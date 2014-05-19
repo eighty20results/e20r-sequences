@@ -79,13 +79,14 @@ class PMProSequences
             $this->dbgOut('Sequence ID given (' . $sequence_id .') so loading options from post metadata');
             $this->options = get_post_meta($sequence_id, '_pmpros_sequence_settings', false);
 
-            var_dump($this->options);
+           // var_dump($this->options);
 
             // Check whether we need to set any default variables for the settings
             if ( empty($this->options) )
             {
                 $this->dbgOut('Using defaults for the sequence settings (ID: ' . $sequence_id . ')');
                 $this->options = $this->defaultOptions();
+                // $this->pmpros_sequence_meta_save($sequence_id);
             } // else
               //  print_r($this->options);
 
@@ -186,9 +187,12 @@ class PMProSequences
             else
                 $settings[3] = 'byDays';
 
-            // Save settings to WPDB
-            update_post_meta($post_id, '_pmpros_sequence_settings', $settings);
             $sequence->options = $settings;
+
+            // Save settings to WPDB
+            $sequence->save_sequence_meta( $post_id, $settings );
+            // update_post_meta($post_id, '_pmpros_sequence_settings', $settings);
+
 
             /*
             if (! update_post_meta($post_id, '_pmpros_sequence_settings', $_POST['pmpros_sequence_hidden']) )
@@ -208,6 +212,17 @@ class PMProSequences
 
         }
     }
+
+    function save_sequence_meta( $post_id, $settings )
+    {
+        if (! empty($this->options))
+        {
+            update_post_meta($post_id, '_pmpros_sequence_settings', $settings);
+            $this->dbgOut('Saved Sequence Settings for ' . $post_id);
+        }
+    }
+
+
 
     //add a post to this sequence
 	function addPost($post_id, $delay)
@@ -437,7 +452,7 @@ class PMProSequences
     {
         if (PMPROS_SEQUENCE_DEBUG)
         {
-            $tmpFile = '/Users/sjolshag/strongcubedfitness.com/sequence_debug_log.txt';
+            $tmpFile = 'sequence_debug_log.txt';
             $fh = fopen($tmpFile, 'a');
             fwrite($fh, $msg . "\r\n");
             fclose($fh);
