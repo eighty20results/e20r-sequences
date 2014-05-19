@@ -141,7 +141,7 @@ function pmpros_the_content($content)
 		$sequence = new PMProSequences($post->ID);
         $sequence->fetchOptions( $post->ID );
 
-        if ( $sequence->options['dayCount'] === true)
+        if ( $sequence->options[1] === true)
             $content .= "<p>You are on day " . intval(pmpro_getMemberDays()) . " of your membership.</p>";
 
 		$content .= $sequence->getPostList();

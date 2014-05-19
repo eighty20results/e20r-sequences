@@ -3,7 +3,7 @@ define('PMPROS_SEQUENCE_DEBUG', true);
 
 class PMProSequences
 {
-    public $options = array();
+    public $options;
     private $sequence_id = null;
 
 	//constructor
@@ -13,11 +13,8 @@ class PMProSequences
 
 		if ( ! empty($id) )
         {
-            $this->dbgOut('ID provided');
             $this->sequence_id = $id;
-//            $this->options = $this->fetchOptions($this->sequence_id);
-
-			return $this->getSeriesByID($this->sequence_id);
+			return $this->getSeriesByID($id);
         }
         else
             $this->options = $this->defaultOptions();
@@ -46,10 +43,10 @@ class PMProSequences
     public function defaultOptions()
     {
         return array(
-            'hidden' => false,
-            'dayCount' => true,
-            'sortOrder' => SORT_ASC,
-            'delayType' => 'byDays',
+            false, // 'hidden'
+            'on', //'dayCount'
+            SORT_ASC, // 'sortOrder'
+            'byDays', // 'delayType'
         );
     }
 
@@ -57,6 +54,12 @@ class PMProSequences
      *
      * Fetch any options for this specific sequence from the database (stored as post metadata)
      * Use default options if the sequence ID isn't supplied
+     *
+     * Array content:
+     *  [0] => hidden (boolean) - Whether to show or hide upcoming (future) posts in sequence from display.
+     *  [1] => dayCount (boolean) - Whether to show or hide the "You are on day X of your membership" information.
+     *  [2] => sortOrder (int) - Constant: Ascending or Descending
+     *  [3] => delayType (string) - byDays or byDate
      *
      * @param int|null $sequence_id - The Sequence ID to fetch options for
      * @return bool - true on success | false on error
@@ -67,16 +70,24 @@ class PMProSequences
 
         // Check that we're being called in context of an actual Sequence 'edit' operation
         if (is_null($sequence_id))
+        {
             $this->dbgOut('No sequence id provided. Will return defaults');
-        else
+            $this->options = $this->defaultOptions();
+        }
+        elseif ( (!is_null($sequence_id)) && (empty($this->options)))
         {
             $this->dbgOut('Sequence ID given (' . $sequence_id .') so loading options from post metadata');
             $this->options = get_post_meta($sequence_id, '_pmpros_sequence_settings', false);
 
-            if ( empty($this->options))
-                $this->options = array(
-                    false, true, SORT_ASC, 'byDays'
-                );
+            var_dump($this->options);
+
+            // Check whether we need to set any default variables for the settings
+            if ( empty($this->options) )
+            {
+                $this->dbgOut('Using defaults for the sequence settings (ID: ' . $sequence_id . ')');
+                $this->options = $this->defaultOptions();
+            } // else
+              //  print_r($this->options);
 
             // ToDo: format options?
 
@@ -104,7 +115,7 @@ class PMProSequences
         if ( empty( $this->options['delayType']) )
             $this->options['delayType'] = 'byDays'; // Default option
 */
-        return true;
+        return $this->options;
     }
 
     /**
@@ -139,8 +150,9 @@ class PMProSequences
         if ( isset($_POST['pmpros_settings_noncename']) )
         {
             $sequence = new PMProSequences($post_id);
-            $sequence->dbgOut('About to try saving settings for post ' . $post_id);
-            $settings = $sequence->options;
+            $sequence->dbgOut('About to save settings for sequence ' . $post_id);
+            $settings = $sequence->fetchOptions($post_id);
+
 
             if ( isset($_POST['pmpros_sequence_hidden']) )
             {
@@ -176,6 +188,7 @@ class PMProSequences
 
             // Save settings to WPDB
             update_post_meta($post_id, '_pmpros_sequence_settings', $settings);
+            $sequence->options = $settings;
 
             /*
             if (! update_post_meta($post_id, '_pmpros_sequence_settings', $_POST['pmpros_sequence_hidden']) )
@@ -586,7 +599,10 @@ class PMProSequences
 	function sequenceMetaBox()
 	{
 		global $post;
-		$sequence = new PMProSequences($post->ID);
+
+        $sequence = new PMProSequences($post->ID);
+        $sequence->fetchOptions($post->ID);
+
         $sequence->dbgOut('Load the post list meta box');
 
         // Instantiate the settings & grab any existing settings if they exist.
@@ -621,8 +637,8 @@ class PMProSequences
             Show membership length info
         </label>
         <br />
-        <p><strong>Sort order (listing order)</strong></p>
-        <label class="screen-reader-text" for="pmpros_sequence_sortorder">Sort Order</label>
+        <p><strong>Display order</strong></p>
+        <label class="screen-reader-text" for="pmpros_sequence_sortorder">Display Order</label>
         <select name="pmpros_sequence_sortorder" id="pmpros_sequence_sortorder">
             <option value="<?php echo SORT_ASC; ?>" <?php selected( $settings->options['sortOrder'], SORT_ASC); ?> >Ascending</option>
             <option value="<?php echo SORT_DESC; ?>" <?php selected( $settings->options['sortOrder'], SORT_DESC); ?> >Descending</option>
@@ -718,7 +734,7 @@ class PMProSequences
  					<?php } elseif ( ! ($this->isPastDelay( $memberFor, $sp->delay )) && ( ! $this->hideUpcomingPosts() ) ) { ?>
                     <li>
 						<span class="pmpro_sequence_item-title"><?php echo get_the_title($sp->id);?></span>
-						<span class="pmpro_sequence_item-unavailable">available on <?php echo ($this->options['delayType'] == 'byDays' ? 'day' : ''); ?> <?php echo $sp->delay;?></span>
+						<span class="pmpro_sequence_item-unavailable">available on <?php echo ($this->options[3] == 'byDays' ? 'day' : ''); ?> <?php echo $sp->delay;?></span>
                     </li>
 					<?php } ?>
 					<div class="clear"></div>
@@ -746,7 +762,7 @@ class PMProSequences
     public function hideUpcomingPosts()
     {
         $this->dbgOut('Do we show or hide upcoming posts?');
-        return ($this->options['hidden'] == 'on' ? true : false );
+        return $this->options[0];
     }
 
     /**
@@ -757,7 +773,7 @@ class PMProSequences
     {
         $this->dbgOut('Delay value is: ' . $delay);
 
-        switch ($this->options['delayType'])
+        switch ($this->options[3])
         {
             case 'byDays':
                 $this->dbgOut('Delay configured as "days since membership start"');
@@ -867,10 +883,10 @@ class PMProSequences
 		<thead>
 			<th>Order</th>
 			<th width="50%">Title</th>
-            <?php $this->dbgOut('Delay Type: ' . $this->options['delayType']); ?>
-			<?php if ($this->options['delayType'] == 'byDays'): ?>
+            <?php $this->dbgOut('Delay Type: ' . $this->options[3]); ?>
+			<?php if ($this->options[3] == 'byDays'): ?>
                 <th>Delay (# of days)</th>
-            <?php elseif ( $this->options['delayType'] == 'byDate'): ?>
+            <?php elseif ( $this->options[3] == 'byDate'): ?>
                 <th>Date</th>
             <?php else: ?>
                 <th>Not Defined</th>
@@ -919,9 +935,9 @@ class PMProSequences
 				<thead>
 					<tr>
 						<th>Post/Page</th>
-                        <?php if ($this->options['delayType'] == 'byDays'): ?>
+                        <?php if ($this->options[3] == 'byDays'): ?>
                             <th>Delay (# of days)</th>
-                        <?php elseif ( $this->options['delayType'] == 'byDate'): ?>
+                        <?php elseif ( $this->options[3] == 'byDate'): ?>
                             <th>Date (YYYY-MM-DD)</th>
                         <?php else: ?>
                             <th>Not Defined</th>
@@ -972,7 +988,7 @@ class PMProSequences
 					jQuery.ajax({
 						url: '<?php echo home_url()?>',type:'GET',timeout:5000,
 						dataType: 'html',
-						data: "pmpros_add_post=1&pmpros_sequence=<?php echo get_post_id;?>&pmpros_post=" + jQuery('#pmpros_post').val() + '&pmpros_delay=' + jQuery('#pmpros_delay').val(),
+						data: "pmpros_add_post=1&pmpros_sequence=<?php echo $post->id; ?>&pmpros_post=" + jQuery('#pmpros_post').val() + '&pmpros_delay=' + jQuery('#pmpros_delay').val(),
 						error: function(xml){
 							alert('Error saving sequence post [1]');
 							//enable save button
@@ -1007,7 +1023,7 @@ class PMProSequences
 				jQuery.ajax({
 					url: '<?php echo home_url()?>',type:'GET',timeout:2000,
 					dataType: 'html',
-					data: "pmpros_add_post=1&pmpros_sequence=<?php echo $this->id;?>&pmpros_remove="+post_id,
+					data: "pmpros_add_post=1&pmpros_sequence=<?php echo $post->id;?>&pmpros_remove="+post_id,
 					error: function(xml){
 						alert('Error removing sequence post [1]');
 						//enable save button

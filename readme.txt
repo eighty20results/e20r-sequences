@@ -21,33 +21,8 @@ This plugin currently requires Paid Memberships Pro.
 
 = I found a bug in the plugin. =
 
-Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/strangerstudios/pmpro-sequence/issues
+Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/pmpro-sequence/issues
 
 == Changelog ==
-= .2.4 =
-* Added settings-api class and implemented per-sequence settings to allow hiding future posts & sort order for display.
-
-= .2.3 =
-* Added pmpro_member_startdate filter to pmpro_getMemberStartdate function.
-
-= .2.2 =
-* Flushing rewrite rules on activation and deactivation so /sequence/ URLs work without having to update permalink settings.
-* Added pmpro_sequence_get_post_list filter.
-
-= .2.1 =
-* Fixed a warning message (Thanks, moneysharp on the WP.org forums.)
-
-= .2 =
-* Styled the post list on a sequence page.
-* Hiding the post list if a user doesn't have access to the sequence page.
-* Hiding links to posts user doesn't have access to yet due to delay.
-* Fixed bug with editing the first post in the sequence.
-* Now allowing 0 day content. Forcing delay (and post ids) to be integers.
-
-= .1.1 =
-* Fixed code for hasAccess logic.
-* Updating the message shown when a user doesn't have access.
-* Fixed edit link in the "Posts in this Sequences" meta box.
-
 = .1 =
-* This is the initial version of the plugin.
+* Initial version of the Sequence plugin including support for display options ,etc.
