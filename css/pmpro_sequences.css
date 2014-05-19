@@ -1,0 +1,10 @@
+
+.pmpro_sequence_list {list-style: none; margin: 1.5em 0; border-top: 1px solid #EEE; }
+.pmpro_sequence_list li {padding: .5em 1em; margin: 0; background: #F9F9F9; border-top: 1px solid #FFF; border-bottom: 1px solid #EEE; }
+.pmpro_sequence_list li:nth-child(odd) { }
+.pmpro_sequence_list li:nth-child(event) { }
+
+.pmpro_sequence_item-title {display: inline-block; }
+.pmpro_sequence_item-title a {font-size: 1.1em; }
+.pmpro_sequence_item-available {display: inline-block; float: right; width: auto; }
+.pmpro_sequence_item-unavailable {display: inline-block; float: right; width: auto; font-style: italic; font-size: .9em; text-align: center;  }
