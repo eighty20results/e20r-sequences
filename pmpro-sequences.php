@@ -119,7 +119,6 @@ function pmpros_ajax()
             {
                 $sequence->dbgOut('Unable to delete the sequence');
             }
-
         }
 
 
@@ -140,8 +139,9 @@ function pmpros_the_content($content)
 	{
 		$sequence = new PMProSequences($post->ID);
         $sequence->fetchOptions( $post->ID );
+        $settings = $sequence->getSettings();
 
-        if ( $sequence->options[1] === true)
+        if ( $settings[1] == 1)
             $content .= "<p>You are on day " . intval(pmpro_getMemberDays()) . " of your membership.</p>";
 
 		$content .= $sequence->getPostList();

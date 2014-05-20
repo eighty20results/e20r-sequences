@@ -3,8 +3,8 @@ define('PMPROS_SEQUENCE_DEBUG', true);
 
 class PMProSequences
 {
-    private $options = array();
-    private $sequence_id = 0;
+    public $options;
+    public $sequence_id = 0;
 
 	//constructor
 	function PMProSequences($id = null)
@@ -17,10 +17,10 @@ class PMProSequences
 			return $this->getSeriesByID($id);
         }
         else
-            if (self::sequence_id != 0)
+        {
+            if ($this->sequence_id != 0)
             {
                 self::dbgOut('No ID supplied to __construct(), but ID was set before, so load options');
-                self::setSettings( self::defaultOptions() );
             }
             else
             {
@@ -29,19 +29,19 @@ class PMProSequences
                 if ($wp_query->post->ID)
                 {
                     self::dbgOut('Found Post ID and loading options if not already loaded ' . $wp_query->post->ID);
-                    self::setID( $wp_query->post->ID );
-                    self::fetchOptions( self::getID() );
+                    $this->sequence_id = $wp_query->post->ID;
+//                    self::fetchOptions( self::getID() );
                     if ( empty( $this->options ) )
                         $this->defaultOptions();
                 }
-
-
             }
+        }
 	}
 
     /*************************************************************************************/
     /* Internal routines for fetching sequence related information (ID & Settings array) */
 
+    /*
     public function getID()
     {
         return $this->sequence_id;
@@ -62,9 +62,13 @@ class PMProSequences
         if (! is_array($varArray))
             self::dbgOut('Not a valid settings array!');
 
-        $this->options = $varArray;
-        if (self::getID() != 0)
-            self::save_sequence_meta( self::getID() );
+        foreach ($varArray as $key => $val)
+        {
+            $this->setSetting($val, $key);
+        }
+
+//        if ($this->sequence_id != 0)
+//            $this->save_sequence_meta( $this->options, $this->sequence_id );
     }
 
     public function setSetting( $value, $idx = 0 )
@@ -74,7 +78,7 @@ class PMProSequences
 
         $this->options[$idx] = $value;
     }
-
+*/
     /*************************************************************************************/
 
     //populate sequence data by post id passed
@@ -127,7 +131,7 @@ class PMProSequences
      *                       Day 1 starts at midnight on 12/3
      *
      * @param int $sequence_id - The Sequence ID to fetch options for
-     * @return bool -- Returns True if options were successfully fetched & saved.
+     * @return mixed -- Returns array of options if options were successfully fetched & saved.
      */
     public function fetchOptions( $sequence_id = 0 )
     {
@@ -140,35 +144,39 @@ class PMProSequences
             if ( ( $this->sequence_id != 0 ) && ( $this->sequence_id != $sequence_id ))
             {
                 self::dbgOut('fetchOptions() - ID defined in class but callee supplied different sequence ID!');
-                self::setID($sequence_id);
+                $this->sequence_id = $sequence_id;
             }
             elseif ($this->sequence_id == 0)
             {
                 // This shouldn't be possible... (but never say never!)
-                self::setID($sequence_id);
+                $this->sequence_id = $sequence_id;
             }
         }
 
         // Check that we're being called in context of an actual Sequence 'edit' operation
+        self::dbgOut('fetchOptions(): Attempting to load settings from DB');
+        $settings = get_post_meta($this->sequence_id, '_pmpros_sequence_settings', false);
+        $this->options = $settings[0];
+
+        self::dbgOut('fetchOptions() - Fetched options: '. print_r($this->options , true));
+            /*
+            $this->options[0] = $settings[0];
+            $this->options[1] = $settings[1];
+            $this->options[2] = $settings[2];
+            $this->options[3] = $settings[3];
+            $this->options[4] = $settings[4];
+            */
+        self::dbgOut('Loaded from DB: '. print_r($this->options, true));
+
+        // Check whether we need to set any default variables for the settings
         if ( empty($this->options) )
         {
             self::dbgOut('fetchOptions(): No settings found. Using defaults');
             $this->options = self::defaultOptions();
+            self::dbgOut('fetchOptions() - Loaded defaults: '. print_r($this->options , true));
         }
-        else
-        {
-            self::dbgOut('fetchOptions(): Attempting to load settings from DB');
-            $this->options = get_post_meta(self::getSettings(), '_pmpros_sequence_settings');
 
-            self::dbgOut('Loaded from DB: '. print_r($this->options, true));
-
-            // Check whether we need to set any default variables for the settings
-            if ( ! $this->options )
-            {
-                self::dbgOut('fetchOptions(): Failed to load options from DB');
-                $this->options = self::defaultOptions();
-            }
-        }
+        return $this->options;
     }
 
     /**
@@ -205,25 +213,22 @@ class PMProSequences
         // OK, we're authenticated: we need to find and save the data
         if ( isset($_POST['pmpros_settings_noncename']) )
         {
-            $settings = self::getSettings();
 
-            if ( empty($settings) )
-            {
-                self::dbgOut('Have to load new instance of Sequence class');
-                $sequence = new PMProSequences($post_id);
-                $sequence->fetchOptions($post_id);
-                $settings = $sequence->getSettings();
-            }
-            else
-                self::dbgOut('pmpros_sequence_meta_save(): Current Settings: ' . print_r($settings, true));
+            self::dbgOut('Have to load new instance of Sequence class');
+
+            $sequence = new PMProSequences($post_id);
+            $settings = $sequence->fetchOptions($post_id);
+
+            if (!$settings)
+                $settings = $sequence->defaultOptions();
 
             if ( isset($_POST['pmpros_sequence_hidden']) )
             {
                 $settings[0] = $_POST['pmpros_sequence_hidden'];
                 self::dbgOut('pmpros_sequence_meta_save(): POST value for hidden: ' . $_POST['pmpros_sequence_hidden'] );
             }
-            elseif (empty($settings[0]))
-                $settings[0] = false;
+            elseif ( empty($settings[0]) )
+                $settings[0] = 0;
 
             if ( isset($_POST['pmpros_sequence_daycount']) )
             {
@@ -231,7 +236,7 @@ class PMProSequences
                 self::dbgOut('pmpros_sequence_meta_save(): POST value for dayCount: ' . $_POST['pmpros_sequence_daycount']);
             }
             elseif (empty($settings[1]))
-                $settings[1] = true;
+                $settings[1] = 1;
 
             if ( isset($_POST['pmpros_sequence_sortorder']) )
             {
@@ -252,7 +257,7 @@ class PMProSequences
             // $sequence->options = $settings;
 
             // Save settings to WPDB
-            self::save_sequence_meta( $settings );
+            $sequence->save_sequence_meta( $settings, $post_id );
 
             self::dbgOut('pmpros_sequence_meta_save(): Saved metadata for sequence #' . $post_id);
             // update_post_meta($post_id, '_tls_sequence_settings', (array)$settings->options);
@@ -267,24 +272,18 @@ class PMProSequences
      * @param $settings (array) -- Settings for the Sequence
      *
      */
-    function save_sequence_meta( $settings )
+    function save_sequence_meta( $settings, $post_id )
     {
         // Make sure the settings array isn't empty (no settings defined)
         if (! empty( $settings ))
         {
-            // Get the ID of this sequence CPT
-            $post_id = self::getID();
-
             self::dbgOut('save_sequence_meta(): Settings for ' . $post_id .' will be: ' . print_r( $settings, true));
 
             // Update the *_postmeta table for this sequence
             update_post_meta($post_id, '_pmpros_sequence_settings', $settings );
 
             // Preserve the settings in memory / class context
-            self::setSettings($settings);
-
             self::dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $post_id);
-            self::dbgOut('save_sequence_meta(): Settings are now: ' . print_r( self::getSettings(), true));
         }
     }
 
@@ -342,7 +341,7 @@ class PMProSequences
 		//add sequence to post
 		$post_sequence = get_post_meta($post_id, "_post_sequence", true);
 		if(!is_array($post_sequence)) {
-            self::dbgOut('addPost(): No (yet) an array of posts. Adding the single new post');
+            self::dbgOut('addPost(): Not (yet) an array of posts. Adding the single new post to a new array');
 			$post_sequence = array($this->id);
         }
         else
@@ -693,26 +692,34 @@ class PMProSequences
     {
         global $post;
 
-        $sequence = new PMProSequences($post->ID);
-        $settings = $sequence->fetchOptions($post->ID);
-        if ( empty($sequence->options) )
+        $sequence_id = $post->ID;
+        $sequence = new PMProSequences($sequence_id);
+
+        if ( $sequence_id != 0)
         {
-            $sequence->error = 'Error fetching the Sequence options';
-            $sequence->dbgOut('pmpro_sequence_settings_meta_box(): Error fetching the Sequence options for #' . $post->ID);
+            $sequence->dbgOut('Loading settings for Meta Box');
+            $sequence->fetchOptions($sequence_id);
+            $settings = $sequence->fetchOptions($sequence_id);
+            $sequence->dbgOut('Returned settings: ' . print_r($sequence->options, true));
+        }
+        else
+        {
+            self::dbgOut('Not a valid Sequence ID, cannot load options');
+            return;
         }
 
-        $sequence->dbgOut('pmpro_sequence_settings_meta_box() - Loaded settings: ' . print_r($settings, true));
+        self::dbgOut('pmpro_sequence_settings_meta_box() - Loaded settings: ' . print_r($settings, true));
 
         ?>
         <input type="hidden" name="pmpros_settings_noncename" id="pmpros_settings_noncename" value="<?php echo wp_create_nonce( plugin_basename(__FILE__) )?>" />
-        <input type="hidden" name="pmpros_settings_hidden_delay" id="pmpros_settings_hidden_delay" value="<?php echo $sequence->options[3]; ?>"/>
+        <input type="hidden" name="pmpros_settings_hidden_delay" id="pmpros_settings_hidden_delay" value="<?php echo $settings[3]; ?>"/>
         <label class="selectit">
-            <input type="checkbox" value="1" title="Hide unpublished / future posts for this sequence" name="pmpros_sequence_hidden" <?php checked($sequence->options[0], 1); ?> />
+            <input type="checkbox" value="1" title="Hide unpublished / future posts for this sequence" name="pmpros_sequence_hidden" <?php checked($settings[0], 1); ?> />
             Hide future posts
         </label>
         <br />
         <label class="selectit">
-            <input type="checkbox" value="1" title="Whether to show &quot;You are on day NNN of your membership&quot; text" name="pmpros_sequence_daycount" <?php checked($sequence->options[1], 1); ?> />
+            <input type="checkbox" value="1" title="Whether to show &quot;You are on day NNN of your membership&quot; text" name="pmpros_sequence_daycount" <?php checked($settings[1], 1); ?> />
             Show membership length info
         </label>
         <br />
@@ -725,9 +732,9 @@ class PMProSequences
         <p><strong>Day 1 of Sequence starts:</strong></p>
         <label class="screen-reader-text" for="pmpros_sequence_sortorder">Display Order</label>
         <select name="pmpros_sequence_sortorder" id="pmpros_sequence_sortorder">
-            <option value="0" <?php selected( intval($sequence->options[4]), '0'); ?> >24 hours after membership started</option>
-            <option value="1" <?php selected( intval($sequence->options[4]), '1'); ?> >At midnight, immediately after membership started</option>
-            <option value="2" <?php selected( intval($sequence->options[4]), '2'); ?> >At midnight, 24+ hours after membership started</option>
+            <option value="0" <?php selected( intval($settings[4]), '0'); ?> >24 hours after membership started</option>
+            <option value="1" <?php selected( intval($settings[4]), '1'); ?> >At midnight, immediately after membership started</option>
+            <option value="2" <?php selected( intval($settings[4]), '2'); ?> >At midnight, 24+ hours after membership started</option>
         </select>
         </div>
         -->
@@ -735,15 +742,15 @@ class PMProSequences
         <p><strong>Display order</strong></p>
         <label class="screen-reader-text" for="pmpros_sequence_sortorder">Display Order</label>
         <select name="pmpros_sequence_sortorder" id="pmpros_sequence_sortorder">
-            <option value="<?php echo SORT_ASC; ?>" <?php selected( intval($sequence->options[2]), SORT_ASC); ?> >Ascending</option>
-            <option value="<?php echo SORT_DESC; ?>" <?php selected( intval($sequence->options[2]), SORT_DESC); ?> >Descending</option>
+            <option value="<?php echo SORT_ASC; ?>" <?php selected( intval($settings[2]), SORT_ASC); ?> >Ascending</option>
+            <option value="<?php echo SORT_DESC; ?>" <?php selected( intval($settings[2]), SORT_DESC); ?> >Descending</option>
         </select>
         <br />
         <p><strong>Sequence Delay type</strong></p>
         <label class="screen-reader-text" for="pmpros_sequence_delaytype">Delay Type</label>
         <select name="pmpros_sequence_delaytype" id="pmpros_sequence_delaytype" >
-            <option value="byDays" <?php selected( $sequence->options[3], 'byDays'); ?> >Number of Days</option>
-            <option value="byDate" <?php selected( $sequence->options[3], 'byDate'); ?> >Release Date (YYYY-MM-DD)</option>
+            <option value="byDays" <?php selected( $settings[3], 'byDays'); ?> >Number of Days</option>
+            <option value="byDate" <?php selected( $settings[3], 'byDate'); ?> >Release Date (YYYY-MM-DD)</option>
         </select>
         <!-- Test whether the sequence delay type has been changed. Submit AJAX request to delete existing posts if it has -->
         <script language="javascript">
@@ -1133,7 +1140,7 @@ class PMProSequences
 						}
 						else
 						{
-                            alert('Saved post <?php echo $this->id ?>');
+                            alert('Removed Post/Page with ID <?php echo $post->id ?>');
 							jQuery('#pmpros_sequence_posts').html(responseHTML);
 						}																						
 					}
