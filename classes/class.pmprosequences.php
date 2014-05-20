@@ -3,24 +3,81 @@ define('PMPROS_SEQUENCE_DEBUG', true);
 
 class PMProSequences
 {
-    public $options;
-    private $sequence_id = null;
+    private $options = array();
+    private $sequence_id = 0;
 
 	//constructor
 	function PMProSequences($id = null)
 	{
-        $this->dbgOut('__constructor() - Sequence ID: ' . $id);
-
 		if ( ! empty($id) )
         {
+            self::dbgOut('__constructor() - Sequence ID: ' . $id);
+
             $this->sequence_id = $id;
 			return $this->getSeriesByID($id);
         }
         else
-            $this->options = $this->defaultOptions();
+            if (self::sequence_id != 0)
+            {
+                self::dbgOut('No ID supplied to __construct(), but ID was set before, so load options');
+                self::setSettings( self::defaultOptions() );
+            }
+            else
+            {
+                self::dbgOut('No sequence ID or options defined! Checking against global variables');
+                global $wp_query;
+                if ($wp_query->post->ID)
+                {
+                    self::dbgOut('Found Post ID and loading options if not already loaded ' . $wp_query->post->ID);
+                    self::setID( $wp_query->post->ID );
+                    self::fetchOptions( self::getID() );
+                    if ( empty( $this->options ) )
+                        $this->defaultOptions();
+                }
+
+
+            }
 	}
 
-	//populate sequence data by post id passed
+    /*************************************************************************************/
+    /* Internal routines for fetching sequence related information (ID & Settings array) */
+
+    public function getID()
+    {
+        return $this->sequence_id;
+    }
+
+    public function setID( $var )
+    {
+        $this->sequence_id = (int) $var;
+    }
+
+    public function getSettings()
+    {
+        return $this->options;
+    }
+
+    public function setSettings( $varArray )
+    {
+        if (! is_array($varArray))
+            self::dbgOut('Not a valid settings array!');
+
+        $this->options = $varArray;
+        if (self::getID() != 0)
+            self::save_sequence_meta( self::getID() );
+    }
+
+    public function setSetting( $value, $idx = 0 )
+    {
+        if (! empty($this->options[$idx]))
+            self::dbgOut('Overwriting setting # ' . $idx . ' (old: ' . $this->options[$idx] . ') with ' . $value);
+
+        $this->options[$idx] = $value;
+    }
+
+    /*************************************************************************************/
+
+    //populate sequence data by post id passed
 	function getSeriesByID($id)
 	{
 		$this->post = get_post($id);
@@ -28,7 +85,6 @@ class PMProSequences
 		if(!empty($this->post->ID))
         {
 			$this->id = $id;
-            $this->fetchOptions( $this->id );
         }
         else
 			$this->id = false;
@@ -47,6 +103,7 @@ class PMProSequences
             1, //'dayCount'
             SORT_ASC, // 'sortOrder'
             'byDays', // 'delayType'
+            0, // startTime
         );
     }
 
@@ -60,36 +117,58 @@ class PMProSequences
      *  [1] => dayCount (boolean) - Whether to show or hide the "You are on day X of your membership" information.
      *  [2] => sortOrder (int) - Constant: Ascending or Descending
      *  [3] => delayType (string) - byDays or byDate
+     *  TODO: [4] => startTime (int) - The time window when the first day of the sequence should be considered 'Day 1'
+     *                           (and 'day 1' content becomes available)
+     *                   0 = Immediately (this makes 'day 0' and 'day 1' the same.
+     *                   1 = 24 hours after the membership started (i.e. 'member start date/time + 24 hours)
+     *                   2 = At midnight after the membership started, i.e. if membership starts at 4am on 12/1,
+     *                       Day 1 starts at midnight on 12/2.
+     *                   3 = At midnight at least 24 hours after the membership started. I.e. Start at 3am on 12/1,
+     *                       Day 1 starts at midnight on 12/3
      *
-     * @param int|null $sequence_id - The Sequence ID to fetch options for
-     * @return bool - true on success | false on error
-     *
+     * @param int $sequence_id - The Sequence ID to fetch options for
+     * @return bool -- Returns True if options were successfully fetched & saved.
      */
-    public function fetchOptions( $sequence_id = null )
+    public function fetchOptions( $sequence_id = 0 )
     {
-
-        // Check that we're being called in context of an actual Sequence 'edit' operation
-        if (is_null($sequence_id))
+        // Did we receive an ID to process/use?
+        if ($sequence_id != 0)
         {
-            $this->dbgOut('fetchOptions(): No sequence id provided. Will return defaults');
-            $this->options = $this->defaultOptions();
-        }
-        elseif ( (!is_null($sequence_id)) && (empty($this->options)))
-        {
-            $this->dbgOut('fetchOptions(): Sequence ID given (' . $sequence_id .') so trying to load options from post metadata');
-            $this->options = get_post_meta($sequence_id, '_pmpros_sequence_settings');
+            self::dbgOut('fetchOptions() - Sequence ID supplied by callee: ' . $sequence_id);
 
-            $this->dbgOut('PostMeta: '. print_r($this->options, true));
-
-            // Check whether we need to set any default variables for the settings
-            if ( empty($this->options) )
+            // Does the ID differ from the one this object has stored already?
+            if ( ( $this->sequence_id != 0 ) && ( $this->sequence_id != $sequence_id ))
             {
-                $this->dbgOut('fetchOptions(): Using defaults for the sequence settings (ID: ' . $sequence_id . ')');
-                $this->options = $this->defaultOptions();
+                self::dbgOut('fetchOptions() - ID defined in class but callee supplied different sequence ID!');
+                self::setID($sequence_id);
+            }
+            elseif ($this->sequence_id == 0)
+            {
+                // This shouldn't be possible... (but never say never!)
+                self::setID($sequence_id);
             }
         }
 
-        return $this->options;
+        // Check that we're being called in context of an actual Sequence 'edit' operation
+        if ( empty($this->options) )
+        {
+            self::dbgOut('fetchOptions(): No settings found. Using defaults');
+            $this->options = self::defaultOptions();
+        }
+        else
+        {
+            self::dbgOut('fetchOptions(): Attempting to load settings from DB');
+            $this->options = get_post_meta(self::getSettings(), '_pmpros_sequence_settings');
+
+            self::dbgOut('Loaded from DB: '. print_r($this->options, true));
+
+            // Check whether we need to set any default variables for the settings
+            if ( ! $this->options )
+            {
+                self::dbgOut('fetchOptions(): Failed to load options from DB');
+                $this->options = self::defaultOptions();
+            }
+        }
     }
 
     /**
@@ -120,84 +199,92 @@ class PMProSequences
         if ( !current_user_can( 'edit_post', $post_id ) )
             return $post_id;
 
+        self::dbgOut('pmpros_sequence_meta_save(): About to save settings for sequence ' . $post_id);
+        self::dbgOut('From Web: ' . print_r($_REQUEST, true));
+
         // OK, we're authenticated: we need to find and save the data
         if ( isset($_POST['pmpros_settings_noncename']) )
         {
-            $sequence = new PMProSequences($post_id);
-            $sequence->dbgOut('pmpros_sequence_meta_save(): About to save settings for sequence ' . $post_id);
-            $sequence->dbgOut('From Web: ' . print_r($_REQUEST, true));
-            $sequence->fetchOptions($post_id);
+            $settings = self::getSettings();
 
-            if ( ! empty( $sequence->options ) )
-                $sequence->dbgOut('pmpros_sequence_meta_save(): Current Settings: ' . print_r($sequence->options, true));
+            if ( empty($settings) )
+            {
+                self::dbgOut('Have to load new instance of Sequence class');
+                $sequence = new PMProSequences($post_id);
+                $sequence->fetchOptions($post_id);
+                $settings = $sequence->getSettings();
+            }
             else
-                $sequence->dbgOut('pmpros_sequence_meta_save() - unable to fetch options from DB');
+                self::dbgOut('pmpros_sequence_meta_save(): Current Settings: ' . print_r($settings, true));
 
             if ( isset($_POST['pmpros_sequence_hidden']) )
             {
-                $sequence->options[0] = $_POST['pmpros_sequence_hidden'];
-                $sequence->dbgOut('pmpros_sequence_meta_save(): POST value for hidden: ' . $_POST['pmpros_sequence_hidden'] );
+                $settings[0] = $_POST['pmpros_sequence_hidden'];
+                self::dbgOut('pmpros_sequence_meta_save(): POST value for hidden: ' . $_POST['pmpros_sequence_hidden'] );
             }
-            elseif (empty($sequence->options[0]))
-                $sequence->options[0] = false;
+            elseif (empty($settings[0]))
+                $settings[0] = false;
 
             if ( isset($_POST['pmpros_sequence_daycount']) )
             {
-                $sequence->options[1] = $_POST['pmpros_sequence_daycount'];
-                $sequence->dbgOut('pmpros_sequence_meta_save(): POST value for dayCount: ' . $_POST['pmpros_sequence_daycount']);
+                $settings[1] = $_POST['pmpros_sequence_daycount'];
+                self::dbgOut('pmpros_sequence_meta_save(): POST value for dayCount: ' . $_POST['pmpros_sequence_daycount']);
             }
-            elseif (empty($sequence->options[1]))
-                $sequence->options[1] = true;
+            elseif (empty($settings[1]))
+                $settings[1] = true;
 
             if ( isset($_POST['pmpros_sequence_sortorder']) )
             {
-                $sequence->options[2] = $_POST['pmpros_sequence_sortorder'];
-                $sequence->dbgOut('pmpros_sequence_meta_save(): POST value for sortOrder: ' . $_POST['pmpros_sequence_sortorder'] );
+                $settings[2] = $_POST['pmpros_sequence_sortorder'];
+                self::dbgOut('pmpros_sequence_meta_save(): POST value for sortOrder: ' . $_POST['pmpros_sequence_sortorder'] );
             }
-            elseif (empty($sequence->options[2]))
-                $sequence->options[2] = SORT_ASC;
+            elseif (empty($settings[2]))
+                $settings[2] = SORT_ASC;
 
             if ( isset($_POST['pmpros_sequence_delaytype']) )
             {
-                $sequence->options[3] = $_POST['pmpros_sequence_delaytype'];
-                $sequence->dbgOut('pmpros_sequence_meta_save(): POST value for delayType: ' . $_POST['pmpros_sequence_delaytype'] );
+                $settings[3] = $_POST['pmpros_sequence_delaytype'];
+                self::dbgOut('pmpros_sequence_meta_save(): POST value for delayType: ' . $_POST['pmpros_sequence_delaytype'] );
             }
-            elseif (empty($sequence->options[3]))
-                $sequence->options[3] = 'byDays';
+            elseif (empty($settings[3]))
+                $settings[3] = 'byDays';
 
             // $sequence->options = $settings;
 
             // Save settings to WPDB
-            $sequence->save_sequence_meta( $post_id, $sequence->options );
-            // update_post_meta($post_id, '_pmpros_sequence_settings', $settings);
+            self::save_sequence_meta( $settings );
 
-
-            /*
-            if (! update_post_meta($post_id, '_pmpros_sequence_settings', $_POST['pmpros_sequence_hidden']) )
-                $sequence->dbgOut('Unable to save parameter "hidden": ' . $_POST['pmpros_sequence_hidden']);
-
-            if (! update_post_meta($post_id, '_tls_pmpros_sequence_daycount', $_POST['pmpros_sequence_daycount']) )
-                $sequence->dbgOut('Unable to save parameter "dayCount": ' . $_POST['pmpros_sequence_daycount']);
-
-            if (! update_post_meta($post_id, '_tls_pmpros_sequence_sortorder', $_POST['pmpros_sequence_sortorder'] ) )
-                $sequence->dbgOut('Unable to save parameter "sortOrder": ' . $_POST['pmpros_sequence_sortorder']);
-
-            if (! update_post_meta($post_id, '_tls_pmpros_sequence_delaytype', $_POST['pmpros_sequence_delaytype'] ) )
-                $sequence->dbgOut('Unable to save parameter "delayType": ' . $_POST['pmpros_sequence_delaytype']);
-            */
-            $sequence->dbgOut('pmpros_sequence_meta_save(): Saved metadata for sequence #' . $post_id);
+            self::dbgOut('pmpros_sequence_meta_save(): Saved metadata for sequence #' . $post_id);
             // update_post_meta($post_id, '_tls_sequence_settings', (array)$settings->options);
 
         }
     }
 
-    function save_sequence_meta( $post_id, $settings )
+    /**
+     *
+     * Save the settings to the Wordpress DB.
+     *
+     * @param $settings (array) -- Settings for the Sequence
+     *
+     */
+    function save_sequence_meta( $settings )
     {
-        if (! empty($this->options))
+        // Make sure the settings array isn't empty (no settings defined)
+        if (! empty( $settings ))
         {
-            update_post_meta($post_id, '_pmpros_sequence_settings', $settings);
-            $this->dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $post_id);
-            $this->dbgOut('save_sequence_meta(): Settings are now: ' . print_r($this->options, true));
+            // Get the ID of this sequence CPT
+            $post_id = self::getID();
+
+            self::dbgOut('save_sequence_meta(): Settings for ' . $post_id .' will be: ' . print_r( $settings, true));
+
+            // Update the *_postmeta table for this sequence
+            update_post_meta($post_id, '_pmpros_sequence_settings', $settings );
+
+            // Preserve the settings in memory / class context
+            self::setSettings($settings);
+
+            self::dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $post_id);
+            self::dbgOut('save_sequence_meta(): Settings are now: ' . print_r( self::getSettings(), true));
         }
     }
 
@@ -206,9 +293,9 @@ class PMProSequences
     //add a post to this sequence
 	function addPost($post_id, $delay)
 	{
-        if (! $this->isValidDelay($delay) )
+        if (! self::isValidDelay($delay) )
         {
-            $this->dbgOut('addPost(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
+            self::dbgOut('addPost(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
             $this->error = 'Invalid delay value specified.';
             return false;
         }
@@ -216,18 +303,18 @@ class PMProSequences
 		if(empty($post_id) || !isset($delay))
 		{
 			$this->error = "Please enter a value for post and delay.";
-            $this->dbgOut('addPost(): No Post ID or delay specified');
+            self::dbgOut('addPost(): No Post ID or delay specified');
 			return false;
 		}
 
-        $this->dbgOut('addPost(): Post ID: ' . $post_id . ' and delay: ' . $delay);
+        self::dbgOut('addPost(): Post ID: ' . $post_id . ' and delay: ' . $delay);
 
 		$post = get_post($post_id);
 			
 		if(empty($post->ID))
 		{
 			$this->error = "A post with that id does not exist.";
-            $this->dbgOut('addPost(): No Post with ' . $post_id . ' found');
+            self::dbgOut('addPost(): No Post with ' . $post_id . ' found');
 			return false;
 		}
 		
@@ -246,7 +333,7 @@ class PMProSequences
 		$this->posts[] = $temp;
 		
 		//sort
-        $this->dbgOut('addPost(): Sorting the Sequence by delay');
+        self::dbgOut('addPost(): Sorting the Sequence by delay');
 		usort($this->posts, array("PMProSequences", "sortByDelay"));
 
 		//save
@@ -255,17 +342,17 @@ class PMProSequences
 		//add sequence to post
 		$post_sequence = get_post_meta($post_id, "_post_sequence", true);
 		if(!is_array($post_sequence)) {
-            $this->dbgOut('addPost(): No (yet) an array of posts. Adding the single new post');
+            self::dbgOut('addPost(): No (yet) an array of posts. Adding the single new post');
 			$post_sequence = array($this->id);
         }
         else
         {
 			$post_sequence[] = $this->id;
-            $this->dbgOut('addPost(): Appended post (ID: ' . $this->id . ') to Sequence');
+            self::dbgOut('addPost(): Appended post (ID: ' . $this->id . ') to Sequence');
         }
 		//save
 		update_post_meta($post_id, "_post_sequence", $post_sequence);
-        $this->dbgOut('addPost(): Post/Page list updated and saved');
+        self::dbgOut('addPost(): Post/Page list updated and saved');
 
     }
 	
@@ -299,7 +386,7 @@ class PMProSequences
 			unset($post_sequence[$key]);
 			update_post_meta($post_id, "_post_sequence", $post_sequence);
 
-            $this->dbgOut('removePost(): Post/Page list updated and saved');
+            self::dbgOut('removePost(): Post/Page list updated and saved');
 
         }
 
@@ -366,7 +453,7 @@ class PMProSequences
 		else
         {
             $delay = $this->normalizeDelay( $this->posts[$key]->delay );
-            $this->dbgOut('getDelayForPost(): Delay for post with id = ' . $post_id . ' is ' .$delay);
+            self::dbgOut('getDelayForPost(): Delay for post with id = ' . $post_id . ' is ' .$delay);
             return $delay;
         }
 	}
@@ -382,10 +469,10 @@ class PMProSequences
     {
 
         if ( $this->isValidDate($delay) ) {
-            $this->dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
+            self::dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
             return $this->convertToDays($delay);
         }
-        $this->dbgOut('normalizeDelay(): Delay specified as # of days since membership start: ' . $delay);
+        self::dbgOut('normalizeDelay(): Delay specified as # of days since membership start: ' . $delay);
         return $delay;
     }
 
@@ -393,11 +480,11 @@ class PMProSequences
     {
         if (empty($this->options[2]))
         {
-            $this->dbgOut('sortByDelay(): Need sortOrder option to base sorting decision on...');
+            self::dbgOut('sortByDelay(): Need sortOrder option to base sorting decision on...');
             // $sequence = $this->getSeriesByID($a->id);
             if ( $this->sequence_id !== null)
             {
-                $this->dbgOut('sortByDelay(): Have valid sequence post ID saved: ' . $this->sequence_id);
+                self::dbgOut('sortByDelay(): Have valid sequence post ID saved: ' . $this->sequence_id);
                 $this->fetchOptions( $this->sequence_id );
             }
         }
@@ -405,15 +492,15 @@ class PMProSequences
         switch ($this->options[2])
         {
             case SORT_ASC:
-                $this->dbgOut('sortByDelay(): Sorted in Ascending order');
+                self::dbgOut('sortByDelay(): Sorted in Ascending order');
                 return $this->sortAscending($a, $b);
                 break;
             case SORT_DESC:
-                $this->dbgOut('sortByDelay(): Sorted in Descending order');
+                self::dbgOut('sortByDelay(): Sorted in Descending order');
                 return $this->sortDescending($a, $b);
                 break;
             default:
-                $this->dbgOut('sortByDelay(): sortOrder not defined');
+                self::dbgOut('sortByDelay(): sortOrder not defined');
         }
     }
 
@@ -486,10 +573,10 @@ class PMProSequences
             $dDiff->format('%d');
 
             $days = $dDiff->days;
-            $this->dbgOut('convertToDays() - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
+            self::dbgOut('convertToDays() - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
         } else {
             $days = $date;
-            $this->dbgOut('convertToDays() - Days of delay from start: ' . $date);
+            self::dbgOut('convertToDays() - Days of delay from start: ' . $date);
         }
 
         return $days;
@@ -499,7 +586,7 @@ class PMProSequences
     {
         $startDate = pmpro_getMemberStartdate();
         $endDate = date( 'Y-m-d', strtotime( $startDate . " +" . $days . ' days' ));
-        $this->dbgOut('C2Date - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $endDate .  ' for delay day count: ' . $days);
+        self::dbgOut('C2Date - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $endDate .  ' for delay day count: ' . $days);
         return $endDate;
     }
 */
@@ -716,7 +803,7 @@ class PMProSequences
 		if(!empty($this->posts))
 		{
             // Order the posts in accordance with the 'sortOrder' option
-            $this->dbgOut('getPostLists(): Sorting posts for display');
+            self::dbgOut('getPostLists(): Sorting posts for display');
             usort($this->posts, array("PMProSequences", "sortByDelay"));
 
             // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
@@ -735,7 +822,7 @@ class PMProSequences
                         if ($this->isPastDelay( $memberFor, $sp->delay )) {
                     ?>
                     <li>
-                        <?php $this->dbgOut('Post ' . $sp->id . ' delay: ' . $sp->delay); ?>
+                        <?php self::dbgOut('Post ' . $sp->id . ' delay: ' . $sp->delay); ?>
 						<span class="pmpro_sequence_item-title"><a href="<?php echo get_permalink($sp->id);?>"><?php echo get_the_title($sp->id);?></a></span>
 						<span class="pmpro_sequence_item-available"><a class="pmpro_btn pmpro_btn-primary" href="<?php echo get_permalink($sp->id);?>">Available Now</a></span>
                     </li>
@@ -769,7 +856,7 @@ class PMProSequences
     // Test whether to show future sequence posts (i.e. not yet available to member)
     public function hideUpcomingPosts()
     {
-        $this->dbgOut('hideUpcomingPosts(): Do we show or hide upcoming posts?');
+        self::dbgOut('hideUpcomingPosts(): Do we show or hide upcoming posts?');
         return $this->options[0] == 1 ? true : false;
     }
 
@@ -779,22 +866,22 @@ class PMProSequences
      */
     public function isValidDelay( $delay )
     {
-        $this->dbgOut('isValidDelay(): Delay value is: ' . $delay);
+        self::dbgOut('isValidDelay(): Delay value is: ' . $delay);
 
         switch ($this->options[3])
         {
             case 'byDays':
-                $this->dbgOut('isValidDelay(): Delay configured as "days since membership start"');
+                self::dbgOut('isValidDelay(): Delay configured as "days since membership start"');
                 return ( is_numeric( $delay ) ? true : false);
                 break;
 
             case 'byDate':
-                $this->dbgOut('isValidDelay(): Delay configured as a date value');
+                self::dbgOut('isValidDelay(): Delay configured as a date value');
                 return ( $this->isValidDate( $delay ) ? true : false);
                 break;
 
             default:
-                $this->dbgOut('isValidDelay(): Not a valid delay value, based on config');
+                self::dbgOut('isValidDelay(): Not a valid delay value, based on config');
                 return false;
         }
     }
@@ -831,7 +918,7 @@ class PMProSequences
 		//boot out people without permissions
 		if(!current_user_can("edit_posts"))
         {
-            $this->dbgOut('add_post(): User is not permitted to edit');
+            self::dbgOut('add_post(): User is not permitted to edit');
 			return false;
         }
 
@@ -841,27 +928,27 @@ class PMProSequences
 		if(isset($_REQUEST['pmpros_delay'])) {
             if ( $this->isValidDelay( $_REQUEST['pmpros_delay'] ) )
             {
-                $this->dbgOut('add_post(): Delay value is recognizable');
+                self::dbgOut('add_post(): Delay value is recognizable');
                 if ( $this->isValidDate($_REQUEST['pmpros_delay']))
                 {
-                    $this->dbgOut('add_post(): Delay specified as a valid date format');
+                    self::dbgOut('add_post(): Delay specified as a valid date format');
                     $delay = $_REQUEST['pmpros_delay'];
                 }
                 else
                 {
-                    $this->dbgOut('add_post(): Delay specified as the number of days');
+                    self::dbgOut('add_post(): Delay specified as the number of days');
                     $delay = intval($_REQUEST['pmpros_delay']);
                 }
             }
             else
             {
                 // Ignore this post (TODO: Return error with correct warning message)
-                $this->dbgOut('add_post(): Invalid delay value specified: ' . $_REQUEST['pmpros_delay']);
+                self::dbgOut('add_post(): Invalid delay value specified: ' . $_REQUEST['pmpros_delay']);
                 $delay = null;
                 $pmpros_post = null;
             }
         } else
-            $this->dbgOut('add_post(): No delay specified');
+            self::dbgOut('add_post(): No delay specified');
 
 		if(isset($_REQUEST['pmpros_remove']))
 			$remove = intval($_REQUEST['pmpros_remove']);
@@ -869,7 +956,7 @@ class PMProSequences
 		//adding a post
 		if(!empty($pmpros_post))
         {
-            $this->dbgOut('Adding post in metabox');
+            self::dbgOut('Adding post in metabox');
             $this->addPost($pmpros_post, $delay);
         }
 		//removing a post
@@ -879,7 +966,7 @@ class PMProSequences
 		//show posts
 		$this->getPosts();
 
-        $this->dbgOut('Displaying the back-end meta box content');
+        self::dbgOut('Displaying the back-end meta box content');
         // usort($this->posts, array("PMProSequences", "sortByDelay"));
 
 		?>		
@@ -891,7 +978,7 @@ class PMProSequences
 		<thead>
 			<th>Order</th>
 			<th width="50%">Title</th>
-            <?php $this->dbgOut('Delay Type: ' . $this->options[3]); ?>
+            <?php self::dbgOut('Delay Type: ' . $this->options[3]); ?>
 			<?php if ($this->options[3] == 'byDays'): ?>
                 <th>Delay (# of days)</th>
             <?php elseif ( $this->options[3] == 'byDate'): ?>
@@ -908,7 +995,7 @@ class PMProSequences
 		
 		if(empty($this->posts))
 		{
-            $this->dbgOut('No Posts found?');
+            self::dbgOut('No Posts found?');
 		?>
 		<?php
 		}
@@ -921,7 +1008,7 @@ class PMProSequences
 					<td><?php echo $count?>.</td>
 					<td><?php echo get_the_title($post->id)?></td>
 					<td><?php echo $post->delay ?></td>
-                    <?php $this->dbgOut('Sequence entry # ' . $count . ' for post ' . $post->id . ' delayed ' . $this->normalizeDelay($post->delay)); ?>
+                    <?php self::dbgOut('Sequence entry # ' . $count . ' for post ' . $post->id . ' delayed ' . $this->normalizeDelay($post->delay)); ?>
 					<td>
 						<a href="javascript:pmpros_editPost('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);">Edit</a>
 					</td>
