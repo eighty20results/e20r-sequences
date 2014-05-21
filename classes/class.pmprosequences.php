@@ -713,45 +713,67 @@ class PMProSequences
         ?>
         <input type="hidden" name="pmpros_settings_noncename" id="pmpros_settings_noncename" value="<?php echo wp_create_nonce( plugin_basename(__FILE__) )?>" />
         <input type="hidden" name="pmpros_settings_hidden_delay" id="pmpros_settings_hidden_delay" value="<?php echo $settings[3]; ?>"/>
-        <label class="selectit">
-            <input type="checkbox" value="1" title="Hide unpublished / future posts for this sequence" name="pmpros_sequence_hidden" <?php checked($settings[0], 1); ?> />
-            Hide future posts
-        </label>
-        <br />
-        <label class="selectit">
-            <input type="checkbox" value="1" title="Whether to show &quot;You are on day NNN of your membership&quot; text" name="pmpros_sequence_daycount" <?php checked($settings[1], 1); ?> />
-            Show membership length info
-        </label>
-        <br />
-        <!-- TODO: Enable and implement
-        <label class="selectit">
-            <input type="checkbox" value="1" title="Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out." name="pmpros_sequence_daycount" <?php checked($sequence->options[5], 1); ?> />
-            Configure Sequence Start
-        </label>
-        <div id="pmpros_sequence_startTime" style="display: none;">
-        <p><strong>Day 1 of Sequence starts:</strong></p>
-        <label class="screen-reader-text" for="pmpros_sequence_sortorder">Display Order</label>
-        <select name="pmpros_sequence_sortorder" id="pmpros_sequence_sortorder">
-            <option value="0" <?php selected( intval($settings[4]), '0'); ?> >24 hours after membership started</option>
-            <option value="1" <?php selected( intval($settings[4]), '1'); ?> >At midnight, immediately after membership started</option>
-            <option value="2" <?php selected( intval($settings[4]), '2'); ?> >At midnight, 24+ hours after membership started</option>
-        </select>
-        </div>
-        -->
-        <br />
-        <p><strong>Display order</strong></p>
-        <label class="screen-reader-text" for="pmpros_sequence_sortorder">Display Order</label>
-        <select name="pmpros_sequence_sortorder" id="pmpros_sequence_sortorder">
-            <option value="<?php echo SORT_ASC; ?>" <?php selected( intval($settings[2]), SORT_ASC); ?> >Ascending</option>
-            <option value="<?php echo SORT_DESC; ?>" <?php selected( intval($settings[2]), SORT_DESC); ?> >Descending</option>
-        </select>
-        <br />
-        <p><strong>Sequence Delay type</strong></p>
-        <label class="screen-reader-text" for="pmpros_sequence_delaytype">Delay Type</label>
-        <select name="pmpros_sequence_delaytype" id="pmpros_sequence_delaytype" >
-            <option value="byDays" <?php selected( $settings[3], 'byDays'); ?> >Number of Days</option>
-            <option value="byDate" <?php selected( $settings[3], 'byDate'); ?> >Release Date (YYYY-MM-DD)</option>
-        </select>
+        <table>
+            <tr>
+                <td style="width: 20px;"><input type="checkbox" value="1" title="Hide unpublished / future posts for this sequence" name="pmpros_sequence_hidden" <?php checked($settings[0], 1); ?> /></td>
+                <td stlye="width: 120px;"><label class="selectit">Hide future posts</label></td>
+            </tr>
+            <tr>
+                <td><input type="checkbox" value="1" title="Whether to show &quot;You are on day NNN of your membership&quot; text" name="pmpros_sequence_daycount" <?php checked($settings[1], 1); ?> /></td>
+                <td colpan="2"><label class="selectit">Show membership length info</label></td>
+            </tr>
+            <!-- TODO: Enable and implement
+            <tr>
+                <td><input type="checkbox" value="1" title="Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out." name="pmpros_sequence_daycount" <?php checked($sequence->options[5], 1); ?> /></td>
+                <td><label class="selectit">Configure Sequence Start</label></td>
+            </tr>
+            <tr style="display: none;" id="pmpros_selectWhen">
+                <td><label class="screen-reader-text" for="pmpros_sequence_startwhen">Day 1 Starts</label></td>
+                <td>
+                    <select name="pmpros_sequence_startwhen" id="pmpros_sequence_startwhen">
+                        <option value="0" <?php selected( intval($settings[4]), '0'); ?> >Immediately</option>
+                        <option value="1" <?php selected( intval($settings[4]), '1'); ?> >24 hours after membership started</option>
+                        <option value="2" <?php selected( intval($settings[4]), '2'); ?> >At midnight, immediately after membership started</option>
+                        <option value="3" <?php selected( intval($settings[4]), '3'); ?> >At midnight, 24+ hours after membership started</option>
+                    </select>
+                </td>
+            </tr>
+            -->
+            <tr>
+               <td colspan="2"><p><strong>Display order</strong></p><td>
+            </tr>
+            <tr>
+               <td colspan="2" style="display: none;"><label class="screen-reader-text" for="pmpros_sequence_sortorder">Display Order</label></td>
+            </tr>
+            <tr>
+               <td colspan="2">
+                    <select name="pmpros_sequence_sortorder" id="pmpros_sequence_sortorder">
+                        <option value="<?php echo SORT_ASC; ?>" <?php selected( intval($settings[2]), SORT_ASC); ?> >Ascending</option>
+                        <option value="<?php echo SORT_DESC; ?>" <?php selected( intval($settings[2]), SORT_DESC); ?> >Descending</option>
+                    </select>
+               </td>
+            </tr>
+            <tr>
+                <td colspan="2"><p><strong>Sequence Delay type</strong></p></td>
+            </tr>
+            <tr>
+                <td colspan="2" style="display: none;"><label class="screen-reader-text" for="pmpros_sequence_delaytype">Delay Type</label></td>
+            </tr>
+            <tr>
+                <td colspan="2">
+                    <select name="pmpros_sequence_delaytype" id="pmpros_sequence_delaytype" >
+                        <option value="byDays" <?php selected( $settings[3], 'byDays'); ?> >Number of Days</option>
+                        <option value="byDate" <?php selected( $settings[3], 'byDate'); ?> >Release Date (YYYY-MM-DD)</option>
+                    </select>
+                </td>
+            </tr>
+            <tr>
+                <td colspan="2" style="text-align: right;">
+                    <a class="button" id="pmpros_save">Save Settings</a>
+                </td>
+            </tr>
+        </table>
+
         <!-- Test whether the sequence delay type has been changed. Submit AJAX request to delete existing posts if it has -->
         <script language="javascript">
             jQuery(document).ready(function () {
