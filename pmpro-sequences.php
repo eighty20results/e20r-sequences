@@ -128,6 +128,17 @@ function pmpros_ajax()
 }
 add_action("init", "pmpros_ajax");
 
+function pmpro_sequence_ajaxResponse(){
+
+    try{
+
+    } catch (Exception $e){
+        exit;
+    }
+
+    exit;
+}
+add_action('wp_ajax_pmpro_save_settings', 'pmpro_sequence_ajaxResponse');
 /*
 	Show list of sequence pages at end of sequence
 */
