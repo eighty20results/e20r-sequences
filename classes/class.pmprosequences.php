@@ -152,6 +152,11 @@ class PMProSequences
                 $this->sequence_id = $sequence_id;
             }
         }
+        else
+        {
+            if ($this->sequence_id != 0)
+                $sequence_id = $this->sequence_id;
+        }
 
         // Check that we're being called in context of an actual Sequence 'edit' operation
         self::dbgOut('fetchOptions(): Attempting to load settings from DB');
@@ -277,14 +282,22 @@ class PMProSequences
         // Make sure the settings array isn't empty (no settings defined)
         if (! empty( $settings ))
         {
-            self::dbgOut('save_sequence_meta(): Settings for ' . $post_id .' will be: ' . print_r( $settings, true));
+            try {
+                self::dbgOut('save_sequence_meta(): Settings for ' . $post_id .' will be: ' . print_r( $settings, true));
 
-            // Update the *_postmeta table for this sequence
-            update_post_meta($post_id, '_pmpros_sequence_settings', $settings );
+                // Update the *_postmeta table for this sequence
+                update_post_meta($post_id, '_pmpros_sequence_settings', $settings );
 
-            // Preserve the settings in memory / class context
-            self::dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $post_id);
+                // Preserve the settings in memory / class context
+                self::dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $post_id);
+            }
+            catch (Exception $e)
+            {
+                return false;
+            }
         }
+
+        return true;
     }
 
 
@@ -781,7 +794,7 @@ class PMProSequences
                 </tr>
                 <tr>
                     <td colspan="2" style="padding: 0px; margin 0px;">
-                        <a class="button button-primary button-large" style="float: right; right: 12px; display: inline-block;" id="pmpros_save">Save Settings</a>
+                        <a class="button button-primary button-large" style="float: right; right: 12px; display: inline-block;" id="pmpro_settings_save">Save Settings</a>
                     </td>
                 </tr>
                 </table>
@@ -811,19 +824,23 @@ class PMProSequences
 
                             jQuery.data(this, 'pmpros_settings_delaytype', jQuery(this).val());
                             // Send Ajax request to delete all existing articles/posts in sequence.
-                            jQuery.ajax({
-                                url: '<?php echo home_url()?>',type:'GET',timeout:5000,
-                                dataType: 'html',
-                                data: "pmpros_clear_series=1&pmpros_sequence=<?php echo $post->ID; ?>",
-                                error: function(xml)
+                            jQuery.post(
+                                "<?php echo site_url(); ?>/wp-admin/admin-ajax.php",
                                 {
-                                    alert('Error clearing old Sequence posts [1]');
-                                },
-                                success: function(responseHTML)
+                                    action: 'pmpros_settings_delay',
+                                    'pmpros_clear_series': '1',
+                                    'pmpros_sequence_id': '<?php echo $post->ID ?>',
+                                }
+                                function(responseHTML)
                                 {
                                     if (responseHTML != 'error')
                                     {
                                         jQuery('#pmpros_sequence_posts').html(responseHTML);
+                                    }
+                                    else
+                                    {
+                                        alert('Sequence: Error clearing old posts/pages');
+                                        jQuery(this).val(current);
                                     }
                                 }
                             });
@@ -833,29 +850,56 @@ class PMProSequences
                         console.log('Current (hidden): ' + jQuery('input[name=pmpros_settings_hidden_delay]').val());
                     });
                 // For the Sequence Settings 'Save Settings' button
-                jQuery('input#pmpros_save').click(function(){
-                    alert('Saving Settings for Sequence');
+                jQuery('#pmpro_settings_save').click(function(){
+
+                    if(jQuery(this).html() == 'Saving...')
+                        return;	//already saving, ignore this request
+
+                    //disable save button
+                    jQuery(this).html('Saving...');
+
+                    if (jQuery('#pmpros_sequence_hidden').is(":checked"))
+                        var isHidden = jQuery('input#pmpros_sequence_hidden').val();
+                    else
+                        var isHidden = 0;
+
+                    if ( jQuery('#pmpros_sequence_daycount').is(":checked"))
+                        var showDayCount = jQuery('input#pmpros_sequence_daycount').val()
+                    else
+                        var showDayCount = 0;
+
                     jQuery.post(
-                        site.siteurl+"/wp-admin/admin-ajax.php",
+                        "<?php echo site_url(); ?>/wp-admin/admin-ajax.php",
                         //Data to send to back-end
                         {
                             action: 'pmpro_save_settings',
                             'cookie': encodeURIComponent(document.cookie),
-                            'pmpros_sequence_hidden':jQuery('input#pmpros_sequence_hidden').val(),
-                            'pmpros_sequence_daycount': jQuery('input#pmpros_sequence_daycount').val(),
-                            'pmpros_sequence_startwhen': jQuery('#pmpros_sequence_daycount').val(),
+                            'pmpros_sequence_id': '<?php echo $post->ID; ?>',
+                            'pmpros_sequence_hidden': isHidden,
+                            'pmpros_sequence_daycount': showDayCount,
+                            'pmpros_sequence_startwhen': jQuery('#pmpros_sequence_startwhen').val(),
                             'pmpros_sequence_sortorder': jQuery('#pmpros_sequence_sortorder').val(),
-                            'pmpros_sequence_delaytype': jQuery('#pmpros_sequence_delaytype').val(),
+                            'pmpros_sequence_delaytype': jQuery('#pmpros_sequence_delaytype').val()
                         },
                         //on success function
-                        function(id){
+                        function(status){
+
+                            if (status == 'success')
+                            {
+                                jQuery('#pmpro_settings_save').html('Save Settings');
+                            }
+                            else
+                            {
+                                alert('Error saving sequence settings');
+                                jQuery('#pmpro_settings_save').html('Save Settings');
+                            }
                             /* Do Some Stuff in here to update elements on the page...*/
                             /*Reset the form*/
-                            jQuery('input#newsliders').val('');
-                            jQuery('#sliders-adder').addClass('wp-hidden-children');
+                            // jQuery('input#newsliders').val('');
+                            //jQuery('#sliders-adder').addClass('wp-hidden-children');
 
                             return false;
-                        };
+                        }
                     );
                     return false;
                 });
@@ -1203,7 +1247,7 @@ class PMProSequences
 						}
 						else
 						{
-                            alert('Removed Post/Page with ID <?php echo $post->id ?>');
+                            alert('Removed Post/Page from Sequence');
 							jQuery('#pmpros_sequence_posts').html(responseHTML);
 						}																						
 					}
