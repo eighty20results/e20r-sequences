@@ -94,7 +94,6 @@ add_action("init", array("PMProSequences", "checkForMetaBoxes"), 20);
 */
 function pmpros_ajax()
 {
-    //
 
     if ( isset($_REQUEST['pmpros_add_post']) || isset($_REQUEST['pmpros_clear_series']) )
 	{
@@ -108,29 +107,78 @@ function pmpros_ajax()
         }
 
         $sequence = new PMProSequences($sequence_id);
-        $sequence->dbgOut('Processing sequence # ' . $sequence_id);
-
-        // Clear the sequence metadata if the series type (by date or by day count) changed.
-        if (isset($_REQUEST['pmpros_clear_series']))
-        {
-            $sequence->dbgOut('Deleting all entries in sequence #' .$sequence_id);
-
-            if (! delete_post_meta($sequence_id, '_post_sequence'))
-            {
-                $sequence->dbgOut('Unable to delete the sequence');
-            }
-        }
-
-
         $sequence->getPostListForMetaBox();
         exit;
     }
 }
 add_action("init", "pmpros_ajax");
 
-function pmpro_sequence_ajaxResponse(){
+function pmpro_sequence_ajaxClearPosts()
+{
+    // Clear the sequence metadata if the series type (by date or by day count) changed.
+    if (isset($_POST['pmpros_clear_series']))
+    {
+        $sequence_id = intval($_POST['pmpros_sequence_id']);
+        $sequence = new PMProSequences($sequence_id);
+        $sequence->dbgOut('Deleting all entries in sequence #' .$sequence_id);
 
+        if (! delete_post_meta($sequence_id, '_post_sequence'))
+        {
+            $sequence->dbgOut('Unable to delete the posts in sequence # ' . $sequence_id);
+            echo 'error';
+        }
+        else
+            $sequence->getPostListForMetaBox();
+    }
+
+}
+
+add_action('wp_ajax_pmpro_sequence_clear', 'pmpro_sequence_ajaxClearPosts');
+/**
+ * Function to process Sequence Settings Ajax call (save operation)
+ *
+ */
+function pmpro_sequence_ajaxSaveSettings()
+{
     try{
+
+        if ( isset($_POST['pmpros_sequence_id']) )
+        {
+            $sequence_id = intval($_POST['pmpros_sequence_id']);
+            $sequence = new PMProSequences($sequence_id);
+            $settings = $sequence->fetchOptions();
+            $sequence->dbgOut('Saving settings for Sequence w/ID: ' . $sequence_id);
+
+            $sequence->dbgOut('Pre-Save settings are: ' . print_r($settings, true));
+            $sequence->dbgOut('POST: ' . print_r($_POST, true));
+
+            if (isset($_POST['pmpros_sequence_hidden']))
+            {
+                $settings[0] = intval($_POST['pmpros_sequence_hidden']);
+            }
+            if (isset($_POST['pmpros_sequence_daycount']))
+            {
+                $settings[1] = intval($_POST['pmpros_sequence_daycount']);
+            }
+            if (isset($_POST['pmpros_sequence_sortorder']))
+            {
+                $settings[2] = intval($_POST['pmpros_sequence_sortorder']);
+            }
+            if (isset($_POST['pmpros_sequence_delaytype']))
+            {
+                $settings[3] = esc_attr($_POST['pmpros_sequence_delaytype']);
+            }
+            if (isset($_POST['pmpros_sequence_startwhen']))
+            {
+                $settings[4] = esc_attr($_POST['pmpros_sequence_startwhen']);
+            }
+
+            $sequence->dbgOut('Settings are now: ' . print_r($settings, true));
+            if ($sequence->save_sequence_meta($settings, $sequence_id))
+                echo 'success';
+            else
+                echo 'error';
+        }
 
     } catch (Exception $e){
         exit;
@@ -138,7 +186,9 @@ function pmpro_sequence_ajaxResponse(){
 
     exit;
 }
-add_action('wp_ajax_pmpro_save_settings', 'pmpro_sequence_ajaxResponse');
+
+add_action('wp_ajax_pmpro_save_settings', 'pmpro_sequence_ajaxSaveSettings');
+
 /*
 	Show list of sequence pages at end of sequence
 */
