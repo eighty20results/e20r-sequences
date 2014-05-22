@@ -25,4 +25,5 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 == Changelog ==
 = .1 =
-* Initial version of the Sequence plugin including support for display options ,etc.
+* Initial version of the Sequence plugin including support Sequence specific display & delay type options.
+* Renamed from "Series" to try and avoid namespace collisions and allow people to transition manually to this plugin if desirable.
