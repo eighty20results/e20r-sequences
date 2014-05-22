@@ -23,7 +23,7 @@ Author URI: http://www.eighty20results.com
 	2. User gets access to any "0 days after" (or on a specific date) sequence content.
 	3. Each day a script checks if a user should gain access to any new content, if so:
 	- User is given access to the content.
-	- An email is sent to the user letting them know that content is available.	
+	- TODO: An email is sent to the user letting them know that content is available.
 	
 	Checking for access:
 	* Is a membership level required?
@@ -54,12 +54,6 @@ define('PMPROS_SEQUENCE_DEBUG', true);
 if (! class_exists( 'PMProSequences' )):
     require_once(dirname(__FILE__) . "/classes/class.pmprosequences.php");
 endif;
-
-/*
-if (! class_exists('PMPros_Settings')):
-    require_once(dirname(__FILE__) . "/classes/class.pmpros-settings.php");
-endif;
-*/
 
 /*
 	Load CSS, JS files
@@ -95,10 +89,10 @@ add_action("init", array("PMProSequences", "checkForMetaBoxes"), 20);
 function pmpros_ajax()
 {
 
-    if ( isset($_REQUEST['pmpros_add_post']) || isset($_REQUEST['pmpros_clear_series']) )
+    if ( isset($_REQUEST['pmpros_add_post']) )
 	{
 
-        $sequence_id = intval($_REQUEST['pmpros_sequence']);
+        $sequence_id = intval($_REQUEST['pmpro_sequence_id']);
 
         if ($sequence_id == 0 )
         {
@@ -107,7 +101,17 @@ function pmpros_ajax()
         }
 
         $sequence = new PMProSequences($sequence_id);
-        $sequence->getPostListForMetaBox();
+        $sequence->fetchOptions();
+        $sequence->dbgOut('Running Ajax add_post');
+        $sequence->dbgOut('REQUEST: ' . print_r($_REQUEST, true));
+        $status = $sequence->getPostListForMetaBox();
+
+        if ( preg_match("/^Error/", $status) )
+        {
+            $sequence->dbgOut('getPostListForMetaBox() returned error');
+            echo $status;
+        }
+
         exit;
     }
 }
@@ -116,24 +120,75 @@ add_action("init", "pmpros_ajax");
 function pmpro_sequence_ajaxClearPosts()
 {
     // Clear the sequence metadata if the series type (by date or by day count) changed.
-    if (isset($_POST['pmpros_clear_series']))
+    if (isset($_POST['pmpros_clear_sequence']))
     {
-        $sequence_id = intval($_POST['pmpros_sequence_id']);
-        $sequence = new PMProSequences($sequence_id);
-        $sequence->dbgOut('Deleting all entries in sequence #' .$sequence_id);
+        if (isset($_POST['pmpros_sequence_id']))
+        {
+            $sequence_id = intval($_POST['pmpros_sequence_id']);
+            $sequence = new PMProSequences($sequence_id);
+        }
+        else
+        {
+            echo 'Error: Unable to identify the Sequence';
+            exit;
+        }
 
-        if (! delete_post_meta($sequence_id, '_post_sequence'))
+        if (! pmpro_sequence_settings_save($sequence_id, $sequence))
+        {
+            echo 'Error: Unable to save Sequence settings';
+            exit;
+        }
+
+        $sequence->dbgOut('Deleting all entries in sequence # ' .$sequence_id);
+        if (! delete_post_meta($sequence_id, '_sequence_posts'))
         {
             $sequence->dbgOut('Unable to delete the posts in sequence # ' . $sequence_id);
-            echo 'error';
+            echo 'Error: Unable to delete posts from sequence';
         }
         else
             $sequence->getPostListForMetaBox();
     }
+    else
+         echo 'Error: Unknown request';
 
 }
 
 add_action('wp_ajax_pmpro_sequence_clear', 'pmpro_sequence_ajaxClearPosts');
+
+function pmpro_sequence_settings_save( $sequence_id, $sequenceObj )
+{
+
+    $settings = $sequenceObj->fetchOptions($sequence_id);
+    $sequenceObj->dbgOut('Saving settings for Sequence w/ID: ' . $sequence_id);
+
+    $sequenceObj->dbgOut('Pre-Save settings are: ' . print_r($settings, true));
+    $sequenceObj->dbgOut('POST: ' . print_r($_POST, true));
+
+    if (isset($_POST['pmpros_sequence_hidden']))
+    {
+        $settings->hidden = intval($_POST['pmpros_sequence_hidden']);
+    }
+    if (isset($_POST['pmpros_sequence_daycount']))
+    {
+        $settings->dayCount = intval($_POST['pmpros_sequence_daycount']);
+    }
+    if (isset($_POST['pmpros_sequence_sortorder']))
+    {
+        $settings->sortOrder = intval($_POST['pmpros_sequence_sortorder']);
+    }
+    if (isset($_POST['pmpros_sequence_delaytype']))
+    {
+        $settings->delayType = esc_attr($_POST['pmpros_sequence_delaytype']);
+    }
+    if (isset($_POST['pmpros_sequence_startwhen']))
+    {
+        $settings->startWhen = esc_attr($_POST['pmpros_sequence_startwhen']);
+    }
+
+    $sequenceObj->dbgOut('Settings are now: ' . print_r($settings, true));
+
+    return $sequenceObj->save_sequence_meta($settings, $sequence_id);
+}
 /**
  * Function to process Sequence Settings Ajax call (save operation)
  *
@@ -146,38 +201,9 @@ function pmpro_sequence_ajaxSaveSettings()
         {
             $sequence_id = intval($_POST['pmpros_sequence_id']);
             $sequence = new PMProSequences($sequence_id);
-            $settings = $sequence->fetchOptions();
-            $sequence->dbgOut('Saving settings for Sequence w/ID: ' . $sequence_id);
 
-            $sequence->dbgOut('Pre-Save settings are: ' . print_r($settings, true));
-            $sequence->dbgOut('POST: ' . print_r($_POST, true));
-
-            if (isset($_POST['pmpros_sequence_hidden']))
-            {
-                $settings[0] = intval($_POST['pmpros_sequence_hidden']);
-            }
-            if (isset($_POST['pmpros_sequence_daycount']))
-            {
-                $settings[1] = intval($_POST['pmpros_sequence_daycount']);
-            }
-            if (isset($_POST['pmpros_sequence_sortorder']))
-            {
-                $settings[2] = intval($_POST['pmpros_sequence_sortorder']);
-            }
-            if (isset($_POST['pmpros_sequence_delaytype']))
-            {
-                $settings[3] = esc_attr($_POST['pmpros_sequence_delaytype']);
-            }
-            if (isset($_POST['pmpros_sequence_startwhen']))
-            {
-                $settings[4] = esc_attr($_POST['pmpros_sequence_startwhen']);
-            }
-
-            $sequence->dbgOut('Settings are now: ' . print_r($settings, true));
-            if ($sequence->save_sequence_meta($settings, $sequence_id))
+            if (pmpro_sequence_settings_save($sequence_id, $sequence))
                 echo 'success';
-            else
-                echo 'error';
         }
 
     } catch (Exception $e){
@@ -196,13 +222,12 @@ function pmpros_the_content($content)
 {
 	global $post;
 	
-	if($post->post_type == "pmpro_sequence" && pmpro_has_membership_access())
+	if ( ( $post->post_type == "pmpro_sequence" ) && pmpro_has_membership_access() )
 	{
 		$sequence = new PMProSequences($post->ID);
-        $sequence->fetchOptions( $post->ID );
-        $settings = $sequence->getSettings();
+        $settings = $sequence->fetchOptions();
 
-        if ( $settings[1] == 1)
+        if ( intval($settings->dayCount) == 1)
             $content .= "<p>You are on day " . intval(pmpro_getMemberDays()) . " of your membership.</p>";
 
 		$content .= $sequence->getPostList();
@@ -219,7 +244,7 @@ add_filter("the_content", "pmpros_the_content");
 function pmpros_hasAccess($user_id, $post_id)
 {
 	//is this post in a sequence?
-	$post_sequence = get_post_meta($post_id, "_post_sequence", true);
+	$post_sequence = get_post_meta($post_id, "_post_sequences", true);
 	if(empty($post_sequence))
 		return true;		//not in a sequence
 		
@@ -227,31 +252,56 @@ function pmpros_hasAccess($user_id, $post_id)
 	$all_access_levels = apply_filters("pmproap_all_access_levels", array(), $user_id, $post_id);	
 	if(!empty($all_access_levels) && pmpro_hasMembershipLevel($all_access_levels, $user_id))
 		return true;	//user has one of the all access levels
-		
-	//check each sequence
+
+    $tmpSequence = new PMProSequences($post_id);
+    $tmpSequence->fetchOptions();
+    $tmpSequence->dbgOut('pmpros_hasAccess() - Sequence ID: ' . print_r($post_id, true));
+
+    //check each sequence
 	foreach($post_sequence as $sequence_id)
 	{
 		//does the user have access to any of the sequence pages?
-		$results = pmpro_has_membership_access($sequence_id, $user_id, true);	//passing true there to get the levels which have access to this page
-		if($results[0])	//first item in array is if the user has access
+		$results = pmpro_has_membership_access($sequence_id, $user_id, true); //Using true for levels having access to page
+
+		if($results[0])	// First item in results array == true if user has access
 		{
+            $tmpSequence->dbgOut('pmpros_hasAccess() - User has membership level that sequence requires');
 			//has the user been around long enough for any of the delays?
-			$sequence_posts = get_post_meta($sequence_id, "_post_sequence", true);
+			$sequence_posts = get_post_meta($sequence_id, "_sequence_posts", true);
+
+            $tmpSequence->dbgOut('Fetched PostMeta: ' . print_r($sequence_posts, true));
+
 			if(!empty($sequence_posts))
 			{
 				foreach($sequence_posts as $sp)
 				{
+                    $tmpSequence->dbgOut('Checking post for access - contains: ' . print_r($sp, true));
 					//this post we are checking is in this sequence
 					if($sp->id == $post_id)
 					{
 						//check specifically for the levels with access to this sequence
 						foreach($results[1] as $level_id)
 						{
-                            if ($this->options )
-							if(pmpro_getMemberDays($user_id, $level_id) >= $sp->delay)
-							{						
-								return true;	//user has access to this sequence and has been around longer than this post's delay
-							}
+                            $tmpSequence->dbgOut('pmpros_hasAccess() - Testing for delay type...');
+
+                            if ($tmpSequence->options->delayType == 'byDays')
+                            {
+                                $tmpSequence->dbgOut('Delay Type is # of days since membership start');
+    							// BUG: Assumes the # of days is the right ay to
+                                if(pmpro_getMemberDays($user_id, $level_id) >= $sp->delay)
+		    					{
+			    					return true;	//user has access to this sequence and has been around longer than this post's delay
+				    			}
+                            }
+                            elseif ($tmpSequence->options->delayType == 'byDate')
+                            {
+                                $tmpSequence->dbgOut('Delay Type is a fixed date');
+                                $today = date('Y-m-d');
+                                $tmpSequence->dbgOut('Today: ' . $today . ' and delay: ' . $sp->delay);
+
+                                if ($today >= $sp->delay)
+                                    return true;
+                            }
 						}
 					}
 				}
@@ -297,7 +347,7 @@ function pmpros_pmpro_text_filter($text)
 		if(!pmpros_hasAccess($current_user->ID, $post->ID))
 		{						
 			//Update text. The either have to wait or sign up.
-			$post_sequence = get_post_meta($post->ID, "_post_sequence", true);
+			$post_sequence = get_post_meta($post->ID, "_post_sequences", true);
 			
 			$insequence = false;
 			foreach($post_sequence as $ps)
@@ -312,9 +362,12 @@ function pmpros_pmpro_text_filter($text)
 			if($insequence)
 			{
 				//user has one of the sequence levels, find out which one and tell him how many days left
-				$sequence = new PMProSequences($insequence);
-				$day = $sequence->getDelayForPost($post->ID);
-				$text = "This content is part of the <a href='" . get_permalink($insequence) . "'>" . get_the_title($insequence) . "</a> sequence. You will gain access on day " . $day . " of your membership.";
+				$sequence = new PMProSequences($post->ID);
+
+                $day = $sequence->getDelayForPost($insequence->id);
+                $sequence->dbgOut('# of days worth of delay: ' . $day);
+
+				$text = "This content is part of the <a href='" . get_permalink($post->ID) . "'>" . get_the_title($post->ID) . "</a> sequence. You will gain access on day " . $day . " of your membership.";
 			}
 			else
 			{
@@ -398,7 +451,12 @@ if(!function_exists("pmpro_getMemberStartdate"))
             $dEnd = new DateTime( date('Y-m-d') ); // Today's date
             $dDiff = $dStart->diff($dEnd);
             $dDiff->format('%d');
+            // $dDiff->format('%R%a');
+
             $days = $dDiff->days;
+
+            if ($dDiff->invert == 1)
+                $days = 0 - $days; // Invert the value
 
 			$pmpro_member_days[$user_id][$level_id] = $days;
 		}
