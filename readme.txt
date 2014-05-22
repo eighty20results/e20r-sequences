@@ -1,5 +1,5 @@
 === PMPro Sequences ===
-Contributors: strangerstudios
+Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
@@ -9,7 +9,7 @@ Stable tag: .1
 Create "Series" which are groups of posts/pages where content is revealed to members over time. This is the "drip feed content" module for Paid Memberships Pro.
 
 == Description ==
-This plugin currently requires Paid Memberships Pro. 
+This plugin currently requires Paid Memberships Pro and is a complete rip-off of the pmpro_series plugin from strangerstudios
 
 == Installation ==
 
