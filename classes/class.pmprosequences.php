@@ -705,7 +705,30 @@ class PMProSequences
 
     }
 
-	//this is the Sequence meta box
+    /**
+     * @param $date1 (string) - Date in format 'YYYY-MM-DD'
+     * @param $date2 (string) - Date in format 'YYYY-MM-DD'
+     * @return int - Number of days (as a count)
+     */
+
+    // TODO - Bug? What if date1 is after date 2 (Negative days)? - http://www.php.net/manual/en/datetime.diff.php#97810
+
+    function date_diff($date1, $date2)
+    {
+        $current = $date1;
+        $datetime2 = date_create($date2);
+        $count = 0;
+
+        // TODO: Does not include support for TIME in the date calculation.
+
+        while(date_create($current) < $datetime2){
+            $current = gmdate("Y-m-d", strtotime("+1 day", strtotime($current)));
+            $count++;
+        }
+        return $count;
+    }
+
+    //this is the Sequence meta box
 	function sequenceMetaBox()
 	{
 		global $post;
