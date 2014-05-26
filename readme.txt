@@ -9,7 +9,14 @@ Stable tag: .1
 Create "Sequence" which are groups of posts/pages where content is revealed to members over time. This a clone of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
 == Description ==
-This plugin currently requires Paid Memberships Pro and is a complete rip-off of the pmpro_series plugin from strangerstudios
+This plugin currently requires Paid Memberships Pro and is a complete rip-off of the pmpro_series plugin from strangerstudios.
+
+Added a few features that weren't included in pmpro_series, specifically the ability to:
+
+* Configure the sort order for the series/sequence
+* Show/hide upcoming series/sequence posts
+* Show/hide "You are on day XXX of your membership"
+* Configure "Days of delay since start of membership" or specific calendar date as when to make content available
 
 == Installation ==
 
@@ -20,7 +27,19 @@ This plugin currently requires Paid Memberships Pro and is a complete rip-off of
 
 == TODO ==
 1. Add support for pre v5.3 releases (Currently uses DateTime->diff() - not available on pre 5.3 releases - to manage TZ specifics). This is "bad", I know...
-2. Consider adding support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
+2. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
+3. Add support for setting a "preview unpublished posts" window (i.e. # of days/weeks in advance to let users see upcoming content)
+4. Add support for setting a "remove posts from list after" window (i.e. # of days/weeks after it went public that it gets removed from the list).
+    Should we then remove access to the post - for the member - after this windows has expired?
+
+== Known Issues ==
+
+Issue with with correctly saving visibility of 'You are on day XXX ...' flag when clicking "Save" for the sequence.
+  Workaround: Save the sequence first (i.e. the "Post/Page" save) then change the checkbox back to desired value &
+  click "Save Settings" button.
+
+DEBUG is enabled.
+   A fair bit of data will get dumped into ./sequence_debug_log.txt (located in either website root and/or wp-admin/).
 
 == Frequently Asked Questions ==
 
@@ -33,3 +52,5 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Initial version of the Sequence plugin including support Sequence specific display & delay type options.
 * Renamed from "Series" to try and avoid namespace collisions and allow people to transition manually to this plugin if desirable.
 
+= .1.1 =
+* Version bump to signify fixes added after the initial version (minor typo & namespace bugs)
