@@ -291,7 +291,7 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
 
         $tmpSequence = new PMProSequences($post_id);
         $tmpSequence->fetchOptions();
-        $tmpSequence->dbgOut('pmpros_hasAccess() - Sequence ID: ' . print_r($post_id, true));
+        $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Sequence ID: ' . print_r($post_id, true));
 
         //check each sequence
         foreach($post_sequence as $sequence_id)
@@ -301,7 +301,7 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
 
             if($results[0])	// First item in results array == true if user has access
             {
-                $tmpSequence->dbgOut('pmpros_hasAccess() - User has membership level that sequence requires');
+                $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - User has membership level that sequence requires');
                 //has the user been around long enough for any of the delays?
                 $sequence_posts = get_post_meta($sequence_id, "_sequence_posts", true);
 
@@ -318,7 +318,7 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
                             //check specifically for the levels with access to this sequence
                             foreach($results[1] as $level_id)
                             {
-                                $tmpSequence->dbgOut('pmpros_hasAccess() - Testing for delay type...');
+                                $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Testing for delay type...');
 
                                 if ($tmpSequence->options->delayType == 'byDays')
                                 {
