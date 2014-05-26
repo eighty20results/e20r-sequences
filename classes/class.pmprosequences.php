@@ -1009,6 +1009,7 @@ class PMProSequences
 
             if ( jQuery('#pmpro_sequence_daycount').is(":checked"))
             {
+                console.log('dayCount setting is checked');
                 // alert('Day Count Checkbox: ' + dayCount);
                 return dayCount;
             }
