@@ -1014,7 +1014,7 @@ class PMProSequences
                 return dayCount;
             }
             else
-                return showDayCount = 0;
+                return 0;
         }
         </script>
 	<?php
