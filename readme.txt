@@ -6,7 +6,7 @@ Requires PHP 5.3 or later.
 Tested up to: 3.9.1
 Stable tag: .1
 
-Create "Series" which are groups of posts/pages where content is revealed to members over time. This is the "drip feed content" module for Paid Memberships Pro.
+Create "Sequence" which are groups of posts/pages where content is revealed to members over time. This a clone of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
 == Description ==
 This plugin currently requires Paid Memberships Pro and is a complete rip-off of the pmpro_series plugin from strangerstudios
