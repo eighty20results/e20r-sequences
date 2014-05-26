@@ -768,26 +768,48 @@ class PMProSequences
             <table style="width: 180px;">
                 <tr>
                     <td style="width: 20px;"><input type="checkbox" value="1" title="Hide unpublished / future posts for this sequence" id="pmpro_sequence_hidden" name="pmpro_sequence_hidden" <?php checked($settings->hidden, 1); ?> /></td>
-                    <td style="width: 160px"><label class="selectit">Hide future posts</label></td>
+                    <td style="width: 160px"><label class="selectit">Hide all future posts</label></td>
                 </tr>
+                <!-- TODO: Enable and implement
+                <tr id="pmpro_sequence_foreshadow" style="display: none;">
+                    <td colspan="2">
+                        <label class="screen-reader-text" for="pmpro_sequence_previewwindow">Days to preview</label>
+                    </td>
+                </tr>
+                <tr id="pmpro_sequence_foreshadow_2" style="display: none;" id="pmpro_sequence_previewWindowOpt">
+                    <td colspan="2">
+                        <select name="pmpro_sequence_foreshadow" id="pmpro_sequence_previewwindow">
+                            <option value="0" <?php selected( intval($settings->previewWindow), '0'); ?> >All</option>
+                            <option value="1" <?php selected( intval($settings->previewWindow), '1'); ?> >1 day</option>
+                            <option value="2" <?php selected( intval($settings->previewWindow), '2'); ?> >2 days</option>
+                            <option value="3" <?php selected( intval($settings->previewWindow), '3'); ?> >3 days</option>
+                            <option value="4" <?php selected( intval($settings->previewWindow), '4'); ?> >4 days</option>
+                            <option value="5" <?php selected( intval($settings->previewWindow), '5'); ?> >5 days</option>
+                            <option value="6" <?php selected( intval($settings->previewWindow), '6'); ?> >1 week</option>
+                            <option value="7" <?php selected( intval($settings->previewWindow), '7'); ?> >2 weeks</option>
+                            <option value="8" <?php selected( intval($settings->previewWindow), '8'); ?> >3 weeks</option>
+                            <option value="9" <?php selected( intval($settings->previewWindow), '8'); ?> >1 month</option>
+                        </select>
+                    </td>
+                </tr>
+                -->
                 <tr>
                     <td><input id="pmpro_sequence_daycount" type="checkbox" value="1" title="Whether to show &quot;You are on day NNN of your membership&quot; text" name="pmpro_sequence_daycount" <?php checked($settings->dayCount, 1); ?> /></td>
                     <td><label class="selectit">Show membership length info</label></td>
                 </tr>
-                <!-- TODO: Enable and implement -->
+                <!-- TODO: Enable and implement
                 <tr id="pmpro_sequenceseq_start_0" style="display: none;">
                     <td>
-                        <input id='pmpro_sequence_daycount' type="checkbox" value="1" title="Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out." name="pmpro_sequence_daycount" <?php echo ($sequence->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
+                        <input id='pmpro_sequence_enablestartwhen' type="checkbox" value="1" title="Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out." name="pmpro_sequence_enablestartwhen" <?php echo ($sequence->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
                     </td>
                     <td><label class="selectit">Configure Sequence Start</label></td>
                 </tr>
-                <tr id="pmpro_sequenceseq_start_1" style="display: none; height: 1px;">
+                <tr id="pmpro_sequence_seq_start_1" style="display: none; height: 1px;">
                     <td colspan="2">
                         <label class="screen-reader-text" for="pmpro_sequence_startwhen">Day 1 Starts</label>
                     </td>
-
                 </tr>
-                <tr id="pmpro_sequenceseq_start_2" style="display: none;" id="pmpro_sequenceselectWhen">
+                <tr id="pmpro_sequence_seq_start_2" style="display: none;" id="pmpro_sequence_selectWhen">
                     <td colspan="2">
                         <select name="pmpro_sequence_startwhen" id="pmpro_sequence_startwhen">
                             <option value="0" <?php selected( intval($settings->startWhen), '0'); ?> >Immediately</option>
@@ -797,7 +819,7 @@ class PMProSequences
                         </select>
                     </td>
                 </tr>
-               <!-- -->
+               -->
                 <tr>
                    <td colspan="2" style="vertical-align: bottom; padding: 0px;"><p><strong>Display order</strong></p><td>
                 </tr>
