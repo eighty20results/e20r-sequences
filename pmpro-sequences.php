@@ -94,10 +94,13 @@ if ( !function_exists( 'pmpro_sequence_ajax')):
 
     add_action("init", "pmpro_sequence_ajax");
 
+    /**
+     * Process additions to
+     */
     function pmpro_sequence_ajax()
     {
 
-        if ( isset($_REQUEST['pmpros_add_post']) )
+        if ( isset($_REQUEST['pmpro_sequenceadd_post']) )
         {
 
             $sequence_id = intval($_REQUEST['pmpro_sequence_id']);
