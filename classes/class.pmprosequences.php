@@ -1325,7 +1325,7 @@ class PMProSequences
 			function pmpro_sequence_removePost(post_id)
 			{								
 				jQuery.ajax({
-					url: '<?php echo home_url()?>',type:'GET',timeout:2000,
+					url: '<?php echo home_url()?>',type:'GET',timeout:5000,
 					dataType: 'html',
 					data: "pmpro_sequenceadd_post=1&pmpro_sequence_id=<?php echo $this->sequence_id;?>&pmpro_sequenceremove="+post_id,
 					error: function(xml){
