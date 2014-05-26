@@ -46,7 +46,7 @@ Author URI: http://www.eighty20results.com
 	* wp_pmpro_sequence_content (sequence_id, post_id, day) stored in post meta
 */
 
-define('PMPROS_SEQUENCE_DEBUG', true);
+define('PMPRO_SEQUENCE_DEBUG', true);
 
 /*
 	Includes
@@ -187,25 +187,25 @@ if ( ! function_exists( 'pmpro_sequence_ajaxClearPosts')):
         $sequenceObj->dbgOut('Pre-Save settings are: ' . print_r($settings, true));
         $sequenceObj->dbgOut('POST: ' . print_r($_POST, true));
 
-        if (isset($_POST['pmpros_sequence_hidden']))
+        if (isset($_POST['pmpro_sequence_hidden']))
         {
-            $settings->hidden = intval($_POST['pmpros_sequence_hidden']);
+            $settings->hidden = intval($_POST['pmpro_sequence_hidden']);
         }
-        if (isset($_POST['pmpros_sequence_daycount']))
+        if (isset($_POST['pmpro_sequence_daycount']))
         {
-            $settings->dayCount = intval($_POST['pmpros_sequence_daycount']);
+            $settings->dayCount = intval($_POST['pmpro_sequence_daycount']);
         }
-        if (isset($_POST['pmpros_sequence_sortorder']))
+        if (isset($_POST['pmpro_sequence_sortorder']))
         {
-            $settings->sortOrder = intval($_POST['pmpros_sequence_sortorder']);
+            $settings->sortOrder = intval($_POST['pmpro_sequence_sortorder']);
         }
-        if (isset($_POST['pmpros_sequence_delaytype']))
+        if (isset($_POST['pmpro_sequence_delaytype']))
         {
-            $settings->delayType = esc_attr($_POST['pmpros_sequence_delaytype']);
+            $settings->delayType = esc_attr($_POST['pmpro_sequence_delaytype']);
         }
-        if (isset($_POST['pmpros_sequence_startwhen']))
+        if (isset($_POST['pmpro_sequence_startwhen']))
         {
-            $settings->startWhen = esc_attr($_POST['pmpros_sequence_startwhen']);
+            $settings->startWhen = esc_attr($_POST['pmpro_sequence_startwhen']);
         }
 
         $sequenceObj->dbgOut('Settings are now: ' . print_r($settings, true));
@@ -227,7 +227,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
     {
         try{
 
-            if ( isset($_POST['pmpros_sequence_id']) )
+            if ( isset($_POST['pmpro_sequence_id']) )
             {
                 $sequence_id = intval($_POST['pmpros_sequence_id']);
                 $sequence = new PMProSequences($sequence_id);

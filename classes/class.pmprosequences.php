@@ -1,5 +1,5 @@
 <?php
-define('pmpro_sequenceSEQUENCE_DEBUG', true);
+define('PMPRO_SEQUENCE_DEBUG', true);
 
 class PMProSequences
 {
@@ -164,17 +164,10 @@ class PMProSequences
 
         // Check that we're being called in context of an actual Sequence 'edit' operation
         self::dbgOut('fetchOptions(): Attempting to load settings from DB for "' . get_the_title($this->sequence_id) . '"');
-        $settings = get_post_meta($this->sequence_id, '_pmpro_sequencesequence_settings', false);
+        $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', false);
         $this->options = $settings[0];
 
         self::dbgOut('fetchOptions() - Fetched options: '. print_r($this->options , true));
-            /*
-            $this->options[0] = $settings[0];
-            $this->options[1] = $settings[1];
-            $this->options[2] = $settings[2];
-            $this->options[3] = $settings[3];
-            $this->options[4] = $settings[4];
-            */
         self::dbgOut('Loaded from DB: '. print_r($this->options, true));
 
         // Check whether we need to set any default variables for the settings
@@ -194,14 +187,14 @@ class PMProSequences
      * @param $post_id -- ID of the sequence these options belong to.
      * @return int | mixed - Either the ID of the Sequence or its content
      */
-    function pmpro_sequencesequence_meta_save( $post_id )
+    function pmpro_sequence_meta_save( $post_id )
     {
         // Check that the function was called correctly. If not, just return
         if(empty($post_id))
             return false;
 
         //Verify that this is a valid call (from the actual edit page)
-        if (!isset($_POST['pmpro_sequencesettings_noncename']) || !wp_verify_nonce( $_POST['pmpro_sequencesettings_noncename'], plugin_basename(__FILE__) ))
+        if (!isset($_POST['pmpro_sequence_settings_noncename']) || !wp_verify_nonce( $_POST['pmpro_sequence_settings_noncename'], plugin_basename(__FILE__) ))
             return $post_id;
 
         // Is this an auto save routine? If our form has not been submitted (clicked "save"), we'd probably not want to save anything yet
@@ -216,11 +209,11 @@ class PMProSequences
         if ( !current_user_can( 'edit_post', $post_id ) )
             return $post_id;
 
-        self::dbgOut('pmpro_sequencesequence_meta_save(): About to save settings for sequence ' . $post_id);
+        self::dbgOut('pmpro_sequence_meta_save(): About to save settings for sequence ' . $post_id);
         self::dbgOut('From Web: ' . print_r($_REQUEST, true));
 
         // OK, we're authenticated: we need to find and save the data
-        if ( isset($_POST['pmpro_sequencesettings_noncename']) )
+        if ( isset($_POST['pmpro_sequence_settings_noncename']) )
         {
 
             self::dbgOut('Have to load new instance of Sequence class');
@@ -231,42 +224,42 @@ class PMProSequences
             if (!$settings)
                 $settings = $sequence->defaultOptions();
 
-            if ( isset($_POST['pmpro_sequencesequence_hidden']) )
+            if ( isset($_POST['pmpro_sequence_hidden']) )
             {
-                $settings->hidden = $_POST['pmpro_sequencesequence_hidden'];
-                self::dbgOut('pmpro_sequencesequence_meta_save(): POST value for hidden: ' . $_POST['pmpro_sequencesequence_hidden'] );
+                $settings->hidden = $_POST['pmpro_sequence_hidden'];
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for hidden: ' . $_POST['pmpro_sequence_hidden'] );
             }
             elseif ( empty($settings->hidden) )
                 $settings->hidden = 0;
 
-            if ( isset($_POST['pmpro_sequencesequence_daycount']) )
+            if ( isset($_POST['pmpro_sequence_daycount']) )
             {
-                $settings->dayCount = $_POST['pmpro_sequencesequence_daycount'];
-                self::dbgOut('pmpro_sequencesequence_meta_save(): POST value for dayCount: ' . $_POST['pmpro_sequencesequence_daycount']);
+                $settings->dayCount = $_POST['pmpro_sequence_daycount'];
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for dayCount: ' . $_POST['pmpro_sequence_daycount']);
             }
             elseif (empty($settings->dayCount))
                 $settings->dayCount = 1;
 
-            if ( isset($_POST['pmpro_sequencesequence_sortorder']) )
+            if ( isset($_POST['pmpro_sequence_sortorder']) )
             {
-                $settings->sortOrder = $_POST['pmpro_sequencesequence_sortorder'];
-                self::dbgOut('pmpro_sequencesequence_meta_save(): POST value for sortOrder: ' . $_POST['pmpro_sequencesequence_sortorder'] );
+                $settings->sortOrder = $_POST['pmpro_sequence_sortorder'];
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for sortOrder: ' . $_POST['pmpro_sequence_sortorder'] );
             }
             elseif (empty($settings->sortOrder))
                 $settings->sortOrder = SORT_ASC;
 
-            if ( isset($_POST['pmpro_sequencesequence_delaytype']) )
+            if ( isset($_POST['pmpro_sequence_delaytype']) )
             {
-                $settings->delayType = $_POST['pmpro_sequencesequence_delaytype'];
-                self::dbgOut('pmpro_sequencesequence_meta_save(): POST value for delayType: ' . $_POST['pmpro_sequencesequence_delaytype'] );
+                $settings->delayType = $_POST['pmpro_sequence_delaytype'];
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for delayType: ' . $_POST['pmpro_sequence_delaytype'] );
             }
             elseif (empty($settings->delayType))
                 $settings->delayType = 'byDays';
 
-            if ( isset($_POST['pmpro_sequencesequence_startwhen']) )
+            if ( isset($_POST['pmpro_sequence_startwhen']) )
             {
-                $settings->startWhen = $_POST['pmpro_sequencesequence_startwhen'];
-                self::dbgOut('pmpro_sequencesequence_meta_save(): POST value for startWhen: ' . $_POST['pmpro_sequencesequence_startwhen'] );
+                $settings->startWhen = $_POST['pmpro_sequence_startwhen'];
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for startWhen: ' . $_POST['pmpro_sequence_startwhen'] );
             }
             elseif (empty($settings->startWhen))
                 $settings->startWhen = 0;
@@ -276,7 +269,7 @@ class PMProSequences
             // Save settings to WPDB
             $sequence->save_sequence_meta( $settings, $post_id );
 
-            self::dbgOut('pmpro_sequencesequence_meta_save(): Saved metadata for sequence #' . $post_id);
+            self::dbgOut('pmpro_sequence_meta_save(): Saved metadata for sequence #' . $post_id);
             // update_post_meta($post_id, '_tls_sequence_settings', (array)$settings->options);
 
         }
@@ -298,7 +291,7 @@ class PMProSequences
                 self::dbgOut('save_sequence_meta(): Settings for ' . $post_id .' will be: ' . print_r( $settings, true));
 
                 // Update the *_postmeta table for this sequence
-                update_post_meta($post_id, '_pmpro_sequencesequence_settings', $settings );
+                update_post_meta($post_id, '_pmpro_sequence_settings', $settings );
 
                 // Preserve the settings in memory / class context
                 self::dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $post_id);
@@ -538,7 +531,7 @@ class PMProSequences
      */
     public function dbgOut($msg)
     {
-        if (pmpro_sequenceSEQUENCE_DEBUG)
+        if (PMPRO_SEQUENCE_DEBUG)
         {
             $tmpFile = 'sequence_debug_log.txt';
             $fh = fopen($tmpFile, 'a');
@@ -686,7 +679,7 @@ class PMProSequences
 			wp_enqueue_script('pmpros-select2', plugins_url('js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
 
 			add_action('admin_menu', array("PMProSequences", "defineMetaBoxes"));
-            add_action('save_post', array('PMProSequences', 'pmpro_sequencesequence_meta_save'), 10, 2);
+            add_action('save_post', array('PMProSequences', 'pmpro_sequence_meta_save'), 10, 2);
 		}
 	}
 
@@ -696,8 +689,8 @@ class PMProSequences
 		add_meta_box('pmpro_page_meta', 'Require Membership', 'pmpro_page_meta', 'pmpro_sequence', 'side');
 
 		// sequence settings box (for posts & pages)
-        add_meta_box('pmpros-sequence-settings', esc_html__('Settings for this Sequence', 'pmpro_sequencesequence'), array("PMProSequences", 'pmpro_sequence_settings_meta_box'), 'pmpro_sequence', 'side', 'high');
-//        add_meta_box('pmpro_sequencesettings_meta', __('Settings', 'pmpro_sequencesequence'), 'settings_page_meta', 'page', 'side');
+        add_meta_box('pmpros-sequence-settings', esc_html__('Settings for this Sequence', 'pmpro_sequence'), array("PMProSequences", 'pmpro_sequence_settings_meta_box'), 'pmpro_sequence', 'side', 'high');
+//        add_meta_box('pmpro_sequence_settings_meta', __('Settings', 'pmpro_sequence'), 'settings_page_meta', 'page', 'side');
 
 		//sequence meta box
 		add_meta_box('pmpro_sequence_meta', 'Posts in this Sequence', array("PMProSequences", "sequenceMetaBox"), 'pmpro_sequence', 'normal', 'high');
@@ -739,7 +732,7 @@ class PMProSequences
 
         // Instantiate the settings & grab any existing settings if they exist.
      ?>
-		<div id="pmpro_sequencesequence_posts">
+		<div id="pmpro_sequence_posts">
 		<?php $sequence->getPostListForMetaBox(); ?>
 		</div>				
 		<?php		
@@ -768,35 +761,35 @@ class PMProSequences
         self::dbgOut('pmpro_sequence_settings_meta_box() - Loaded settings: ' . print_r($settings, true));
 
         ?>
-        <div class="submitbox" id="pmpro_sequencesequence_meta">
+        <div class="submitbox" id="pmpro_sequence_meta">
             <div id="minor-publishing">
-            <input type="hidden" name="pmpro_sequencesettings_noncename" id="pmpro_sequencesettings_noncename" value="<?php echo wp_create_nonce( plugin_basename(__FILE__) )?>" />
-            <input type="hidden" name="pmpro_sequencesettings_hidden_delay" id="pmpro_sequencesettings_hidden_delay" value="<?php echo $settings->delayType; ?>"/>
+            <input type="hidden" name="pmpro_sequence_settings_noncename" id="pmpro_sequence_settings_noncename" value="<?php echo wp_create_nonce( plugin_basename(__FILE__) )?>" />
+            <input type="hidden" name="pmpro_sequence_settings_hidden_delay" id="pmpro_sequence_settings_hidden_delay" value="<?php echo $settings->delayType; ?>"/>
             <table style="width: 180px;">
                 <tr>
-                    <td style="width: 20px;"><input type="checkbox" value="1" title="Hide unpublished / future posts for this sequence" id="pmpro_sequencesequence_hidden" name="pmpro_sequencesequence_hidden" <?php checked($settings->hidden, 1); ?> /></td>
+                    <td style="width: 20px;"><input type="checkbox" value="1" title="Hide unpublished / future posts for this sequence" id="pmpro_sequence_hidden" name="pmpro_sequence_hidden" <?php checked($settings->hidden, 1); ?> /></td>
                     <td style="width: 160px"><label class="selectit">Hide future posts</label></td>
                 </tr>
                 <tr>
-                    <td><input id="pmpro_sequencesequence_daycount" type="checkbox" value="1" title="Whether to show &quot;You are on day NNN of your membership&quot; text" name="pmpro_sequencesequence_daycount" <?php checked($settings->dayCount, 1); ?> /></td>
+                    <td><input id="pmpro_sequence_daycount" type="checkbox" value="1" title="Whether to show &quot;You are on day NNN of your membership&quot; text" name="pmpro_sequence_daycount" <?php checked($settings->dayCount, 1); ?> /></td>
                     <td><label class="selectit">Show membership length info</label></td>
                 </tr>
                 <!-- TODO: Enable and implement -->
                 <tr id="pmpro_sequenceseq_start_0" style="display: none;">
                     <td>
-                        <input id='pmpro_sequencesequence_daycount' type="checkbox" value="1" title="Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out." name="pmpro_sequencesequence_daycount" <?php echo ($sequence->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
+                        <input id='pmpro_sequence_daycount' type="checkbox" value="1" title="Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out." name="pmpro_sequence_daycount" <?php echo ($sequence->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
                     </td>
                     <td><label class="selectit">Configure Sequence Start</label></td>
                 </tr>
                 <tr id="pmpro_sequenceseq_start_1" style="display: none; height: 1px;">
                     <td colspan="2">
-                        <label class="screen-reader-text" for="pmpro_sequencesequence_startwhen">Day 1 Starts</label>
+                        <label class="screen-reader-text" for="pmpro_sequence_startwhen">Day 1 Starts</label>
                     </td>
 
                 </tr>
                 <tr id="pmpro_sequenceseq_start_2" style="display: none;" id="pmpro_sequenceselectWhen">
                     <td colspan="2">
-                        <select name="pmpro_sequencesequence_startwhen" id="pmpro_sequencesequence_startwhen">
+                        <select name="pmpro_sequence_startwhen" id="pmpro_sequence_startwhen">
                             <option value="0" <?php selected( intval($settings->startWhen), '0'); ?> >Immediately</option>
                             <option value="1" <?php selected( intval($settings->startWhen), '1'); ?> >24 hours after membership started</option>
                             <option value="2" <?php selected( intval($settings->startWhen), '2'); ?> >At midnight, immediately after membership started</option>
@@ -809,11 +802,11 @@ class PMProSequences
                    <td colspan="2" style="vertical-align: bottom; padding: 0px;"><p><strong>Display order</strong></p><td>
                 </tr>
                 <tr>
-                   <td colspan="2" style="display: none; height: 1px; padding: 0px;"><label class="screen-reader-text" for="pmpro_sequencesequence_sortorder">Display Order</label></td>
+                   <td colspan="2" style="display: none; height: 1px; padding: 0px;"><label class="screen-reader-text" for="pmpro_sequence_sortorder">Display Order</label></td>
                 </tr>
                 <tr>
                    <td colspan="2" style="padding: 0px; vertical-align: top;">
-                        <select name="pmpro_sequencesequence_sortorder" id="pmpro_sequencesequence_sortorder">
+                        <select name="pmpro_sequence_sortorder" id="pmpro_sequence_sortorder">
                             <option value="<?php echo SORT_ASC; ?>" <?php selected( intval($settings->sortOrder), SORT_ASC); ?> >Ascending</option>
                             <option value="<?php echo SORT_DESC; ?>" <?php selected( intval($settings->sortOrder), SORT_DESC); ?> >Descending</option>
                         </select>
@@ -823,11 +816,11 @@ class PMProSequences
                     <td colspan="2" style="vertical-align: bottom; padding: 0px;"><p><strong>Sequence Delay type</strong></p></td>
                 </tr>
                 <tr>
-                    <td colspan="2" style="display: none; height: 1px;"><label class="screen-reader-text" for="pmpro_sequencesequence_delaytype">Delay Type</label></td>
+                    <td colspan="2" style="display: none; height: 1px;"><label class="screen-reader-text" for="pmpro_sequence_delaytype">Delay Type</label></td>
                 </tr>
                 <tr>
                     <td colspan="2" style="vertical-align: top; padding: 0px;">
-                        <select name="pmpro_sequencesequence_delaytype" id="pmpro_sequencesequence_delaytype" >
+                        <select name="pmpro_sequence_delaytype" id="pmpro_sequence_delaytype" >
                             <option value="byDays" <?php selected( $settings->delayType, 'byDays'); ?> >Number of Days</option>
                             <option value="byDate" <?php selected( $settings->delayType, 'byDate'); ?> >Release Date (YYYY-MM-DD)</option>
                         </select>
@@ -848,25 +841,25 @@ class PMProSequences
         <!-- Test whether the sequence delay type has been changed. Submit AJAX request to delete existing posts if it has -->
         <script language="javascript">
             jQuery(document).ready(function () {
-                jQuery("#pmpro_sequencesequence_delaytype")
+                jQuery("#pmpro_sequence_delaytype")
                     .change(function(){
                         console.log('Process changes to delayType option');
                         var selected = jQuery(this).val();
-                        var current = jQuery('input[name=pmpro_sequencesettings_hidden_delay]').val();
+                        var current = jQuery('input[name=pmpro_sequence_settings_hidden_delay]').val();
                         console.log( 'Post # ' + <?php echo $post->ID; ?> );
                         console.log( 'delayType: ' + selected );
                         console.log( 'Current: ' + current );
 
-                        if ( jQuery(this).val() != jQuery('#pmpro_sequencesettings_hidden_delay').val() ) {
+                        if ( jQuery(this).val() != jQuery('#pmpro_sequence_settings_hidden_delay').val() ) {
                             if (! confirm("Changing the delay type will erase all\n existing posts or pages in the Sequence list.\n\nAre you sure?\n (Cancel if 'No')\n\n"))
                             {
-                                jQuery(this).val(jQuery.data(this, 'pmpro_sequencesettings_hidden_delay'));
+                                jQuery(this).val(jQuery.data(this, 'pmpro_sequence_settings_hidden_delay'));
                                 jQuery(this).val(current);
 
                                 return false;
                             }
 
-                            jQuery.data(this, 'pmpro_sequencesettings_delaytype', jQuery(this).val());
+                            jQuery.data(this, 'pmpro_sequence_settings_delaytype', jQuery(this).val());
 
                             // Send POST (AJAX) request to delete all existing articles/posts in sequence.
                             jQuery.post(
@@ -874,22 +867,22 @@ class PMProSequences
                                 {
                                     action: 'pmpro_sequence_clear',
                                     pmpro_sequenceclear_sequence: '1',
-                                    pmpro_sequencesequence_id: '<?php echo $post->ID ?>',
-                                    pmpro_sequencesequence_hidden: isHidden(),
-                                    pmpro_sequencesequence_daycount: showDayCount(),
-                                    pmpro_sequencesequence_startwhen: jQuery('#pmpro_sequencesequence_startwhen').val(),
-                                    pmpro_sequencesequence_sortorder: jQuery('#pmpro_sequencesequence_sortorder').val(),
-                                    pmpro_sequencesequence_delaytype: jQuery('#pmpro_sequencesequence_delaytype').val()
+                                    pmpro_sequence_id: '<?php echo $post->ID ?>',
+                                    pmpro_sequence_hidden: isHidden(),
+                                    pmpro_sequence_daycount: showDayCount(),
+                                    pmpro_sequence_startwhen: jQuery('#pmpro_sequence_startwhen').val(),
+                                    pmpro_sequence_sortorder: jQuery('#pmpro_sequence_sortorder').val(),
+                                    pmpro_sequence_delaytype: jQuery('#pmpro_sequence_delaytype').val()
                                 },
                                 function(responseHTML)
                                 {
                                     if ( ! responseHTML.match("^Error") )
                                     {
                                         /*
-                                         * Refresh the list of posts (now empty) in the #pmpro_sequencesequence_posts meta box
+                                         * Refresh the list of posts (now empty) in the #pmpro_sequence_posts meta box
                                          */
                                         setLabels();
-                                        jQuery('#pmpro_sequencesequence_posts').html(responseHTML);
+                                        jQuery('#pmpro_sequence_posts').html(responseHTML);
                                     }
                                     else
                                     {
@@ -901,7 +894,7 @@ class PMProSequences
                         };
 
                         console.log('Selected: '+ jQuery(this).val());
-                        console.log('Current (hidden): ' + jQuery('input[name=pmpro_sequencesettings_hidden_delay]').val());
+                        console.log('Current (hidden): ' + jQuery('input[name=pmpro_sequence_settings_hidden_delay]').val());
                     });
                 // For the Sequence Settings 'Save Settings' button
                 jQuery('#pmpro_settings_save').click(function(){
@@ -918,12 +911,12 @@ class PMProSequences
                         {
                             action: 'pmpro_save_settings',
                             'cookie': encodeURIComponent(document.cookie),
-                            'pmpro_sequencesequence_id': '<?php echo $post->ID; ?>',
-                            'pmpro_sequencesequence_hidden': isHidden(),
-                            'pmpro_sequencesequence_daycount': showDayCount(),
-                            'pmpro_sequencesequence_startwhen': jQuery('#pmpro_sequencesequence_startwhen').val(),
-                            'pmpro_sequencesequence_sortorder': jQuery('#pmpro_sequencesequence_sortorder').val(),
-                            'pmpro_sequencesequence_delaytype': jQuery('#pmpro_sequencesequence_delaytype').val()
+                            'pmpro_sequence_id': '<?php echo $post->ID; ?>',
+                            'pmpro_sequence_hidden': isHidden(),
+                            'pmpro_sequence_daycount': showDayCount(),
+                            'pmpro_sequence_startwhen': jQuery('#pmpro_sequence_startwhen').val(),
+                            'pmpro_sequence_sortorder': jQuery('#pmpro_sequence_sortorder').val(),
+                            'pmpro_sequence_delaytype': jQuery('#pmpro_sequence_delaytype').val()
                         },
                         //on success function
                         function(status)
@@ -954,10 +947,10 @@ class PMProSequences
         function setLabels()
         {
 
-            var delayType = jQuery('#pmpro_sequencesequence_delaytype').val();
-            var headerHTML_start = '<th id="pmpro_sequencesequence_delaytype">';
+            var delayType = jQuery('#pmpro_sequence_delaytype').val();
+            var headerHTML_start = '<th id="pmpro_sequence_delaytype">';
             var headerHTML_end = '</th>';
-            var entryHTML_start = '<th id="pmpro_sequencesequence_delayentrytype">';
+            var entryHTML_start = '<th id="pmpro_sequence_delayentrytype">';
             var entryHTML_end = '</th>';
 
             var labelText = 'Not Defined';
@@ -982,17 +975,17 @@ class PMProSequences
 
         function isHidden()
         {
-            if (jQuery('#pmpro_sequencesequence_hidden').is(":checked"))
-                return jQuery('input#pmpro_sequencesequence_hidden').val();
+            if (jQuery('#pmpro_sequence_hidden').is(":checked"))
+                return jQuery('input#pmpro_sequence_hidden').val();
             else
                 return 0;
         }
         function showDayCount()
         {
-            var dayCount = jQuery('input#pmpro_sequencesequence_daycount').val();
+            var dayCount = jQuery('input#pmpro_sequence_daycount').val();
             console.log('dayCount checkbox value: ' + dayCount);
 
-            if ( jQuery('#pmpro_sequencesequence_daycount').is(":checked"))
+            if ( jQuery('#pmpro_sequence_daycount').is(":checked"))
             {
                 // alert('Day Count Checkbox: ' + dayCount);
                 return dayCount;
@@ -1314,7 +1307,7 @@ class PMProSequences
 							}
 							else
 							{
-								jQuery('#pmpro_sequencesequence_posts').html(responseHTML);
+								jQuery('#pmpro_sequence_posts').html(responseHTML);
 							}																						
 						}
 					});
@@ -1350,7 +1343,7 @@ class PMProSequences
 						else
 						{
                             alert('Removed Post/Page from this Sequence');
-							jQuery('#pmpro_sequencesequence_posts').html(responseHTML);
+							jQuery('#pmpro_sequence_posts').html(responseHTML);
 						}																						
 					}
 				});
