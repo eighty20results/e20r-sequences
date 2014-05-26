@@ -229,7 +229,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 
             if ( isset($_POST['pmpro_sequence_id']) )
             {
-                $sequence_id = intval($_POST['pmpros_sequence_id']);
+                $sequence_id = intval($_POST['pmpro_sequence_id']);
                 $sequence = new PMProSequences($sequence_id);
 
                 if (pmpro_sequence_settings_save($sequence_id, $sequence))
@@ -237,6 +237,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
             }
 
         } catch (Exception $e){
+            echo 'Error: ' . $e->getMessage();
             exit;
         }
 
