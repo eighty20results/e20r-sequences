@@ -8,9 +8,11 @@
       <library name="PHP">
         <CLASSES>
           <root url="file://$MODULE_DIR$/../Wordpress-Includes/trunk/wp-includes" />
+          <root url="file://$MODULE_DIR$/../paid-memberships-pro" />
         </CLASSES>
         <SOURCES>
           <root url="file://$MODULE_DIR$/../Wordpress-Includes/trunk/wp-includes" />
+          <root url="file://$MODULE_DIR$/../paid-memberships-pro" />
         </SOURCES>
       </library>
     </orderEntry>
