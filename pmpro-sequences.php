@@ -140,11 +140,11 @@ if ( ! function_exists( 'pmpro_sequence_ajaxClearPosts')):
     function pmpro_sequence_ajaxClearPosts()
     {
         // Clear the sequence metadata if the sequence type (by date or by day count) changed.
-        if (isset($_POST['pmpros_clear_sequence']))
+        if (isset($_POST['pmpro_sequence_clear']))
         {
-            if (isset($_POST['pmpros_sequence_id']))
+            if (isset($_POST['pmpro_sequence_id']))
             {
-                $sequence_id = intval($_POST['pmpros_sequence_id']);
+                $sequence_id = intval($_POST['pmpro_sequence_id']);
                 $sequence = new PMProSequences($sequence_id);
             }
             else
