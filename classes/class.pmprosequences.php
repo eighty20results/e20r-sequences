@@ -1314,7 +1314,7 @@ class PMProSequences
 							foreach($allposts as $p)
 							{
 							?>
-							<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php echo setPostStatus( $p->post_status );?>)</option>
+							<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php echo $this->setPostStatus( $p->post_status );?>)</option>
 							<?php
 							}
 						?>
