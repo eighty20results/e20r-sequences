@@ -698,6 +698,9 @@ class PMProSequences
     }
 
     /**
+     *
+     * Pre PHP v5.3 datetime::diff() alternative (calculate # of days between two dates)
+     *
      * @param $date1 (string) - Date in format 'YYYY-MM-DD'
      * @param $date2 (string) - Date in format 'YYYY-MM-DD'
      * @return int - Number of days (as a count)
@@ -794,7 +797,7 @@ class PMProSequences
                 </tr>
                 -->
                 <tr>
-                    <td><input id="pmpro_sequence_daycount" type="checkbox" value="1" title="Whether to show &quot;You are on day NNN of your membership&quot; text" name="pmpro_sequence_daycount" <?php checked($settings->dayCount, 1); ?> /></td>
+                    <td><input type="checkbox" value="1" title="Whether to show the &quot;You are on day NNN of your membership&quot; text" id="pmpro_sequence_daycount" name="pmpro_sequence_daycount" <?php checked($settings->dayCount, 1); ?> /></td>
                     <td><label class="selectit">Show membership length info</label></td>
                 </tr>
                 <!-- TODO: Enable and implement
@@ -1004,14 +1007,13 @@ class PMProSequences
         }
         function showDayCount()
         {
-            var dayCount = jQuery('input#pmpro_sequence_daycount').val();
-            console.log('dayCount checkbox value: ' + dayCount);
+            // var dayCount = jQuery('input#pmpro_sequence_daycount').val();
+            // console.log('dayCount checkbox value: ' + dayCount);
 
             if ( jQuery('#pmpro_sequence_daycount').is(":checked"))
             {
                 console.log('dayCount setting is checked');
-                // alert('Day Count Checkbox: ' + dayCount);
-                return dayCount;
+                return jQuery('input#pmpro_sequence_daycount').val();;
             }
             else
                 return 0;
@@ -1137,6 +1139,35 @@ class PMProSequences
         }
         return ( $memberFor >= $delay ) ? true : false;
 
+    }
+
+    function setPostStatus( $post_state )
+    {
+        $txtState = null;
+
+        switch ($post_state)
+        {
+            case 'draft':
+                $txtState = '-DRAFT';
+                break;
+
+            case 'future':
+                $txtState = '-SCHED';
+                break;
+
+            case 'pending':
+                $txtState = '-REVIEW';
+                break;
+
+            case 'private':
+                $txtState = '-PRIVT';
+                break;
+
+            default:
+                $txtState = '';
+        }
+
+        return $txtState;
     }
 
     //this code updates the posts and draws the list/form
@@ -1283,7 +1314,7 @@ class PMProSequences
 							foreach($allposts as $p)
 							{
 							?>
-							<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php if($p->post_status == "draft") echo "-DRAFT";?>)</option>
+							<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php echo setPostStatus( $p->post_status );?>)</option>
 							<?php
 							}
 						?>
