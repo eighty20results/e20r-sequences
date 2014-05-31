@@ -307,9 +307,14 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
         if(!empty($all_access_levels) && pmpro_hasMembershipLevel($all_access_levels, $user_id))
             return true;	//user has one of the all access levels
 
-        $tmpSequence = new PMProSequences($post_id);
+        /**
+         * BUG: Assumes that $post_id == the sequence ID, but
+         * it's not when filtering the actual sequence member
+         */
+
+        $tmpSequence = new PMProSequences($post_sequence[0]);
         $tmpSequence->fetchOptions();
-        $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Sequence ID: ' . print_r($post_id, true));
+        $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Sequence ID: ' . print_r($post_sequence[0], true));
 
         //check each sequence
         foreach($post_sequence as $sequence_id)
@@ -440,7 +445,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                     //user has one of the sequence levels, find out which one and tell him how many days left
                     $sequence = new PMProSequences($post->ID);
 
-                    $day = $sequence->getDelayForPost($insequence->id);
+                    $day = $sequence->getDelayForPost($post->ID);
                     $sequence->dbgOut('# of days worth of delay: ' . $day);
 
                     $text = "This content is part of the <a href='" . get_permalink($post->ID) . "'>" . get_the_title($post->ID) . "</a> sequence. You will gain access on day " . $day . " of your membership.";
