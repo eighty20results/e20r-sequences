@@ -163,7 +163,7 @@ class PMProSequences
         }
 
         // Check that we're being called in context of an actual Sequence 'edit' operation
-        self::dbgOut('fetchOptions(): Attempting to load settings from DB for "' . get_the_title($this->sequence_id) . '"');
+        self::dbgOut('fetchOptions(): Attempting to load settings from DB for (' . $this->sequence_id . ') "' . get_the_title($this->sequence_id) . '"');
         $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', false);
         $this->options = $settings[0];
 

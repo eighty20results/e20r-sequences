@@ -46,10 +46,11 @@ Author URI: http://www.eighty20results.com
 	* wp_pmpro_sequence_content (sequence_id, post_id, day) stored in post meta
 */
 
+/* Enable / Disable DEBUG logging to separate file */
 define('PMPRO_SEQUENCE_DEBUG', true);
 
 /*
-	Includes
+	Include the class for PMProSequences
 */
 if (! class_exists( 'PMProSequences' )):
     require_once(dirname(__FILE__) . "/classes/class.pmprosequences.php");
@@ -95,7 +96,9 @@ if ( !function_exists( 'pmpro_sequence_ajax')):
     add_action("init", "pmpro_sequence_ajax");
 
     /**
-     * Process additions to
+     * Process AJAX based additions to the sequence list
+     *
+     * Returns 'error' message (or nothing, if success) to calling JavaScript function
      */
     function pmpro_sequence_ajax()
     {
@@ -174,6 +177,8 @@ if ( ! function_exists( 'pmpro_sequence_ajaxClearPosts')):
     }
 
     /**
+     * Save the settings for a sequence ID as post_meta for that Sequence CPT
+     *
      * @param $sequence_id -- ID of the sequence to save options for
      * @param $sequenceObj -- stdObject containing configuration settings
      * @return bool - Returns true if save is successful
@@ -222,6 +227,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
     /**
      * Function to process Sequence Settings AJAX POST call (save operation)
      *
+     * Returns 'success' or 'error' message to calling JavaScript function
      */
     function pmpro_sequence_ajaxSaveSettings()
     {
@@ -251,8 +257,12 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
 
     add_filter("the_content", "pmpro_sequence_content");
 
-    /*
+    /**
+     *
      * Show list of sequence pages at the bottom of the sequence page
+     *
+     * @param $content -- The content to process as part of the filter action
+     * @return string -- The filtered content
      */
     function pmpro_sequence_content($content)
     {
@@ -263,9 +273,11 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
             $sequence = new PMProSequences($post->ID);
             $settings = $sequence->fetchOptions();
 
-            if ( intval($settings->dayCount) == 1)
+            // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
+            if ( intval($settings->dayCount) == 1 )
                 $content .= "<p>You are on day " . intval(pmpro_getMemberDays()) . " of your membership.</p>";
 
+            // Add the list of posts in the sequence to the content.
             $content .= $sequence->getPostList();
         }
 
@@ -274,10 +286,15 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
 endif;
 
 if ( ! function_exists( ' pmpro_sequence_hasAccess')):
-    /*
-        Make sure people can't view content they don't have access to.
-    */
-    //returns true if a user has access to a page, including logic for sequence/delays
+
+    /**
+     * Check the whether the User ID has access to the post ID
+     * Make sure people can't view content they don't have access to.
+     *
+     * @param $user_id (int) -- The users ID to check access for
+     * @param $post_id (int) -- The ID of the post we're checking access for
+     * @return bool -- true | false -- Indicates user ID's access privileges to the post/sequence
+     */
     function pmpro_sequence_hasAccess($user_id, $post_id)
     {
         //is this post in a sequence?
@@ -290,9 +307,14 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
         if(!empty($all_access_levels) && pmpro_hasMembershipLevel($all_access_levels, $user_id))
             return true;	//user has one of the all access levels
 
-        $tmpSequence = new PMProSequences($post_id);
+        /**
+         * BUG: Assumes that $post_id == the sequence ID, but
+         * it's not when filtering the actual sequence member
+         */
+
+        $tmpSequence = new PMProSequences($post_sequence[0]);
         $tmpSequence->fetchOptions();
-        $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Sequence ID: ' . print_r($post_id, true));
+        $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Sequence ID: ' . print_r($post_sequence[0], true));
 
         //check each sequence
         foreach($post_sequence as $sequence_id)
@@ -326,9 +348,7 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
                                     $tmpSequence->dbgOut('Delay Type is # of days since membership start');
                                     // BUG: Assumes the # of days is the right ay to
                                     if(pmpro_getMemberDays($user_id, $level_id) >= $sp->delay)
-                                    {
-                                        return true;	//user has access to this sequence and has been around longer than this post's delay
-                                    }
+                                        return true;	//user has access to this sequence and has been a member for longer than this post's delay
                                 }
                                 elseif ($tmpSequence->options->delayType == 'byDate')
                                 {
@@ -359,6 +379,16 @@ add_filter("pmpro_has_membership_access_filter", "pmpro_sequence_pmpro_has_membe
     /*
         Filter pmpro_has_membership_access based on sequence access.
     */
+    /**
+     * Filter pmpro_has_membership_access based on sequence access.
+     *
+     * @param $hasaccess (bool) -- Current access status
+     * @param $mypost (int) -- The post we're processing
+     * @param $myuser (int) -- The user ID we're testing
+     * @param $post_membership_levels -- The membership level(s) we're testing against
+     *
+     * @return bool -- True if access is granted, false if not
+     */
     function pmpro_sequence_pmpro_has_membership_access_filter($hasaccess, $mypost, $myuser, $post_membership_levels)
     {
         //If the user doesn't have access already, we won't change that. So only check if they already have access.
@@ -383,9 +413,12 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
     add_filter("pmpro_non_member_text_filter", "pmpro_seuquence_pmpro_text_filter");
     add_filter("pmpro_not_logged_in_text_filter", "pmpro_seuquence_pmpro_text_filter");
 
-    /*
-        Filter the message for users without access.
-    */
+    /**
+     * Filter the message for users without access.
+     *
+     * @param $text (string) -- The text to filter
+     * @return string -- the filtered text
+     */
     function pmpro_seuquence_pmpro_text_filter($text)
     {
         global $wpdb, $current_user, $post;
@@ -412,7 +445,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                     //user has one of the sequence levels, find out which one and tell him how many days left
                     $sequence = new PMProSequences($post->ID);
 
-                    $day = $sequence->getDelayForPost($insequence->id);
+                    $day = $sequence->getDelayForPost($post->ID);
                     $sequence->dbgOut('# of days worth of delay: ' . $day);
 
                     $text = "This content is part of the <a href='" . get_permalink($post->ID) . "'>" . get_the_title($post->ID) . "</a> sequence. You will gain access on day " . $day . " of your membership.";
@@ -441,14 +474,24 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
 endif;
 
 /*
-	Couple functions from PMPro in case we don't have them yet.
+	Couple functions from PMPro in case we don't have them loaded yet.
 */
 if( ! function_exists("pmpro_getMemberStartdate") ):
 
 	/*
 		Get a member's start date... either in general or for a specific level_id.
 	*/
-	function pmpro_getMemberStartdate($user_id = NULL, $level_id = 0)
+
+    /**
+     *
+     * Returns the member's start date (either generally speaking or for a specific level)
+     *
+     * @param $user_id (int) - ID of user who's start date we're finding
+     * @param $level_id (int) - ID of the level to find the start date for (optional)
+     *
+     * @returns mixed - The start date for this user_id at the specific level_id (or in general)
+     */
+    function pmpro_getMemberStartdate($user_id = NULL, $level_id = 0)
 	{		
 		if(empty($user_id))
 		{
@@ -473,8 +516,15 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 		
 		return $pmpro_startdates[$user_id][$level_id];
 	}
-	
-	function pmpro_getMemberDays($user_id = NULL, $level_id = 0)
+
+    /**
+     * Calculate the # of days since the membership level (or membership in general) was started for a specific user_id
+     *
+     * @param int $user_id -- user_id to calculate # of days since membership start for
+     * @param int $level_id -- level_id to calculate the # of days for
+     * @return int -- Number of days since user_id started their membership (at this level)
+     */
+    function pmpro_getMemberDays($user_id = NULL, $level_id = 0)
 	{
 		if(empty($user_id))
 		{
