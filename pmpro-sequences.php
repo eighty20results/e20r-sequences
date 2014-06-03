@@ -543,17 +543,23 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 			$days = ($now - $startdate)/3600/24;
 		**/
 
-            /* Will take Daylight savings changes into account and ensure only integer value days returned */
-            $dStart = new DateTime( date('Y-m-d', $startdate) );
-            $dEnd = new DateTime( date('Y-m-d') ); // Today's date
-            $dDiff = $dStart->diff($dEnd);
-            $dDiff->format('%d');
-            // $dDiff->format('%R%a');
+			// Check that there is a start date at all
+			if(empty($startdate))
+				$days = 0;
+			else
+			{
+				/* Will take Daylight savings changes into account and ensure only integer value days returned */
+				$dStart = new DateTime( date( 'Y-m-d', $startdate ) );
+				$dEnd   = new DateTime( date( 'Y-m-d' ) ); // Today's date
+				$dDiff  = $dStart->diff( $dEnd );
+				$dDiff->format( '%d' );
+				// $dDiff->format('%R%a');
 
-            $days = $dDiff->days;
+				$days = $dDiff->days;
 
-            if ($dDiff->invert == 1)
-                $days = 0 - $days; // Invert the value
+				if ( $dDiff->invert == 1 )
+					$days = 0 - $days; // Invert the value
+			}
 
 			$pmpro_member_days[$user_id][$level_id] = $days;
 		}
