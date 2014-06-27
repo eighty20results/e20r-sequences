@@ -8,11 +8,11 @@
       <library name="PHP">
         <CLASSES>
           <root url="file://$USER_HOME$/strongcubedfitness.com/wp-content/plugins/sp-gf-mysql-connect" />
-          <root url="file://$MODULE_DIR$/../wordpress/wp-includes" />
+          <root url="file://$MODULE_DIR$/../wordpress" />
         </CLASSES>
         <SOURCES>
           <root url="file://$USER_HOME$/strongcubedfitness.com/wp-content/plugins/sp-gf-mysql-connect" />
-          <root url="file://$MODULE_DIR$/../wordpress/wp-includes" />
+          <root url="file://$MODULE_DIR$/../wordpress" />
         </SOURCES>
       </library>
     </orderEntry>

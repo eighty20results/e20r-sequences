@@ -3,8 +3,8 @@
 Plugin Name: PMPro Sequence
 Plugin URI: http://www.eighty20results.com/pmpro-sequence/
 Description: Offer serialized (drip feed) content to your PMPro members. Based on the PMPro Series plugin by Stranger Studios. Renamed for namespace reasons.
-Version: .1.1
-Author: Thomas Sjolshagen
+Version: .1.2
+Author: Thomas Sjolshagen (Original and owned by Stranger Studios)
 Author URI: http://www.eighty20results.com
 */
 
@@ -548,17 +548,23 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 			$days = ($now - $startdate)/3600/24;
 		**/
 
-            /* Will take Daylight savings changes into account and ensure only integer value days returned */
-            $dStart = new DateTime( date('Y-m-d', $startdate) );
-            $dEnd = new DateTime( date('Y-m-d') ); // Today's date
-            $dDiff = $dStart->diff($dEnd);
-            $dDiff->format('%d');
-            // $dDiff->format('%R%a');
+			// Check that there is a start date at all
+			if(empty($startdate))
+				$days = 0;
+			else
+			{
+				/* Will take Daylight savings changes into account and ensure only integer value days returned */
+				$dStart = new DateTime( date( 'Y-m-d', $startdate ) );
+				$dEnd   = new DateTime( date( 'Y-m-d' ) ); // Today's date
+				$dDiff  = $dStart->diff( $dEnd );
+				$dDiff->format( '%d' );
+				// $dDiff->format('%R%a');
 
-            $days = $dDiff->days;
+				$days = $dDiff->days;
 
-            if ($dDiff->invert == 1)
-                $days = 0 - $days; // Invert the value
+				if ( $dDiff->invert == 1 )
+					$days = 0 - $days; // Invert the value
+			}
 
 			$pmpro_member_days[$user_id][$level_id] = $days;
 		}
