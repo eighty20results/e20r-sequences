@@ -427,8 +427,11 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
         {
             if(!pmpro_sequence_hasAccess($current_user->ID, $post->ID))
             {
+                $sequence = new PMProSequences($post->ID);
+
                 //Update text. The either have to wait or sign up.
                 $post_sequence = get_post_meta($post->ID, "_post_sequences", true);
+                $sequence->dbgOut('Post Sequence Dump: ' . print_r($post_sequence, true));
 
                 $insequence = false;
                 foreach($post_sequence as $ps)
@@ -443,7 +446,6 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                 if($insequence)
                 {
                     //user has one of the sequence levels, find out which one and tell him how many days left
-                    $sequence = new PMProSequences($post->ID);
 
                     $day = $sequence->getDelayForPost($post->ID);
                     $sequence->dbgOut('# of days worth of delay: ' . $day);
@@ -452,18 +454,21 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                 }
                 else
                 {
-                    //user has to sign up for one of the sequence
+                    // User has to sign up for one of the sequence(s)
                     if(count($post_sequence) == 1)
                     {
                         $text = "This content is part of the <a href='" . get_permalink($post_sequence[0]) . "'>" . get_the_title($post_sequence[0]) . "</a> sequence.";
                     }
                     else
                     {
-                        $text = "This content is part of the following sequence: ";
-                        $sequence = array();
-                        foreach($post_sequence as $sequence_id)
-                            $sequence[] = "<a href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a>";
-                        $text .= implode(", ", $sequence) . ".";
+                        $text = "This content is part of the following sequences: ";
+                        $seq_links = array();
+
+                        foreach($post_sequence as $sequence_id) {
+                            $seq_links[] = "<a href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a>";
+                        }
+
+                        $text .= implode(" and ", $seq_links) . ".";
                     }
                 }
             }

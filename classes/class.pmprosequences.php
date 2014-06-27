@@ -356,16 +356,36 @@ class PMProSequences
 		//save
 		update_post_meta($this->id, "_sequence_posts", $this->posts);
 
-		//add sequence to post
+		//Get any previously existing sequences this post/page is linked to
 		$post_sequence = get_post_meta($post_id, "_post_sequences", true);
-		if(!is_array($post_sequence)) {
-            self::dbgOut('addPost(): Not (yet) an array of posts. Adding the single new post to a new array');
-			$post_sequence = array($this->id);
+
+        // Is there any previously saved sequence ID found for the post/page?
+		if(empty($post_sequence))
+        {
+            self::dbgOut('addPost(): Not previously defined sequence(s) found for this post (ID: ' . $post_id . ')');
+            $post_sequence = array($this->id);
         }
         else
         {
-			$post_sequence[] = $this->id;
-            self::dbgOut('addPost(): Appended post (ID: ' . $this->id . ') to Sequence');
+            self::dbgOut('addPost(): Post/Page w/id ' . $post_id . ' belongs to more than one sequence already: ' . print_r($post_sequence, true));
+
+            if ( !is_array($post_sequence) )
+            {
+                self::dbgOut('AddPost(): Previously defined sequence(s) found for this post (ID: ' . $post_id . '). Sequence data: ' . print_r($post_sequence, true));
+                self::dbgOut('addPost(): Not (yet) an array of posts. Adding the single new post to a new array');
+                $post_sequence = array($this->id);
+            }
+            else
+            {
+                // Bug Fix: Never checked if the Post/Page ID was already included in the sequence meta.
+                if ( !array_search( $this->id, $post_sequence) )
+                {
+                    // If not, add it.
+                    $post_sequence[] = $this->id;
+                    self::dbgOut('addPost(): Appended post (ID: ' . $post_id . ') to Sequence');
+                }
+            }
+
         }
 		//save
 		update_post_meta($post_id, "_post_sequences", $post_sequence);
