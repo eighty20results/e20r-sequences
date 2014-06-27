@@ -47,7 +47,7 @@ Author URI: http://www.eighty20results.com
 */
 
 /* Enable / Disable DEBUG logging to separate file */
-define('PMPRO_SEQUENCE_DEBUG', true);
+define('PMPRO_SEQUENCE_DEBUG', false);
 
 /*
 	Include the class for PMProSequences
