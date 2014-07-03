@@ -1,5 +1,5 @@
 <?php
-define('PMPRO_SEQUENCE_DEBUG', true);
+define('PMPRO_SEQUENCE_DEBUG', false);
 
 class PMProSequences
 {
@@ -38,48 +38,6 @@ class PMProSequences
         }
 	}
 
-    /*************************************************************************************/
-    /* Internal routines for fetching sequence related information (ID & Settings array) */
-
-    /*
-    public function getID()
-    {
-        return $this->sequence_id;
-    }
-
-    public function setID( $var )
-    {
-        $this->sequence_id = (int) $var;
-    }
-
-    public function getSettings()
-    {
-        return $this->options;
-    }
-
-    public function setSettings( $varArray )
-    {
-        if (! is_array($varArray))
-            self::dbgOut('Not a valid settings array!');
-
-        foreach ($varArray as $key => $val)
-        {
-            $this->setSetting($val, $key);
-        }
-
-//        if ($this->sequence_id != 0)
-//            $this->save_sequence_meta( $this->options, $this->sequence_id );
-    }
-
-    public function setSetting( $value, $idx = 0 )
-    {
-        if (! empty($this->options[$idx]))
-            self::dbgOut('Overwriting setting # ' . $idx . ' (old: ' . $this->options[$idx] . ') with ' . $value);
-
-        $this->options[$idx] = $value;
-    }
-*/
-    /*************************************************************************************/
 
     //populate sequence data by post id passed
 	function getSequenceByID($id)
@@ -305,8 +263,6 @@ class PMProSequences
         return true;
     }
 
-
-
     //add a post to this sequence
 	function addPost($post_id, $delay)
 	{
@@ -356,16 +312,36 @@ class PMProSequences
 		//save
 		update_post_meta($this->id, "_sequence_posts", $this->posts);
 
-		//add sequence to post
+		//Get any previously existing sequences this post/page is linked to
 		$post_sequence = get_post_meta($post_id, "_post_sequences", true);
-		if(!is_array($post_sequence)) {
-            self::dbgOut('addPost(): Not (yet) an array of posts. Adding the single new post to a new array');
-			$post_sequence = array($this->id);
+
+        // Is there any previously saved sequence ID found for the post/page?
+		if(empty($post_sequence))
+        {
+            self::dbgOut('addPost(): Not previously defined sequence(s) found for this post (ID: ' . $post_id . ')');
+            $post_sequence = array($this->id);
         }
         else
         {
-			$post_sequence[] = $this->id;
-            self::dbgOut('addPost(): Appended post (ID: ' . $this->id . ') to Sequence');
+            self::dbgOut('addPost(): Post/Page w/id ' . $post_id . ' belongs to more than one sequence already: ' . print_r($post_sequence, true));
+
+            if ( !is_array($post_sequence) )
+            {
+                self::dbgOut('AddPost(): Previously defined sequence(s) found for this post (ID: ' . $post_id . '). Sequence data: ' . print_r($post_sequence, true));
+                self::dbgOut('addPost(): Not (yet) an array of posts. Adding the single new post to a new array');
+                $post_sequence = array($this->id);
+            }
+            else
+            {
+                // Bug Fix: Never checked if the Post/Page ID was already included in the sequence meta.
+                if ( !array_search( $this->id, $post_sequence) )
+                {
+                    // If not, add it.
+                    $post_sequence[] = $this->id;
+                    self::dbgOut('addPost(): Appended post (ID: ' . $post_id . ') to Sequence');
+                }
+            }
+
         }
 		//save
 		update_post_meta($post_id, "_post_sequences", $post_sequence);
@@ -485,6 +461,13 @@ class PMProSequences
         return array($this->convertToDays($a->delay), $this->convertToDays($b->delay));
     }
 
+    /**
+     *
+     * Convert any date string to a number of days worth of delay (since membership started for the current user)
+     *
+     * @param $delay (int | string) -- The delay value (either a # of days or a date YYYY-MM-DD)
+     * @return mixed (int) -- The # of days since membership started (for this user)
+     */
     public function normalizeDelay( $delay )
     {
 
@@ -496,6 +479,13 @@ class PMProSequences
         return $delay;
     }
 
+    /**
+     *
+     * Sort the two post objects (order them) according to the defined sortOrder
+     *
+     * @param $a (post object)
+     * @param $b (post object)
+     */
     function sortByDelay($a, $b)
     {
         if (empty($this->options->sortOrder))
@@ -629,11 +619,11 @@ class PMProSequences
 	//send an email RE new access to post_id to email of user_id
 	function sendEmail($post_id, $user_id)
 	{
-
+        // TODO: Implement this functionality to support sending email notices whenever the post becomes available
 	}
 	
 	/*
-		Create CPT
+		Create the Custom Post Type for the Sequence/Sequences
 	*/
 	function createCPT()
 	{
@@ -678,7 +668,7 @@ class PMProSequences
 	}
 	
 	/*
-		Meta boxes
+		Include the CSS, Javascript and load/define Visual editor Meta boxes
 	*/	
 	function checkForMetaBoxes()
 	{
@@ -693,7 +683,11 @@ class PMProSequences
 		}
 	}
 
-	function defineMetaBoxes()
+    /**
+     * Add the actual meta box definitions as add_meta_box() functions (3 meta boxes; One for the page meta,
+     * one for the Settings & one for the sequence posts/page definitions.
+     */
+    function defineMetaBoxes()
 	{
 		//PMPro box
 		add_meta_box('pmpro_page_meta', 'Require Membership', 'pmpro_page_meta', 'pmpro_sequence', 'side');
@@ -751,6 +745,13 @@ class PMProSequences
 		<?php		
 	}
 
+    /**
+     * Define and create the metabox for the Sequence Settings (per sequence page/list)
+     *
+     * @param $object -- The class object (sequence class)
+     * @param $box -- The metabox object
+     *
+     */
     function pmpro_sequence_settings_meta_box( $object, $box )
     {
         global $post;
@@ -1088,7 +1089,9 @@ class PMProSequences
 		return false;
 	}
 
-    // Test whether to show future sequence posts (i.e. not yet available to member)
+    /**
+     * Test whether to show future sequence posts (i.e. not yet available to member)
+     */
     public function hideUpcomingPosts()
     {
         self::dbgOut('hideUpcomingPosts(): Do we show or hide upcoming posts?');
@@ -1097,7 +1100,6 @@ class PMProSequences
 
     /**
      * Validates that the value received follows a valid "delay" format for the post/page sequence
-     *
      */
     public function isValidDelay( $delay )
     {
@@ -1136,12 +1138,20 @@ class PMProSequences
         return false;
     }
 
+    /**
+     * Used to validate whether the delay specified is less than the number of days since the member joined
+     *
+     * @param $memberFor -- How long the member has been active for (days)
+     * @param $delay -- The specified delay to test against
+     * @return bool -- True if delay is less than the time the member has been a member for.
+     *
+     */
     public function isPastDelay( $memberFor, $delay )
     {
         if ($this->isValidDate($delay))
         {
             $now = time();
-            // TODO: Add support for startWhen options
+            // TODO: Add support for startWhen options (once the plugin supports differentiating on when the drip starts)
             $delayTime = strtotime( $delay . ' 00:00:00.0' );
             $this->dbgOut('isPastDelay() - Now = ' . $now . ' and delay time = ' . $delayTime );
 
@@ -1151,6 +1161,12 @@ class PMProSequences
 
     }
 
+    /**
+     * Used to label the post list in the metabox
+     *
+     * @param $post_state -- The current post state (Draft, Scheduled, Under Review, Private, other)
+     * @return null|string -- Return the correct postfix for the post
+     */
     function setPostStatus( $post_state )
     {
         $txtState = null;
@@ -1212,7 +1228,7 @@ class PMProSequences
             }
             else
             {
-                // Ignore this post (TODO: Return error with correct warning message)
+                // Ignore this post & return error message to display for the user/admin
                 $expectedDelay = ( $this->options->delayType == 'byDate' ) ? 'a date (Format: YYYY-MM-DD)' : 'a number (days since membership start)';
                 self::dbgOut('getPostListForMetaBox(): Invalid delay value specified, not adding the post: ' . $_REQUEST['pmpro_sequencedelay']);
                 $this->error = 'Error: Invalid delay type specified (' . $_REQUEST['pmpro_sequencedelay'] . '). Expected ' . $expectedDelay;
@@ -1417,9 +1433,3 @@ class PMProSequences
 	}
 }
 
-/*
-if (is_admin())
-{
-    add_action('admin_menu', 'pmpro_page_meta_wrapper');
-}
-*/
