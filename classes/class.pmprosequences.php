@@ -584,26 +584,35 @@ class PMProSequences
      */
     public function convertToDays( $date )
     {
+	    $level_id = pmpro_getMembershipLevelForUser();
+
         if ( $this->isValidDate( $date ) )
         {
-            $startDate = pmpro_getMemberStartdate();
-            $dStart = new DateTime( date( 'Y-m-d', $startDate ) );
-            $dEnd = new DateTime( date( 'Y-m-d', strtotime($date) ) ); // Today's date
-            $dDiff = $dStart->diff($dEnd);
-            $dDiff->format('%d');
-            // $dDiff->format('%R%a');
+            $startDate = pmpro_getMemberStartdate(); /* Needs userID & Level ID ... */
 
-            //self::dbgOut('Diff Object:' . print_r($dDiff, true));
+	        if (empty($startDate))
+		            $startDate = 0;
+	        else
+	        {
+	            $dStart = new DateTime( date( 'Y-m-d', $startDate ) );
+	            $dEnd = new DateTime( date( 'Y-m-d', strtotime($date) ) ); // Today's date
+	            $dDiff = $dStart->diff($dEnd);
+	            $dDiff->format('%d');
+	            // $dDiff->format('%R%a');
 
-            $days = $dDiff->days;
+	            //self::dbgOut('Diff Object:' . print_r($dDiff, true));
 
-            if ($dDiff->invert == 1)
-                $days = 0 - $days; // Invert the value
+	            $days = $dDiff->days;
 
-            self::dbgOut('convertToDays() - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
+	            if ($dDiff->invert == 1)
+	                $days = 0 - $days; // Invert the value
+		        }
+
+            self::dbgOut('convertToDays() - Member (Level: ' . $level_id . ') with start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
+
         } else {
             $days = $date;
-            self::dbgOut('convertToDays() - Days of delay from start: ' . $date);
+            self::dbgOut('convertToDays() - Member Level: ' . $level_id . ', - days of delay from start: ' . $date);
         }
 
         return $days;
@@ -620,6 +629,7 @@ class PMProSequences
 	//send an email RE new access to post_id to email of user_id
 	function sendEmail($post_id, $user_id)
 	{
+
 	}
 	
 	/*

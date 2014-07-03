@@ -285,7 +285,9 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
     }
 endif;
 
-if ( ! function_exists( ' pmpro_sequence_hasAccess')):
+
+
+if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
     /**
      * Check the whether the User ID has access to the post ID
@@ -308,7 +310,7 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
             return true;	//user has one of the all access levels
 
         /**
-         * BUG: Assumes that $post_id == the sequence ID, but
+         * BUG: Assumed that $post_id == the sequence ID, but
          * it's not when filtering the actual sequence member
          */
 
@@ -316,11 +318,20 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
         $tmpSequence->fetchOptions();
         $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Sequence ID: ' . print_r($post_sequence[0], true));
 
+	    /** Test to see what happens if user has multiple membership levels
+	     *
+	     * $user_levels = pmpro_getMembershipLevelsForUser($user_id);
+	     * $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - User (ID: ' . $user_id .') has paid for: ' . print_r($user_levels, true))
+	     *
+		 */
+
         //check each sequence
         foreach($post_sequence as $sequence_id)
         {
             //does the user have access to any of the sequence pages?
             $results = pmpro_has_membership_access($sequence_id, $user_id, true); //Using true for levels having access to page
+
+	        $tmpSequence->dbgOut('Returned from access check: ' . print_r($results, true));
 
             if($results[0])	// First item in results array == true if user has access
             {
@@ -328,20 +339,20 @@ if ( ! function_exists( ' pmpro_sequence_hasAccess')):
                 //has the user been around long enough for any of the delays?
                 $sequence_posts = get_post_meta($sequence_id, "_sequence_posts", true);
 
-                $tmpSequence->dbgOut('Fetched PostMeta: ' . print_r($sequence_posts, true));
+                // $tmpSequence->dbgOut('Fetched PostMeta: ' . print_r($sequence_posts, true));
 
                 if(!empty($sequence_posts))
                 {
                     foreach($sequence_posts as $sp)
                     {
-                        $tmpSequence->dbgOut('Checking post for access - contains: ' . print_r($sp, true));
+                        // $tmpSequence->dbgOut('Checking post for access - contains: ' . print_r($sp, true));
                         //this post we are checking is in this sequence
                         if($sp->id == $post_id)
                         {
                             //check specifically for the levels with access to this sequence
                             foreach($results[1] as $level_id)
                             {
-                                $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Testing for delay type...');
+                                $tmpSequence->dbgOut('pmpro_sequence_hasAccess() - Testing delay type for level (ID: ' . $level_id . ')');
 
                                 if ($tmpSequence->options->delayType == 'byDays')
                                 {
@@ -473,6 +484,17 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
     }
 endif;
 
+if ( ! function_exists( 'pmpro_sequence_datediff') ):
+
+	function pmpro_sequence_datediff( $start, $end )
+	{
+		global $wpdb;
+
+		$startDate = date_time_set( $startDate );
+
+		$sql = "SELECT DATEDIFF( '" . $startDate . '", "' . $endDate . "');";
+	}
+endif;
 /*
 	Couple functions from PMPro in case we don't have them loaded yet.
 */
@@ -533,6 +555,7 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 		}
 		
 		global $pmpro_member_days;
+
 		if(empty($pmpro_member_days[$user_id][$level_id]))
 		{		
 			$startdate = pmpro_getMemberStartdate($user_id, $level_id);
@@ -548,6 +571,7 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 				$days = 0;
 			else
 			{
+
 				/* Will take Daylight savings changes into account and ensure only integer value days returned */
 				$dStart = new DateTime( date( 'Y-m-d', $startdate ) );
 				$dEnd   = new DateTime( date( 'Y-m-d' ) ); // Today's date
