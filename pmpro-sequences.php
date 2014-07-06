@@ -47,13 +47,14 @@ Author URI: http://www.eighty20results.com
 */
 
 /* Enable / Disable DEBUG logging to separate file */
-define('PMPRO_SEQUENCE_DEBUG', false);
+define('PMPRO_SEQUENCE_DEBUG', true);
 
 /*
 	Include the class for PMProSequences
 */
 if (! class_exists( 'PMProSequences' )):
     require_once(dirname(__FILE__) . "/classes/class.pmprosequences.php");
+	require_once(dirname(__FILE__) . "/scheduled/crons.php");
 endif;
 
 /*
@@ -183,6 +184,7 @@ if ( ! function_exists( 'pmpro_sequence_ajaxClearPosts')):
      * @param $sequenceObj -- stdObject containing configuration settings
      * @return bool - Returns true if save is successful
      */
+
     function pmpro_sequence_settings_save( $sequence_id, $sequenceObj )
     {
 
@@ -192,13 +194,107 @@ if ( ! function_exists( 'pmpro_sequence_ajaxClearPosts')):
         $sequenceObj->dbgOut('Pre-Save settings are: ' . print_r($settings, true));
         $sequenceObj->dbgOut('POST: ' . print_r($_POST, true));
 
+//	    $sequenceObj->pmpro_sequence_meta_save($sequence_id);
+	    // Check that the function was called correctly. If not, just return
+	    if(empty($sequence_id)) {
+		    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): No sequence ID supplied...');
+		    return false;
+	    }
+
+	    // Verify that we're allowed to update the sequence data
+	    if ( !current_user_can( 'edit_post', $sequence_id ) ) {
+		    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): User is not allowed to edit this post type');
+		    return $sequence_id;
+	    }
+
+
+	    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): About to save settings for sequence ' . $sequence_id);
+	    $sequenceObj->dbgOut('From Web: ' . print_r($_REQUEST, true));
+
+	    // OK, we're authenticated: we need to find and save the data
+	    if ( isset($_POST['pmpro_sequence_settings_noncename']) )
+	    {
+
+		    $sequenceObj->dbgOut('Have to load new instance of Sequence class');
+
+		    if (!$settings)
+			    $settings = $sequenceObj->defaultOptions();
+
+		    if ( isset($_POST['pmpro_sequence_hidden']) )
+		    {
+			    $settings->hidden = intval($_POST['pmpro_sequence_hidden']);
+			    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for hidden: ' . $_POST['pmpro_sequence_hidden'] );
+		    }
+		    elseif ( empty($settings->hidden) )
+			    $settings->hidden = 0;
+
+		    if ( isset($_POST['pmpro_sequence_lengthvisible']) )
+		    {
+			    $settings->lengthVisible = intval($_POST['pmpro_sequence_lengthvisible']);
+			    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for lengthVisible: ' . $_POST['pmpro_sequence_lengthvisible']);
+		    }
+		    elseif (empty($settings->lengthVisible))
+			    $settings->lengthVisible = 1;
+
+		    if ( isset($_POST['pmpro_sequence_sortorder']) )
+		    {
+			    $settings->sortOrder = intval($_POST['pmpro_sequence_sortorder']);
+			    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for sortOrder: ' . $_POST['pmpro_sequence_sortorder'] );
+		    }
+		    elseif (empty($settings->sortOrder))
+			    $settings->sortOrder = SORT_ASC;
+
+		    if ( isset($_POST['pmpro_sequence_delaytype']) )
+		    {
+			    $settings->delayType = esc_attr($_POST['pmpro_sequence_delaytype']);
+			    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for delayType: ' . esc_attr($_POST['pmpro_sequence_delaytype']) );
+		    }
+		    elseif (empty($settings->delayType))
+			    $settings->delayType = 'byDays';
+
+		    if ( isset($_POST['pmpro_sequence_startwhen']) )
+		    {
+			    $settings->startWhen = esc_attr($_POST['pmpro_sequence_startwhen']);
+			    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for startWhen: ' . esc_attr($_POST['pmpro_sequence_startwhen']) );
+		    }
+		    elseif (empty($settings->startWhen))
+			    $settings->startWhen = 0;
+
+		    if ( isset($_POST['pmpro_sequence_sendnotice']) )
+		    {
+			    $settings->sendNotice = intval($_POST['pmpro_sequence_sendnotice']);
+			    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for sendNotice: ' . intval($_POST['pmpro_sequence_sendnotice']) );
+		    }
+		    elseif (empty($settings->sendNotice))
+			    $settings->sendNotice = 1;
+
+		    if ( isset($_POST['pmpro_sequence_noticetemplate']) )
+		    {
+			    $settings->noticeTemplate = esc_attr($_POST['pmpro_sequence_noticetemplate']);
+			    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for noticeTemplate: ' . esc_attr($_POST['pmpro_sequence_noticetemplate']) );
+		    }
+		    elseif (empty($settings->noticeTemplate))
+			    $settings->noticeTemplate = 'new_content.html';
+
+		    if ( isset($_POST['pmpro_sequence_noticetime']) )
+		    {
+			    $settings->noticeTime = esc_attr($_POST['pmpro_sequence_noticetime']);
+			    $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for noticeTime: ' . esc_attr($_POST['pmpro_sequence_noticetime']) );
+		    }
+		    elseif (empty($settings->noticeTime))
+			    $settings->noticeTime = '12:00 AM';
+
+		    // $sequence->options = $settings;
+
+	    }
+	    /*
         if (isset($_POST['pmpro_sequence_hidden']))
         {
             $settings->hidden = intval($_POST['pmpro_sequence_hidden']);
         }
-        if (isset($_POST['pmpro_sequence_daycount']))
+        if (isset($_POST['pmpro_sequence_lengthvisible']))
         {
-            $settings->dayCount = intval($_POST['pmpro_sequence_daycount']);
+            $settings->lengthVisible = intval($_POST['pmpro_sequence_lengthvisible']);
         }
         if (isset($_POST['pmpro_sequence_sortorder']))
         {
@@ -212,10 +308,11 @@ if ( ! function_exists( 'pmpro_sequence_ajaxClearPosts')):
         {
             $settings->startWhen = esc_attr($_POST['pmpro_sequence_startwhen']);
         }
-
+		*/
         $sequenceObj->dbgOut('Settings are now: ' . print_r($settings, true));
 
-        return $sequenceObj->save_sequence_meta($settings, $sequence_id);
+	    // Save settings to WPDB
+	    return $sequenceObj->save_sequence_meta($settings, $sequence_id);
     }
 
 endif;
@@ -252,7 +349,6 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 
 endif;
 
-
 if ( ! function_exists( 'pmpro_sequence_content' )):
 
     add_filter("the_content", "pmpro_sequence_content");
@@ -274,7 +370,7 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
             $settings = $sequence->fetchOptions();
 
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
-            if ( intval($settings->dayCount) == 1 )
+            if ( intval($settings->lengthVisible) == 1 )
                 $content .= "<p>You are on day " . intval(pmpro_getMemberDays()) . " of your membership.</p>";
 
             // Add the list of posts in the sequence to the content.
@@ -655,8 +751,12 @@ if ( ! function_exists('pmpro_sequence_activation')):
     function pmpro_sequence_activation()
     {
         PMProSequences::createCPT();
-
         flush_rewrite_rules();
+
+	    /* Register Cron job for new content check */
+	    // TODO: Use per-sequence meta to identify time of cron job. (Set Daily/Weekly or hourly)
+	    // Set time (what time) to run this cron job the first time.
+	    wp_schedule_event(time(), 'daily', 'pmpro_sequence_check_for_new_content');
     }
 
 endif;
@@ -670,5 +770,50 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
         global $pmpros_deactivating;
         $pmpros_deactivating = true;
         flush_rewrite_rules();
+
+	    /* Unregister Cron job for new content check */
+
+	    wp_clear_scheduled_hook(time(), 'daily', 'pmpro_sequence_check_for_new_content');
     }
+endif;
+
+
+// register_activation_hook(__FILE__, 'pmpros_activation');
+// register_deactivation_hook(__FILE__, 'pmpros_deactivation');
+
+if ( ! function_exists('pmpro_sequence_member_links_bottom')):
+
+	add_action('pmpro_member_links_bottom', 'pmpro_sequence_member_links_bottom');
+
+	/**
+	 * Add series post links to the account page for the user.
+	 */
+
+	function pmpro_sequence_member_links_bottom() {
+		global $wpdb, $current_user;
+
+		//get all series
+		$seqs = $wpdb->get_results("
+	        SELECT *
+	        FROM $wpdb->posts
+	        WHERE post_type = 'pmpro_series'
+	    ");
+
+		foreach($seqs as $s)
+		{
+			$sequence = new PMProSeries($s->ID);
+			$sequence_posts = $sequence->getPosts();
+
+			foreach($sequence_posts as $sequence_post)
+			{
+				if(pmpro_sequence_hasAccess($current_user->user_id, $sequence_post->id))
+				{
+					?>
+					<li><a href="<?php echo get_permalink($sequence_post->id); ?>" title="<?php echo get_the_title($sequence_post->id); ?>"><?php echo get_the_title($sequence_post->id); ?></a></li>
+				<?php
+				}
+			}
+		}
+	}
+
 endif;
