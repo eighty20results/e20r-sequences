@@ -587,13 +587,14 @@ endif;
 
 if ( ! function_exists( 'pmpro_sequence_datediff') ):
 
+	// TODO: Create a function that supports datediff functionality if PHP < 5.3.0
 	function pmpro_sequence_datediff( $start, $end )
 	{
 		global $wpdb;
 
-		$startDate = date_time_set( $startDate );
+		// $startDate = date_time_set( $start );
 
-		$sql = "SELECT DATEDIFF( '" . $startDate . '", "' . $endDate . "');";
+		//$sql = "SELECT DATEDIFF( '" . $startDate . '", "' . $endDate . "');";
 	}
 endif;
 /*
