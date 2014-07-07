@@ -892,7 +892,7 @@ class PMProSequences
             <input type="hidden" name="pmpro_sequence_settings_hidden_delay" id="pmpro_sequence_settings_hidden_delay" value="<?php echo $settings->delayType; ?>"/>
             <table style="width: 180px;">
 	            <tr>
-		            <td><input type="checkbox" value="1" title="Whether to send an alert/notice to members when new content for this sequence is accessible for them" id="pmpro_sequence_sendnotice" name="pmpro_sequence_sendnotice" <?php checked($settings->sendNotice, 1); ?> /></td>
+		            <td><input type="checkbox" value="1" title="Whether to send an alert/notice to members when new content for this sequence is available to them" id="pmpro_sequence_sendnotice" name="pmpro_sequence_sendnotice" <?php checked($settings->sendNotice, 1); ?> /></td>
 		            <td><label class="selectit">Send alert to members</label></td>
 	            </tr>
 
