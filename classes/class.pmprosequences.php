@@ -229,7 +229,7 @@ class PMProSequences
 	        if ( isset($_POST['pmpro_sequence_sendnotice']) )
 	        {
 		        $settings->sendNotice = intval($_POST['pmpro_sequence_sendnotice']);
-		        $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for sendNotice: ' . intval($_POST['pmpro_sequence_sendnotice']) );
+		        self::dbgOut('pmpro_sequence_settings_save(): POST value for sendNotice: ' . intval($_POST['pmpro_sequence_sendnotice']) );
 	        }
 	        elseif (empty($settings->sendNotice))
 		        $settings->sendNotice = 1;
