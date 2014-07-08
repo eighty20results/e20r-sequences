@@ -585,6 +585,19 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
     }
 endif;
 
+/**
+ * Filter to replace the !!excerpt_intro!! variable content in a "new content alert" message.
+ */
+if ( ! function_exists('pmpro_sequence_email_body')):
+
+	add_filter("pmpro_after_phpmailer_init", "pmpro_sequence_email_body");
+
+	function pmpro_sequence_email_body( $phpmailer )
+	{
+		$phpmailer->Body = str_replace("!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body );
+	}
+endif;
+
 if ( ! function_exists( 'pmpro_sequence_datediff') ):
 
 	// TODO: Create a function that supports datediff functionality if PHP < 5.3.0

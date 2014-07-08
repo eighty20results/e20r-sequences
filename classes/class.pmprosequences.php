@@ -673,12 +673,13 @@ class PMProSequences
 		$email->data = array(
 			"name" => $user->display_name,
 			"sitename" => get_option("blogname"),
+			"excerpt_intro" => '<p>A summary of the post follows below.</p>',
 			"post_link" => '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>'
 		);
 
 		if(!empty($post->post_excerpt))
 			// TODO - Fix the excerpt prefix (<p>A summary ... </p>)
-			$email->data['excerpt'] = '<p>A summary of the post follows below.</p><p>' . $post->post_excerpt . '</p>';
+			$email->data['excerpt'] = $email->data['excerpt_intro'] . '<p>' . $post->post_excerpt . '</p>';
 		else
 			$email->data['excerpt'] = '';
 
