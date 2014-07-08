@@ -23,7 +23,9 @@ function pmpro_sequence_check_for_new_content()
 
 	foreach($seq as $s)
 	{
-		$sequence = new PMProSeries($s->ID);
+		$sequence = new PMProSequences($s->ID);
+		// TODO: Check if sequence is configured to send member updates. Return if not.
+
 		$sequence_posts = $sequence->getPosts();
 
 		foreach($sequence_posts as $sequence_post)

@@ -677,6 +677,7 @@ class PMProSequences
 		);
 
 		if(!empty($post->post_excerpt))
+			// TODO - Fix the excerpt prefix (<p>A summary ... </p>)
 			$email->data['excerpt'] = '<p>A summary of the post follows below.</p><p>' . $post->post_excerpt . '</p>';
 		else
 			$email->data['excerpt'] = '';

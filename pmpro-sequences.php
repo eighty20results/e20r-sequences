@@ -797,12 +797,14 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 		$seqs = $wpdb->get_results("
 	        SELECT *
 	        FROM $wpdb->posts
-	        WHERE post_type = 'pmpro_series'
+	        WHERE post_type = 'pmpro_sequence'
 	    ");
 
 		foreach($seqs as $s)
 		{
-			$sequence = new PMProSeries($s->ID);
+			$sequence = new PMProSequences($s->ID);
+			// TODO: Check whether this sequence is configured to send out notices on new content.
+
 			$sequence_posts = $sequence->getPosts();
 
 			foreach($sequence_posts as $sequence_post)
