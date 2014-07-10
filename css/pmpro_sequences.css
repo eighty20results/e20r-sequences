@@ -8,3 +8,35 @@
 .pmpro_sequence_item-title a {font-size: 1.1em; }
 .pmpro_sequence_item-available {display: inline-block; float: right; width: auto; }
 .pmpro_sequence_item-unavailable {display: inline-block; float: right; width: auto; font-style: italic; font-size: .9em; text-align: center;  }
+
+.pmpro-sequence-sortorder label,
+.pmpro-sequence-delaytype label,
+.pmpro-sequence-template label,
+.pmpro-sequence-noticetime label {
+    vertical-align: baseline;
+}
+span#pmpro-seq-sort-status,
+span#pmpro-seq-delay-status,
+span#pmpro-seq-template-status,
+span#pmpro-seq-noticetime-status {
+    font-weight: bold;
+}
+.edit-pmpro-seq-sort,
+.edit-pmpro-seq-delay,
+.edit-pmpro-seq-template,
+.edit-pmpro-seq-noticetime {
+    display: inline-block;
+}
+
+.pmpro-seq-alert-hl {
+    padding-top: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    /* color: #9C0000; */
+}
+
+#pmpro_settings_save {
+    float: right;
+    right: 12px;
+    display: inline-block;
+}

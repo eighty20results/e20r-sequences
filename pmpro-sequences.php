@@ -66,12 +66,17 @@ if (! function_exists('pmpro_sequence_scripts')):
 
     function pmpror_sequence_scripts()
     {
-        if(!is_admin())
+
+	    wp_enqueue_style("pmpro_sequence_pmpro", plugins_url('css/pmpro_sequences.css',__FILE__ ));
+	    wp_enqueue_script("pmpro_sequence_pmpro", plugins_url('js/pmpro-sequences.js',__FILE__), '', null, true);
+
+	    if(!is_admin())
         {
             /*if(!defined("PMPRO_VERSION"))
             {*/
                 //load some styles that we need from PMPro
-                wp_enqueue_style("pmpro_sequence_pmpro", plugins_url('css/pmpro_sequences.css',__FILE__ ));
+//                wp_enqueue_style("pmpro_sequence_pmpro", plugins_url('css/pmpro_sequences.css',__FILE__ ));
+//	            wp_enqueue_script("pmpro_sequence_pmpro", plugins_url('js/pmpro_sequences.js', __FILE__), '', '0.1', true);
             /*}*/
         }
 
