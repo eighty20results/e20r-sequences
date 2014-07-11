@@ -186,68 +186,75 @@ class PMProSequences
             if (!$settings)
                 $settings = $sequence->defaultOptions();
 
-            if ( isset($_POST['pmpro_sequence_hidden']) )
+	        // Checkbox - not included during post/save if unchecked
+            if ( isset($_POST['hidden_pmpro_seq_future']) )
             {
-                $settings->hidden = intval($_POST['pmpro_sequence_hidden']);
-                self::dbgOut('pmpro_sequence_meta_save(): POST value for hidden: ' . $_POST['pmpro_sequence_hidden'] );
+                $settings->hidden = intval($_POST['hidden_pmpro_seq_future']);
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->hidden: ' . $_POST['hidden_pmpro_seq_future'] );
             }
             elseif ( empty($settings->hidden) )
                 $settings->hidden = 0;
 
-            if ( isset($_POST['pmpro_sequence_lengthvisible']) )
+	        // Checkbox - not included during post/save if unchecked
+            if (isset($_POST['hidden_pmpro_seq_lengthvisible']) )
             {
-                $settings->lengthVisible = intval($_POST['pmpro_sequence_lengthvisible']);
-                self::dbgOut('pmpro_sequence_meta_save(): POST value for lengthVisible: ' . $_POST['pmpro_sequence_lengthvisible']);
+		            $settings->lengthVisible = intval($_POST['hidden_pmpro_seq_lengthvisible']);
+		            self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->lengthVisible: ' . $_POST['hidden_pmpro_seq_lengthvisible']);
             }
-            elseif (empty($settings->lengthVisible))
-                $settings->lengthVisible = 1;
+            elseif (empty($settings->lengthVisible)) {
+	            self::dbgOut('Setting lengthVisible to default value (checked)');
+	            $settings->lengthVisible = 1;
+            }
 
-            if ( isset($_POST['pmpro_sequence_sortorder']) )
+
+            if ( isset($_POST['hidden_pmpro_seq_sortorder']) )
             {
-                $settings->sortOrder = intval($_POST['pmpro_sequence_sortorder']);
-                self::dbgOut('pmpro_sequence_meta_save(): POST value for sortOrder: ' . $_POST['pmpro_sequence_sortorder'] );
+                $settings->sortOrder = intval($_POST['hidden_pmpro_seq_sortorder']);
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->sortOrder: ' . $_POST['hidden_pmpro_seq_sortorder'] );
             }
             elseif (empty($settings->sortOrder))
                 $settings->sortOrder = SORT_ASC;
 
-            if ( isset($_POST['pmpro_sequence_delaytype']) )
+            if ( isset($_POST['hidden_pmpro_seq_delaytype']) )
             {
-                $settings->delayType = esc_attr($_POST['pmpro_sequence_delaytype']);
-                self::dbgOut('pmpro_sequence_meta_save(): POST value for delayType: ' . esc_attr($_POST['pmpro_sequence_delaytype']) );
+                $settings->delayType = esc_attr($_POST['hidden_pmpro_seq_delaytype']);
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->delayType: ' . esc_attr($_POST['hidden_pmpro_seq_delaytype']) );
             }
             elseif (empty($settings->delayType))
                 $settings->delayType = 'byDays';
 
-            if ( isset($_POST['pmpro_sequence_startwhen']) )
+            if ( isset($_POST['hidden_pmpro_seq_startwhen']) )
             {
-                $settings->startWhen = esc_attr($_POST['pmpro_sequence_startwhen']);
-                self::dbgOut('pmpro_sequence_meta_save(): POST value for startWhen: ' . esc_attr($_POST['pmpro_sequence_startwhen']) );
+                $settings->startWhen = esc_attr($_POST['hidden_pmpro_seq_startwhen']);
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->startWhen: ' . esc_attr($_POST['hidden_pmpro_seq_startwhen']) );
             }
             elseif (empty($settings->startWhen))
                 $settings->startWhen = 0;
 
-	        if ( isset($_POST['pmpro_sequence_sendnotice']) )
+	        // Checkbox - not included during post/save if unchecked
+	        if ( isset($_POST['hidden_pmpro_seq_sendnotice']) )
 	        {
-		        $settings->sendNotice = intval($_POST['pmpro_sequence_sendnotice']);
-		        self::dbgOut('pmpro_sequence_settings_save(): POST value for sendNotice: ' . intval($_POST['pmpro_sequence_sendnotice']) );
+		        $settings->sendNotice = intval($_POST['hidden_pmpro_seq_sendnotice']);
+		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->sendNotice: ' . intval($_POST['hidden_pmpro_seq_sendnotice']) );
 	        }
-	        elseif (empty($settings->sendNotice))
+	        elseif (empty($settings->sendNotice)) {
 		        $settings->sendNotice = 1;
-
-	        if ( isset($_POST['pmpro_sequence_noticetemplate']) )
-	        {
-		        $settings->noticeTemplate = esc_attr($_POST['pmpro_sequence_noticetemplate']);
-		        self::dbgOut('pmpro_sequence_meta_save(): POST value for noticeTemplate: ' . esc_attr($_POST['pmpro_sequence_noticetemplate']) );
 	        }
-	        elseif (empty($settings->noticeTemplate))
+
+	        if ( isset($_POST['hidden_pmpro_seq_template']) )
+	        {
+		        $settings->noticeTemplate = esc_attr($_POST['hidden_pmpro_seq_template']);
+		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTemplate: ' . esc_attr($_POST['hidden_pmpro_seq_template']) );
+	        }
+	        else
 		        $settings->noticeTemplate = 'new_content.html';
 
-	        if ( isset($_POST['pmpro_sequence_noticetime']) )
+	        if ( isset($_POST['hidden_pmpro_seq_noticetime']) )
 	        {
-		        $settings->noticeTime = esc_attr($_POST['pmpro_sequence_noticetime']);
-		        self::dbgOut('pmpro_sequence_meta_save(): POST value for noticeTime: ' . esc_attr($_POST['pmpro_sequence_noticetime']) );
+		        $settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_noticetime']);
+		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTime: ' . esc_attr($_POST['hidden_pmpro_seq_noticetime']) );
 	        }
-	        elseif (empty($settings->noticeTime))
+	        else
 		        $settings->noticeTime = '12:00 AM';
 
 	        // $sequence->options = $settings;
@@ -836,6 +843,10 @@ class PMProSequences
 	 */
 	function pmpro_sequence_listEmailTemplates( $settings )
 	{
+		?>
+			<!-- Default template (blank) -->
+			<option value=""></option>
+		<?php
 		$files = array();
 
 		self::dbgOut('Directory containing templates: ' . dirname(__DIR__) . '/email/');
@@ -894,59 +905,19 @@ class PMProSequences
             <input type="hidden" name="pmpro_sequence_settings_hidden_delay" id="pmpro_sequence_settings_hidden_delay" value="<?php echo esc_attr($settings->delayType); ?>"/>
             <table style="width: 100%;">
 	            <tr>
-                    <td style="width: 20px;"><input type="checkbox" value="1" title="<?php _e('Hide unpublished / future posts for this sequence'); ?>" id="pmpro_sequence_hidden" name="pmpro_sequence_hidden" <?php checked($settings->hidden, 1); ?> /></td>
+                    <td style="width: 20px;">
+	                    <input type="checkbox" value="1" id="pmpro_sequence_hidden" name="pmpro_sequence_hidden" title="<?php _e('Hide unpublished / future posts for this sequence'); ?>" <?php checked($settings->hidden, 1); ?> />
+		                <input type="hidden" name="hidden_pmpro_seq_future" id="hidden_pmpro_seq_future" value="<?php echo esc_attr($settings->hidden); ?>" >
+                    </td>
                     <td style="width: 160px"><label class="selectit"><?php _e('Hide all future posts'); ?></label></td>
                 </tr>
-                <!-- TODO: Enable and implement
-                <tr id="pmpro_sequence_foreshadow" style="display: none;">
-                    <td colspan="2">
-                        <label class="screen-reader-text" for="pmpro_sequence_previewwindow"><? _e('Days to preview'); ?></label>
-                    </td>
-                </tr>
-                <tr id="pmpro_sequence_foreshadow_2" style="display: none;" id="pmpro_sequence_previewWindowOpt">
-                    <td colspan="2">
-                        <select name="pmpro_sequence_foreshadow" id="pmpro_sequence_previewwindow">
-                            <option value="0" <?php selected( intval($settings->previewWindow), '0'); ?> >All</option>
-                            <option value="1" <?php selected( intval($settings->previewWindow), '1'); ?> >1 day</option>
-                            <option value="2" <?php selected( intval($settings->previewWindow), '2'); ?> >2 days</option>
-                            <option value="3" <?php selected( intval($settings->previewWindow), '3'); ?> >3 days</option>
-                            <option value="4" <?php selected( intval($settings->previewWindow), '4'); ?> >4 days</option>
-                            <option value="5" <?php selected( intval($settings->previewWindow), '5'); ?> >5 days</option>
-                            <option value="6" <?php selected( intval($settings->previewWindow), '6'); ?> >1 week</option>
-                            <option value="7" <?php selected( intval($settings->previewWindow), '7'); ?> >2 weeks</option>
-                            <option value="8" <?php selected( intval($settings->previewWindow), '8'); ?> >3 weeks</option>
-                            <option value="9" <?php selected( intval($settings->previewWindow), '8'); ?> >1 month</option>
-                        </select>
-                    </td>
-                </tr>
-                -->
                 <tr>
-                    <td><input type="checkbox" value="1" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text'); ?>" id="pmpro_sequence_lengthvisible" name="pmpro_sequence_lengthvisible" <?php checked($settings->lengthVisible, 1); ?> /></td>
+                    <td>
+	                    <input type="checkbox" value="1" id="pmpro_sequence_lengthvisible" name="pmpro_sequence_lengthvisible" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text'); ?>" <?php checked($settings->lengthVisible, 1); ?> />
+	                    <input type="hidden" name="hidden_pmpro_seq_lengthvisible" id="hidden_pmpro_seq_lengthvisible" value="<?php echo esc_attr($settings->lengthVisible); ?>" >
+                    </td>
                     <td><label class="selectit"><?php _e('Show membership length info'); ?></label></td>
                 </tr>
-                <!-- TODO: Enable and implement
-                <tr id="pmpro_sequenceseq_start_0" style="display: none;">
-                    <td>
-                        <input id='pmpro_sequence_enablestartwhen' type="checkbox" value="1" title="<?php _e('Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out.'); ?>" name="pmpro_sequence_enablestartwhen" <?php echo ($sequence->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
-                    </td>
-                    <td><label class="selectit"><?php _e('Sequence starts'); ?></label></td>
-                </tr>
-                <tr id="pmpro_sequence_seq_start_1" style="display: none; height: 1px;">
-                    <td colspan="2">
-                        <label class="screen-reader-text" for="pmpro_sequence_startwhen">Day 1 Starts</label>
-                    </td>
-                </tr>
-                <tr id="pmpro_sequence_seq_start_2" style="display: none;" id="pmpro_sequence_selectWhen">
-                    <td colspan="2">
-                        <select name="pmpro_sequence_startwhen" id="pmpro_sequence_startwhen">
-                            <option value="0" <?php selected( intval($settings->startWhen), '0'); ?> >Immediately</option>
-                            <option value="1" <?php selected( intval($settings->startWhen), '1'); ?> >24 hours after membership started</option>
-                            <option value="2" <?php selected( intval($settings->startWhen), '2'); ?> >At midnight, immediately after membership started</option>
-                            <option value="3" <?php selected( intval($settings->startWhen), '3'); ?> >At midnight, 24+ hours after membership started</option>
-                        </select>
-                    </td>
-                </tr>
-               -->
 	            <tr><td colspan="2"><hr/></td></tr>
                 <tr>
 	                <td colspan="2">
@@ -989,22 +960,8 @@ class PMProSequences
 			                </div>
 		                </div>
 	                </td>
-	                <!--
-                    <td colspan="2" style="vertical-align: bottom; padding: 0px;"><p><strong>Delay type</strong></p></td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="display: none; height: 1px;"><label class="screen-reader-text" for=""><?php _e('Delay type'); ?></label></td>
-                </tr>
-                <tr>
-                    <td colspan="2" style="vertical-align: top; padding: 0px;">
-                        <select name="pmpro_sequence_delaytype" id="pmpro_sequence_delaytype" >
-                            <option value="byDays" <?php selected( $settings->delayType, 'byDays'); ?> ><?php _e('Number of Days'); ?></option>
-                            <option value="byDate" <?php selected( $settings->delayType, 'byDate'); ?> ><?php _e('Release Date (YYYY-MM-DD)'); ?></option>
-                        </select>
-                    </td> -->
                 </tr>
 	            <!-- TODO: Add support for time to run new-content job (cron) for this sequence (the default value is set at plugin registration -->
-
 	            <tr>
 		            <td colspan="2">
 			            <div class="pmpro-seq-alert-hl">New content alerts</div>
@@ -1015,9 +972,10 @@ class PMProSequences
 		            <td colspan="2">
 			            <div class="pmpro-sequence-alerts">
 				            <input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them'); ?>" id="pmpro_sequence_sendnotice" name="pmpro_sequence_sendnotice" <?php checked($settings->sendNotice, 1); ?> />
+				            <input type="hidden" name="hidden_pmpro_seq_sendnotice" id="hidden_pmpro_seq_sendnotice" value="<?php echo esc_attr($settings->sendNotice); ?>" >
 				            <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Send new content alerts'); ?></label>
-				            <hr width="60%"/>
 				            <div class="pmpro-sequence-template">
+					            <hr width="60%"/>
 					            <label for="pmpro-seq-template"><?php _e('Email templ:'); ?> </label>
 					            <span id="pmpro-seq-template-status"><?php _e( esc_attr( $settings->noticeTemplate ) ); ?></span>
 					            <a href="#pmpro-seq-template" id="pmpro-seq-edit-template" class="edit-pmpro-seq-template">
@@ -1035,27 +993,20 @@ class PMProSequences
 				            </div>
 			            </div>
 		            </td>
-		            <!-- <td colspan="2" style="vertical-align: bottom; padding: 0px;"><p><strong><?php _e('Alert Template'); ?></strong></p></td>
-	            </tr>
-	            <tr>
-		            <td colspan="2" style="display: none; height: 1px; padding: 0px;"><label class="screen-reader-text" for="pmpro_sequence_noticetemplate">Notice Template</label></td>
-	            </tr>
-	            <tr>
-		            <td colspan="2" style="padding: 0px; vertical-align: top;">
-			            <select name="pmpro_sequence_noticetemplate" id="pmpro_sequence_noticetemplate">
-				            <?php // $sequence->pmpro_sequence_listEmailTemplates( $settings ); ?>
-			            </select>
-		            </td> -->
 	            </tr>
 	            <tr>
 		            <td colspan="2">
 			            <div class="pmpro-sequence-noticetime">
-				            <label for="pmpro-seq-noticetime"><?php _e('Send at:'); ?> </label>
+				            <label for="pmpro-seq-noticetime"><?php _e('When:'); ?> </label>
 				            <span id="pmpro-seq-noticetime-status"><?php _e(esc_attr($settings->noticeTime)); ?></span>
 				            <a href="#pmpro-seq-noticetime" id="pmpro-seq-edit-noticetime" class="edit-pmpro-seq-noticetime">
 					            <span aria-hidden="true"><?php _e('Edit'); ?></span>
 					            <span class="screen-reader-text"><?php _e('Edit the transmission time for any new content posted alerts for this sequence'); ?></span>
 				            </a>
+				            <div>
+					            <label for="pmpro-seq-noticetime"><?php _e('Timezone:'); ?> </label>
+					            <span id="pmpro-seq-noticetime-status"><?php echo '  ' . get_option('timezone_string'); ?></span>
+				            </div>
 				            <div id="pmpro-seq-noticetime-select" style="display: none;">
 					            <input type="hidden" name="hidden_pmpro_seq_noticetime" id="hidden_pmpro_seq_noticetime" value="<?php echo esc_attr($settings->noticeTime); ?>" >
 					            <select name="pmpro_sequence_noticetime" id="pmpro_sequence_noticetime">
@@ -1075,7 +1026,54 @@ class PMProSequences
                         <a class="button button-primary button-large" class="pmpro-seq-settings-save" id="pmpro_settings_save"><?php _e('Save Settings'); ?></a>
                     </td>
                 </tr>
-                </table>
+	            <!-- TODO: Enable and implement
+                <tr id="pmpro_sequence_foreshadow" style="display: none;">
+                    <td colspan="2">
+                        <label class="screen-reader-text" for="pmpro_sequence_previewwindow"><? _e('Days to preview'); ?></label>
+                    </td>
+                </tr>
+                <tr id="pmpro_sequence_foreshadow_2" style="display: none;" id="pmpro_sequence_previewWindowOpt">
+                    <td colspan="2">
+                        <select name="pmpro_sequence_foreshadow" id="pmpro_sequence_previewwindow">
+                            <option value="0" <?php selected( intval($settings->previewWindow), '0'); ?> >All</option>
+                            <option value="1" <?php selected( intval($settings->previewWindow), '1'); ?> >1 day</option>
+                            <option value="2" <?php selected( intval($settings->previewWindow), '2'); ?> >2 days</option>
+                            <option value="3" <?php selected( intval($settings->previewWindow), '3'); ?> >3 days</option>
+                            <option value="4" <?php selected( intval($settings->previewWindow), '4'); ?> >4 days</option>
+                            <option value="5" <?php selected( intval($settings->previewWindow), '5'); ?> >5 days</option>
+                            <option value="6" <?php selected( intval($settings->previewWindow), '6'); ?> >1 week</option>
+                            <option value="7" <?php selected( intval($settings->previewWindow), '7'); ?> >2 weeks</option>
+                            <option value="8" <?php selected( intval($settings->previewWindow), '8'); ?> >3 weeks</option>
+                            <option value="9" <?php selected( intval($settings->previewWindow), '8'); ?> >1 month</option>
+                        </select>
+                    </td>
+                </tr>
+                -->
+	            <!-- TODO: Enable and implement
+                <tr id="pmpro_sequenceseq_start_0" style="display: none;">
+                    <td>
+                        <input id='pmpro_sequence_enablestartwhen' type="checkbox" value="1" title="<?php _e('Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out.'); ?>" name="pmpro_sequence_enablestartwhen" <?php echo ($sequence->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
+                    </td>
+                    <td><label class="selectit"><?php _e('Sequence starts'); ?></label></td>
+                </tr>
+                <tr id="pmpro_sequence_seq_start_1" style="display: none; height: 1px;">
+                    <td colspan="2">
+                        <label class="screen-reader-text" for="pmpro_sequence_startwhen">Day 1 Starts</label>
+                    </td>
+                </tr>
+                <tr id="pmpro_sequence_seq_start_2" style="display: none;" id="pmpro_sequence_selectWhen">
+                    <td colspan="2">
+                        <select name="pmpro_sequence_startwhen" id="pmpro_sequence_startwhen">
+                            <option value="0" <?php selected( intval($settings->startWhen), '0'); ?> >Immediately</option>
+                            <option value="1" <?php selected( intval($settings->startWhen), '1'); ?> >24 hours after membership started</option>
+                            <option value="2" <?php selected( intval($settings->startWhen), '2'); ?> >At midnight, immediately after membership started</option>
+                            <option value="3" <?php selected( intval($settings->startWhen), '3'); ?> >At midnight, 24+ hours after membership started</option>
+                        </select>
+                    </td>
+                </tr>
+               -->
+
+            </table>
             </div>
         </div>
 
@@ -1103,20 +1101,20 @@ class PMProSequences
                             jQuery.data(this, 'pmpro_sequence_settings_delaytype', jQuery(this).val());
 
                             // Send POST (AJAX) request to delete all existing articles/posts in sequence.
-                            jQuery.post(
-                                "<?php echo site_url(); ?>/wp-admin/admin-ajax.php",
+                            jQuery.post( pmproSequenceAjax.ajaxurl,
                                 {
                                     action: 'pmpro_sequence_clear',
                                     'pmpro_sequenceclear_sequence': '1',
+	                                'security': pmproSequenceAjax.pmproSequenceNonce,
                                     'pmpro_sequence_id': '<?php echo $post->ID ?>',
-                                    'pmpro_sequence_hidden': isHidden(),
-                                    'pmpro_sequence_lengthvisible': showLength(),
-                                    'pmpro_sequence_startwhen': jQuery('#pmpro_sequence_startwhen').val(),
-                                    'pmpro_sequence_sortorder': jQuery('#pmpro_sequence_sortorder').val(),
-                                    'pmpro_sequence_delaytype': jQuery('#pmpro_sequence_delaytype').val(),
-	                                'pmpro_sequence_sendnotice': jQuery('#pmpro_sequence_sendnotice').val(),
-	                                'pmpro_sequence_noticetime': jQuery('#pmpro_sequence_noticetime').val(),
-	                                'pmpro_sequence_noticetemplate': jQuery('#pmpro_sequence_template').val()
+                                    'hidden_pmpro_seq_hidden': isHidden(),
+                                    'hidden_pmpro_seq_lengthvisible': showLength(),
+                                    'hidden_pmpro_seq_startwhen': jQuery('#pmpro_sequence_startwhen').val(),
+                                    'hidden_pmpro_seq_sortorder': jQuery('#hidden_pmpro_seq_sortorder').val(),
+                                    'hidden_pmpro_seq_delaytype': jQuery('#hidden_pmpro_seq_delaytype').val(),
+	                                'hidden_pmpro_seq_sendnotice': jQuery('#hidden_pmpro_seq_sendnotice').val(),
+	                                'hidden_pmpro_seq_noticetime': jQuery('#hidden_pmpro_seq_noticetime').val(),
+	                                'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_template').val()
                                 },
                                 function(responseHTML)
                                 {
@@ -1149,21 +1147,21 @@ class PMProSequences
                     //disable save button
                     jQuery(this).html('Saving...');
 
-                    jQuery.post(
-                        "<?php echo site_url(); ?>/wp-admin/admin-ajax.php",
+                    jQuery.post( pmproSequenceAjax.ajaxurl,
                         //Data to send to back-end
                         {
                             action: 'pmpro_save_settings',
                             'cookie': encodeURIComponent(document.cookie),
+	                        'security': pmproSequenceAjax.pmproSequenceNonce,
                             'pmpro_sequence_id': '<?php echo $post->ID; ?>',
-                            'pmpro_sequence_hidden': isHidden(),
-                            'pmpro_sequence_lengthvisible': showLength(),
-                            'pmpro_sequence_startwhen': jQuery('#pmpro_sequence_startwhen').val(),
-                            'pmpro_sequence_sortorder': jQuery('#pmpro_sequence_sortorder').val(),
-	                        'pmpro_sequence_delaytype': jQuery('#pmpro_sequence_delaytype').val(),
-	                        'pmpro_sequence_sendnotice': jQuery('#pmpro_sequence_sendnotice').val(),
-	                        'pmpro_sequence_noticetime': jQuery('#pmpro_sequence_noticetime').val(),
-	                        'pmpro_sequence_noticetemplate': jQuery('#pmpro_sequence_template').val()
+	                        'hidden_pmpro_seq_hidden': isHidden(),
+	                        'hidden_pmpro_seq_lengthvisible': showLength(),
+	                        'hidden_pmpro_seq_startwhen': jQuery('#pmpro_sequence_startwhen').val(),
+	                        'hidden_pmpro_seq_sortorder': jQuery('#hidden_pmpro_seq_sortorder').val(),
+	                        'hidden_pmpro_seq_delaytype': jQuery('#hidden_pmpro_seq_delaytype').val(),
+	                        'hidden_pmpro_seq_sendnotice': jQuery('#hidden_pmpro_seq_sendnotice').val(),
+	                        'hidden_pmpro_seq_noticetime': jQuery('#hidden_pmpro_seq_noticetime').val(),
+	                        'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_template').val()
                         },
                         //on success function
                         function(status)
@@ -1191,55 +1189,7 @@ class PMProSequences
                 });
             });
 
-        function setLabels()
-        {
 
-            var delayType = jQuery('#pmpro_sequence_delaytype').val();
-            var headerHTML_start = '<th id="pmpro_sequence_delaytype">';
-            var headerHTML_end = '</th>';
-            var entryHTML_start = '<th id="pmpro_sequence_delayentrytype">';
-            var entryHTML_end = '</th>';
-
-            var labelText = 'Not Defined';
-            var entryText = 'Not Defined';
-
-            if (delayType == 'byDays')
-            {
-                labelText = "Delay";
-                entryText = "Days to delay";
-            }
-
-            if (delayType == 'byDate')
-            {
-                labelText = "Avail. on";
-                entryText = "Release on (YYYY-MM-DD)";
-            }
-
-            jQuery('#pmpro_sequence_delaylabel').html( headerHTML_start + labelText + headerHTML_end);
-            jQuery('#pmpro_sequence_delayentrylabel').html( entryHTML_start + entryText + entryHTML_end);
-
-        }
-
-        function isHidden()
-        {
-            if (jQuery('#pmpro_sequence_hidden').is(":checked"))
-                return jQuery('input#pmpro_sequence_hidden').val();
-            else
-                return 0;
-        }
-        function showLength()
-        {
-            // var lengthVisible = jQuery('input#pmpro_sequence_lengthvisible').val();
-            // console.log('lengthVisible checkbox value: ' + lengthVisible);
-
-            if ( jQuery('#pmpro_sequence_lengthvisible').is(":checked"))
-            {
-                console.log('lengthVisible setting is checked');
-                return jQuery('input#pmpro_sequence_lengthvisible').val();;
-            }
-            else
-                return 0;
-        }
         </script>
 	<?php
 

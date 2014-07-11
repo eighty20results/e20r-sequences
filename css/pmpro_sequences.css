@@ -9,6 +9,10 @@
 .pmpro_sequence_item-available {display: inline-block; float: right; width: auto; }
 .pmpro_sequence_item-unavailable {display: inline-block; float: right; width: auto; font-style: italic; font-size: .9em; text-align: center;  }
 
+.pmpro-sequence-template,
+.pmpro-sequence-noticetime {
+    display: none;
+}
 .pmpro-sequence-sortorder label,
 .pmpro-sequence-delaytype label,
 .pmpro-sequence-template label,
@@ -20,6 +24,7 @@ span#pmpro-seq-delay-status,
 span#pmpro-seq-template-status,
 span#pmpro-seq-noticetime-status {
     font-weight: bold;
+    color: #3875d7;
 }
 .edit-pmpro-seq-sort,
 .edit-pmpro-seq-delay,
