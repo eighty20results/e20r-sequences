@@ -24,7 +24,15 @@ function pmpro_sequence_check_for_new_content()
 	foreach($seq as $s)
 	{
 		$sequence = new PMProSequences($s->ID);
-		// TODO: Check if sequence is configured to send member updates. Return if not.
+
+		// Grab the settings for this sequence.
+		$seq_settings = $sequence->fetchOptions($s->ID);
+
+		// Check if sequence is configured to send member updates. Return if not.
+		if ($seq_settings->sendNotice != 1) {
+			$sequence->dbgOut('Not configured to send notices to users. Exiting!');
+			return;
+		}
 
 		$sequence_posts = $sequence->getPosts();
 
