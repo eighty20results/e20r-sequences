@@ -1003,10 +1003,6 @@ class PMProSequences
 					            <span aria-hidden="true"><?php _e('Edit'); ?></span>
 					            <span class="screen-reader-text"><?php _e('Edit the transmission time for any new content posted alerts for this sequence'); ?></span>
 				            </a>
-				            <div>
-					            <label for="pmpro-seq-noticetime"><?php _e('Timezone:'); ?> </label>
-					            <span id="pmpro-seq-noticetime-status"><?php echo '  ' . get_option('timezone_string'); ?></span>
-				            </div>
 				            <div id="pmpro-seq-noticetime-select" style="display: none;">
 					            <input type="hidden" name="hidden_pmpro_seq_noticetime" id="hidden_pmpro_seq_noticetime" value="<?php echo esc_attr($settings->noticeTime); ?>" >
 					            <select name="pmpro_sequence_noticetime" id="pmpro_sequence_noticetime">
@@ -1016,6 +1012,11 @@ class PMProSequences
 					            <a href="#pmproseq_noticetime" id="ok-pmpro-seq-noticetime" class="save-pmproseq button"><?php _e('OK'); ?></a>
 					            <a href="#pmproseq_noticetime" id="cancel-pmpro-seq-noticetime" class="cancel-pmproseq button-cancel"><?php _e('Cancel'); ?></a>
 				            </div>
+				            <div>
+					            <label for="pmpro-seq-noticetime"><?php _e('Timezone:'); ?> </label>
+					            <span id="pmpro-seq-noticetime-status"><?php echo '  ' . get_option('timezone_string'); ?></span>
+				            </div>
+
 			            </div>
 		            </td>
 	            <tr>
