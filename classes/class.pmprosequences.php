@@ -70,6 +70,7 @@ class PMProSequences
 	    $settings->sendNotice = 1; // sendNotice == Yes
 	    $settings->noticeTemplate = 'new_content.html'; // Default plugin template
 	    $settings->noticeTime = '12:00 AM'; // At Midnight (server TZ)
+        $settings->noticeTimestamp = time(); // The current time (in UTC)
         $settings->excerpt_intro = 'A summary of the post follows below:';
 
         $this->options = $settings; // Save as options for this sequence
@@ -253,6 +254,10 @@ class PMProSequences
 	        if ( isset($_POST['hidden_pmpro_seq_noticetime']) )
 	        {
 		        $settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_noticetime']);
+                // Calculate the timestamp value for the noticeTime specified (noticeTime is in current timezone)
+
+            $settings->noticeTimestamp = $sequence->calculateTimestamp($settings->noticeTime);
+
 		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTime: ' . esc_attr($_POST['hidden_pmpro_seq_noticetime']) );
 	        }
 	        else
@@ -278,11 +283,37 @@ class PMProSequences
     }
 
     /**
+     * Converts a timeString to a timestamp value (UTC compliant).
+     * Will use the supplied timeString to calculate & return the UTC seconds-since-epoch for that clock time tomorrow.
+     *
+     * @param $timeString (string) -- A clock value ('12:00 AM' for instance)
+     * @return int -- The calculated timestamp value
+     */
+    private function calculateTimestamp( $timeString ) {
+
+        /* current time & date */
+        $timestamp = time();
+        $timeInput = 'tomorrow ' . $timeString . ' ' . get_option('timezone_string');
+
+        /* Various debug information to log */
+        self::dbgOut('calculateTimestamp() Supplied timeString: ' . $timeString);
+        self::dbgOut('calculateTimestamp() strtotime() input: ' . $timeInput);
+        self::dbgOut('calculateTimestamp() Current UTC timestamp: ' . $timestamp);
+
+        $timestamp = strtotime($timeInput);
+
+        /* Calculate */
+        self::dbgOut('calculateTimestamp() UTC timestamp for timeString (tomorrow): ' . $timestamp);
+        return $timestamp;
+    }
+
+    /**
      *
      * Save the settings to the Wordpress DB.
      *
      * @param $settings (array) -- Settings for the Sequence
-     *
+     * @param $post_id (int) -- The ID for the Sequence
+     * @return bool - Success or failure for the save operation
      */
     function save_sequence_meta( $settings, $post_id )
     {
@@ -660,13 +691,10 @@ class PMProSequences
         return $endDate;
     }
 */
-	//send an email RE new access to post_id to email of user_id
 
 	/**
 	 *
 	 * Send email to userID about access to new post.
-	 *
-	 * TODO: Add per-sequence support for independent times to send the message(s).
 	 *
 	 * @param $post_id -- ID of post to send email about
 	 * @param $user_id -- ID of user to send the email to.
@@ -816,21 +844,23 @@ class PMProSequences
 	/**
 	 * Update the when we're supposed to run the New Content Notice cron job for this sequence.
 	 *
-	 * @param $sequence -- stdObject - PMPro Sequence Object
+     * TODO: Per-sequence support for independent times to send the message(s).
+     *
+     * @param $sequence -- stdObject - PMPro Sequence Object
 	 */
 	function updateNoticeCron( $sequence )
 	{
 		try {
             $timestamp = wp_next_scheduled( 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id) );
 
-            // Check if the job is previously scheduled. If not,
+            // Check if the job is previously scheduled. If not, we're using the default cron schedule.
             if ($timestamp) {
-			    // Clear old cronjob location
-			    wp_clear_scheduled_hook(time(), 'daily', 'pmpro_sequence_check_for_new_content', array( $sequence->sequence_id ));
+			    // Clear old cronjob for this sequence
+			    wp_clear_scheduled_hook($timestamp, 'daily', 'pmpro_sequence_check_for_new_content', array( $sequence->sequence_id ));
             }
 
 			// Set time (what time) to run this cron job the first time.
-			wp_schedule_event(time(), 'daily', 'pmpro_sequence_check_for_new_content');
+			wp_schedule_event(time(), 'daily', 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id));
 
 		}
 		catch (Exception $e) {
@@ -1041,7 +1071,7 @@ class PMProSequences
 				            <span id="pmpro-seq-noticetime-status"><?php _e(esc_attr($settings->noticeTime)); ?></span>
 				            <a href="#pmpro-seq-noticetime" id="pmpro-seq-edit-noticetime" class="edit-pmpro-seq-noticetime">
 					            <span aria-hidden="true"><?php _e('Edit'); ?></span>
-					            <span class="screen-reader-text"><?php _e('Edit the transmission time for any new content posted alerts for this sequence'); ?></span>
+					            <span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence'); ?></span>
 				            </a>
 				            <div id="pmpro-seq-noticetime-select" style="display: none;">
 					            <input type="hidden" name="hidden_pmpro_seq_noticetime" id="hidden_pmpro_seq_noticetime" value="<?php echo esc_attr($settings->noticeTime); ?>" >
