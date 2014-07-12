@@ -353,6 +353,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		if ( isset($_POST['hidden_pmpro_seq_noticetime']) )
 		{
 			$settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_noticetime']);
+			$sequenceObj->updateNoticeCron($settings->noticeTime);
 			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTime: ' . esc_attr($_POST['hidden_pmpro_seq_noticetime']) );
 		}
 		else

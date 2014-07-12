@@ -798,6 +798,26 @@ class PMProSequences
         return $count;
     }
 
+	/**
+	 * Update the when we're supposed to run the New Content Notice cron job for this sequence.
+	 *
+	 * @param $sequence -- stdObject - PMPro Sequence Object
+	 */
+	function updateNoticeCron( $sequence )
+	{
+		try {
+			// Clear old cronjob location
+			wp_clear_scheduled_hook(time(), 'daily', 'pmpro_sequence_check_for_new_content', array( '', '' ));
+
+			// Set time (what time) to run this cron job the first time.
+			wp_schedule_event(time(), 'daily', 'pmpro_sequence_check_for_new_content');
+
+		}
+		catch (Exception $e) {
+			echo 'Error: ' . $e->getMessage();
+		}
+	}
+
     //this is the Sequence meta box
 	function sequenceMetaBox()
 	{
