@@ -70,6 +70,7 @@ class PMProSequences
 	    $settings->sendNotice = 1; // sendNotice == Yes
 	    $settings->noticeTemplate = 'new_content.html'; // Default plugin template
 	    $settings->noticeTime = '12:00 AM'; // At Midnight (server TZ)
+        $settings->excerpt_intro = 'A summary of the post follows below:';
 
         $this->options = $settings; // Save as options for this sequence
 
@@ -256,6 +257,14 @@ class PMProSequences
 	        }
 	        else
 		        $settings->noticeTime = '12:00 AM';
+
+            if ( isset($_POST['hidden_pmpro_seq_excerpt']) )
+            {
+                $settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_excerpt']);
+                self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->excerpt_intro: ' . esc_attr($_POST['hidden_pmpro_seq_excerpt']) );
+            }
+            else
+                $settings->excerpt_intro = 'A summary of the post follows below:';
 
 	        // $sequence->options = $settings;
 
@@ -663,9 +672,11 @@ class PMProSequences
 	 * @param $user_id -- ID of user to send the email to.
 	 *
 	 */
-	function sendEmail($post_id, $user_id)
+	function sendEmail($post_id, $user_id, $seq_id)
 	{
 		$email = new PMProEmail();
+        $sequence = new PMProSequences($seq_id);
+        $settings = $sequence->fetchOptions($seq_id);
 
 		$user = get_user_by('id', $user_id);
 		$post = get_post($post_id);
@@ -680,14 +691,18 @@ class PMProSequences
 		$email->data = array(
 			"name" => $user->display_name,
 			"sitename" => get_option("blogname"),
-			"excerpt_intro" => '<p>A summary of the post follows below.</p>',
 			"post_link" => '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>'
 		);
 
-		if(!empty($post->post_excerpt))
-			// TODO - Fix the excerpt prefix (<p>A summary ... </p>)
-			$email->data['excerpt'] = $email->data['excerpt_intro'] . '<p>' . $post->post_excerpt . '</p>';
-		else
+
+		if(!empty($post->post_excerpt)) {
+
+            if ( empty( $settings->excerpt_intro ) )
+                $settings->excerpt_intro = 'A summary of the post follows below:';
+
+            $email->data['excerpt'] = '<p>' . $settings->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
+		}
+        else
 			$email->data['excerpt'] = '';
 
 		$email->sendEmail();
@@ -806,8 +821,13 @@ class PMProSequences
 	function updateNoticeCron( $sequence )
 	{
 		try {
-			// Clear old cronjob location
-			wp_clear_scheduled_hook(time(), 'daily', 'pmpro_sequence_check_for_new_content', array( '', '' ));
+            $timestamp = wp_next_scheduled( 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id) );
+
+            // Check if the job is previously scheduled. If not,
+            if ($timestamp) {
+			    // Clear old cronjob location
+			    wp_clear_scheduled_hook(time(), 'daily', 'pmpro_sequence_check_for_new_content', array( $sequence->sequence_id ));
+            }
 
 			// Set time (what time) to run this cron job the first time.
 			wp_schedule_event(time(), 'daily', 'pmpro_sequence_check_for_new_content');
@@ -1039,6 +1059,25 @@ class PMProSequences
 
 			            </div>
 		            </td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <div class="pmpro-sequence-excerpt">
+                            <label for="pmpro-seq-excerpt"><?php _e('Intro:'); ?> </label>
+                            <span id="pmpro-seq-excerpt-status"><?php _e(esc_attr($settings->excerpt_intro)); ?></span>
+                            <a href="#pmpro-seq-excerpt" id="pmpro-seq-edit-excerpt" class="edit-pmpro-seq-excerpt">
+                                <span aria-hidden="true"><?php _e('Edit'); ?></span>
+                                <span class="screen-reader-text"><?php _e('Update/Edit the e'); ?></span>
+                            </a>
+                            <div id="pmpro-seq-excerpt-input" style="display: none;">
+                                <input type="hidden" name="hidden_pmpro_seq_excerpt" id="hidden_pmpro_seq_excerpt" value="<?php echo esc_attr($settings->excerpt_intro); ?>" />
+                                <input type="text" name="pmpro_sequence_excerpt" id="pmpro_sequence_excerpt" value="<?php echo esc_attr($settings->excerpt_intro); ?>"/>
+                                <a href="#pmproseq_excerpt" id="ok-pmpro-seq-excerpt" class="save-pmproseq button"><?php _e('OK'); ?></a>
+                                <a href="#pmproseq_excerpt" id="cancel-pmpro-seq-excerpt" class="cancel-pmproseq button-cancel"><?php _e('Cancel'); ?></a>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
 	            <tr>
                     <td colspan="2"><hr style="width: 100%;" /></td>
                 </tr>
@@ -1135,7 +1174,8 @@ class PMProSequences
                                     'hidden_pmpro_seq_delaytype': jQuery('#hidden_pmpro_seq_delaytype').val(),
 	                                'hidden_pmpro_seq_sendnotice': jQuery('#hidden_pmpro_seq_sendnotice').val(),
 	                                'hidden_pmpro_seq_noticetime': jQuery('#hidden_pmpro_seq_noticetime').val(),
-	                                'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_template').val()
+                                    'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_template').val(),
+                                    'hidden_pmpro_seq_excerpt': jQuery('#hidden_pmpro_seq_excerpt').val()
                                 },
                                 function(responseHTML)
                                 {
@@ -1182,7 +1222,8 @@ class PMProSequences
 	                        'hidden_pmpro_seq_delaytype': jQuery('#hidden_pmpro_seq_delaytype').val(),
 	                        'hidden_pmpro_seq_sendnotice': jQuery('#hidden_pmpro_seq_sendnotice').val(),
 	                        'hidden_pmpro_seq_noticetime': jQuery('#hidden_pmpro_seq_noticetime').val(),
-	                        'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_template').val()
+	                        'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_template').val(),
+                            'hidden_pmpro_seq_excerpt': jQuery('#hidden_pmpro_seq_excerpt').val()
                         },
                         //on success function
                         function(status)

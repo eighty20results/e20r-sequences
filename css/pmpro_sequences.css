@@ -45,3 +45,7 @@ span#pmpro-seq-noticetime-status {
     right: 12px;
     display: inline-block;
 }
+
+input#pmpro_sequence_excerpt {
+    width: 180px;
+}

@@ -359,6 +359,14 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		else
 			$settings->noticeTime = '12:00 AM';
 
+        if ( isset($_POST['hidden_pmpro_seq_excerpt']) )
+        {
+            $settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_excerpt']);
+            self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->excerpt_intro: ' . esc_attr($_POST['hidden_pmpro_seq_excerpt']) );
+        }
+        else
+            $settings->excerpt_intro = 'A summary of the post follows below:';
+
 		// $sequence->options = $settings;
 
 		$sequenceObj->dbgOut('Settings are now: ' . print_r($settings, true));

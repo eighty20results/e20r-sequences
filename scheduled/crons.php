@@ -50,7 +50,7 @@ function pmpro_sequence_check_for_new_content()
 				if ( pmpro_sequence_hasAccess( $user->user_id, $sequence_post->id ) && !in_array( $sequence_post->id, $notified ) )
 				{
 					// Send the email to the user about this post
-					$sequence->sendEmail( $sequence_post->id, $user->user_id );
+					$sequence->sendEmail( $sequence_post->id, $user->user_id, $s->ID );
 
 					// Update the sequence metadata that user has been notified
 					$notified[] = $sequence_post->id;
