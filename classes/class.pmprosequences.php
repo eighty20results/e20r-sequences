@@ -302,7 +302,18 @@ class PMProSequences
 
 	    try {
 		    /* current time & date */
-		    $timeInput = 'tomorrow ' . $timeString . ' ' . get_option('timezone_string');
+            $schedHour = date( 'h', strtotime($timeString));
+            $nowHour = date('h', $timestamp);
+
+            //             06           05
+            $hourDiff = $schedHour - $nowHour;
+
+            if ($hourDiff >= 1)
+                $when = ''; // Today
+            else
+                $when = 'tomorrow ';
+
+		    $timeInput = $when . $timeString . ' ' . get_option('timezone_string');
 
 		    /* Various debug information to log */
 		    self::dbgOut('calculateTimestamp() Supplied timeString: ' . $timeString);
@@ -947,7 +958,7 @@ class PMProSequences
      */
     function pmpro_sequence_addUserNoticeOptIn( $sequence )
 	{
-		$noticeForm = '';
+		$optinForm = '';
         global $current_user;
 
 		self::dbgOut('addUserNoticeOptIn() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
@@ -956,48 +967,46 @@ class PMProSequences
 
             $optIn = get_user_option($current_user->ID, 'pmpro_sequence_notices', false);
 
-            self::dbgOut('addUserNoticeOptIn() - Saved Meta: ' . print_r($optIn, true));
+            self::dbgOut('addUserNoticeOptIn() - Fetched Meta: ' . print_r($optIn, true));
 
             /* Determine the state of the users opt-in for new content notices */
-            if ( empty($optIn ) ) {
+            if ( empty($optIn->sequence ) ) {
 
                 // Create new opt-in settings for this user
                 $optIn = new stdClass();
-                $optIn->sequence = $sequence->sequence_id;
-                $optIn->sendNotice = $sequence->options->sendNotice;
+                $optIn->sequence[$sequence->sequence_id] = array('sendNotice' => $sequence->options->sendNotice);
 
                 if (! update_user_option($current_user->ID, 'pmpro_sequence_notices', $optIn))
                     self::dbgOut('addUserNoticeOptIn() - Error saving new user meta for notice opt-in');
-
             }
 
-            $key = array_search($sequence->sequence_id, $optIn);
+            // $key = array_search($sequence->sequence_id, $optIn);
 
             // Not unset, so the user has made a choice in the past.
-            if ( ! empty( $key ) ) {
+            if ( ! empty( $optIn->sequence[$sequence->sequence_id] ) ) {
 
                 self::dbgOut('addUserNoticeOptIn() - This user has opt-in setting for this sequence');
-                $optedIn = ( $optIn->sendNotice == 1 ? false : true );
+                $optedIn = $optIn->sequence[$sequence->sequence_id]['sendNotice'];
             }
             else {
                 self::dbgOut('Since sendNotice is true, we will send notices - and mark this as checked');
-                $optedIn = true;
+                $optedIn = 1;
             }
 
 	        $optinNonce = wp_create_nonce('pmpro-sequence-user-optin');
 
             /* Add form information */
-            $noticeForm .= "
+            $optinForm .= "
             <div class=\"pmpro_sequence_useroptin\">
             	<form action=\"" . admin_url('admin-ajax.php') ."\" method=\"post\">
-                	<input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optIn->sendNotice . "\" >
-                    <p><input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"Email me a notice when new content is available\"" . ($optIn->sendNotice == 1 ? ' checked=\"checked\"' : '') . " />
+                	<input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optedIn . "\" >
+                    <p><input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"Email me a notice when new content is available\"" . ($optedIn == 1 ? ' checked=\"checked\"' : '') . " />
                     <label for=\"pmpro-seq-useroptin\">Yes, send me email notifications!</label>&nbsp;&nbsp;<a href=\"#pmproseq_useroptin\" id=\"save_pmpro-seq-useroptin\" class=\"pmpro_useroptin_btn button button-primary button-large\">Save</a></p>
                 </form>
             </div>
             ";
 
-            $noticeForm .= "
+            $optinForm .= "
 			<script language=\"javascript\">
 	        // console.log('Hide the Save button');
         	// jQuery('#save_pmpro-seq-useroptin').hide();
@@ -1027,7 +1036,7 @@ class PMProSequences
             ";
         }
 
-        return $noticeForm;
+        return $optinForm;
 	}
 	/**
 	 * List all template files in email directory for this plugin.

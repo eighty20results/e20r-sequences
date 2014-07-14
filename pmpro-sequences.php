@@ -214,6 +214,7 @@ if (! function_exists('pmpro_sequence_optinsave')):
 
     function pmpro_sequence_optinsave()
     {
+        global $current_user;
 
         $response = array();
 
@@ -231,7 +232,7 @@ if (! function_exists('pmpro_sequence_optinsave')):
 
 		        // Update setting for this sequence
 		        $optIn->sequence[intval( $_POST['pmpro_sequence_id'] )] = array(
-			        'sendNotice' => isset($_POST['pmpro_sequence_optIn']) ? intval($_POST['pmpro_sequence_optIn']) : $seq->options->sendNotice
+			        'sendNotice' => ( isset($_POST['pmpro_sequence_optIn']) ? intval($_POST['pmpro_sequence_optIn']) : $seq->options->sendNotice )
 		        );
 
 		        $seq = new PMProSequences( intval( $_POST['pmpro_sequence_id']) );
@@ -255,22 +256,25 @@ if (! function_exists('pmpro_sequence_optinsave')):
 		        exit;
 	        }
 
+
 	        $seq->dbgOut('User options: ' . print_r($optIn, true));
 
             // TODO: add save logic for update_user_option() for the opt-in values
-	        if ( ! update_user_option($user_id, 'pmpro_sequence_notices', $optIn))
-		        $seq->dbgOut('Error: Unable to save user options: ' . print_r($optIn, true));
-
+            if ($user_id == $current_user->ID)
+                if ( ! update_user_option($user_id, 'pmpro_sequence_notices', $optIn))
+                    $seq->dbgOut('Error: Unable to save user options: ' . print_r($optIn, true));
+            else {
+                $seq->dbgOut('Error: Mismatched User IDs!');
+                $response = json_encode(array('error' => 'Error saving settings'));
+            }
         } catch (Exception $e) {
             // $response = array( 'result' => 'Error: ' . $e->getMessage());
-            $response = 'Error: ' . $e->getMessage();
+            $response = json_encode(array('error' => 'Error: ' . $e->getMessage()));
         }
 
         echo $response;
         exit;
-
     }
-
 endif;
 
 if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):

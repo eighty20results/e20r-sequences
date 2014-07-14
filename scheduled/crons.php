@@ -49,11 +49,13 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				foreach ( $sequence_posts as $sequence_post ) {
 					/* Iterate through all users (TODO: Fix this as it will be slow for a large system!) */
 					foreach ( $users as $user ) {
+
 						/* Grab saved config info about the post to signify notification has been sent */
-						$notified = get_user_meta( $user->user_id, 'pmpro_seq_notified', true );
+						$notified = get_user_option( $user->user_id, 'pmpro_sequence_notices', true );
 
 						/* Check whether the userID has access to this sequence post and if the post isn't previously "notified" */
-						if ( pmpro_sequence_hasAccess( $user->user_id, $sequence_post->id ) && ! in_array( $sequence_post->id, $notified ) ) {
+						if ( pmpro_sequence_hasAccess( $user->user_id, $sequence_post->id ) &&
+                            ( $notified[$sequence_post->id]['sendNotice'] == 1) ) {
 							// Send the email to the user about this post
 							$sequence->sendEmail( $sequence_post->id, $user->user_id, $s->ID );
 							$sequence->dbgOut('Sent email to user ' . $user->user_id . ' about post post ' .
