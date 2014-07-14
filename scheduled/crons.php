@@ -52,6 +52,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
 						/* Grab saved config info about the post to signify notification has been sent */
 						$notified = get_user_option( $user->user_id, 'pmpro_sequence_notices', true );
+                        $sequence->dbgOut('Notice settings:' . print_r($notified, true));
 
 						/* Check whether the userID has access to this sequence post and if the post isn't previously "notified" */
 						if ( pmpro_sequence_hasAccess( $user->user_id, $sequence_post->id ) &&
