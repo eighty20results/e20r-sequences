@@ -941,11 +941,91 @@ class PMProSequences
 		}
 	}
 
-	function addUserNoticeOptIn()
+    /**
+     * @param $sequence -- The Sequence Settings object (contains settings)
+     * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
+     */
+    function pmpro_sequence_addUserNoticeOptIn( $sequence )
 	{
 		$noticeForm = '';
-		self::dbgOut('Adding User specific opt-in to sequence display for new content notices');
-		return $noticeForm;
+        global $current_user;
+
+		self::dbgOut('addUserNoticeOptIn() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
+
+        if ($sequence->sendNotice == 1) {
+
+            $optIn = get_user_option($current_user->ID, 'pmpro_sequence_notices', false);
+
+            self::dbgOut('addUserNoticeOptIn() - Saved Meta: ' . print_r($optIn, true));
+
+            /* Determine the state of the users opt-in for new content notices */
+            if ( empty($optIn ) ) {
+
+                // Create new opt-in settings for this user
+                $optIn = new stdClass();
+                $optIn->sequence = $sequence->sequence_id;
+                $optIn->sendNotice = $sequence->sendNotice;
+
+                if (! update_user_option($current_user->ID, 'pmpro_sequence_notices', $optIn))
+                    self::dbgOut('addUserNoticeOptIn() - Error saving new user meta for notice opt-in');
+
+            }
+
+            $key = array_search($sequence->sequence_id, $optIn);
+
+            // Not unset, so the user has made a choice in the past.
+            if ( ! empty( $key ) ) {
+
+                self::dbgOut('addUserNoticeOptIn() - This user has opt-in setting for this sequence');
+                $optedIn = ( $optIn->sendNotice == 1 ? false : true );
+            }
+            else {
+                self::dbgOut('Since sendNotice is true, we will send notices - and mark this as checked');
+                $optedIn = true;
+            }
+
+            /* Add form information */
+            $noticeForm .= "
+            <div class=\"pmpro-sequence-useroptin\">
+                <input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optIn->sendNotice . "\" >
+                <input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"" . _e('Email me a notice when new content is available') . "\"" . checked($optIn->sendNotice, 1) . " />
+                <label for=\"pmpro-seq-useroptin\">" . _e('I would like to receive email alerts when new content is available') . "</label>
+                <a href=\"#pmproseq_delaytype\" id=\"ok-pmpro-seq-delay\" class=\"save-pmproseq button\">" . _e('Save') . "</a>
+            </div>
+            ";
+
+            $noticeForm .= "<script language=\"javascript\">
+            // Send POST (AJAX) request to save the user opt-in settings
+            jQuery.post( pmproSequenceAjax.ajaxurl,
+                {
+                    action: 'pmpro_sequence_save_user_optin',
+                    'security': pmproSequenceAjax.pmproSequenceNonce,
+                    'pmpro_sequence_id': '" . $sequence->sequence_id . "',
+                    'pmpro_sequence_optIn': jQuery(\"#hidden_pmpro_seq_useroptin\").val(),
+                    'pmpro_sequence_userId': '" . $current_user->ID . "';
+                },
+                function(responseHTML)
+                {
+                    if ( ! responseHTML.match(\"^Error\") )
+                    {
+                        /*
+                         * Refresh the list of posts (now empty) in the #pmpro_sequence_posts meta box
+                         */
+                        // jQuery('#pmpro_sequence_posts').html(responseHTML);
+                        alert('User specific opt-in settings saved');
+                    }
+                    else
+                    {
+                        alert(responseHTML);
+                        jQuery(this).val(current);
+                    }
+                }
+            );
+            </script>
+            ";
+        }
+
+        return $noticeForm;
 	}
 	/**
 	 * List all template files in email directory for this plugin.

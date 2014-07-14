@@ -207,6 +207,32 @@ if ( ! function_exists( 'pmpro_sequence_ajaxClearPosts')):
 
 endif;
 
+if (! function_exists('pmpro_sequence_optinsave')):
+
+    add_action('wp_ajax_pmpro_sequence_save_user_optin', 'pmpro_sequence_optinsave');
+    add_action('wp_ajax_nopriv_pmpro_sequence_save_user_optin', 'pmpro_sequence_ajaxUnprivError');
+
+    function pmpro_sequence_optinsave()
+    {
+        check_ajax_referer('pmpro-sequence-send-settings', 'security');
+        $response = array();
+
+        try {
+
+            // TODO: add save logic for update_user_option() for the opt-in values
+
+        } catch (Exception $e) {
+            // $response = array( 'result' => 'Error: ' . $e->getMessage());
+            $response = 'Error: ' . $e->getMessage();
+        }
+
+        echo $response;
+        exit;
+
+    }
+
+endif;
+
 if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 
     add_action('wp_ajax_pmpro_save_settings', 'pmpro_sequence_ajaxSaveSettings');
@@ -409,7 +435,7 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
                 $content .= "<p>You are on day " . intval(pmpro_getMemberDays()) . " of your membership.</p>";
 
 	        if ( intval($settings->sendNotice) == 1)
-		        $content .= $sequence->addUserNoticeOptIn();
+		        $content .= $sequence->pmpro_sequence_addUserNoticeOptIn( $sequence );
 
             // Add the list of posts in the sequence to the content.
             $content .= $sequence->getPostList();

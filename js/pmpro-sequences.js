@@ -210,6 +210,7 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-edit-excerpt').slideToggle();
         });
 
+
     })(jQuery);
 });
 
