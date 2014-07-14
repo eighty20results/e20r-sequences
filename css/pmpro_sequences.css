@@ -16,20 +16,23 @@
 .pmpro-sequence-sortorder label,
 .pmpro-sequence-delaytype label,
 .pmpro-sequence-template label,
-.pmpro-sequence-noticetime label {
+.pmpro-sequence-noticetime label,
+.pmpro-sequence-excerpt label {
     vertical-align: baseline;
 }
 span#pmpro-seq-sort-status,
 span#pmpro-seq-delay-status,
 span#pmpro-seq-template-status,
-span#pmpro-seq-noticetime-status {
+span#pmpro-seq-noticetime-status,
+span#pmpro-seq-excerpt-status {
     font-weight: bold;
     color: #3875d7;
 }
 .edit-pmpro-seq-sort,
 .edit-pmpro-seq-delay,
 .edit-pmpro-seq-template,
-.edit-pmpro-seq-noticetime {
+.edit-pmpro-seq-noticetime,
+.edit-pmpro-seq-excerpt {
     display: inline-block;
 }
 
@@ -47,5 +50,5 @@ span#pmpro-seq-noticetime-status {
 }
 
 input#pmpro_sequence_excerpt {
-    width: 180px;
+    width: 170px;
 }

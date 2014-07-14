@@ -7,14 +7,15 @@ jQuery.noConflict();
 jQuery(document).ready(function(){
     (function($){
         /* Get the current sortOrder values */
-        var $sortOrder = jQuery('#pmpro_sequence_sortorder option:selected').val();
-        var $sortText = jQuery('#pmpro_sequence_sortorder option:selected').text();
+        var $sortOrder = $('#pmpro_sequence_sortorder option:selected').val();
+        var $sortText = $('#pmpro_sequence_sortorder option:selected').text();
         var $delayText = $('#pmpro_sequence_delaytype option:selected').text();
         var $delayType = $('#pmpro_sequence_delaytype option:selected').val();
         var $templateName = $('#pmpro_sequence_template option:selected').text();
         var $template = $('#pmpro_sequence_template option:selected').val();
         var $alertText = $('#pmpro_sequence_noticetime option:selected').text();
         var $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
+        var $excerpt = $('#pmpro_sequence_excerpt').val();
 
         console.log('Sort Order is: ' + jQuery('#pmpro_sequence_sortorder option:selected').text());
 
@@ -74,6 +75,12 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-noticetime-select').slideToggle();
         });
 
+        $('#pmpro-seq-edit-excerpt').click(function(){
+            console.log('Edit button for excerpt intro edit field clicked');
+            $('#pmpro-seq-edit-excerpt').slideToggle();
+            $('#pmpro-seq-excerpt-input').slideToggle();
+        });
+
         /** Cancel button events **/
 
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
@@ -121,6 +128,18 @@ jQuery(document).ready(function(){
 
         });
 
+        /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
+         * the value of the label & select, then hide everything again.
+         */
+        $('#cancel-pmpro-seq-excerpt').click(function(){
+            console.log('Cancel button for Excerpt Intro was clicked');
+            // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
+            $('#pmpro-seq-excerpt-select').slideToggle();
+            $('#pmpro-seq-edit-excerp').slideToggle();
+
+        });
+
+
         /** OK button events **/
         $('#ok-pmpro-seq-sort').click(function(){
             console.log('OK button for Sort order was clicked');
@@ -138,7 +157,7 @@ jQuery(document).ready(function(){
 
         $('#ok-pmpro-seq-delay').click(function(){
             console.log('OK button for delay type was clicked');
-            if ( $('#pmpro-seq-delay-status option:selected').val != $sortOrder) {
+            if ( $('#pmpro-seq-delay-status option:selected').val != $delayType) {
                 /* Save the new sortOrder setting */
                 $delayText = $('#pmpro_sequence_delaytype option:selected').text();
                 $delayType = $('#pmpro_sequence_delaytype option:selected').val();
@@ -157,8 +176,8 @@ jQuery(document).ready(function(){
                 $templateName = $('#pmpro_sequence_template option:selected').text();
                 $template = $('#pmpro_sequence_template option:selected').val();
                 $('#pmpro-seq-template-status').text($templateName);
-                $('#hidden_pmpro_seq_template').val($template);
-                console.log('Template was changed and is now: ' + $delayText);
+                $('#hidden_pmpro_seq_noticetemplate').val($template);
+                console.log('Template was changed and is now: ' + $templateName);
             }
             $('#pmpro-seq-template-select').slideToggle();
             $('#pmpro-seq-edit-template').slideToggle();
@@ -166,7 +185,7 @@ jQuery(document).ready(function(){
 
         $('#ok-pmpro-seq-noticetime').click(function(){
             console.log('OK button for alert notice time was clicked');
-            if ( $('#pmpro-seq-noticetime-status option:selected').val != $template) {
+            if ( $('#pmpro-seq-noticetime-status option:selected').val != $alertTime) {
                 /* Save the new sortOrder setting */
                 $alertText = $('#pmpro_sequence_noticetime option:selected').text();
                 $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
@@ -176,6 +195,19 @@ jQuery(document).ready(function(){
             }
             $('#pmpro-seq-noticetime-select').slideToggle();
             $('#pmpro-seq-edit-noticetime').slideToggle();
+        });
+
+        $('#ok-pmpro-seq-excerpt').click(function(){
+            console.log('OK button for Excerpt Intro was clicked');
+            if ( $('#pmpro_sequence_excerpt').val != $excerpt) {
+                /* Save the new excerpt info */
+                $excerpt = $('#pmpro_sequence_excerpt').val();
+                $('#hidden_pmpro_seq_excerpt').val($excerpt);
+                $('#pmpro-seq-excerpt-status').text('"' + $excerpt + '"');
+                console.log('Content of Excerpt Intro was changed and is now: ' + $excerpt);
+            }
+            $('#pmpro-seq-excerpt-input').slideToggle();
+            $('#pmpro-seq-edit-excerpt').slideToggle();
         });
 
     })(jQuery);
@@ -229,4 +261,12 @@ function showLength()
     }
     else
         return 0;
+}
+
+function formatTime($h_24) {
+    var $time = $h_24.split(':');
+
+    var $h = $h_24 % 12;
+    if ($h === 0) $h = 12;
+    return ($h < 10 ? "0" + $h : $h) + ":" + $time[1] + ($h_24 < 12 ? ' AM' : ' PM');
 }

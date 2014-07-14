@@ -2,60 +2,74 @@
 /* Check for new content, email a notice to the user if new content exists. */
 if (! function_exists('pmpro_sequence_check_for_new_content')):
 
-function pmpro_sequence_check_for_new_content()
-{
-
-	global $wpdb;
-
-	//get all members
-	$users = $wpdb->get_results("
-        SELECT *
-        FROM $wpdb->pmpro_memberships_users
-        WHERE status = 'active'
-	");
-
-	//get all series
-	$seq = $wpdb->get_results("
-        SELECT *
-        FROM $wpdb->posts
-        WHERE post_type = 'pmpro_sequence'
-    ");
-
-	// Loop through all defined sequences on the system
-	foreach ( $seq as $s )
+	/**
+	 * Cron job - defined per sequence, unless the sequence ID is empty, then we'll run through all sequences
+	 */
+	function pmpro_sequence_check_for_new_content( $sequenceId = 0)
 	{
-		$sequence = new PMProSequences( $s->ID );
+		// Exit if the cron job being run is the default one.
+		if ($sequenceId == 0)
+			return;
 
-		// Grab the settings for this sequence.
-		$seq_settings = $sequence->fetchOptions( $s->ID );
+		global $wpdb;
 
-		// Check if this sequence is configured to send new content notices. Exit if not.
-		if ( $seq_settings->sendNotice == 1 ) {
-			$sequence->dbgOut( 'cron() - Sequence is configured to send new content notices to users.' );
+		/* Fetch list of members */
+		$users = $wpdb->get_results("
+	        SELECT *
+	        FROM $wpdb->pmpro_memberships_users
+	        WHERE status = 'active'
+		");
 
-			// Get the posts belonging to this sequence.
-			$sequence_posts = $sequence->getPosts();
+		/*
+		 * Get the specified sequence data from the database
+		 */
+		$seq = $wpdb->get_results("
+	        SELECT *
+	        FROM $wpdb->posts
+	        WHERE post_type = 'pmpro_sequence' AND ID = $sequenceId
+	    ");
 
-			// Iterate through all of the posts
-			foreach ( $sequence_posts as $sequence_post ) {
-				// Iterate through all users (TODO: Fix this as it will be slow for a large system!)
-				foreach ( $users as $user ) {
-					$notified = get_user_meta( $user->user_id, 'pmpro_seq_notified', true );
+		/* Loop through all defined sequences on the system */
+		foreach ( $seq as $s )
+		{
+			/* Grab a sequence object */
+			$sequence = new PMProSequences( $s->ID );
 
-					// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
-					if ( pmpro_sequence_hasAccess( $user->user_id, $sequence_post->id ) && ! in_array( $sequence_post->id, $notified ) ) {
-						// Send the email to the user about this post
-						$sequence->sendEmail( $sequence_post->id, $user->user_id, $s->ID );
+			/* Grab the settings for this sequence. */
+			$seq_settings = $sequence->fetchOptions( $s->ID );
 
-						// Update the sequence metadata that user has been notified
-						$notified[] = $sequence_post->id;
-						update_user_meta( $user->user_id, 'pmpro_seq_notified', $notified );
-					}
-				}
-			}
+			/* Check if this sequence is configured to send new content notices. */
+			if ( $seq_settings->sendNotice == 1 ) {
+				$sequence->dbgOut( 'cron() - Sequence is configured to send new content notices to users.' );
+
+				/* Get all posts belonging to this sequence. */
+				$sequence_posts = $sequence->getPosts();
+
+				/* Iterate through all of the posts in the sequence */
+				foreach ( $sequence_posts as $sequence_post ) {
+					/* Iterate through all users (TODO: Fix this as it will be slow for a large system!) */
+					foreach ( $users as $user ) {
+						/* Grab saved config info about the post to signify notification has been sent */
+						$notified = get_user_meta( $user->user_id, 'pmpro_seq_notified', true );
+
+						/* Check whether the userID has access to this sequence post and if the post isn't previously "notified" */
+						if ( pmpro_sequence_hasAccess( $user->user_id, $sequence_post->id ) && ! in_array( $sequence_post->id, $notified ) ) {
+							// Send the email to the user about this post
+							$sequence->sendEmail( $sequence_post->id, $user->user_id, $s->ID );
+							$sequence->dbgOut('Sent email to user ' . $user->user_id . ' about post post ' .
+							                  $sequence_post->id . ' in sequence ' . $sequence->sequence_id);
+							/* Update the sequence metadata that user has been notified */
+							$notified[] = $sequence_post->id;
+							update_user_meta( $user->user_id, 'pmpro_seq_notified', $notified );
+						} else
+							$sequence->dbgOut('User with ID ' . $user->user_id . ' does not have access to post ' .
+							                  $sequence_post->id . ' in sequence ' . $sequence->sequence_id);
+					} /* End foreach for user iteration */
+				} /* End foreach for sequence posts */
+			} /* End if */
+			else
+				/* Move on to the next one since this one isn't configured to send notices */
+				$sequence->dbgOut('cron() - Sequence ' . $s->ID . ' is not configured to send notices. Skipping...');
 		}
-		else
-			$sequence->dbgOut('cron() - Sequence ' . $s->ID . ' is not configured to send notices. Skipping...');
 	}
-}
 endif;

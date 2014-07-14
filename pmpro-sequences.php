@@ -292,7 +292,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		if ( isset($_POST['hidden_pmpro_seq_future']) )
 		{
 			$settings->hidden = intval($_POST['hidden_pmpro_seq_future']);
-			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->hidden: ' . $_POST['hidden_pmpro_seq_future'] );
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->hidden: ' . $_POST['hidden_pmpro_seq_future'] );
 		}
 		elseif ( empty($settings->hidden) )
 			$settings->hidden = 0;
@@ -301,7 +301,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		if (isset($_POST['hidden_pmpro_seq_lengthvisible']) )
 		{
 			$settings->lengthVisible = intval($_POST['hidden_pmpro_seq_lengthvisible']);
-			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->lengthVisible: ' . $_POST['hidden_pmpro_seq_lengthvisible']);
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->lengthVisible: ' . $_POST['hidden_pmpro_seq_lengthvisible']);
 		}
 		elseif (empty($settings->lengthVisible)) {
 			$sequenceObj->dbgOut('Setting lengthVisible to default value (checked)');
@@ -311,7 +311,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		if ( isset($_POST['hidden_pmpro_seq_sortorder']) )
 		{
 			$settings->sortOrder = intval($_POST['hidden_pmpro_seq_sortorder']);
-			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->sortOrder: ' . $_POST['hidden_pmpro_seq_sortorder'] );
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->sortOrder: ' . $_POST['hidden_pmpro_seq_sortorder'] );
 		}
 		elseif (empty($settings->sortOrder))
 			$settings->sortOrder = SORT_ASC;
@@ -319,7 +319,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		if ( isset($_POST['hidden_pmpro_seq_delaytype']) )
 		{
 			$settings->delayType = esc_attr($_POST['hidden_pmpro_seq_delaytype']);
-			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->delayType: ' . esc_attr($_POST['hidden_pmpro_seq_delaytype']) );
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->delayType: ' . esc_attr($_POST['hidden_pmpro_seq_delaytype']) );
 		}
 		elseif (empty($settings->delayType))
 			$settings->delayType = 'byDays';
@@ -327,7 +327,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		if ( isset($_POST['hidden_pmpro_seq_startwhen']) )
 		{
 			$settings->startWhen = esc_attr($_POST['hidden_pmpro_seq_startwhen']);
-			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->startWhen: ' . esc_attr($_POST['hidden_pmpro_seq_startwhen']) );
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->startWhen: ' . esc_attr($_POST['hidden_pmpro_seq_startwhen']) );
 		}
 		elseif (empty($settings->startWhen))
 			$settings->startWhen = 0;
@@ -336,16 +336,16 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		if ( isset($_POST['hidden_pmpro_seq_sendnotice']) )
 		{
 			$settings->sendNotice = intval($_POST['hidden_pmpro_seq_sendnotice']);
-			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->sendNotice: ' . intval($_POST['hidden_pmpro_seq_sendnotice']) );
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->sendNotice: ' . intval($_POST['hidden_pmpro_seq_sendnotice']) );
 		}
 		elseif (empty($settings->sendNotice)) {
 			$settings->sendNotice = 1;
 		}
 
-		if ( isset($_POST['hidden_pmpro_seq_template']) )
+		if ( isset($_POST['hidden_pmpro_seq_noticetemplate']) )
 		{
-			$settings->noticeTemplate = esc_attr($_POST['hidden_pmpro_seq_template']);
-			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTemplate: ' . esc_attr($_POST['hidden_pmpro_seq_template']) );
+			$settings->noticeTemplate = esc_attr($_POST['hidden_pmpro_seq_noticetemplate']);
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->noticeTemplate: ' . esc_attr($_POST['hidden_pmpro_seq_noticetemplate']) );
 		}
 		else
 			$settings->noticeTemplate = 'new_content.html';
@@ -353,23 +353,31 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		if ( isset($_POST['hidden_pmpro_seq_noticetime']) )
 		{
 			$settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_noticetime']);
-			$sequenceObj->updateNoticeCron($settings->noticeTime);
-			$sequenceObj->dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTime: ' . esc_attr($_POST['hidden_pmpro_seq_noticetime']) );
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save() - noticeTime in settings: ' . $settings->noticeTime);
+
+			/* Calculate the timestamp value for the noticeTime specified (noticeTime is in current timezone) */
+			$settings->noticeTimestamp = $sequenceObj->calculateTimestamp($settings->noticeTime);
+
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->noticeTime: ' . esc_attr($_POST['hidden_pmpro_seq_noticetime']) );
 		}
 		else
-			$settings->noticeTime = '12:00 AM';
+			$settings->noticeTime = '00:00';
 
         if ( isset($_POST['hidden_pmpro_seq_excerpt']) )
         {
-            $settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_excerpt']);
-            self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->excerpt_intro: ' . esc_attr($_POST['hidden_pmpro_seq_excerpt']) );
+            $settings->excerpt_intro = esc_attr($_POST['hidden_pmpro_seq_excerpt']);
+            $sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->excerpt_intro: ' . esc_attr($_POST['hidden_pmpro_seq_excerpt']) );
         }
         else
             $settings->excerpt_intro = 'A summary of the post follows below:';
 
 		// $sequence->options = $settings;
+		if ( $settings->sendNotice == 1 ) {
+			$sequenceObj->dbgOut( 'pmpro_sequence_meta_save(): Updating the cron job for sequence ' . $sequenceObj->sequence_id );
+			$sequenceObj->updateNoticeCron( $sequenceObj->sequence_id );
+		}
 
-		$sequenceObj->dbgOut('Settings are now: ' . print_r($settings, true));
+		$sequenceObj->dbgOut('pmpro_sequence_settings_save() - Settings are now: ' . print_r($settings, true));
 
 		// Save settings to WPDB
 		return $sequenceObj->save_sequence_meta($settings, $sequence_id);
@@ -399,6 +407,9 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
             if ( intval($settings->lengthVisible) == 1 )
                 $content .= "<p>You are on day " . intval(pmpro_getMemberDays()) . " of your membership.</p>";
+
+	        if ( intval($settings->sendNotice) == 1)
+		        $content .= $sequence->addUserNoticeOptIn();
 
             // Add the list of posts in the sequence to the content.
             $content .= $sequence->getPostList();

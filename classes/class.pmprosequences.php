@@ -69,7 +69,7 @@ class PMProSequences
         $settings->startWhen =  0; // startWhen == immediately
 	    $settings->sendNotice = 1; // sendNotice == Yes
 	    $settings->noticeTemplate = 'new_content.html'; // Default plugin template
-	    $settings->noticeTime = '12:00 AM'; // At Midnight (server TZ)
+	    $settings->noticeTime = '00:00'; // At Midnight (server TZ)
         $settings->noticeTimestamp = time(); // The current time (in UTC)
         $settings->excerpt_intro = 'A summary of the post follows below:';
 
@@ -243,10 +243,10 @@ class PMProSequences
 		        $settings->sendNotice = 1;
 	        }
 
-	        if ( isset($_POST['hidden_pmpro_seq_template']) )
+	        if ( isset($_POST['hidden_pmpro_seq_noticetemplate']) )
 	        {
-		        $settings->noticeTemplate = esc_attr($_POST['hidden_pmpro_seq_template']);
-		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTemplate: ' . esc_attr($_POST['hidden_pmpro_seq_template']) );
+		        $settings->noticeTemplate = esc_attr($_POST['hidden_pmpro_seq_noticetemplate']);
+		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTemplate: ' . esc_attr($_POST['hidden_pmpro_seq_noticetemplate']) );
 	        }
 	        else
 		        $settings->noticeTemplate = 'new_content.html';
@@ -254,18 +254,18 @@ class PMProSequences
 	        if ( isset($_POST['hidden_pmpro_seq_noticetime']) )
 	        {
 		        $settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_noticetime']);
-                // Calculate the timestamp value for the noticeTime specified (noticeTime is in current timezone)
 
-            $settings->noticeTimestamp = $sequence->calculateTimestamp($settings->noticeTime);
+                /* Calculate the timestamp value for the noticeTime specified (noticeTime is in current timezone) */
+                $settings->noticeTimestamp = $sequence->calculateTimestamp($settings->noticeTime);
 
 		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->noticeTime: ' . esc_attr($_POST['hidden_pmpro_seq_noticetime']) );
 	        }
 	        else
-		        $settings->noticeTime = '12:00 AM';
+		        $settings->noticeTime = '00:00';
 
-            if ( isset($_POST['hidden_pmpro_seq_excerpt']) )
+            if ( isset($_POST['hidden_pmpro_seq_excerpt']) && ($_POST['hidden_pmpro_seq_excerpt']!= ''))
             {
-                $settings->noticeTime = esc_attr($_POST['hidden_pmpro_seq_excerpt']);
+                $settings->excerpt_intro = esc_attr($_POST['hidden_pmpro_seq_excerpt']);
                 self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->excerpt_intro: ' . esc_attr($_POST['hidden_pmpro_seq_excerpt']) );
             }
             else
@@ -276,7 +276,13 @@ class PMProSequences
             // Save settings to WPDB
             $sequence->save_sequence_meta( $settings, $post_id );
 
-            self::dbgOut('pmpro_sequence_meta_save(): Saved metadata for sequence #' . $post_id);
+	        // Update the cron job for this notice.
+	        if ( $settings->sendNotice == 1 ) {
+		        $sequence->dbgOut( 'pmpro_sequence_meta_save(): Updating the cron job for sequence ' . $sequence->sequence_id );
+		        $sequence->updateNoticeCron( $sequence->sequence_id );
+	        }
+
+	        self::dbgOut('pmpro_sequence_meta_save(): Saved metadata for sequence #' . $post_id);
             // update_post_meta($post_id, '_tls_sequence_settings', (array)$settings->options);
 
         }
@@ -289,21 +295,30 @@ class PMProSequences
      * @param $timeString (string) -- A clock value ('12:00 AM' for instance)
      * @return int -- The calculated timestamp value
      */
-    private function calculateTimestamp( $timeString ) {
+    public function calculateTimestamp( $timeString )
+    {
 
-        /* current time & date */
-        $timestamp = time();
-        $timeInput = 'tomorrow ' . $timeString . ' ' . get_option('timezone_string');
+	    $timestamp = time();
 
-        /* Various debug information to log */
-        self::dbgOut('calculateTimestamp() Supplied timeString: ' . $timeString);
-        self::dbgOut('calculateTimestamp() strtotime() input: ' . $timeInput);
-        self::dbgOut('calculateTimestamp() Current UTC timestamp: ' . $timestamp);
+	    try {
+		    /* current time & date */
+		    $timeInput = 'tomorrow ' . $timeString . ' ' . get_option('timezone_string');
 
-        $timestamp = strtotime($timeInput);
+		    /* Various debug information to log */
+		    self::dbgOut('calculateTimestamp() Supplied timeString: ' . $timeString);
+		    self::dbgOut('calculateTimestamp() strtotime() input: ' . $timeInput);
+		    self::dbgOut('calculateTimestamp() Current UTC timestamp: ' . $timestamp);
 
-        /* Calculate */
-        self::dbgOut('calculateTimestamp() UTC timestamp for timeString (tomorrow): ' . $timestamp);
+		    $timestamp = strtotime($timeInput);
+
+		    /* Calculate */
+		    self::dbgOut('calculateTimestamp() UTC timestamp for timeString (tomorrow): ' . $timestamp);
+	    }
+	    catch (Exception $e)
+	    {
+		    self::dbgOut('calculateTimestamp() Error calculating timestamp: : ' . $e->getMessage());
+	    }
+
         return $timestamp;
     }
 
@@ -614,6 +629,7 @@ class PMProSequences
 	public function sortAscending($a, $b)
 	{
         list($aDelay, $bDelay) = $this->normalizeDelays($a, $b);
+		$this->dbgOut('sortAscending() - Delays have been normalized');
 
         // Now sort the data
         if ($aDelay == $bDelay)
@@ -649,35 +665,49 @@ class PMProSequences
      */
     public function convertToDays( $date )
     {
-	    $level_id = pmpro_getMembershipLevelForUser();
-
+	    $this->dbgOut('In convertToDays()');
+	    /*
+	    try {
+		    $level_id = pmpro_getMembershipLevelForUser();
+		    $this->dbgOut('convertToDays() - User Level: ' . $level_id);
+	    } catch (Exception $e) {
+		    $this->dbgOut('Error getting membership level info: ' . $e->getMessage());
+	    }
+		*/
         if ( $this->isValidDate( $date ) )
         {
+	        $this->dbgOut('convertToDays() - Date is valid: ' . $date);
+
             $startDate = pmpro_getMemberStartdate(); /* Needs userID & Level ID ... */
 
 	        if (empty($startDate))
 		            $startDate = 0;
-	        else
-	        {
-	            $dStart = new DateTime( date( 'Y-m-d', $startDate ) );
-	            $dEnd = new DateTime( date( 'Y-m-d', strtotime($date) ) ); // Today's date
-	            $dDiff = $dStart->diff($dEnd);
-	            $dDiff->format('%d');
-	            // $dDiff->format('%R%a');
 
-	            //self::dbgOut('Diff Object:' . print_r($dDiff, true));
+	        $this->dbgOut('convertToDays() - Start Date: ' . $startDate);
+	        try {
 
-	            $days = $dDiff->days;
+		        $dStart = new DateTime( date( 'Y-m-d', $startDate ) );
+		        $dEnd   = new DateTime( date( 'Y-m-d', strtotime( $date ) ) ); // Today's date
+		        $dDiff  = $dStart->diff( $dEnd );
+		        $dDiff->format( '%d' );
+		        // $dDiff->format('%R%a');
 
-	            if ($dDiff->invert == 1)
-	                $days = 0 - $days; // Invert the value
-		        }
+		        //self::dbgOut('Diff Object:' . print_r($dDiff, true));
 
-            self::dbgOut('convertToDays() - Member (Level: ' . $level_id . ') with start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
+		        $days = $dDiff->days;
 
-        } else {
+		        if ( $dDiff->invert == 1 )
+			        $days = 0 - $days; // Invert the value
+	        } catch (Exception $e) {
+		        self::dbgOut('convertToDays() - Error calculating days: ' . $e->getMessage());
+	        }
+
+            self::dbgOut('convertToDays() - Member with start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
+
+        }
+        else {
             $days = $date;
-            self::dbgOut('convertToDays() - Member Level: ' . $level_id . ', - days of delay from start: ' . $date);
+            self::dbgOut('convertToDays() - Member: days of delay from start: ' . $date);
         }
 
         return $days;
@@ -832,7 +862,7 @@ class PMProSequences
         $datetime2 = date_create($date2);
         $count = 0;
 
-        // TODO: Does not include support for TIME in the date calculation.
+        // TODO: Does not include support for TIME in the date calculation (needs to worry about which version of PHP we're using).
 
         while(date_create($current) < $datetime2){
             $current = gmdate("Y-m-d", strtotime("+1 day", strtotime($current)));
@@ -843,8 +873,6 @@ class PMProSequences
 
 	/**
 	 * Update the when we're supposed to run the New Content Notice cron job for this sequence.
-	 *
-     * TODO: Per-sequence support for independent times to send the message(s).
      *
      * @param $sequence -- stdObject - PMPro Sequence Object
 	 */
@@ -856,15 +884,18 @@ class PMProSequences
             // Check if the job is previously scheduled. If not, we're using the default cron schedule.
             if ($timestamp) {
 			    // Clear old cronjob for this sequence
+	            self::dbgOut('Clearing old cron job for sequence # ' . $sequence->sequence_id);
 			    wp_clear_scheduled_hook($timestamp, 'daily', 'pmpro_sequence_check_for_new_content', array( $sequence->sequence_id ));
             }
 
 			// Set time (what time) to run this cron job the first time.
-			wp_schedule_event(time(), 'daily', 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id));
+			self::dbgOut('Adding cron job for ' . $sequence->sequence_id);
+			wp_schedule_event($sequence->noticeTimestamp, 'daily', 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id));
 
 		}
 		catch (Exception $e) {
 			echo 'Error: ' . $e->getMessage();
+			self::dbgOut('Error updating cron job(s): ' . $e->getMessage());
 		}
 	}
 
@@ -891,23 +922,31 @@ class PMProSequences
 	 *
 	 * @param string $postfix -- AM or PM for the time (hours)
 	 */
-	function pmpro_sequence_createTimeOpts( $postfix = 'AM', $settings )
+	function pmpro_sequence_createTimeOpts( $settings )
 	{
 
-		// TODO: Support language settings for time (24 vs 12 hour time, etc).
-		$hr = '12:00 ' . $postfix;
-		?>
-			<option value="<?php echo($hr); ?>" <?php selected( $settings->noticeTime, $hr ); ?> ><?php echo($hr);?></option>
-		<?php
-		foreach (range(1, 11) as $hour )
-		{
-			$hr = $hour . ':00 ' . $postfix;
-			?>
-			<option value="<?php echo($hr); ?>" <?php selected( $settings->noticeTime, $hr); ?> ><?php echo ($hr);?></option>
-		<?php }
+		$prepend    = array('00','01','02','03','04','05','06','07','08','09');
+		$hours      = array_merge($prepend,range(10, 23));
+		$minutes    = array_merge($prepend, range(10, 59)); // For debug
+		// $minutes     = array('00', '30');
 
+		$selTime = preg_split('/\:/', $settings->noticeTime);
+
+		foreach ($hours as $hour) {
+			foreach ($minutes as $minute) {
+				?>
+				<option value="<?php echo( $hour . ':' . $minute ); ?>"<?php selected( $settings->noticeTime, $hour . ':' . $minute ); ?> ><?php echo( $hour . ':' . $minute ); ?></option>
+				<?php
+			}
+		}
 	}
 
+	function addUserNoticeOptIn()
+	{
+		$noticeForm = '';
+		self::dbgOut('Adding User specific opt-in to sequence display for new content notices');
+		return $noticeForm;
+	}
 	/**
 	 * List all template files in email directory for this plugin.
 	 */
@@ -1046,14 +1085,14 @@ class PMProSequences
 				            <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Send new content alerts'); ?></label>
 				            <div class="pmpro-sequence-template">
 					            <hr width="60%"/>
-					            <label for="pmpro-seq-template"><?php _e('Email templ:'); ?> </label>
+					            <label for="pmpro-seq-template"><?php _e('Template:'); ?> </label>
 					            <span id="pmpro-seq-template-status"><?php _e( esc_attr( $settings->noticeTemplate ) ); ?></span>
 					            <a href="#pmpro-seq-template" id="pmpro-seq-edit-template" class="edit-pmpro-seq-template">
 						            <span aria-hidden="true"><?php _e('Edit'); ?></span>
 						            <span class="screen-reader-text"><?php _e('Select the template to use when posting new content in this sequence'); ?></span>
 					            </a>
 					            <div id="pmpro-seq-template-select" style="display: none;">
-						            <input type="hidden" name="hidden_pmpro_seq_template" id="hidden_pmpro_seq_template" value="<?php echo esc_attr($settings->noticeTemplate); ?>" >
+						            <input type="hidden" name="hidden_pmpro_seq_noticetemplate" id="hidden_pmpro_seq_noticetemplate" value="<?php echo esc_attr($settings->noticeTemplate); ?>" >
 						            <select name="pmpro_sequence_template" id="pmpro_sequence_template">
 							            <?php $sequence->pmpro_sequence_listEmailTemplates( $settings ); ?>
 						            </select>
@@ -1073,11 +1112,11 @@ class PMProSequences
 					            <span aria-hidden="true"><?php _e('Edit'); ?></span>
 					            <span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence'); ?></span>
 				            </a>
-				            <div id="pmpro-seq-noticetime-select" style="display: none;">
+				            <div id="pmpro-seq-noticetime-select" style="display: none;">x
+
 					            <input type="hidden" name="hidden_pmpro_seq_noticetime" id="hidden_pmpro_seq_noticetime" value="<?php echo esc_attr($settings->noticeTime); ?>" >
 					            <select name="pmpro_sequence_noticetime" id="pmpro_sequence_noticetime">
-						            <?php $sequence->pmpro_sequence_createTimeOpts('AM', $settings); ?>
-						            <?php $sequence->pmpro_sequence_createTimeOpts('PM', $settings); ?>
+					                <?php $sequence->pmpro_sequence_createTimeOpts( $settings ); ?>
 					            </select>
 					            <a href="#pmproseq_noticetime" id="ok-pmpro-seq-noticetime" class="save-pmproseq button"><?php _e('OK'); ?></a>
 					            <a href="#pmproseq_noticetime" id="cancel-pmpro-seq-noticetime" class="cancel-pmproseq button-cancel"><?php _e('Cancel'); ?></a>
@@ -1086,27 +1125,22 @@ class PMProSequences
 					            <label for="pmpro-seq-noticetime"><?php _e('Timezone:'); ?> </label>
 					            <span id="pmpro-seq-noticetime-status"><?php echo '  ' . get_option('timezone_string'); ?></span>
 				            </div>
-
+				            <div class="pmpro-sequence-excerpt">
+					            <label for="pmpro-seq-excerpt"><?php _e('Intro:'); ?> </label>
+					            <span id="pmpro-seq-excerpt-status">"<?php _e(($settings->excerpt_intro != '' ? esc_attr($settings->excerpt_intro) : 'A summary of the post follows below:')); ?>"</span>
+					            <a href="#pmpro-seq-excerpt" id="pmpro-seq-edit-excerpt" class="edit-pmpro-seq-excerpt">
+						            <span aria-hidden="true"><?php _e('Edit'); ?></span>
+						            <span class="screen-reader-text"><?php _e('Update/Edit the introductory paragraph for the new content excerpt'); ?></span>
+					            </a>
+					            <div id="pmpro-seq-excerpt-input" style="display: none;">
+						            <input type="hidden" name="hidden_pmpro_seq_excerpt" id="hidden_pmpro_seq_excerpt" value="<?php _e(($settings->excerpt_intro != '' ? esc_attr($settings->excerpt_intro) : 'A summary of the post follows below:')); ?>" />
+						            <input type="text" name="pmpro_sequence_excerpt" id="pmpro_sequence_excerpt" value="<?php _e(($settings->excerpt_intro != '' ? esc_attr($settings->excerpt_intro) : 'A summary of the post follows below:'));; ?>"/>
+						            <a href="#pmproseq_excerpt" id="ok-pmpro-seq-excerpt" class="save-pmproseq button"><?php _e('OK'); ?></a>
+						            <a href="#pmproseq_excerpt" id="cancel-pmpro-seq-excerpt" class="cancel-pmproseq button-cancel"><?php _e('Cancel'); ?></a>
+					            </div>
+				            </div>
 			            </div>
 		            </td>
-                </tr>
-                <tr>
-                    <td colspan="2">
-                        <div class="pmpro-sequence-excerpt">
-                            <label for="pmpro-seq-excerpt"><?php _e('Intro:'); ?> </label>
-                            <span id="pmpro-seq-excerpt-status"><?php _e(esc_attr($settings->excerpt_intro)); ?></span>
-                            <a href="#pmpro-seq-excerpt" id="pmpro-seq-edit-excerpt" class="edit-pmpro-seq-excerpt">
-                                <span aria-hidden="true"><?php _e('Edit'); ?></span>
-                                <span class="screen-reader-text"><?php _e('Update/Edit the e'); ?></span>
-                            </a>
-                            <div id="pmpro-seq-excerpt-input" style="display: none;">
-                                <input type="hidden" name="hidden_pmpro_seq_excerpt" id="hidden_pmpro_seq_excerpt" value="<?php echo esc_attr($settings->excerpt_intro); ?>" />
-                                <input type="text" name="pmpro_sequence_excerpt" id="pmpro_sequence_excerpt" value="<?php echo esc_attr($settings->excerpt_intro); ?>"/>
-                                <a href="#pmproseq_excerpt" id="ok-pmpro-seq-excerpt" class="save-pmproseq button"><?php _e('OK'); ?></a>
-                                <a href="#pmproseq_excerpt" id="cancel-pmpro-seq-excerpt" class="cancel-pmproseq button-cancel"><?php _e('Cancel'); ?></a>
-                            </div>
-                        </div>
-                    </td>
                 </tr>
 	            <tr>
                     <td colspan="2"><hr style="width: 100%;" /></td>
@@ -1204,7 +1238,7 @@ class PMProSequences
                                     'hidden_pmpro_seq_delaytype': jQuery('#hidden_pmpro_seq_delaytype').val(),
 	                                'hidden_pmpro_seq_sendnotice': jQuery('#hidden_pmpro_seq_sendnotice').val(),
 	                                'hidden_pmpro_seq_noticetime': jQuery('#hidden_pmpro_seq_noticetime').val(),
-                                    'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_template').val(),
+                                    'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_noticetemplate').val(),
                                     'hidden_pmpro_seq_excerpt': jQuery('#hidden_pmpro_seq_excerpt').val()
                                 },
                                 function(responseHTML)
@@ -1252,7 +1286,7 @@ class PMProSequences
 	                        'hidden_pmpro_seq_delaytype': jQuery('#hidden_pmpro_seq_delaytype').val(),
 	                        'hidden_pmpro_seq_sendnotice': jQuery('#hidden_pmpro_seq_sendnotice').val(),
 	                        'hidden_pmpro_seq_noticetime': jQuery('#hidden_pmpro_seq_noticetime').val(),
-	                        'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_template').val(),
+	                        'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_noticetemplate').val(),
                             'hidden_pmpro_seq_excerpt': jQuery('#hidden_pmpro_seq_excerpt').val()
                         },
                         //on success function
@@ -1299,6 +1333,7 @@ class PMProSequences
             usort($this->posts, array("PMProSequences", "sortByDelay"));
 
             // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
+			self::dbgOut('getPostsLists() - Sorted posts in configured order');
 
 			ob_start();
 			?>		
