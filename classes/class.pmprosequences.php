@@ -592,11 +592,11 @@ class PMProSequences
         switch ($this->options->sortOrder)
         {
             case SORT_ASC:
-                self::dbgOut('sortByDelay(): Sorted in Ascending order');
+                // self::dbgOut('sortByDelay(): Sorted in Ascending order');
                 return $this->sortAscending($a, $b);
                 break;
             case SORT_DESC:
-                self::dbgOut('sortByDelay(): Sorted in Descending order');
+                // self::dbgOut('sortByDelay(): Sorted in Descending order');
                 return $this->sortDescending($a, $b);
                 break;
             default:
@@ -629,7 +629,7 @@ class PMProSequences
 	public function sortAscending($a, $b)
 	{
         list($aDelay, $bDelay) = $this->normalizeDelays($a, $b);
-		$this->dbgOut('sortAscending() - Delays have been normalized');
+		// $this->dbgOut('sortAscending() - Delays have been normalized');
 
         // Now sort the data
         if ($aDelay == $bDelay)
@@ -665,7 +665,7 @@ class PMProSequences
      */
     public function convertToDays( $date )
     {
-	    $this->dbgOut('In convertToDays()');
+	    // $this->dbgOut('In convertToDays()');
 	    /*
 	    try {
 		    $level_id = pmpro_getMembershipLevelForUser();
@@ -702,12 +702,12 @@ class PMProSequences
 		        self::dbgOut('convertToDays() - Error calculating days: ' . $e->getMessage());
 	        }
 
-            self::dbgOut('convertToDays() - Member with start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
+            // self::dbgOut('convertToDays() - Member with start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
 
         }
         else {
             $days = $date;
-            self::dbgOut('convertToDays() - Member: days of delay from start: ' . $date);
+            // self::dbgOut('convertToDays() - Member: days of delay from start: ' . $date);
         }
 
         return $days;
@@ -952,7 +952,7 @@ class PMProSequences
 
 		self::dbgOut('addUserNoticeOptIn() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
 
-        if ($sequence->sendNotice == 1) {
+        if ($sequence->options->sendNotice == 1) {
 
             $optIn = get_user_option($current_user->ID, 'pmpro_sequence_notices', false);
 
@@ -964,7 +964,7 @@ class PMProSequences
                 // Create new opt-in settings for this user
                 $optIn = new stdClass();
                 $optIn->sequence = $sequence->sequence_id;
-                $optIn->sendNotice = $sequence->sendNotice;
+                $optIn->sendNotice = $sequence->options->sendNotice;
 
                 if (! update_user_option($current_user->ID, 'pmpro_sequence_notices', $optIn))
                     self::dbgOut('addUserNoticeOptIn() - Error saving new user meta for notice opt-in');
@@ -984,44 +984,46 @@ class PMProSequences
                 $optedIn = true;
             }
 
+	        $optinNonce = wp_create_nonce('pmpro-sequence-user-optin');
+
             /* Add form information */
             $noticeForm .= "
-            <div class=\"pmpro-sequence-useroptin\">
-                <input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optIn->sendNotice . "\" >
-                <input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"" . _e('Email me a notice when new content is available') . "\"" . checked($optIn->sendNotice, 1) . " />
-                <label for=\"pmpro-seq-useroptin\">" . _e('I would like to receive email alerts when new content is available') . "</label>
-                <a href=\"#pmproseq_delaytype\" id=\"ok-pmpro-seq-delay\" class=\"save-pmproseq button\">" . _e('Save') . "</a>
+            <div class=\"pmpro_sequence_useroptin\">
+            	<form action=\"" . admin_url('admin-ajax.php') ."\" method=\"post\">
+                	<input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optIn->sendNotice . "\" >
+                    <p><input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"Email me a notice when new content is available\"" . ($optIn->sendNotice == 1 ? ' checked=\"checked\"' : '') . " />
+                    <label for=\"pmpro-seq-useroptin\">Yes, send me email notifications!</label>&nbsp;&nbsp;<a href=\"#pmproseq_useroptin\" id=\"save_pmpro-seq-useroptin\" class=\"pmpro_useroptin_btn button button-primary button-large\">Save</a></p>
+                </form>
             </div>
             ";
 
-            $noticeForm .= "<script language=\"javascript\">
-            // Send POST (AJAX) request to save the user opt-in settings
-            jQuery.post( pmproSequenceAjax.ajaxurl,
+            $noticeForm .= "
+			<script language=\"javascript\">
+	        // console.log('Hide the Save button');
+        	// jQuery('#save_pmpro-seq-useroptin').hide();
+			var userNotice = jQuery('#hidden_pmpro_seq_useroptin').val( );
+
+	        /* Show/Hide save button & store state of current user opt-in setting */
+	        jQuery('#pmpro_sequence_useroptin').click(function(){
+
+	            console.log('Checkbox to opt in for new content notices (by user) clicked');
+	            jQuery('#hidden_pmpro_seq_useroptin').val( (this.checked ? 1 : 0) );
+                console.log('User modified their opt-in. Saving... Was: ' + userNotice + ' now: ' + jQuery('#pmpro_sequence_useroptin').val() + ' this: ' + this.checked );
+	            jQuery.post( '" . admin_url('admin-ajax.php') ."',
                 {
                     action: 'pmpro_sequence_save_user_optin',
-                    'security': pmproSequenceAjax.pmproSequenceNonce,
+                    'security': '" . $optinNonce ."',
                     'pmpro_sequence_id': '" . $sequence->sequence_id . "',
-                    'pmpro_sequence_optIn': jQuery(\"#hidden_pmpro_seq_useroptin\").val(),
-                    'pmpro_sequence_userId': '" . $current_user->ID . "';
+                    'pmpro_sequence_optIn': jQuery('#hidden_pmpro_seq_useroptin').val(),
+                    'pmpro_sequence_userId': '" . $current_user->ID . "'
                 },
                 function(responseHTML)
                 {
-                    if ( ! responseHTML.match(\"^Error\") )
-                    {
-                        /*
-                         * Refresh the list of posts (now empty) in the #pmpro_sequence_posts meta box
-                         */
-                        // jQuery('#pmpro_sequence_posts').html(responseHTML);
-                        alert('User specific opt-in settings saved');
-                    }
-                    else
-                    {
+                    if ( responseHTML.match(\"^Error\") )
                         alert(responseHTML);
-                        jQuery(this).val(current);
-                    }
-                }
-            );
-            </script>
+                });
+		    });
+		</script>
             ";
         }
 
@@ -1462,7 +1464,7 @@ class PMProSequences
      */
     public function hideUpcomingPosts()
     {
-        self::dbgOut('hideUpcomingPosts(): Do we show or hide upcoming posts?');
+        // self::dbgOut('hideUpcomingPosts(): Do we show or hide upcoming posts?');
         return $this->options->hidden == 1 ? true : false;
     }
 

@@ -49,7 +49,7 @@ jQuery(document).ready(function(){
             $('.pmpro-sequence-noticetime').slideToggle();
         });
 
-        /* Save new value for the lengthVisible variable */
+        /* Save the vcalue for the setting for the 'hide future posts in sequence' checkbox*/
         $('#pmpro_sequence_hidden').click(function(){
             console.log('Checkbox to hide upcoming posts changed');
             $('#hidden_pmpro_seq_future').val( this.checked ? 1 : 0 );
@@ -209,7 +209,6 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-excerpt-input').slideToggle();
             $('#pmpro-seq-edit-excerpt').slideToggle();
         });
-
 
     })(jQuery);
 });

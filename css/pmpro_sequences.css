@@ -10,7 +10,8 @@
 .pmpro_sequence_item-unavailable {display: inline-block; float: right; width: auto; font-style: italic; font-size: .9em; text-align: center;  }
 
 .pmpro-sequence-template,
-.pmpro-sequence-noticetime {
+.pmpro-sequence-noticetime,
+#save_pmpro-seq-useroptin {
     display: none;
 }
 .pmpro-sequence-sortorder label,
@@ -51,4 +52,14 @@ span#pmpro-seq-excerpt-status {
 
 input#pmpro_sequence_excerpt {
     width: 170px;
+}
+
+.pmpro_sequence_useroptin {
+    border:1px solid #c5c5c5;
+    display: inline-block;
+    width: 650px;
+    text-align: center;
+    margin-left: auto;
+    margin-right: auto;
+    vertical-align: middle;
 }

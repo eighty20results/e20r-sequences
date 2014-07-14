@@ -214,12 +214,52 @@ if (! function_exists('pmpro_sequence_optinsave')):
 
     function pmpro_sequence_optinsave()
     {
-        check_ajax_referer('pmpro-sequence-send-settings', 'security');
+
         $response = array();
 
         try {
+	        check_ajax_referer('pmpro-sequence-user-optin', 'security');
+	        $seq = new PMProSequences();
+	        $seq->dbgOut('optinsave(): ' . print_r( $_POST, true));
+
+	        $optIn = new stdClass();
+	        $optIn->sequence = array();
+
+	        // Settings for sequence(s) and data
+
+	        if ( isset($_POST['pmpro_sequence_id'])) {
+
+		        // Update setting for this sequence
+		        $optIn->sequence[intval( $_POST['pmpro_sequence_id'] )] = array(
+			        'sendNotice' => isset($_POST['pmpro_sequence_optIn']) ? intval($_POST['pmpro_sequence_optIn']) : $seq->options->sendNotice
+		        );
+
+		        $seq = new PMProSequences( intval( $_POST['pmpro_sequence_id']) );
+		        $seq->dbgOut('Updating user settings for sequence #: ' . $seq->sequence_id);
+	        }
+	        else {
+		        $seq->dbgOut( 'No sequence number specified. Ignoring settings for user' );
+		        $response = json_encode(array('success' => 'success'));
+		        echo $response;
+		        exit;
+	        }
+
+	        if ( isset($_POST['pmpro_sequence_userId'])) {
+		        $user_id = intval($_POST['pmpro_sequence_userId']);
+		        $seq->dbgOut('Updating user settings for user #: ' . $user_id);
+	        }
+	        else {
+		        $seq->dbgOut( 'No user ID specified. Ignoring settings!' );
+		        $response = json_encode(array('success' => 'success'));
+		        echo $response;
+		        exit;
+	        }
+
+	        $seq->dbgOut('User options: ' . print_r($optIn, true));
 
             // TODO: add save logic for update_user_option() for the opt-in values
+	        if ( ! update_user_option($user_id, 'pmpro_sequence_notices', $optIn))
+		        $seq->dbgOut('Error: Unable to save user options: ' . print_r($optIn, true));
 
         } catch (Exception $e) {
             // $response = array( 'result' => 'Error: ' . $e->getMessage());
