@@ -308,10 +308,14 @@ class PMProSequences
             //             06           05
             $hourDiff = $schedHour - $nowHour;
 
-            if ($hourDiff >= 1)
+            if ($hourDiff >= 1) {
+                self::dbgOut('calculateTimestamp() - Assuming current day');
                 $when = ''; // Today
-            else
+            }
+            else {
+                self::dbgOut('calculateTimestamp() - Assuming tomorrow');
                 $when = 'tomorrow ';
+            }
 
 		    $timeInput = $when . $timeString . ' ' . get_option('timezone_string');
 
