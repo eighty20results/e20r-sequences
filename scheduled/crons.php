@@ -56,14 +56,16 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
 						/* Check whether the userID has access to this sequence post and if the post isn't previously "notified" */
 						if ( pmpro_sequence_hasAccess( $user->user_id, $sequence_post->id ) &&
-                            ( $notified[$sequence_post->id]['sendNotice'] == 1) ) {
+                            ( $notified->sequence[$s->id]['sendNotice'] == 1) ) {
 							// Send the email to the user about this post
 							$sequence->sendEmail( $sequence_post->id, $user->user_id, $s->ID );
 							$sequence->dbgOut('Sent email to user ' . $user->user_id . ' about post post ' .
 							                  $sequence_post->id . ' in sequence ' . $sequence->sequence_id);
+
 							/* Update the sequence metadata that user has been notified */
-							$notified[] = $sequence_post->id;
-							update_user_meta( $user->user_id, 'pmpro_seq_notified', $notified );
+							$notified->sequence[$s->ID]['notified_posts'] = array( $sequence_post->id => 0);
+
+							update_user_option( $user->user_id, 'pmpro_seq_notified', $notified );
 						} else
 							$sequence->dbgOut('User with ID ' . $user->user_id . ' does not have access to post ' .
 							                  $sequence_post->id . ' in sequence ' . $sequence->sequence_id);

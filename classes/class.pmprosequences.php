@@ -978,7 +978,11 @@ class PMProSequences
 
                 // Create new opt-in settings for this user
                 $optIn = new stdClass();
-                $optIn->sequence[$sequence->sequence_id] = array('sendNotice' => $sequence->options->sendNotice);
+                $optIn->sequence[$sequence->sequence_id] = array(
+                    'sendNotice' => $sequence->options->sendNotice,
+                    'notified' => 0,
+                );
+
 
                 if (! update_user_option($current_user->ID, 'pmpro_sequence_notices', $optIn))
                     self::dbgOut('addUserNoticeOptIn() - Error saving new user meta for notice opt-in');

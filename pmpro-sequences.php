@@ -259,7 +259,7 @@ if (! function_exists('pmpro_sequence_optinsave')):
 
 	        $seq->dbgOut('User options: ' . print_r($optIn, true));
 
-            // TODO: add save logic for update_user_option() for the opt-in values
+            /* Save the user options we just defined */
             if ($user_id == $current_user->ID)
                 if ( ! update_user_option($user_id, 'pmpro_sequence_notices', $optIn))
                     $seq->dbgOut('Error: Unable to save user options: ' . print_r($optIn, true));
