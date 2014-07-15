@@ -279,7 +279,7 @@ class PMProSequences
 	        // Update the cron job for this notice.
 	        if ( $settings->sendNotice == 1 ) {
 		        $sequence->dbgOut( 'pmpro_sequence_meta_save(): Updating the cron job for sequence ' . $sequence->sequence_id );
-		        $sequence->updateNoticeCron( $sequence->sequence_id );
+		        $sequence->updateNoticeCron( $sequence );
 	        }
 
 	        self::dbgOut('pmpro_sequence_meta_save(): Saved metadata for sequence #' . $post_id);
@@ -899,14 +899,19 @@ class PMProSequences
             // Check if the job is previously scheduled. If not, we're using the default cron schedule.
             if ($timestamp) {
 			    // Clear old cronjob for this sequence
+	            self::dbgOut('Current cron job for sequence # ' . $sequence->sequence_id . ' scheduled for ' . $timestamp);
 	            self::dbgOut('Clearing old cron job for sequence # ' . $sequence->sequence_id);
 			    wp_clear_scheduled_hook($timestamp, 'daily', 'pmpro_sequence_check_for_new_content', array( $sequence->sequence_id ));
             }
 
 			// Set time (what time) to run this cron job the first time.
-			self::dbgOut('Adding cron job for ' . $sequence->sequence_id);
-			wp_schedule_event($sequence->noticeTimestamp, 'daily', 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id));
+			self::dbgOut('Adding cron job for ' . $sequence->sequence_id . ' at ' . $sequence->options->noticeTimestamp);
+			wp_schedule_event($sequence->options->noticeTimestamp, 'daily', 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id));
 
+			$timestamp = wp_next_scheduled( 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id) );
+
+			if ($timestamp == $sequence->options->noticeTimestamp)
+				self::dbgOut('Correctly scheduled cron job for content check');
 		}
 		catch (Exception $e) {
 			echo 'Error: ' . $e->getMessage();
@@ -969,7 +974,7 @@ class PMProSequences
 
         if ($sequence->options->sendNotice == 1) {
 
-            $optIn = get_user_option($current_user->ID, 'pmpro_sequence_notices', false);
+            $optIn = get_user_option('pmpro_sequence_alerts', $current_user->ID);
 
             self::dbgOut('addUserNoticeOptIn() - Fetched Meta: ' . print_r($optIn, true));
 
@@ -978,28 +983,23 @@ class PMProSequences
 
                 // Create new opt-in settings for this user
                 $optIn = new stdClass();
-                $optIn->sequence[$sequence->sequence_id] = array(
-                    'sendNotice' => $sequence->options->sendNotice,
-                    'notified' => 0,
-                );
+	            $optIn->sequence[$sequence->sequence_id]->sendNotice = $sequence->options->sendNotice;
 
-
-                if (! update_user_option($current_user->ID, 'pmpro_sequence_notices', $optIn))
+                if (! update_user_option($current_user->ID, 'pmpro_sequence_alerts', $optIn)) {
                     self::dbgOut('addUserNoticeOptIn() - Error saving new user meta for notice opt-in');
+                }
             }
 
             // $key = array_search($sequence->sequence_id, $optIn);
 
             // Not unset, so the user has made a choice in the past.
-            if ( ! empty( $optIn->sequence[$sequence->sequence_id] ) ) {
+            if (empty( $optIn->sequence[$sequence->sequence_id] ) ) {
 
-                self::dbgOut('addUserNoticeOptIn() - This user has opt-in setting for this sequence');
-                $optedIn = $optIn->sequence[$sequence->sequence_id]['sendNotice'];
+	            $optIn->sequence[$sequence->sequence_id]['sendNotice'] = 1;
+	            self::dbgOut('addUserNoticeOptIn() - Using default setting for user ' . $current_user->ID . ' and sequence ' . $sequence->sequence_id);
             }
-            else {
-                self::dbgOut('Since sendNotice is true, we will send notices - and mark this as checked');
-                $optedIn = 1;
-            }
+
+	        self::dbgOut('OptIn options: ' . print_r($optIn, true));
 
 	        $optinNonce = wp_create_nonce('pmpro-sequence-user-optin');
 
@@ -1007,8 +1007,8 @@ class PMProSequences
             $optinForm .= "
             <div class=\"pmpro_sequence_useroptin\">
             	<form action=\"" . admin_url('admin-ajax.php') ."\" method=\"post\">
-                	<input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optedIn . "\" >
-                    <p><input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"Email me a notice when new content is available\"" . ($optedIn == 1 ? ' checked=\"checked\"' : '') . " />
+                	<input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optIn->sequence[$sequence->sequence_id]['sendNotice'] . "\" >
+                    <p><input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"Email me a notice when new content is available\"" . ($optIn->sequence[$sequence->sequence_id]['sendNotice'] == 1 ? ' checked=\"checked\"' : '') . " />
                     <label for=\"pmpro-seq-useroptin\">Yes, send me email notifications!</label>&nbsp;&nbsp;<a href=\"#pmproseq_useroptin\" id=\"save_pmpro-seq-useroptin\" class=\"pmpro_useroptin_btn button button-primary button-large\">Save</a></p>
                 </form>
             </div>

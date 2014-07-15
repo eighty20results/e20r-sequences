@@ -224,6 +224,13 @@ if (! function_exists('pmpro_sequence_optinsave')):
 	        $seq->dbgOut('optinsave(): ' . print_r( $_POST, true));
 
 	        $optIn = new stdClass();
+	        /*
+	         * $optIn->sequence->
+	         *                   id
+	         *                   posts->
+	         *                         id
+	         *
+	         */
 	        $optIn->sequence = array();
 
 	        // Settings for sequence(s) and data
@@ -256,15 +263,17 @@ if (! function_exists('pmpro_sequence_optinsave')):
 		        exit;
 	        }
 
-
 	        $seq->dbgOut('User options: ' . print_r($optIn, true));
 
             /* Save the user options we just defined */
-            if ($user_id == $current_user->ID)
-                if ( ! update_user_option($user_id, 'pmpro_sequence_notices', $optIn))
-                    $seq->dbgOut('Error: Unable to save user options: ' . print_r($optIn, true));
+            if ( $user_id == $current_user->ID ) {
+	            //if ( ! update_user_option( $user_id, 'pmpro_sequence_alerts', $optIn ) )
+	            $seq->dbgOut( 'Saving user options: ' . print_r( $optIn, true ) );
+	            update_user_option( $user_id, 'pmpro_sequence_alerts', $optIn );
+	            // $seq->dbgOut('Saved Data: ' . print_r( get_user_option('pmpro_sequence_alerts', $user_id), true));
+            }
             else {
-                $seq->dbgOut('Error: Mismatched User IDs!');
+                $seq->dbgOut('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID);
                 $response = json_encode(array('error' => 'Error saving settings'));
             }
         } catch (Exception $e) {
@@ -444,7 +453,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		// $sequence->options = $settings;
 		if ( $settings->sendNotice == 1 ) {
 			$sequenceObj->dbgOut( 'pmpro_sequence_meta_save(): Updating the cron job for sequence ' . $sequenceObj->sequence_id );
-			$sequenceObj->updateNoticeCron( $sequenceObj->sequence_id );
+			$sequenceObj->updateNoticeCron( $sequenceObj );
 		}
 
 		$sequenceObj->dbgOut('pmpro_sequence_settings_save() - Settings are now: ' . print_r($settings, true));
