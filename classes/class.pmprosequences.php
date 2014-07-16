@@ -1176,7 +1176,6 @@ class PMProSequences
 		                </div>
 	                </td>
                 </tr>
-	            <!-- TODO: Add support for time to run new-content job (cron) for this sequence (the default value is set at plugin registration -->
 	            <tr>
 		            <td colspan="2">
 			            <div class="pmpro-seq-alert-hl">New content alerts</div>

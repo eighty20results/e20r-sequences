@@ -23,7 +23,7 @@ Author URI: http://www.eighty20results.com
 	2. User gets access to any "0 days after" (or on a specific date) sequence content.
 	3. Each day a script checks if a user should gain access to any new content, if so:
 	- User is given access to the content.
-	- TODO: An email is sent to the user letting them know that content is available.
+	- Optional (global & per-user settable) An email is sent to the user letting them know that content is available.
 	
 	Checking for access:
 	* Is a membership level required?
@@ -941,7 +941,12 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 		foreach($seqs as $s)
 		{
 			$sequence = new PMProSequences($s->ID);
-			// TODO: Check whether this sequence is configured to send out notices on new content.
+
+            // Check whether to process this sequence or move on to the next one.
+            if ( $sequence->options->sendNotice != 1) {
+                $sequence->dbgOut('Sequence ' . $sequence->sequence_id . ' is not configured for alerts. Skipping.');
+                continue;
+            }
 
 			$sequence_posts = $sequence->getPosts();
 
