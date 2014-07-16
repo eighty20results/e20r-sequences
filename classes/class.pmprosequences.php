@@ -897,7 +897,7 @@ class PMProSequences
      *
      * @param $sequence -- stdObject - PMPro Sequence Object
 	 */
-	function updateNoticeCron( $sequence )
+	function updateNoticeCron( PMProSequences $sequence )
 	{
 		try {
 
@@ -947,9 +947,9 @@ class PMProSequences
 	/**
 	 * Create list of options for time.
 	 *
-	 * @param string $postfix -- AM or PM for the time (hours)
+	 * @param $settings -- (array) Sequence specific settings
 	 */
-	function pmpro_sequence_createTimeOpts( $settings )
+	function pmpro_sequence_createTimeOpts( array $settings )
 	{
 
 		$prepend    = array('00','01','02','03','04','05','06','07','08','09');
@@ -972,7 +972,7 @@ class PMProSequences
      * @param $sequence -- The Sequence Settings object (contains settings)
      * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
      */
-    function pmpro_sequence_addUserNoticeOptIn( $sequence )
+    function pmpro_sequence_addUserNoticeOptIn( PMProSequences $sequence )
 	{
 		$optinForm = '';
         global $current_user;
@@ -1802,7 +1802,7 @@ class PMProSequences
 					dataType: 'html',
 					data: "pmpro_sequenceadd_post=1&pmpro_sequence_id=<?php echo $this->sequence_id;?>&pmpro_sequenceremove="+post_id,
 					error: function(xml){
-						alert('Error removing sequence post [1]');
+						alert('Error removing sequence post [1]: '+ xml);
 						//enable save button
 						jQuery('#pmpro_sequencesave').removeAttr('disabled');												
 					},
