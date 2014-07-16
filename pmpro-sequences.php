@@ -337,7 +337,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 	 * @return bool - Returns true if save is successful
 	 */
 
-	function pmpro_sequence_settings_save( $sequence_id, $sequenceObj )
+	function pmpro_sequence_settings_save( int $sequence_id, PMProSequences $sequenceObj )
 	{
 
 		$settings = $sequenceObj->fetchOptions($sequence_id);
@@ -759,9 +759,17 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 			global $wpdb;
 			
 			if(!empty($level_id))
-				$sqlQuery = "SELECT UNIX_TIMESTAMP(startdate) FROM $wpdb->pmpro_memberships_users WHERE status = 'active' AND membership_id IN(" . $wpdb->escape($level_id) . ") AND user_id = '" . $user_id . "' ORDER BY id LIMIT 1";		
+				$sqlQuery = "
+							SELECT UNIX_TIMESTAMP(startdate)
+							FROM $wpdb->pmpro_memberships_users
+							WHERE status = 'active' AND membership_id IN(" . $wpdb->escape($level_id) . ") AND user_id = '" . $user_id . "'
+							ORDER BY id LIMIT 1";
 			else
-				$sqlQuery = "SELECT UNIX_TIMESTAMP(startdate) FROM $wpdb->pmpro_memberships_users WHERE status = 'active' AND user_id = '" . $user_id . "' ORDER BY id LIMIT 1";
+				$sqlQuery = "
+							SELECT UNIX_TIMESTAMP(startdate)
+							FROM $wpdb->pmpro_memberships_users
+							WHERE status = 'active' AND user_id = '" . $user_id . "'
+							ORDER BY id LIMIT 1";
 				
 			$startdate = apply_filters("pmpro_member_startdate", $wpdb->get_var($sqlQuery), $user_id, $level_id);
 			
@@ -885,9 +893,8 @@ if ( ! function_exists('pmpro_sequence_activation')):
         flush_rewrite_rules();
 
 	    /* Register Cron job for new content check */
-	    // TODO: Use per-sequence meta to identify time of cron job. (Set Daily/Weekly or hourly)
 	    // Set time (what time) to run this cron job the first time.
-	    wp_schedule_event(time(), 'daily', 'pmpro_sequence_check_for_new_content');
+	    wp_schedule_event(current_time('timestamp'), 'daily', 'pmpro_sequence_cron_hook');
     }
 
 endif;
@@ -902,9 +909,10 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
         $pmpros_deactivating = true;
         flush_rewrite_rules();
 
-	    /* Unregister Cron job for new content check */
-
-	    wp_clear_scheduled_hook(time(), 'daily', 'pmpro_sequence_check_for_new_content');
+	    /* Unregister Cron jobs for new content check */
+	    $ts = current_time('timestamp');
+	    // TODO: Iterate through all sequences and see if they can be disabled
+	    wp_clear_scheduled_hook($ts, 'daily', 'pmpro_sequence_cron_hook');
     }
 endif;
 

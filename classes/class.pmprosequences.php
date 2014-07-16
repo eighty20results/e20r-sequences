@@ -70,7 +70,7 @@ class PMProSequences
 	    $settings->sendNotice = 1; // sendNotice == Yes
 	    $settings->noticeTemplate = 'new_content.html'; // Default plugin template
 	    $settings->noticeTime = '00:00'; // At Midnight (server TZ)
-        $settings->noticeTimestamp = time(); // The current time (in UTC)
+        $settings->noticeTimestamp = current_time('timestamp'); // The current time (in UTC)
         $settings->excerpt_intro = 'A summary of the post follows below:';
 
         $this->options = $settings; // Save as options for this sequence
@@ -298,17 +298,20 @@ class PMProSequences
     public function calculateTimestamp( $timeString )
     {
 
-	    $timestamp = time();
+	    $timestamp = current_time('timestamp');
 
 	    try {
 		    /* current time & date */
-            $schedHour = date( 'h', strtotime($timeString));
-            $nowHour = date('h', $timestamp);
+            $schedHour = date( 'H', strtotime($timeString));
+            $nowHour = date('H', $timestamp);
+
+		    self::dbgOut('calculateTimestamp() - Timestring: ' . $timeString . ', scheduled Hour: ' . $schedHour . ' and current Hour: ' .$nowHour );
+
 
             //             06           05
             $hourDiff = $schedHour - $nowHour;
 
-            if ($hourDiff >= 1) {
+            if ($hourDiff >= 0) {
                 self::dbgOut('calculateTimestamp() - Assuming current day');
                 $when = ''; // Today
             }
@@ -753,11 +756,12 @@ class PMProSequences
 
 		$user = get_user_by('id', $user_id);
 		$post = get_post($post_id);
+		$templ = preg_split('/\./', $settings->noticeTemplate); // Parse the template name
 
 		$email->email = $user->user_email;
 		$email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
-		$email->template = "new_content"; // TODO Use sequence META to specify the template to use.
-		$email->body = file_get_contents(plugins_url('email/'. $email->template . '.html', dirname(__FILE__)));
+		$email->template = $templ[0];
+		$email->body = file_get_contents(plugins_url('email/'. $settings->noticeTemplate, dirname(__FILE__)));
 
 		// All of the array list names are !!<name>!! escaped values.
 
@@ -777,6 +781,8 @@ class PMProSequences
 		}
         else
 			$email->data['excerpt'] = '';
+
+		$sequence->dbgOut('Email Object: ' . print_r($email, true));
 
 		$email->sendEmail();
 	}
@@ -894,28 +900,29 @@ class PMProSequences
 	function updateNoticeCron( $sequence )
 	{
 		try {
-            $timestamp = wp_next_scheduled( 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id) );
 
             // Check if the job is previously scheduled. If not, we're using the default cron schedule.
-            if ($timestamp) {
+            if (false !== ($timestamp = wp_next_scheduled( 'pmpro_sequence_cron_hook', array($sequence->sequence_id) ) )) {
 			    // Clear old cronjob for this sequence
-	            self::dbgOut('Current cron job for sequence # ' . $sequence->sequence_id . ' scheduled for ' . $timestamp);
-	            self::dbgOut('Clearing old cron job for sequence # ' . $sequence->sequence_id);
-			    wp_clear_scheduled_hook($timestamp, 'daily', 'pmpro_sequence_check_for_new_content', array( $sequence->sequence_id ));
+	            $this->dbgOut('Current cron job for sequence # ' . $sequence->sequence_id . ' scheduled for ' . $timestamp);
+	            $this->dbgOut('Clearing old cron job for sequence # ' . $sequence->sequence_id);
+			    wp_unschedule_event($timestamp, 'pmpro_sequence_cron_hook', array( $sequence->sequence_id ));
             }
 
 			// Set time (what time) to run this cron job the first time.
-			self::dbgOut('Adding cron job for ' . $sequence->sequence_id . ' at ' . $sequence->options->noticeTimestamp);
-			wp_schedule_event($sequence->options->noticeTimestamp, 'daily', 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id));
+			$this->dbgOut('Adding cron job for ' . $sequence->sequence_id . ' at ' . $sequence->options->noticeTimestamp);
+			wp_schedule_event($sequence->options->noticeTimestamp, 'daily', 'pmpro_sequence_cron_hook', array($sequence->sequence_id));
 
-			$timestamp = wp_next_scheduled( 'pmpro_sequence_check_for_new_content', array($sequence->sequence_id) );
+			$ts = wp_next_scheduled( 'pmpro_sequence_cron_hook', array($sequence->sequence_id) );
 
-			if ($timestamp == $sequence->options->noticeTimestamp)
-				self::dbgOut('Correctly scheduled cron job for content check');
+			$this->dbgOut('According to WP, the job is scheduled for: ' . date('d-m-Y H:i:s', $ts) . ' and we asked for ' . date('d-m-Y H:i:s', $sequence->options->noticeTimestamp));
+
+			if ($ts != $sequence->options->noticeTimestamp)
+				$this->dbgOut('Correctly scheduled cron job for content check?');
 		}
 		catch (Exception $e) {
-			echo 'Error: ' . $e->getMessage();
-			self::dbgOut('Error updating cron job(s): ' . $e->getMessage());
+			// echo 'Error: ' . $e->getMessage();
+			$this->dbgOut('Error updating cron job(s): ' . $e->getMessage());
 		}
 	}
 
@@ -1537,7 +1544,7 @@ class PMProSequences
     {
         if ($this->isValidDate($delay))
         {
-            $now = time();
+            $now = current_time('timestamp');
             // TODO: Add support for startWhen options (once the plugin supports differentiating on when the drip starts)
             $delayTime = strtotime( $delay . ' 00:00:00.0' );
             $this->dbgOut('isPastDelay() - Now = ' . $now . ' and delay time = ' . $delayTime );
