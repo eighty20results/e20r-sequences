@@ -1199,7 +1199,7 @@ class PMProSequences
 	                <td colspan="2">
 		                <div class="pmpro-sequence-delaytype">
 			                <label for="pmpro-seq-delay"><?php _e('Delay type:'); ?> </label>
-			                <span id="pmpro-seq-delay-status"><?php _e(($settings->delayType == 'byDate' ? _e('A date') : _e('Days since sign-up'))); ?></span>
+			                <span id="pmpro-seq-delay-status"><?php _e(($settings->delayType == 'byDate' ? _e('A specific date') : _e('Days since sign-up'))); ?></span>
 			                <a href="#pmpro-seq-delay" id="pmpro-seq-edit-delay" class="edit-pmpro-seq-delay">
 				                <span aria-hidden="true"><?php _e('Edit'); ?></span>
 				                <span class="screen-reader-text"><?php _e('Edit the delay type for this sequence'); ?></span>
@@ -1207,8 +1207,8 @@ class PMProSequences
 			                <div id="pmpro-seq-delay-select" style="display: none;">
 				                <input type="hidden" name="hidden_pmpro_seq_delaytype" id="hidden_pmpro_seq_delaytype" value="<?php echo esc_attr($settings->delayType); ?>" >
 				                <select name="pmpro_sequence_delaytype" id="pmpro_sequence_delaytype">
-					                <option value="byDays" <?php selected( $settings->delayType, 'byDays'); ?> ><?php _e('Number of Days'); ?></option>
-					                <option value="byDate" <?php selected( $settings->delayType, 'byDate'); ?> ><?php _e('Release Date (YYYY-MM-DD)'); ?></option>
+					                <option value="byDays" <?php selected( $settings->delayType, 'byDays'); ?> ><?php _e('Days since sign-up'); ?></option>
+					                <option value="byDate" <?php selected( $settings->delayType, 'byDate'); ?> ><?php _e('A specific date'); ?></option>
 				                </select>
 				                <a href="#pmproseq_delaytype" id="ok-pmpro-seq-delay" class="save-pmproseq button"><?php _e('OK'); ?></a>
 				                <a href="#pmproseq_delaytype" id="cancel-pmpro-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel'); ?></a>
@@ -1362,12 +1362,14 @@ class PMProSequences
                             {
                                 jQuery(this).val(jQuery.data(this, 'pmpro_sequence_settings_hidden_delay'));
                                 jQuery(this).val(current);
-
+	                            jQuery('#hidden_pmpro_seq_wipesequence').val(0);
                                 return false;
+                            } else {
+	                            jQuery('#hidden_pmpro_seq_wipesequence').val(1);
                             }
 
                             jQuery.data(this, 'pmpro_sequence_settings_delaytype', jQuery(this).val());
-	                        jQuery('#hidden_pmpro_seq_wipesequence').val(1);
+
 
                             // Send POST (AJAX) request to delete all existing articles/posts in sequence.
 	                        /*
@@ -1441,8 +1443,9 @@ class PMProSequences
                             if (! status.match('^Error'))
                             {
                                 setLabels();
-	                            setLabels();
-	                            jQuery('#pmpro_sequence_posts').html(status);
+
+	                            if (status != '')
+	                                jQuery('#pmpro_sequence_posts').html(status);
 
 	                            jQuery('#pmpro_settings_save').html('Save Settings');
                                 // location.reload();
