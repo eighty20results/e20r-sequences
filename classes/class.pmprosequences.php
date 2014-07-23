@@ -99,6 +99,8 @@ class PMProSequences
 	    $settings->noticeTime = '00:00'; // At Midnight (server TZ)
         $settings->noticeTimestamp = current_time('timestamp'); // The current time (in UTC)
         $settings->excerpt_intro = 'A summary of the post follows below:';
+	    $settings->replyto = pmpro_getOption("from_email");
+	    $settings->fromname = pmpro_getOption("from_name");
 
         $this->options = $settings; // Save as options for this sequence
 
@@ -276,6 +278,23 @@ class PMProSequences
             }
             else
                 $settings->excerpt_intro = 'A summary of the post follows below:';
+
+	        if ( isset($_POST['hidden_pmpro_seq_replyto']) && ($_POST['hidden_pmpro_seq_replyto']!= ''))
+	        {
+		        $settings->replyto = esc_attr($_POST['hidden_pmpro_seq_excerpt']);
+		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->replyto: ' . esc_attr($_POST['hidden_pmpro_seq_replyto']) );
+	        }
+	        else
+		        $settings->replyto = pmpro_getOption("from_email");
+
+
+	        if ( isset($_POST['hidden_pmpro_seq_fromname']) && ($_POST['hidden_pmpro_seq_fromname']!= ''))
+	        {
+		        $settings->replyto = esc_attr($_POST['hidden_pmpro_seq_fromname']);
+		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->fromname: ' . esc_attr($_POST['hidden_pmpro_seq_fromname']) );
+	        }
+	        else
+		        $settings->fromname = pmpro_getOption("from_name");
 
 	        // $sequence->options = $settings;
 
@@ -777,8 +796,8 @@ class PMProSequences
 		$post = get_post($post_id);
 		$templ = preg_split('/\./', $settings->noticeTemplate); // Parse the template name
 
-		$email->from = 'info@strongcubedfitness.com';
-		$email->fromname = 'Strong CUBED Fitness';
+		$email->from = $settings->from; // = 'info@strongcubedfitness.com';
+		$email->fromname = $settings->fronname; // = 'Strong CUBED Fitness';
 
 		$email->email = $user->user_email;
 
@@ -1230,6 +1249,34 @@ class PMProSequences
 				            <input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them'); ?>" id="pmpro_sequence_sendnotice" name="pmpro_sequence_sendnotice" <?php checked($settings->sendNotice, 1); ?> />
 				            <input type="hidden" name="hidden_pmpro_seq_sendnotice" id="hidden_pmpro_seq_sendnotice" value="<?php echo esc_attr($settings->sendNotice); ?>" >
 				            <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Send new content alerts'); ?></label>
+				            <div class="pmpro-sequence-email">
+					            <p class="pmpro-seq-email-hl"><?php _e("Sender:"); ?></p>
+					            <div class="pmpro-sequence-replyto">
+						            <label for="pmpro-seq-replyto"><?php _e('Addr:'); ?> </label>
+						            <span id="pmpro-seq-replyto-status"><?php _e( ($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email")) ); ?></span>
+						            <a href="#pmpro-seq-replyto" id="pmpro-seq-edit-replyto" class="edit-pmpro-seq-replyto">
+							            <span aria-hidden="true"><?php _e('Edit'); ?></span>
+							            <span class="screen-reader-text"><?php _e('Enter the email address to use for the sender of the alert'); ?></span>
+						            </a>
+					            </div>
+					            <div class="pmpro-sequence-fromname">
+						            <label for="pmpro-seq-fromname"><?php _e('Name:'); ?> </label>
+						            <span id="pmpro-seq-fromname-status"><?php _e( ($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name")) ); ?></span>
+						            <a href="#pmpro-seq-fromname" id="pmpro-seq-edit-fromname" class="edit-pmpro-seq-fromname">
+							            <span aria-hidden="true"><?php _e('Edit'); ?></span>
+							            <span class="screen-reader-text"><?php _e('Enter the name to use for the sender of the alert'); ?></span>
+						            </a>
+					            </div>
+					            <div id="pmpro-seq-email-input" style="display: none;">
+						            <input type="hidden" name="hidden_pmpro_seq_replyto" id="hidden_pmpro_seq_replyto" value="<?php _e(($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email"))); ?>" />
+						            <input type="text" name="pmpro_sequence_replyto" id="pmpro_sequence_replyto" value="<?php _e(($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email")));; ?>"/>
+						            <input type="hidden" name="hidden_pmpro_seq_fromname" id="hidden_pmpro_seq_fromname" value="<?php _e(($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name"))); ?>" />
+						            <input type="text" name="pmpro_sequence_fromname" id="pmpro_sequence_fromname" value="<?php _e(($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name")));; ?>"/>
+						            <a href="#pmproseq_email" id="ok-pmpro-seq-email" class="save-pmproseq button"><?php _e('OK'); ?></a>
+						            <a href="#pmproseq_email" id="cancel-pmpro-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel'); ?></a>
+					            </div>
+				            </div>
+
 				            <div class="pmpro-sequence-template">
 					            <hr width="60%"/>
 					            <label for="pmpro-seq-template"><?php _e('Template:'); ?> </label>

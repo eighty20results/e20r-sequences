@@ -16,11 +16,14 @@ jQuery(document).ready(function(){
         var $alertText = $('#pmpro_sequence_noticetime option:selected').text();
         var $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
         var $excerpt = $('#pmpro_sequence_excerpt').val();
+        var $fromname = $('#pmpro_sequence_fromname').val();
+        var $replyto = $('#pmpro_sequence_replyto').val();
 
-        console.log('Sort Order is: ' + jQuery('#pmpro_sequence_sortorder option:selected').text());
+        // console.log('Sort Order is: ' + jQuery('#pmpro_sequence_sortorder option:selected').text());
 
         if ( $('#pmpro_sequence_sendnotice').is(':checked') ) {
             console.log('Show all notice related variables');
+            $('.pmpro-sequence-email').show();
             $('.pmpro-sequence-template').show();
             $('.pmpro-sequence-noticetime').show();
         }
@@ -47,9 +50,10 @@ jQuery(document).ready(function(){
             $('#hidden_pmpro_seq_sendnotice').val( this.checked ? 1 : 0 );
             $('.pmpro-sequence-template').slideToggle();
             $('.pmpro-sequence-noticetime').slideToggle();
+            $('.pmpro-sequence-email').slideToggle();
         });
 
-        /* Save the vcalue for the setting for the 'hide future posts in sequence' checkbox*/
+        /* Save the value for the setting for the 'hide future posts in sequence' checkbox*/
         $('#pmpro_sequence_hidden').click(function(){
             console.log('Checkbox to hide upcoming posts changed');
             $('#hidden_pmpro_seq_future').val( this.checked ? 1 : 0 );
@@ -79,6 +83,13 @@ jQuery(document).ready(function(){
             console.log('Edit button for excerpt intro edit field clicked');
             $('#pmpro-seq-edit-excerpt').slideToggle();
             $('#pmpro-seq-excerpt-input').slideToggle();
+        });
+
+        $('#pmpro-seq-edit-email').click(function(){
+            console.log('Edit button for email edit field clicked');
+            $('#pmpro-seq-email-input').slideToggle();
+            $('#pmpro-seq-edit-replyto').slideToggle();
+            $('#pmpro-seq-edit-fromname').slideToggle();
         });
 
         /** Cancel button events **/
@@ -136,6 +147,15 @@ jQuery(document).ready(function(){
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-excerpt-select').slideToggle();
             $('#pmpro-seq-edit-excerp').slideToggle();
+
+        });
+
+        $('#cancel-pmpro-seq-email').click(function(){
+            console.log('Cancel button for email settings was clicked');
+
+            $('#pmpro-seq-email-input').slideToggle();
+            $('#pmpro-seq-edit-replyto').slideToggle();
+            $('#pmpro-seq-edit-fromname').slideToggle();
 
         });
 
@@ -208,6 +228,24 @@ jQuery(document).ready(function(){
             }
             $('#pmpro-seq-excerpt-input').slideToggle();
             $('#pmpro-seq-edit-excerpt').slideToggle();
+        });
+
+        $('#ok-pmpro-seq-email').click(function(){
+            console.log('An OK button for email settings was clicked');
+            if ( ( $('#pmpro_sequence_fromname').val != $fromname)  ||
+                 ( $('#pmpro_sequence_replyto').val() != $replyto) ) {
+                /* Save the new excerpt info */
+                $fromname = $('#pmpro_sequence_fromname').val();
+                $replyto = $('#pmpro_sequence_replyto').val();
+                $('#hidden_pmpro_seq_fromname').val($fromname);
+                $('#hidden_pmpro_seq_replyto').val($replyto);
+                $('#pmpro-seq-fromname-status').text('"' + $fromname + '"');
+                $('#pmpro-seq-replyto-status').text('"' + $replyto + '"');
+                console.log('Content of email settings was changed and is now: ' + $fromname + ' and ' + $replyto);
+            }
+            $('#pmpro-seq-email-input').slideToggle();
+            $('#pmpro-seq-edit-replyto').slideToggle();
+            $('#pmpro-seq-edit-fromname').slideToggle();
         });
 
     })(jQuery);
