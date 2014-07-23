@@ -356,7 +356,7 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 			                if ( ! delete_post_meta( $sequence_id, '_sequence_posts' ) ) {
 
 				                $sequence->dbgOut( 'ajaxSaveSettings() - Unable to delete the posts in sequence # ' . $sequence_id );
-				                $response = 'Error: Failed to delete the posts in this sequence';
+				                $response = 'Error: No Posts to delete from this sequence or error during delete operation';
 			                }
 			                else {
 
