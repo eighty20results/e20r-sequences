@@ -982,11 +982,11 @@ class PMProSequences
 	{
 
 		$prepend    = array('00','01','02','03','04','05','06','07','08','09');
-		$prepend_mins    = array('00','05');
 		$hours      = array_merge($prepend,range(10, 23));
-		$minutes    = array_merge($prepend_mins, range(10, 55, 5)); // For debug
-		// $minutes     = array('00', '15', '30', '45');
+		$minutes     = array('00', '30');
 
+		// $prepend_mins    = array('00','30');
+		// $minutes    = array_merge($prepend_mins, range(10, 55, 5)); // For debug
 		$selTime = preg_split('/\:/', $settings->noticeTime);
 
 		foreach ($hours as $hour) {
