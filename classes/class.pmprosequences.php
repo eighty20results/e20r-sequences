@@ -5,6 +5,9 @@ class PMProSequences
 {
     public $options;
     public $sequence_id = 0;
+	private $id;
+	private $posts;
+	private $error;
 
 	//constructor
 	function PMProSequences($id = null)
@@ -289,6 +292,8 @@ class PMProSequences
             // update_post_meta($post_id, '_tls_sequence_settings', (array)$settings->options);
 
         }
+
+	    return true;
     }
 
     /**
@@ -572,24 +577,7 @@ class PMProSequences
         }
 	}
 
-	function getReleaseDateForPost($post_id)
-	{
-		$key = $this->getPostKey($post_id);
-
-		if ($key === false) {
-
-			$this->dbgOut('No key found for post ' . $post_id . ' in getReleaseDateForPost');
-			return false;
-		}
-		else {
-			switch ($this->options->delayType) {
-				case 'byDays':
-
-			}
-		}
-	}
     // Returns a "days to delay" value for the posts $a & $b, even if the delay value is a date.
-
     function normalizeDelays($a, $b)
     {
         return array($this->convertToDays($a->delay), $this->convertToDays($b->delay));
@@ -619,6 +607,7 @@ class PMProSequences
      *
      * @param $a (post object)
      * @param $b (post object)
+     * @return int | bool - The usort() return value
      */
     function sortByDelay($a, $b)
     {
@@ -646,6 +635,8 @@ class PMProSequences
             default:
                 self::dbgOut('sortByDelay(): sortOrder not defined');
         }
+
+	    return false;
     }
 
     /**
@@ -709,6 +700,8 @@ class PMProSequences
      */
     public function convertToDays( $date )
     {
+	    $days = 0;
+
 	    // $this->dbgOut('In convertToDays()');
 	    /*
 	    try {
@@ -785,8 +778,11 @@ class PMProSequences
 		$templ = preg_split('/\./', $settings->noticeTemplate); // Parse the template name
 
 		$email->email = $user->user_email;
+
+		$email->subject = sprintf(__("New: %s", 'pmpro'), $post->post_title);
 		// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
-		$email->subject = sprintf(__($post->post_title, 'pmpro'));
+
+
 		$email->template = $templ[0];
 		$email->body = file_get_contents(plugins_url('email/'. $settings->noticeTemplate, dirname(__FILE__)));
 
@@ -987,7 +983,7 @@ class PMProSequences
 
 		// $prepend_mins    = array('00','30');
 		// $minutes    = array_merge($prepend_mins, range(10, 55, 5)); // For debug
-		$selTime = preg_split('/\:/', $settings->noticeTime);
+		// $selTime = preg_split('/\:/', $settings->noticeTime);
 
 		foreach ($hours as $hour) {
 			foreach ($minutes as $minute) {
@@ -1094,6 +1090,9 @@ class PMProSequences
 	}
 	/**
 	 * List all template files in email directory for this plugin.
+	 *
+	 * @param $settings (stdClass) - The settings for the sequence.
+	 *
 	 */
 	function pmpro_sequence_listEmailTemplates( $settings )
 	{
@@ -1404,7 +1403,7 @@ class PMProSequences
                                     }
                                 }
                             ); */
-                        };
+                        }
 
                         console.log('Selected: '+ jQuery(this).val());
                         console.log('Current (hidden): ' + jQuery('input[name=pmpro_sequence_settings_hidden_delay]').val());
