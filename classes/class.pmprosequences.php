@@ -9,33 +9,38 @@ class PMProSequences
 	//constructor
 	function PMProSequences($id = null)
 	{
-		if ( ! empty($id) )
+		if ( ! empty($id) || ($this->sequence_id != 0))
         {
             // $this->dbgOut('__constructor() - Sequence ID: ' . $id);
 
-            $this->sequence_id = $id;
-			return $this->getSequenceByID($id);
+            $this->sequence_id = $this->getSequenceByID($id);
+	        $this->options = $this->fetchOptions();
+
         }
-        else
-        {
-            if ($this->sequence_id != 0)
-            {
-                $this->dbgOut('No ID supplied to __construct(), but ID was set before, so load options');
+        else {
+
+            if ($this->sequence_id != 0) {
+
+                $this->dbgOut('No ID supplied to __construct(), but ID was set before, so loading options');
+	            $this->options = $this->fetchOptions( $this->sequence_id );
             }
-            else
-            {
+            else {
+
                 $this->dbgOut('No sequence ID or options defined! Checking against global variables');
-                global $wp_query;
-                if ($wp_query->post->ID)
-                {
-                   $this->dbgOut('Found Post ID and loading options if not already loaded ' . $wp_query->post->ID);
+	            $this->options = $this->defaultOptions();
+
+	            global $wp_query;
+
+                if ($wp_query->post->ID) {
+
+                    $this->dbgOut('Found Post ID and loading options if not already loaded ' . $wp_query->post->ID);
                     $this->sequence_id = $wp_query->post->ID;
-//                    self::fetchOptions( self::getID() );
-                    if ( empty( $this->options ) )
-                        $this->defaultOptions();
+	                $this->options = $this->fetchOptions($this->sequence_id);
                 }
             }
         }
+
+		return $this->sequence_id;
 	}
 
 
@@ -56,6 +61,25 @@ class PMProSequences
 
     /**
      * Return the default options for a sequence
+     *  stdClass content:
+     *      hidden (boolean) - Whether to show or hide upcoming (future) posts in sequence from display.
+     *      lengthVisible (boolean) - Whether to show or hide the "You are on day X of your membership" information.
+     *      sortOrder (int) - Constant: Ascending or Descending
+     *      delayType (string) - byDays or byDate
+     *      startWhen (int) - The time window when the first day of the sequence should be considered 'Day 1'
+     *                           (and 'day 1' content becomes available)
+     *                          0 = Immediately (this makes 'day 0' and 'day 1' the same.
+     *                          1 = 24 hours after the membership started (i.e. 'member start date/time + 24 hours)
+     *                          2 = At midnight after the membership started, i.e. if membership starts at 4am on 12/1,
+     *                              Day 1 starts at midnight on 12/2.
+     *                          3 = At midnight at least 24 hours after the membership started. I.e. Start at 3am on 12/1,
+     *                              Day 1 starts at midnight on 12/3
+	 *      sendNotice (bool) - Whether to allow alert notices (emails)
+     *      noticeTemplate (string) - The filename for the template to use in the message(s)
+     *      noticeTime (string) - Text representation (in 24 hour clock format) of when to send the notice
+     *      noticeTimestamp (int)   - The timestamp used to schedule the cron job for the notice processing
+     *      excerpt_intro (string) - The introductory text used before the message (page/post) excerpt.
+     *
      * @return array -- Default options for the sequence
      */
     public function defaultOptions()
@@ -66,7 +90,7 @@ class PMProSequences
         $settings->lengthVisible = 1; //'lengthVisible'
         $settings->sortOrder = SORT_ASC; // 'sortOrder'
         $settings->delayType = 'byDays'; // 'delayType'
-        $settings->startWhen =  0; // startWhen == immediately
+        $settings->startWhen =  0; // startWhen == immediately (in current_time('timestamp') + n seconds)
 	    $settings->sendNotice = 1; // sendNotice == Yes
 	    $settings->noticeTemplate = 'new_content.html'; // Default plugin template
 	    $settings->noticeTime = '00:00'; // At Midnight (server TZ)
@@ -81,21 +105,7 @@ class PMProSequences
     /**
      *
      * Fetch any options for this specific sequence from the database (stored as post metadata)
-     * Use default options if the sequence ID isn't supplied
-     *
-     * Array content:
-     *  [0] => hidden (boolean) - Whether to show or hide upcoming (future) posts in sequence from display.
-     *  [1] => lengthVisible (boolean) - Whether to show or hide the "You are on day X of your membership" information.
-     *  [2] => sortOrder (int) - Constant: Ascending or Descending
-     *  [3] => delayType (string) - byDays or byDate
-     *  TODO: [4] => startTime (int) - The time window when the first day of the sequence should be considered 'Day 1'
-     *                           (and 'day 1' content becomes available)
-     *                   0 = Immediately (this makes 'day 0' and 'day 1' the same.
-     *                   1 = 24 hours after the membership started (i.e. 'member start date/time + 24 hours)
-     *                   2 = At midnight after the membership started, i.e. if membership starts at 4am on 12/1,
-     *                       Day 1 starts at midnight on 12/2.
-     *                   3 = At midnight at least 24 hours after the membership started. I.e. Start at 3am on 12/1,
-     *                       Day 1 starts at midnight on 12/3
+     * Use default options if the sequence ID isn't supplied*
      *
      * @param int $sequence_id - The Sequence ID to fetch options for
      * @return mixed -- Returns array of options if options were successfully fetched & saved.
@@ -119,29 +129,22 @@ class PMProSequences
                 $this->sequence_id = $sequence_id;
             }
         }
-        else
-        {
-            if ($this->sequence_id != 0)
-                $sequence_id = $this->sequence_id;
-        }
 
         // Check that we're being called in context of an actual Sequence 'edit' operation
         self::dbgOut('fetchOptions(): Attempting to load settings from DB for (' . $this->sequence_id . ') "' . get_the_title($this->sequence_id) . '"');
         $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', false);
-        $this->options = $settings[0];
+        $options = $settings[0];
 
-        self::dbgOut('fetchOptions() - Fetched options: '. print_r($this->options , true));
-        self::dbgOut('Loaded from DB: '. print_r($this->options, true));
 
         // Check whether we need to set any default variables for the settings
-        if ( empty($this->options) )
-        {
+        if ( empty($options) ) {
+
             self::dbgOut('fetchOptions(): No settings found. Using defaults');
-            $this->options = self::defaultOptions();
-            self::dbgOut('fetchOptions() - Loaded defaults: '. print_r($this->options , true));
+            $options = self::defaultOptions();
         }
 
-        return $this->options;
+	    self::dbgOut('fetchOptions() - Returning the options/settings');
+        return $options;
     }
 
     /**
@@ -174,7 +177,7 @@ class PMProSequences
             return $post_id;
 
         self::dbgOut('pmpro_sequence_meta_save(): About to save settings for sequence ' . $post_id);
-        self::dbgOut('From Web: ' . print_r($_REQUEST, true));
+        // self::dbgOut('From Web: ' . print_r($_REQUEST, true));
 
         // OK, we're authenticated: we need to find and save the data
         if ( isset($_POST['pmpro_sequence_settings_noncename']) )
@@ -354,7 +357,6 @@ class PMProSequences
         if (! empty( $settings ))
         {
             try {
-                self::dbgOut('save_sequence_meta(): Settings for ' . $post_id .' will be: ' . print_r( $settings, true));
 
                 // Update the *_postmeta table for this sequence
                 update_post_meta($post_id, '_pmpro_sequence_settings', $settings );
@@ -374,28 +376,29 @@ class PMProSequences
     //add a post to this sequence
 	function addPost($post_id, $delay)
 	{
-        if (! self::isValidDelay($delay) )
+
+        if (! $this->isValidDelay($delay) )
         {
             self::dbgOut('addPost(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
-            $this->error = 'Invalid delay value specified.';
+            $this->error = 'Error: Invalid delay value specified.';
             return false;
         }
 
 		if(empty($post_id) || !isset($delay))
 		{
 			$this->error = "Please enter a value for post and delay.";
-            self::dbgOut('addPost(): No Post ID or delay specified');
+            $this->dbgOut('addPost(): No Post ID or delay specified');
 			return false;
 		}
 
-        self::dbgOut('addPost(): Post ID: ' . $post_id . ' and delay: ' . $delay);
+        $this->dbgOut('addPost(): Post ID: ' . $post_id . ' and delay: ' . $delay);
 
 		$post = get_post($post_id);
 			
 		if(empty($post->ID))
 		{
 			$this->error = "A post with that id does not exist.";
-            self::dbgOut('addPost(): No Post with ' . $post_id . ' found');
+            $this->dbgOut('addPost(): No Post with ' . $post_id . ' found');
 			return false;
 		}
 		
@@ -411,10 +414,13 @@ class PMProSequences
 		$temp = new stdClass();
 		$temp->id = $post_id;
 		$temp->delay = $delay;
-		$this->posts[] = $temp;
+
+		/* Only add the post if it's not already present. */
+		if (! in_array($temp->id, $this->posts))
+			$this->posts[] = $temp;
 		
 		//sort
-        self::dbgOut('addPost(): Sorting the Sequence by delay');
+        $this->dbgOut('addPost(): Sorting the Sequence by delay');
 		usort($this->posts, array("PMProSequences", "sortByDelay"));
 
 		//save
@@ -426,35 +432,37 @@ class PMProSequences
         // Is there any previously saved sequence ID found for the post/page?
 		if(empty($post_sequence))
         {
-            self::dbgOut('addPost(): Not previously defined sequence(s) found for this post (ID: ' . $post_id . ')');
+            $this->dbgOut('addPost(): Not previously defined sequence(s) found for this post (ID: ' . $post_id . ')');
             $post_sequence = array($this->id);
         }
         else
         {
-            self::dbgOut('addPost(): Post/Page w/id ' . $post_id . ' belongs to more than one sequence already: ' . print_r($post_sequence, true));
+            $this->dbgOut('addPost(): Post/Page w/id ' . $post_id . ' belongs to more than one sequence already: ' . print_r($post_sequence, true));
 
-            if ( !is_array($post_sequence) )
-            {
-                self::dbgOut('AddPost(): Previously defined sequence(s) found for this post (ID: ' . $post_id . '). Sequence data: ' . print_r($post_sequence, true));
-                self::dbgOut('addPost(): Not (yet) an array of posts. Adding the single new post to a new array');
+            if ( !is_array($post_sequence) ) {
+
+                // self::dbgOut('AddPost(): Previously defined sequence(s) found for this post (ID: ' . $post_id . '). Sequence data: ' . print_r($post_sequence, true));
+                $this->dbgOut('addPost(): Not (yet) an array of posts. Adding the single new post to a new array');
                 $post_sequence = array($this->id);
             }
-            else
-            {
-                // Bug Fix: Never checked if the Post/Page ID was already included in the sequence meta.
-                if ( !array_search( $this->id, $post_sequence) )
-                {
+            else {
+
+                // Bug Fix: Never checked if the Post/Page ID was already listed in the sequence.
+                if ( !in_array( $this->id, $post_sequence) ) {
+
                     // If not, add it.
                     $post_sequence[] = $this->id;
-                    self::dbgOut('addPost(): Appended post (ID: ' . $post_id . ') to Sequence');
+                    $this->dbgOut('addPost(): Appended post (ID: ' . $temp->id . ') to sequence ' . $this->id);
                 }
             }
 
         }
+
 		//save
 		update_post_meta($post_id, "_post_sequences", $post_sequence);
-        self::dbgOut('addPost(): Post/Page list updated and saved');
+        $this->dbgOut('addPost(): Post/Page list updated and saved');
 
+		return true;
     }
 	
 	//remove a post from this sequence
@@ -487,7 +495,7 @@ class PMProSequences
 			unset($post_sequence[$key]);
 			update_post_meta($post_id, "_post_sequences", $post_sequence);
 
-            self::dbgOut('removePost(): Post/Page list updated and saved');
+            $this->dbgOut('removePost(): Post/Page list updated and saved');
 
         }
 
@@ -503,15 +511,14 @@ class PMProSequences
 		if(!isset($this->posts) || $force)
 			$this->posts = get_post_meta($this->sequence_id, "_sequence_posts", true);
 
-        if (!isset($this->options->hidden))
-        {
-            // echo print_r($this->posts);
-            $this->fetchOptions($this->id);
-        }
 		return $this->posts;
 	}
-	
-	//does this sequence include post with id = post_id
+
+	/**
+	 * @param $post_id (int) -- Page/post ID to check for inclusion in this sequence.
+	 *
+	 * @return bool -- True if the post is already included in the sequence. False otherwise
+	 */
 	function hasPost($post_id)
 	{
 		$this->getPosts();
@@ -521,7 +528,10 @@ class PMProSequences
 				
 		foreach($this->posts as $key => $post)
 		{
-			if($post->id == $post_id)
+			if($post->id == $post_id) {
+				$this->dbgOut('Post # ' . $post_id . ' is already in the sequence.');
+				return true;
+			}
 				return true;
 		}
 		
@@ -554,14 +564,30 @@ class PMProSequences
             $this->dbgOut('No key found in getDelayForPost');
 			return false;
         }
-        else
-        {
+        else {
+
             $delay = $this->normalizeDelay( $this->posts[$key]->delay );
             $this->dbgOut('getDelayForPost(): Delay for post with id = ' . $post_id . ' is ' .$delay);
             return $delay;
         }
 	}
 
+	function getReleaseDateForPost($post_id)
+	{
+		$key = $this->getPostKey($post_id);
+
+		if ($key === false) {
+
+			$this->dbgOut('No key found for post ' . $post_id . ' in getReleaseDateForPost');
+			return false;
+		}
+		else {
+			switch ($this->options->delayType) {
+				case 'byDays':
+
+			}
+		}
+	}
     // Returns a "days to delay" value for the posts $a & $b, even if the delay value is a date.
 
     function normalizeDelays($a, $b)
@@ -759,7 +785,8 @@ class PMProSequences
 		$templ = preg_split('/\./', $settings->noticeTemplate); // Parse the template name
 
 		$email->email = $user->user_email;
-		$email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
+		// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
+		$email->subject = sprintf(__($post->post_title, 'pmpro'));
 		$email->template = $templ[0];
 		$email->body = file_get_contents(plugins_url('email/'. $settings->noticeTemplate, dirname(__FILE__)));
 
@@ -782,7 +809,7 @@ class PMProSequences
         else
 			$email->data['excerpt'] = '';
 
-		$sequence->dbgOut('Email Object: ' . print_r($email, true));
+		// $sequence->dbgOut('Email Object: ' . print_r($email, true));
 
 		$email->sendEmail();
 	}
@@ -906,12 +933,14 @@ class PMProSequences
 			    // Clear old cronjob for this sequence
 	            $this->dbgOut('Current cron job for sequence # ' . $sequence->sequence_id . ' scheduled for ' . $timestamp);
 	            $this->dbgOut('Clearing old cron job for sequence # ' . $sequence->sequence_id);
-			    wp_unschedule_event($timestamp, 'pmpro_sequence_cron_hook', array( $sequence->sequence_id ));
+			    wp_clear_scheduled_hook($timestamp, 'pmpro_sequence_cron_hook', array( $sequence->sequence_id ));
             }
+
+			$sequence->dbgOut('Cron info: ' . print_r(wp_get_schedule('pmpro_sequence_cron_hook', array($sequence->sequence_id)), true));
 
 			// Set time (what time) to run this cron job the first time.
 			$this->dbgOut('Adding cron job for ' . $sequence->sequence_id . ' at ' . $sequence->options->noticeTimestamp);
-			wp_schedule_event($sequence->options->noticeTimestamp, 'daily', 'pmpro_sequence_cron_hook', array($sequence->sequence_id));
+			wp_schedule_event($sequence->options->noticeTimestamp, 'hourly', 'pmpro_sequence_cron_hook', array($sequence->sequence_id));
 
 			$ts = wp_next_scheduled( 'pmpro_sequence_cron_hook', array($sequence->sequence_id) );
 
@@ -949,13 +978,14 @@ class PMProSequences
 	 *
 	 * @param $settings -- (array) Sequence specific settings
 	 */
-	function pmpro_sequence_createTimeOpts( array $settings )
+	function pmpro_sequence_createTimeOpts( $settings )
 	{
 
 		$prepend    = array('00','01','02','03','04','05','06','07','08','09');
+		$prepend_mins    = array('00','05');
 		$hours      = array_merge($prepend,range(10, 23));
-		$minutes    = array_merge($prepend, range(10, 59)); // For debug
-		// $minutes     = array('00', '30');
+		$minutes    = array_merge($prepend_mins, range(10, 55, 5)); // For debug
+		// $minutes     = array('00', '15', '30', '45');
 
 		$selTime = preg_split('/\:/', $settings->noticeTime);
 
@@ -975,38 +1005,47 @@ class PMProSequences
     function pmpro_sequence_addUserNoticeOptIn( PMProSequences $sequence )
 	{
 		$optinForm = '';
-        global $current_user;
+        global $current_user, $wpdb;
+
+		$meta_key = $wpdb->prefix . 'pmpro_sequence_notices';
 
 		self::dbgOut('addUserNoticeOptIn() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
 
         if ($sequence->options->sendNotice == 1) {
 
-            $optIn = get_user_option('pmpro_sequence_alerts', $current_user->ID);
+	        self::dbgOut('addUserNoticeOptIn() - meta key: ' . $meta_key);
+	        self::dbgOut('addUserNoticeOptIn() - sequence ID: ' . $sequence->sequence_id);
+	        self::dbgOut('addUserNoticeOptIn() - User ID: ' . $current_user->ID);
 
-            self::dbgOut('addUserNoticeOptIn() - Fetched Meta: ' . print_r($optIn, true));
+            $optIn = get_user_meta( $current_user->ID, $meta_key, true );
+
+	        // self::dbgOut('addUserNoticeOptIn() - Fetched Meta: ' . print_r(get_user_meta($current_user->ID, $meta_key, true), true));
 
             /* Determine the state of the users opt-in for new content notices */
-            if ( empty($optIn->sequence ) ) {
+            if ( empty($optIn->sequence ) || empty( $optIn->sequence[$sequence->sequence_id] ) ) {
 
-                // Create new opt-in settings for this user
-                $optIn = new stdClass();
-	            $optIn->sequence[$sequence->sequence_id]->sendNotice = $sequence->options->sendNotice;
+	            self::dbgOut('addUserNoticeOptIn() - No user specific settings found in general or for this sequence. Creating defaults');
 
-                if (! update_user_option($current_user->ID, 'pmpro_sequence_alerts', $optIn)) {
-                    self::dbgOut('addUserNoticeOptIn() - Error saving new user meta for notice opt-in');
-                }
-            }
+	            // Create new opt-in settings for this user
+	            if ( empty($optIn->sequence) )
+		            $new = new stdClass();
+	            else // Saves existing settings
+		            $new = $optIn;
 
-            // $key = array_search($sequence->sequence_id, $optIn);
+	            $new->sequence[$sequence->sequence_id]->sendNotice = $sequence->options->sendNotice;
 
-            // Not unset, so the user has made a choice in the past.
-            if (empty( $optIn->sequence[$sequence->sequence_id] ) ) {
-
-	            $optIn->sequence[$sequence->sequence_id]['sendNotice'] = 1;
 	            self::dbgOut('addUserNoticeOptIn() - Using default setting for user ' . $current_user->ID . ' and sequence ' . $sequence->sequence_id);
+
+	            $optIn = $new;
             }
 
-	        self::dbgOut('OptIn options: ' . print_r($optIn, true));
+	        if ( empty( $optIn->sequence[$sequence->sequence_id]->notifiedPosts ) )
+		        $optIn->sequence[$sequence->sequence_id]->notifiedPosts = array();
+
+	        update_user_meta($current_user->ID, $meta_key, $optIn);
+
+	        self::dbgOut('addUserNoticeOptIn() - Saved user meta for notice opt-in');
+	        // self::dbgOut('OptIn options: ' . print_r($optIn, true));
 
 	        $optinNonce = wp_create_nonce('pmpro-sequence-user-optin');
 
@@ -1014,9 +1053,9 @@ class PMProSequences
             $optinForm .= "
             <div class=\"pmpro_sequence_useroptin\">
             	<form action=\"" . admin_url('admin-ajax.php') ."\" method=\"post\">
-                	<input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optIn->sequence[$sequence->sequence_id]['sendNotice'] . "\" >
-                    <p><input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"Email me a notice when new content is available\"" . ($optIn->sequence[$sequence->sequence_id]['sendNotice'] == 1 ? ' checked=\"checked\"' : '') . " />
-                    <label for=\"pmpro-seq-useroptin\">Yes, send me email notifications!</label>&nbsp;&nbsp;<a href=\"#pmproseq_useroptin\" id=\"save_pmpro-seq-useroptin\" class=\"pmpro_useroptin_btn button button-primary button-large\">Save</a></p>
+                	<input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optIn->sequence[$sequence->sequence_id]->sendNotice . "\" >
+                    <p><input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"Email me a notice when new content is available\"" . ($optIn->sequence[$sequence->sequence_id]->sendNotice == 1 ? ' checked=\"checked\"' : '') . " />
+                    <label for=\"pmpro-seq-useroptin\">Yes, please send me email notifications!</label>&nbsp;&nbsp;<a href=\"#pmproseq_useroptin\" id=\"save_pmpro-seq-useroptin\" class=\"pmpro_useroptin_btn button button-primary button-large\">Save</a></p>
                 </form>
             </div>
             ";
@@ -1103,7 +1142,7 @@ class PMProSequences
             $sequence->dbgOut('Loading settings for Meta Box');
             $sequence->fetchOptions($sequence_id);
             $settings = $sequence->fetchOptions($sequence_id);
-            $sequence->dbgOut('Returned settings: ' . print_r($sequence->options, true));
+            // $sequence->dbgOut('Returned settings: ' . print_r($sequence->options, true));
         }
         else
         {
@@ -1111,13 +1150,14 @@ class PMProSequences
             return;
         }
 
-        self::dbgOut('pmpro_sequence_settings_meta_box() - Loaded settings: ' . print_r($settings, true));
+        // self::dbgOut('pmpro_sequence_settings_meta_box() - Loaded settings: ' . print_r($settings, true));
 
         ?>
         <div class="submitbox" id="pmpro_sequence_meta">
             <div id="minor-publishing">
             <input type="hidden" name="pmpro_sequence_settings_noncename" id="pmpro_sequence_settings_noncename" value="<?php echo wp_create_nonce( plugin_basename(__FILE__) )?>" />
             <input type="hidden" name="pmpro_sequence_settings_hidden_delay" id="pmpro_sequence_settings_hidden_delay" value="<?php echo esc_attr($settings->delayType); ?>"/>
+            <input type="hidden" name="hidden_pmpro_seq_wipesequence" id="hidden_pmpro_seq_wipesequence" value="0"/>
             <table style="width: 100%;">
 	            <tr>
                     <td style="width: 20px;">
@@ -1217,8 +1257,7 @@ class PMProSequences
 					            <span aria-hidden="true"><?php _e('Edit'); ?></span>
 					            <span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence'); ?></span>
 				            </a>
-				            <div id="pmpro-seq-noticetime-select" style="display: none;">x
-
+				            <div id="pmpro-seq-noticetime-select" style="display: none;">
 					            <input type="hidden" name="hidden_pmpro_seq_noticetime" id="hidden_pmpro_seq_noticetime" value="<?php echo esc_attr($settings->noticeTime); ?>" >
 					            <select name="pmpro_sequence_noticetime" id="pmpro_sequence_noticetime">
 					                <?php $sequence->pmpro_sequence_createTimeOpts( $settings ); ?>
@@ -1328,12 +1367,14 @@ class PMProSequences
                             }
 
                             jQuery.data(this, 'pmpro_sequence_settings_delaytype', jQuery(this).val());
+	                        jQuery('#hidden_pmpro_seq_wipesequence').val(1);
 
                             // Send POST (AJAX) request to delete all existing articles/posts in sequence.
+	                        /*
                             jQuery.post( pmproSequenceAjax.ajaxurl,
                                 {
                                     action: 'pmpro_sequence_clear',
-                                    'pmpro_sequenceclear_sequence': '1',
+                                    'pmpro_sequence_clear': '1',
 	                                'security': pmproSequenceAjax.pmproSequenceNonce,
                                     'pmpro_sequence_id': '<?php echo $post->ID ?>',
                                     'hidden_pmpro_seq_hidden': isHidden(),
@@ -1350,9 +1391,7 @@ class PMProSequences
                                 {
                                     if ( ! responseHTML.match("^Error") )
                                     {
-                                        /*
-                                         * Refresh the list of posts (now empty) in the #pmpro_sequence_posts meta box
-                                         */
+                                         // Refresh the list of posts (now empty) in the #pmpro_sequence_posts meta box
                                         setLabels();
                                         jQuery('#pmpro_sequence_posts').html(responseHTML);
                                     }
@@ -1362,7 +1401,7 @@ class PMProSequences
                                         jQuery(this).val(current);
                                     }
                                 }
-                            );
+                            ); */
                         };
 
                         console.log('Selected: '+ jQuery(this).val());
@@ -1392,15 +1431,20 @@ class PMProSequences
 	                        'hidden_pmpro_seq_sendnotice': jQuery('#hidden_pmpro_seq_sendnotice').val(),
 	                        'hidden_pmpro_seq_noticetime': jQuery('#hidden_pmpro_seq_noticetime').val(),
 	                        'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_noticetemplate').val(),
-                            'hidden_pmpro_seq_excerpt': jQuery('#hidden_pmpro_seq_excerpt').val()
+                            'hidden_pmpro_seq_excerpt': jQuery('#hidden_pmpro_seq_excerpt').val(),
+	                        'hidden_pmpro_seq_wipesequence' : jQuery('#hidden_pmpro_seq_wipesequence').val()
                         },
-                        //on success function
-                        function(status)
-                        {
-                            if (status == 'success')
+	                    function(status)
+	                    {
+	                        console.log('Status is: ' + status);
+
+                            if (! status.match('^Error'))
                             {
                                 setLabels();
-                                jQuery('#pmpro_settings_save').html('Save Settings');
+	                            setLabels();
+	                            jQuery('#pmpro_sequence_posts').html(status);
+
+	                            jQuery('#pmpro_settings_save').html('Save Settings');
                                 // location.reload();
                             }
                             else
@@ -1408,13 +1452,29 @@ class PMProSequences
                                 alert(status);
                                 jQuery('#pmpro_settings_save').html('Save Settings');
                             }
-                            /* Do Some Stuff in here to update elements on the page...*/
-                            /*Reset the form*/
-                            // jQuery('input#newsliders').val('');
-                            //jQuery('#sliders-adder').addClass('wp-hidden-children');
 
                             return false;
                         }
+/*	                    'json'
+                    )
+	                    .done(function(retval) {
+		                    console.log('Status is: ' + status);
+
+		                    if (status.result == 'success') {
+
+			                    setLabels();
+			                    alert('Saved Settings as requested');
+			                    jQuery('#pmpro_settings_save').html('Save Settings');
+			                    // location.reload();
+		                    }
+		                    else {
+
+			                    alert(status.result);
+			                    jQuery('#pmpro_settings_save').html('Save Settings');
+		                    }
+
+	                    }
+*/
                     );
                     return false;
                 });
