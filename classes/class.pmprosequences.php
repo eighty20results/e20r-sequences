@@ -777,6 +777,9 @@ class PMProSequences
 		$post = get_post($post_id);
 		$templ = preg_split('/\./', $settings->noticeTemplate); // Parse the template name
 
+		$email->from = 'info@strongcubedfitness.com';
+		$email->fromname = 'Strong CUBED Fitness';
+
 		$email->email = $user->user_email;
 
 		$email->subject = sprintf(__("New: %s", 'pmpro'), $post->post_title);
