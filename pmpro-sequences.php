@@ -200,12 +200,17 @@ if ( ! function_exists( 'pmpro_sequence_ajaxClearPosts')):
             {
                 $sequence->dbgOut('Unable to delete the posts in sequence # ' . $sequence_id);
                 echo 'Error: Unable to delete posts from sequence';
+	            exit;
             }
-            else
-                $sequence->getPostListForMetaBox();
+            else {
+	            echo $sequence->getPostListForMetaBox();
+	            exit;
+            }
         }
-        else
-             echo 'Error: Unknown request';
+        else {
+	        echo 'Error: Unknown request';
+	        exit;
+        }
 
     }
 
@@ -351,12 +356,12 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 			                if ( ! delete_post_meta( $sequence_id, '_sequence_posts' ) ) {
 
 				                $sequence->dbgOut( 'ajaxSaveSettings() - Unable to delete the posts in sequence # ' . $sequence_id );
-				                echo 'Error: Unable to delete all posts in this sequence';
+				                $response = 'Error: Failed to delete the posts in this sequence';
 			                }
 			                else {
 
 				                $sequence->dbgOut('ajaxSaveSettings() - Deleted all posts in the sequence');
-				                $sequence->getPostListForMetaBox();
+				                $response = $sequence->getPostListForMetaBox();
 		                    }
 	                    }
 	                }
