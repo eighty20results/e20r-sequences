@@ -523,8 +523,13 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 		else
 			$sequenceObj->options->replyto = pmpro_getOption('from_email');
 
-		// 'hidden_pmpro_seq_fromname': jQuery('#hidden_pmpro_seq_fromname').val(),
-	    // 'hidden_pmpro_seq_replyto': jQuery('#hidden_pmpro_seq_replyto').val(),
+		if ( isset($_POST['hidden_pmpro_seq_subject']) )
+		{
+			$sequenceObj->options->subject = esc_attr($_POST['hidden_pmpro_seq_subject']);
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->subject: ' . esc_attr($_POST['hidden_pmpro_seq_subject']) );
+		}
+		else
+			$sequenceObj->options->subject = 'New: ';
 
 		// $sequence->options = $settings;
 		if ( $sequenceObj->options->sendNotice == 1 ) {

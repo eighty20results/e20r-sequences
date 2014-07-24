@@ -16,6 +16,7 @@ jQuery(document).ready(function(){
         var $alertText = $('#pmpro_sequence_noticetime option:selected').text();
         var $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
         var $excerpt = $('#pmpro_sequence_excerpt').val();
+        var $subject = $('#pmpro_sequence_subject').val();
         var $fromname = $('#pmpro_sequence_fromname').val();
         var $replyto = $('#pmpro_sequence_replyto').val();
 
@@ -85,6 +86,12 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-excerpt-input').slideToggle();
         });
 
+        $('#pmpro-seq-edit-subject').click(function(){
+            console.log('Edit button for Subject prefix edit field clicked');
+            $('#pmpro-seq-edit-subject').slideToggle();
+            $('#pmpro-seq-subject-input').slideToggle();
+        });
+
         $('#pmpro-seq-edit-fromname').click(function(){
             console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
@@ -152,6 +159,14 @@ jQuery(document).ready(function(){
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-excerpt-input').slideToggle();
             $('#pmpro-seq-edit-excerpt').slideToggle();
+
+        });
+
+        $('#cancel-pmpro-seq-subject').click(function(){
+            console.log('Cancel button for Subject Intro was clicked');
+            // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
+            $('#pmpro-seq-subject-input').slideToggle();
+            $('#pmpro-seq-edit-subject').slideToggle();
 
         });
 
@@ -234,6 +249,19 @@ jQuery(document).ready(function(){
             }
             $('#pmpro-seq-excerpt-input').slideToggle();
             $('#pmpro-seq-edit-excerpt').slideToggle();
+        });
+
+        $('#ok-pmpro-seq-subject').click(function(){
+            console.log('OK button for Subject Intro was clicked');
+            if ( $('#pmpro_sequence_subject').val != $subject) {
+                /* Save the new excerpt info */
+                $subject = $('#pmpro_sequence_subject').val();
+                $('#hidden_pmpro_seq_subject').val($subject);
+                $('#pmpro-seq-subject-status').text('"' + $subject + '"');
+                console.log('Content of Subject Intro was changed and is now: ' + $subject);
+            }
+            $('#pmpro-seq-subject-input').slideToggle();
+            $('#pmpro-seq-edit-subject').slideToggle();
         });
 
         $('#ok-pmpro-seq-email').click(function(){

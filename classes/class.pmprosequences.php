@@ -101,6 +101,7 @@ class PMProSequences
         $settings->excerpt_intro = 'A summary of the post follows below:';
 	    $settings->replyto = pmpro_getOption("from_email");
 	    $settings->fromname = pmpro_getOption("from_name");
+	    $settings->subject = 'New: ';
 
         $this->options = $settings; // Save as options for this sequence
 
@@ -287,7 +288,6 @@ class PMProSequences
 	        else
 		        $settings->replyto = pmpro_getOption("from_email");
 
-
 	        if ( isset($_POST['hidden_pmpro_seq_fromname']) && ($_POST['hidden_pmpro_seq_fromname']!= ''))
 	        {
 		        $settings->replyto = esc_attr($_POST['hidden_pmpro_seq_fromname']);
@@ -295,6 +295,22 @@ class PMProSequences
 	        }
 	        else
 		        $settings->fromname = pmpro_getOption("from_name");
+
+	        if ( isset($_POST['hidden_pmpro_seq_subject']) && ($_POST['hidden_pmpro_seq_subject']!= ''))
+	        {
+		        $settings->subject = esc_attr($_POST['hidden_pmpro_seq_subject']);
+		        self::dbgOut('pmpro_sequence_meta_save(): POST value for settings->subject: ' . esc_attr($_POST['hidden_pmpro_seq_subject']) );
+	        }
+	        else
+		        $settings->subject = 'New: ';
+
+	        if ( isset($_POST['hidden_pmpro_seq_subject']) )
+	        {
+		        $settings->subject = esc_attr($_POST['hidden_pmpro_seq_subject']);
+		        self::dbgOut('pmpro_sequence_settings_save(): POST value for settings->subject: ' . esc_attr($_POST['hidden_pmpro_seq_subject']) );
+	        }
+	        else
+		        $settings->subject = 'New: ';
 
 	        // $sequence->options = $settings;
 
@@ -801,7 +817,7 @@ class PMProSequences
 
 		$email->email = $user->user_email;
 
-		$email->subject = sprintf(__("%s", 'pmpro'), $post->post_title);
+		$email->subject = sprintf(__("%s: %s", 'pmpro'), $settings->subject, $post->post_title);
 		// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
 
 
@@ -1318,6 +1334,21 @@ class PMProSequences
 					            <label for="pmpro-seq-noticetime"><?php _e('Timezone:'); ?> </label>
 					            <span id="pmpro-seq-noticetime-status"><?php echo '  ' . get_option('timezone_string'); ?></span>
 				            </div>
+				            <div class="pmpro-sequence-subject">
+					            <label for="pmpro-seq-subject"><?php _e('Subject:'); ?> </label>
+					            <span id="pmpro-seq-subject-status">"<?php _e(($settings->subject != '' ? esc_attr($settings->subject) : 'New Content')); ?>"</span>
+					            <a href="#pmpro-seq-subject" id="pmpro-seq-edit-subject" class="edit-pmpro-seq-subject">
+						            <span aria-hidden="true"><?php _e('Edit'); ?></span>
+						            <span class="screen-reader-text"><?php _e('Update/Edit the Prefix for the message subject'); ?></span>
+					            </a>
+					            <div id="pmpro-seq-subject-input" style="display: none;">
+						            <input type="hidden" name="hidden_pmpro_seq_subject" id="hidden_pmpro_seq_subject" value="<?php _e(($settings->subject != '' ? esc_attr($settings->subject) : 'New')); ?>" />
+						            <input type="text" name="pmpro_sequence_subject" id="pmpro_sequence_subject" value="<?php _e(($settings->subject != '' ? esc_attr($settings->subject) : 'New'));; ?>"/>
+						            <a href="#pmproseq_subject" id="ok-pmpro-seq-subject" class="save-pmproseq button"><?php _e('OK'); ?></a>
+						            <a href="#pmproseq_subject" id="cancel-pmpro-seq-subject" class="cancel-pmproseq button-cancel"><?php _e('Cancel'); ?></a>
+					            </div>
+				            </div>
+
 				            <div class="pmpro-sequence-excerpt">
 					            <label for="pmpro-seq-excerpt"><?php _e('Intro:'); ?> </label>
 					            <span id="pmpro-seq-excerpt-status">"<?php _e(($settings->excerpt_intro != '' ? esc_attr($settings->excerpt_intro) : 'A summary of the post follows below:')); ?>"</span>
@@ -1485,6 +1516,7 @@ class PMProSequences
 	                        'hidden_pmpro_seq_fromname': jQuery('#hidden_pmpro_seq_fromname').val(),
 	                        'hidden_pmpro_seq_replyto': jQuery('#hidden_pmpro_seq_replyto').val(),
                             'hidden_pmpro_seq_excerpt': jQuery('#hidden_pmpro_seq_excerpt').val(),
+	                        'hidden_pmpro_seq_subject': jQuery('#hidden_pmpro_seq_subject').val(),
 	                        'hidden_pmpro_seq_wipesequence' : jQuery('#hidden_pmpro_seq_wipesequence').val()
                         },
 	                    function(status)
