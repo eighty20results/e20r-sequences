@@ -763,7 +763,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                     // User has to sign up for one of the sequence(s)
                     if(count($post_sequence) == 1)
                     {
-                        $text = "This content is part of the <a alt='Click to access' href='" . get_permalink($post_sequence[0]) . "'>" . get_the_title($post_sequence[0]) . "</a> sequence.";
+                        $text = "This content is part of the <a href='" . get_permalink($post_sequence[0]) . "'>" . get_the_title($post_sequence[0]) . "</a> sequence.";
                     }
                     else
                     {
@@ -771,14 +771,11 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                         $seq_links = array();
 
                         foreach($post_sequence as $sequence_id) {
-                            $seq_links[] = "<a alt='Click to access' href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a>";
+                            $seq_links[] = "<a href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a>";
                         }
 
                         $text .= implode(" and ", $seq_links) . ".";
                     }
-
-	                $text .= '<br/>';
-	                $text .= '';
                 }
             }
         }
