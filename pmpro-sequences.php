@@ -507,6 +507,25 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
         else
 	        $sequenceObj->options->excerpt_intro = 'A summary of the post follows below:';
 
+		if ( isset($_POST['hidden_pmpro_seq_fromname']) )
+		{
+			$sequenceObj->options->fromname = esc_attr($_POST['hidden_pmpro_seq_fromname']);
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->fromname: ' . esc_attr($_POST['hidden_pmpro_seq_fromname']) );
+		}
+		else
+			$sequenceObj->options->fromname = pmpro_getOption('from_name');
+
+		if ( isset($_POST['hidden_pmpro_seq_replyto']) )
+		{
+			$sequenceObj->options->replyto = esc_attr($_POST['hidden_pmpro_seq_replyto']);
+			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->replyto: ' . esc_attr($_POST['hidden_pmpro_seq_replyto']) );
+		}
+		else
+			$sequenceObj->options->replyto = pmpro_getOption('from_email');
+
+		// 'hidden_pmpro_seq_fromname': jQuery('#hidden_pmpro_seq_fromname').val(),
+	    // 'hidden_pmpro_seq_replyto': jQuery('#hidden_pmpro_seq_replyto').val(),
+
 		// $sequence->options = $settings;
 		if ( $sequenceObj->options->sendNotice == 1 ) {
 			$sequenceObj->dbgOut( 'pmpro_sequence_meta_save(): Updating the cron job for sequence ' . $sequenceObj->sequence_id );
@@ -744,7 +763,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                     // User has to sign up for one of the sequence(s)
                     if(count($post_sequence) == 1)
                     {
-                        $text = "This content is part of the <a href='" . get_permalink($post_sequence[0]) . "'>" . get_the_title($post_sequence[0]) . "</a> sequence.";
+                        $text = "This content is part of the <a alt='Click to access' href='" . get_permalink($post_sequence[0]) . "'>" . get_the_title($post_sequence[0]) . "</a> sequence.";
                     }
                     else
                     {
@@ -752,11 +771,14 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                         $seq_links = array();
 
                         foreach($post_sequence as $sequence_id) {
-                            $seq_links[] = "<a href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a>";
+                            $seq_links[] = "<a alt='Click to access' href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a>";
                         }
 
                         $text .= implode(" and ", $seq_links) . ".";
                     }
+
+	                $text .= '<br/>';
+	                $text .= '';
                 }
             }
         }

@@ -85,11 +85,16 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-excerpt-input').slideToggle();
         });
 
-        $('#pmpro-seq-edit-email').click(function(){
+        $('#pmpro-seq-edit-fromname').click(function(){
+            console.log('Edit button for email edit field clicked');
+            $('#pmpro-seq-email-input').slideToggle();
+            $('#pmpro-seq-edit-fromname').slideToggle();
+        });
+
+        $('#pmpro-seq-edit-replyto').click(function(){
             console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
-            $('#pmpro-seq-edit-fromname').slideToggle();
         });
 
         /** Cancel button events **/
@@ -145,8 +150,8 @@ jQuery(document).ready(function(){
         $('#cancel-pmpro-seq-excerpt').click(function(){
             console.log('Cancel button for Excerpt Intro was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
-            $('#pmpro-seq-excerpt-select').slideToggle();
-            $('#pmpro-seq-edit-excerp').slideToggle();
+            $('#pmpro-seq-excerpt-input').slideToggle();
+            $('#pmpro-seq-edit-excerpt').slideToggle();
 
         });
 
@@ -158,6 +163,7 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-edit-fromname').slideToggle();
 
         });
+
 
 
         /** OK button events **/

@@ -22,7 +22,9 @@
 .pmpro-sequence-noticetime label,
 .pmpro-sequence-excerpt label,
 .pmpro-sequence-email label {
-    vertical-align: baseline;
+    vertical-align: bottom;
+    width: 67px;
+    overflow: hidden;
 }
 
 .pmpro-seq-email-hl {
@@ -43,8 +45,15 @@ span#pmpro-seq-noticetime-status,
 span#pmpro-seq-fromname-status,
 span#pmpro-seq-replyto-status,
 span#pmpro-seq-excerpt-status {
+    display: inline-block;
+    vertical-align: bottom;
     overflow: hidden;
-    width: 80px;
+    width: 150px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    -o-text-overflow: ellipsis;
+    /* -moz-binding: url('assets/xml/ellipsis.xml#ellipsis'); */
+    height: 18px;
     font-weight: bold;
     color: #3875d7;
 }

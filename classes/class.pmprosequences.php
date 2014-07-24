@@ -1482,6 +1482,8 @@ class PMProSequences
 	                        'hidden_pmpro_seq_sendnotice': jQuery('#hidden_pmpro_seq_sendnotice').val(),
 	                        'hidden_pmpro_seq_noticetime': jQuery('#hidden_pmpro_seq_noticetime').val(),
 	                        'hidden_pmpro_seq_noticetemplate': jQuery('#hidden_pmpro_seq_noticetemplate').val(),
+	                        'hidden_pmpro_seq_fromname': jQuery('#hidden_pmpro_seq_fromname').val(),
+	                        'hidden_pmpro_seq_replyto': jQuery('#hidden_pmpro_seq_replyto').val(),
                             'hidden_pmpro_seq_excerpt': jQuery('#hidden_pmpro_seq_excerpt').val(),
 	                        'hidden_pmpro_seq_wipesequence' : jQuery('#hidden_pmpro_seq_wipesequence').val()
                         },
