@@ -82,16 +82,6 @@ if (! function_exists('pmpro_sequence_scripts')):
 	    wp_enqueue_style("pmpro_sequence_css", plugins_url('css/pmpro_sequences.css',__FILE__ ));
 	    wp_enqueue_script('pmpro_sequence_script');
 
-	    if(!is_admin())
-        {
-            /*if(!defined("PMPRO_VERSION"))
-            {*/
-                //load some styles that we need from PMPro
-//                wp_enqueue_style("pmpro_sequence_pmpro", plugins_url('css/pmpro_sequences.css',__FILE__ ));
-//	            wp_enqueue_script("pmpro_sequence_pmpro", plugins_url('js/pmpro_sequences.js', __FILE__), '', '0.1', true);
-            /*}*/
-        }
-
     }
 
 endif;
@@ -749,7 +739,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                 if($insequence)
                 {
                     //user has one of the sequence levels, find out which one and tell him how many days left
-	                $text = "This content managed as part of the <a href='" . get_permalink($post->ID) . "'>" . get_the_title($post->ID) . "</a> sequence. ";
+	                $text = "This content managed as part of the <a href='" . get_permalink($post->ID) . "'>" . get_the_title($post->ID) . "</a> sequence. <br/>";
 
 	                switch ($sequence->options->delayType) {
 		                case 'byDays':
