@@ -796,12 +796,12 @@ class PMProSequences
 		$post = get_post($post_id);
 		$templ = preg_split('/\./', $settings->noticeTemplate); // Parse the template name
 
-		$email->from = $settings->from; // = 'info@strongcubedfitness.com';
-		$email->fromname = $settings->fronname; // = 'Strong CUBED Fitness';
+		$email->from = $settings->replyto; // = pmpro_getOption('from_email');
+		$email->fromname = $settings->fromname; // = pmpro_getOption('from_name');
 
 		$email->email = $user->user_email;
 
-		$email->subject = sprintf(__("New: %s", 'pmpro'), $post->post_title);
+		$email->subject = sprintf(__("%s", 'pmpro'), $post->post_title);
 		// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
 
 
