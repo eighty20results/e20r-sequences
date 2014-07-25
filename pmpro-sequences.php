@@ -804,7 +804,6 @@ endif;
 
 if ( ! function_exists( 'pmpro_seq_datediff') ):
 
-	// TODO: Create a function that supports datediff functionality if PHP < 5.3.0
 	/**
 	 *
 	 * Calculates the difference between two dates (specified in UTC seconds)
