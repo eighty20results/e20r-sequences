@@ -1,5 +1,5 @@
 <?php
-define('PMPRO_SEQUENCE_DEBUG', true);
+define('PMPRO_SEQUENCE_DEBUG', false);
 
 class PMProSequences
 {
