@@ -35,7 +35,7 @@ Added a few features that weren't included in pmpro_series, specifically the abi
 == Known Issues ==
 
 DEBUG is available
-   Currently disabled, to enable set PMPRO_SEQUENCE_DEBUG to 'true' in both pmpro-sequences.php and class.pmprosequences.php.
+   Currently disabled, to enable set PMPRO_SEQUENCE_DEBUG to 'true' in pmpro-sequences.php.
    A fair bit of data will get dumped into ./sequence_debug_log.txt (located in either website root and/or wp-admin/).
 
 == Frequently Asked Questions ==
