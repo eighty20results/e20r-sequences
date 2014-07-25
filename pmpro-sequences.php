@@ -796,9 +796,21 @@ if ( ! function_exists('pmpro_sequence_email_body')):
 
 	add_filter("pmpro_after_phpmailer_init", "pmpro_sequence_email_body");
 
+	/**
+	 * Changes the content of the following placeholders as described:
+	 *
+	 *  !!excerpt_intro!! --> The introduction to the excerpt (Configure in "Sequence" editor ("Sequence Settings pane")
+	 *  !!lesson_title!! --> The title of the lesson/post we're emailing an alert about.
+	 *  !!today!! --> Today's date (in format '[day], [month][st|rd|th], [year]).
+	 *
+	 * @param $phpmailer -- PMPro Mail object (contains the Body of the message)
+	 */
 	function pmpro_sequence_email_body( $phpmailer )
 	{
-		$phpmailer->Body = str_replace("!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body );
+		$phpmailer->Body = str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body );
+		$phpmailer->Body = str_replace( "!!today!!", date('l, F jS, Y', current_time('timestamp')), $phpmailer->Body );
+		$phpmailer->Body = str_replace( "!!lesson_title!!", $phpmailer->lesson_title , $phpmailer->Body );
+
 	}
 endif;
 
