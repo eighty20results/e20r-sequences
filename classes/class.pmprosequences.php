@@ -1062,39 +1062,45 @@ class PMProSequences
             /* Add form information */
             $optinForm .= "
             <div class=\"pmpro_sequence_useroptin\">
+            	<div class=\"seq_spinner\"></div>
             	<form action=\"" . admin_url('admin-ajax.php') ."\" method=\"post\">
                 	<input type=\"hidden\" name=\"hidden_pmpro_seq_useroptin\" id=\"hidden_pmpro_seq_useroptin\" value=\"" . $optIn->sequence[$sequence->sequence_id]->sendNotice . "\" >
                     <p><input type=\"checkbox\" value=\"1\" id=\"pmpro_sequence_useroptin\" name=\"pmpro_sequence_useroptin\" title=\"Email me a notice when new content is available\"" . ($optIn->sequence[$sequence->sequence_id]->sendNotice == 1 ? ' checked=\"checked\"' : '') . " />
                     <label for=\"pmpro-seq-useroptin\">Yes, please send me email notifications!</label>&nbsp;&nbsp;<a href=\"#pmproseq_useroptin\" id=\"save_pmpro-seq-useroptin\" class=\"pmpro_useroptin_btn button button-primary button-large\">Save</a></p>
                 </form>
             </div>
+
             ";
 
             $optinForm .= "
 			<script language=\"javascript\">
 	        // console.log('Hide the Save button');
         	// jQuery('#save_pmpro-seq-useroptin').hide();
-			var userNotice = jQuery('#hidden_pmpro_seq_useroptin').val( );
+			var userNotice = jQuery('#hidden_pmpro_seq_useroptin').val();
 
 	        /* Show/Hide save button & store state of current user opt-in setting */
-	        jQuery('#pmpro_sequence_useroptin').click(function(){
+	        jQuery('#pmpro_sequence_useroptin').click(function()
+	        	{
 
-	            console.log('Checkbox to opt in for new content notices (by user) clicked');
-	            jQuery('#hidden_pmpro_seq_useroptin').val( (this.checked ? 1 : 0) );
-                console.log('User modified their opt-in. Saving... Was: ' + userNotice + ' now: ' + jQuery('#pmpro_sequence_useroptin').val() + ' this: ' + this.checked );
-	            jQuery.post( '" . admin_url('admin-ajax.php') ."',
-                {
-                    action: 'pmpro_sequence_save_user_optin',
-                    'security': '" . $optinNonce ."',
-                    'pmpro_sequence_id': '" . $sequence->sequence_id . "',
-                    'pmpro_sequence_optIn': jQuery('#hidden_pmpro_seq_useroptin').val(),
-                    'pmpro_sequence_userId': '" . $current_user->ID . "'
-                },
-                function(responseHTML)
-                {
-                    if ( responseHTML.match(\"^Error\") )
-                        alert(responseHTML);
-                });
+		            console.log('Checkbox to opt in for new content notices (by user) clicked');
+		            jQuery('#hidden_pmpro_seq_useroptin').val( (this.checked ? 1 : 0) );
+	                console.log('User modified their opt-in. Saving... Was: ' + userNotice + ' now: ' + jQuery('#pmpro_sequence_useroptin').val() + ' this: ' + this.checked );
+	                jQuery('div .seq_spinner').show();
+		            jQuery.post( '" . admin_url('admin-ajax.php') ."',
+	                {
+	                    action: 'pmpro_sequence_save_user_optin',
+	                    'security': '" . $optinNonce ."',
+	                    'pmpro_sequence_id': '" . $sequence->sequence_id . "',
+	                    'pmpro_sequence_optIn': jQuery('#hidden_pmpro_seq_useroptin').val(),
+	                    'pmpro_sequence_userId': '" . $current_user->ID . "'
+	                },
+	                function(responseHTML)
+	                {
+	                    if ( responseHTML.match(\"^Error\") )
+	                        alert(responseHTML);
+		                else
+		                    jQuery('div .seq_spinner').hide();
+	                });
 		    });
 		</script>
             ";
@@ -1338,6 +1344,7 @@ class PMProSequences
                 <tr>
                     <td colspan="2" style="padding: 0px; margin 0px;">
                         <a class="button button-primary button-large" class="pmpro-seq-settings-save" id="pmpro_settings_save"><?php _e('Save Settings'); ?></a>
+	                    <div class="seq_spinner"></div>
                     </td>
                 </tr>
 	            <!-- TODO: Enable and implement
@@ -1461,6 +1468,8 @@ class PMProSequences
                     if(jQuery(this).html() == 'Saving...')
                         return;	//already saving, ignore this request
 
+	                jQuery('div .seq_spinner').show();
+
                     //disable save button
                     jQuery(this).html('Saving...');
 
@@ -1497,6 +1506,7 @@ class PMProSequences
 	                                jQuery('#pmpro_sequence_posts').html(status);
 
 	                            jQuery('#pmpro_settings_save').html('Save Settings');
+
                                 // location.reload();
                             }
                             else
@@ -1505,6 +1515,7 @@ class PMProSequences
                                 jQuery('#pmpro_settings_save').html('Save Settings');
                             }
 
+		                    jQuery('div .seq_spinner').hide();
                             return false;
                         }
 /*	                    'json'
