@@ -52,6 +52,9 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 /* Set the max number of email alerts to send in one go to one user */
 define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
 
+/* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
+define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.3.0');
+
 /*
 	Include the class for PMProSequences
 */
@@ -720,7 +723,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
      */
     function pmpro_seuquence_pmpro_text_filter($text)
     {
-        global $wpdb, $current_user, $post;
+        global $current_user, $post;
 
         if(!empty($current_user) && !empty($post))
         {
@@ -799,16 +802,54 @@ if ( ! function_exists('pmpro_sequence_email_body')):
 	}
 endif;
 
-if ( ! function_exists( 'pmpro_sequence_datediff') ):
+if ( ! function_exists( 'pmpro_seq_datediff') ):
 
 	// TODO: Create a function that supports datediff functionality if PHP < 5.3.0
-	function pmpro_sequence_datediff( $start, $end )
-	{
-		global $wpdb;
+	/**
+	 *
+	 * Calculates the difference between two dates (specified in UTC seconds)
+	 *
+	 * @param $startdate (timestamp) - timestamp value for start date
+	 * @param $enddate (timestamp) - timestamp value for end date
+	 * @return int
+	 */
+	function pmpro_seq_datediff( $startdate, $enddate ) {
 
-		// $startDate = date_time_set( $start );
+		// Create two DateTime objects
+		$dStart = new DateTime( date( 'Y-m-d', $startdate ) );
+		$dEnd   = new DateTime( date( 'Y-m-d', $enddate ) ); // Today's date
 
-		//$sql = "SELECT DATEDIFF( '" . $startDate . '", "' . $endDate . "');";
+		if ( version_compare( PHP_VERSION, PMPRO_SEQ_REQUIRED_PHP_VERSION, '>=' ) ) {
+
+			/* Calculate the difference using 5.3 supported logic */
+			$dDiff  = $dStart->diff( $dEnd );
+			$dDiff->format( '%d' );
+			// $dDiff->format('%R%a');
+
+			$days = $dDiff->days;
+
+			// Invert the value
+			if ( $dDiff->invert == 1 )
+				$days = 0 - $days;
+		}
+		else {
+
+			// V5.2.x workaround
+			$dStartStr = $dStart->format('U');
+			$dEndStr = $dEnd->format('U');
+
+			// Difference (in seconds)
+			$diff = abs($dStartStr - $dEndStr);
+
+			// Convert to days.
+			$days = $diff * 86400;
+
+			// Sign flip if needed.
+			if ( gmp_sign($dStartStr - $dEndStr) == -1)
+				$days = 0 - $days;
+		}
+
+		return $days;
 	}
 endif;
 /*
@@ -881,33 +922,15 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 		global $pmpro_member_days;
 
 		if(empty($pmpro_member_days[$user_id][$level_id]))
-		{		
+		{
+			// Get the timestamp representing the start date for the specific user_id.
 			$startdate = pmpro_getMemberStartdate($user_id, $level_id);
-		/**
-		    Removed to support TZ transitions and whole days
-
-			$now = time();
-			$days = ($now - $startdate)/3600/24;
-		**/
 
 			// Check that there is a start date at all
 			if(empty($startdate))
 				$days = 0;
 			else
-			{
-
-				/* Will take Daylight savings changes into account and ensure only integer value days returned */
-				$dStart = new DateTime( date( 'Y-m-d', $startdate ) );
-				$dEnd   = new DateTime( date( 'Y-m-d' ) ); // Today's date
-				$dDiff  = $dStart->diff( $dEnd );
-				$dDiff->format( '%d' );
-				// $dDiff->format('%R%a');
-
-				$days = $dDiff->days;
-
-				if ( $dDiff->invert == 1 )
-					$days = 0 - $days; // Invert the value
-			}
+				$days = pmpro_seq_datediff($startdate, current_time('timestamp'));
 
 			$pmpro_member_days[$user_id][$level_id] = $days;
 		}
