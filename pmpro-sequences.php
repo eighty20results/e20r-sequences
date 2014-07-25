@@ -222,7 +222,6 @@ if (! function_exists('pmpro_sequence_optinsave')):
 	        $seq = new PMProSequences();
 	        // $seq->dbgOut('optinsave(): ' . print_r( $_POST, true));
 
-	        $new = new stdClass();
 	        /*
 	         * $optIn->sequence[$sequence->sequence_id]->sendNotice = 1|0;
 	         * $optIn->sequence[$sequence->sequence_id]->notifiedPosts = array();
@@ -319,6 +318,8 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
     {
 	    // Validate that the ajax referrer is secure
 	    check_ajax_referer('pmpro-sequence-send-settings', 'security');
+
+	    $error = false;
 	    $response = array();
 
 	    try {
@@ -335,7 +336,6 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 	                // $response = array( 'result' => 'success' );
 	                $response = '';
 
-	                // TODO: Fix the return value if we're wiping the sequence (clear the metabox).
 	                if ( isset($_POST['hidden_pmpro_seq_wipesequence'])) {
 
 		                if (intval($_POST['hidden_pmpro_seq_wipesequence']) == 1) {
@@ -343,30 +343,37 @@ if (! function_exists( 'pmpro_sequence_ajaxSaveSettings')):
 			                // Wipe the list of posts in the sequence.
 			                $sequence->dbgOut( 'ajaxSaveSettings() - Deleting all entries in sequence # ' . $sequence_id );
 
-			                if ( ! delete_post_meta( $sequence_id, '_sequence_posts' ) ) {
+			                $sposts = get_post_meta( $sequence_id, '_sequence_posts' );
 
-				                $sequence->dbgOut( 'ajaxSaveSettings() - Unable to delete the posts in sequence # ' . $sequence_id );
-				                $response = 'Error: No Posts to delete from this sequence or error during delete operation';
+			                if ( count($sposts) > 0) {
+
+				                if ( ! delete_post_meta( $sequence_id, '_sequence_posts' ) ) {
+
+					                $sequence->dbgOut( 'ajaxSaveSettings() - Unable to delete the posts in sequence # ' . $sequence_id );
+					                $error = 'Error: Unable to delete posts from sequence';
+				                }
 			                }
-			                else {
 
-				                $sequence->dbgOut('ajaxSaveSettings() - Deleted all posts in the sequence');
-				                $response = $sequence->getPostListForMetaBox();
-		                    }
+			                $sequence->dbgOut( 'ajaxSaveSettings() - Deleted all posts in the sequence' );
 	                    }
 	                }
                 }
             }
 		    else
-			    $response = 'Error: No sequence ID found/specified';
+			    $error = 'Error: No sequence ID found/specified';
 
 		        //$response = array( 'result' => 'Error: No post ID specified');
         } catch (Exception $e) {
 		    // $response = array( 'result' => 'Error: ' . $e->getMessage());
 		    // $response = array( 'result' => 'Error: ' . $e->getMessage());
-		    $response = 'Error: ' . $e->getMessage();
-		    $sequence->dbgOut(print_r($response, true));
+		    $error = 'Error: ' . $e->getMessage();
+		    $sequence->dbgOut(print_r($error, true));
         }
+
+	    if ($error)
+		    $response = $error;
+	    else
+		    $response = $sequence->getPostListForMetaBox();
 
 	    // header('Content-Type: application/json');
         //echo json_encode($response);
