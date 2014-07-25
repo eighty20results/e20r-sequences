@@ -1332,7 +1332,7 @@ class PMProSequences
 				            </div>
 				            <div>
 					            <label for="pmpro-seq-noticetime"><?php _e('Timezone:'); ?> </label>
-					            <span id="pmpro-seq-noticetime-status"><?php echo '  ' . get_option('timezone_string'); ?></span>
+					            <span id="pmpro-seq-noticetimetz-status"><?php echo '  ' . get_option('timezone_string'); ?></span>
 				            </div>
 				            <div class="pmpro-sequence-subject">
 					            <label for="pmpro-seq-subject"><?php _e('Subject:'); ?> </label>
