@@ -809,7 +809,7 @@ if ( ! function_exists('pmpro_sequence_email_body')):
 	{
 		$phpmailer->Body = str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body );
 		$phpmailer->Body = str_replace( "!!today!!", date('l, F jS, Y', current_time('timestamp')), $phpmailer->Body );
-		$phpmailer->Body = str_replace( "!!lesson_title!!", $phpmailer->lesson_title , $phpmailer->Body );
+		$phpmailer->Body = str_replace( "!!ptitle!!", $phpmailer->ptitle , $phpmailer->Body );
 
 	}
 endif;

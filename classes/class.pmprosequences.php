@@ -816,7 +816,7 @@ class PMProSequences
 		$email->fromname = $settings->fromname; // = pmpro_getOption('from_name');
 
 		$email->email = $user->user_email;
-		$email->lesson_title = $post->post_title;
+		$email->ptitle = $post->post_title;
 
 		$email->subject = sprintf(__("%s: %s", 'pmpro'), $settings->subject, $post->post_title);
 		// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
