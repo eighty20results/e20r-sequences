@@ -816,6 +816,7 @@ class PMProSequences
 		$email->fromname = $settings->fromname; // = pmpro_getOption('from_name');
 
 		$email->email = $user->user_email;
+		$email->lesson_title = $post->post_title;
 
 		$email->subject = sprintf(__("%s: %s", 'pmpro'), $settings->subject, $post->post_title);
 		// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
@@ -827,7 +828,7 @@ class PMProSequences
 		// All of the array list names are !!<name>!! escaped values.
 
 		$email->data = array(
-			"name" => $user->display_name,
+			"name" => $user->first_name, // Options are: display_name, first_name, last_name, nickname
 			"sitename" => get_option("blogname"),
 			"post_link" => '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>'
 		);
@@ -842,8 +843,6 @@ class PMProSequences
 		}
         else
 			$email->data['excerpt'] = '';
-
-		// $sequence->dbgOut('Email Object: ' . print_r($email, true));
 
 		$email->sendEmail();
 	}
