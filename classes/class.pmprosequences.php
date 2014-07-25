@@ -926,32 +926,6 @@ class PMProSequences
 
     }
 
-    /**
-     *
-     * Pre PHP v5.3 datetime::diff() alternative (calculate # of days between two dates)
-     *
-     * @param $date1 (string) - Date in format 'YYYY-MM-DD'
-     * @param $date2 (string) - Date in format 'YYYY-MM-DD'
-     * @return int - Number of days (as a count)
-     */
-
-    // TODO - Bug? What if date1 is after date 2 (Negative days)? - http://www.php.net/manual/en/datetime.diff.php#97810
-
-    function date_diff($date1, $date2)
-    {
-        $current = $date1;
-        $datetime2 = date_create($date2);
-        $count = 0;
-
-        // TODO: Does not include support for TIME in the date calculation (needs to worry about which version of PHP we're using).
-
-        while(date_create($current) < $datetime2){
-            $current = gmdate("Y-m-d", strtotime("+1 day", strtotime($current)));
-            $count++;
-        }
-        return $count;
-    }
-
 	/**
 	 * Update the when we're supposed to run the New Content Notice cron job for this sequence.
      *
@@ -1140,21 +1114,11 @@ class PMProSequences
 		$files = array();
 
 		self::dbgOut('Directory containing templates: ' . dirname(__DIR__) . '/email/');
-		$dir = opendir(dirname(__DIR__) . '/email/');
+		$templ_dir = dirname(__DIR__) . '/email';
 
-		while(false != ($file = readdir($dir)))
+		chdir($templ_dir);
+		foreach ( glob('*.html') as $file)
 		{
-			if(($file != ".") and ($file != "..") and ($file != "index.php"))
-			{
-				$files[] = $file; // put in array.
-			}
-		}
-
-		natsort($files); // sort.
-
-		foreach($files as $file)
-		{
-			// self::dbgOut('<option value="' . sanitize_file_name($file) . '" ' . selected( esc_attr( $settings->noticeTemplate ), sanitize_file_name($file) ) . ' >' . sanitize_file_name($file) .'</option>');
 			echo('<option value="' . sanitize_file_name($file) . '" ' . selected( esc_attr( $settings->noticeTemplate), sanitize_file_name($file) ) . ' >' . sanitize_file_name($file) .'</option>');
 		}
 	}
