@@ -5,7 +5,9 @@ All adjustable settings are configured in the Sequence Editor (Right column, met
 You can also set the template file to use (default is the new_content.html file located in <plugin_home>/email/).
 
 To add a new template, simply add another .html file to the same directory and select it in the Sequence Settings for
-the Sequence you want it to use. These template files will support standard HTML elements.
+the Sequence you want it to use.
+
+These template files will support standard HTML elements.
 
 == Mandatory Information ==
 
