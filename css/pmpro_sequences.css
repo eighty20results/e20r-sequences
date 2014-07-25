@@ -39,6 +39,21 @@ table#newmeta td {
     vertical-align: middle !important;
 }
 
+span#pmpro-seq-noticetimetz-status {
+    display: inline-block;
+    vertical-align: bottom;
+    overflow: hidden;
+    width: 150px;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    /* -o-text-overflow: ellipsis; */
+    /* -moz-binding: url('assets/xml/ellipsis.xml#ellipsis'); */
+    height: 18px;
+    font-weight: bold;
+    color: #666666;
+
+}
+
 span#pmpro-seq-sort-status,
 span#pmpro-seq-delay-status,
 span#pmpro-seq-template-status,
