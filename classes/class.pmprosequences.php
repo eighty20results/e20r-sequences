@@ -758,6 +758,9 @@ class PMProSequences
 	        $this->dbgOut('convertToDays() - Start Date: ' . $startDate);
 	        try {
 
+		        // Use v5.2 and v5.3 compatible function
+		        $days = pmpro_seq_datediff($startDate, current_time('timestamp'));
+		        /*
 		        $dStart = new DateTime( date( 'Y-m-d', $startDate ) );
 		        $dEnd   = new DateTime( date( 'Y-m-d', strtotime( $date ) ) ); // Today's date
 		        $dDiff  = $dStart->diff( $dEnd );
@@ -770,6 +773,7 @@ class PMProSequences
 
 		        if ( $dDiff->invert == 1 )
 			        $days = 0 - $days; // Invert the value
+		        */
 	        } catch (Exception $e) {
 		        self::dbgOut('convertToDays() - Error calculating days: ' . $e->getMessage());
 	        }
