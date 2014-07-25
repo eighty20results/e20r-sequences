@@ -354,7 +354,7 @@ class PMProSequences
             //             06           05
             $hourDiff = $schedHour - $nowHour;
 
-            if ($hourDiff >= 0) {
+            if ($hourDiff >= 1) {
                 self::dbgOut('calculateTimestamp() - Assuming current day');
                 $when = ''; // Today
             }
