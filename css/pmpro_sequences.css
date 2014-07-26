@@ -113,10 +113,10 @@ input#pmpro_sequence_excerpt {
 }
 
 .seq_spinner {
-    background: url('images/spinner.gif') no-repeat;
+    background: url('/wp-admin/images/wpspin_light.gif') no-repeat;
     background-size: 16px 16px;
     display: none;
-    float: left;
+    float: right;
     opacity: .7;
     filter: alpha(opacity=70);
     width: 16px;
