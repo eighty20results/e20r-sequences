@@ -9,13 +9,14 @@ var userNotice = jQuery('#hidden_pmpro_seq_useroptin').val();
 /* Show/Hide save button & store state of current user opt-in setting */
 function pmpro_sequence_optinSelect( sequence_id, user_id ) {
 
-    console.log('Checkbox to opt in for new content notices (by user) clicked');
+    // console.log('Checkbox to opt in for new content notices (by user) clicked');
 
     jQuery('#hidden_pmpro_seq_useroptin').val( jQuery('#pmpro_sequence_useroptin').is(':checked') ? 1 : 0 );
 
+    /*
     console.log('User modified their opt-in. Saving... Was: ' + userNotice + ' now: ' + ( jQuery('#pmpro_sequence_useroptin').is(':checked') ? 1 : 0)
     + ' this: ' + jQuery('#pmpro_sequence_useroptin').is(':checked') );
-
+    */
     // Enable the spinner during the save operation
     jQuery('div .seq_spinner').show();
 
