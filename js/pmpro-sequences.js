@@ -1,25 +1,27 @@
-// console.log('Hide the Save button');
-// jQuery('#save_pmpro-seq-useroptin').hide();
-
 // Save the value of the User sequence notification optin for the current user
-var userNotice = jQuery('#hidden_pmpro_seq_useroptin').val();
+// var userNotice = jQuery('#hidden_pmpro_seq_useroptin').val();
 
-// jQuery('#pmpro_sequence_useroptin').click(function() {
-
-/* Show/Hide save button & store state of current user opt-in setting */
+/**
+ *
+ * Update the "new content alert" for the logged in user.
+ *
+ * @param sequence_id -- ID of the sequence we're changing the user's opt-in setting for
+ * @param user_id -- ID of user
+ */
 function pmpro_sequence_optinSelect( sequence_id, user_id ) {
 
-    // console.log('Checkbox to opt in for new content notices (by user) clicked');
-
+    /* Show/Hide save button & store state of current user opt-in setting */
     jQuery('#hidden_pmpro_seq_useroptin').val( jQuery('#pmpro_sequence_useroptin').is(':checked') ? 1 : 0 );
 
     /*
     console.log('User modified their opt-in. Saving... Was: ' + userNotice + ' now: ' + ( jQuery('#pmpro_sequence_useroptin').is(':checked') ? 1 : 0)
     + ' this: ' + jQuery('#pmpro_sequence_useroptin').is(':checked') );
     */
+
     // Enable the spinner during the save operation
     jQuery('div .seq_spinner').show();
 
+    // Send POST to back-end server with new opt-in value
     jQuery.ajax({
         url: pmpro_sequence.ajaxurl,
         type: 'POST',
@@ -44,7 +46,7 @@ function pmpro_sequence_optinSelect( sequence_id, user_id ) {
         },
         complete: function() {
 
-            var doCheck = jQuery('#hidden_pmpro_seq_useroptin').val() == 1 ? true : false;
+            var doCheck = (jQuery('#hidden_pmpro_seq_useroptin').val() == 1 ? true : false);
             jQuery('#pmpro_sequence_useroptin').prop('checked', doCheck);
 
             jQuery('div .seq_spinner').hide();
@@ -53,4 +55,3 @@ function pmpro_sequence_optinSelect( sequence_id, user_id ) {
     });
 }
 
-// });
