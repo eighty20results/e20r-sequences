@@ -136,7 +136,7 @@ if (! function_exists('pmpro_sequence_ajaxUnprivError')):
 		wp_send_json( array(
 			'success' => false,
 			'html' => '',
-			'message' => __('Error: You must be logged in to edit PMPro Sequences', 'pmprosequence')
+			'message' => __('You must be logged in to edit PMPro Sequences', 'pmprosequence')
 		));
 
 	}
