@@ -94,6 +94,13 @@ if (! function_exists('pmpro_sequence_admin_scripts')):
 				    'saving_error_2' => __('Error saving sequence post [2]', 'pmprosequence'),
 				    'remove_error_1' => __('Error deleting sequence post [1]', 'pmprosequence'),
 				    'remove_error_2' => __('Error deleting sequence post [2]', 'pmprosequence'),
+				    'undefined' => __('Not Defined', 'pmprosequence'),
+				    'unknownerrorrm' => __('Unknown error removing post from sequence', 'pmprosequence'),
+				    'unknownerroradd' => __('Unknown error adding post to sequence', 'pmprosequence'),
+				    'daysLabel' => __('Delay', 'pmprosequence'),
+				    'daysText' => __('Days to delay', 'pmprosequence'),
+				    'dateLabel' => __('Avail. on', 'pmprosequence'),
+				    'dateText' => __('Release on (YYYY-MM-DD)', 'pmpro_sequence'),
 			    )
 		    )
 	    );
@@ -109,8 +116,13 @@ if (! function_exists('pmpro_sequence_ajaxUnprivError')):
 	 * Functions returns error message. Used by nopriv Ajax traps.
 	 */
 	function pmpro_sequence_ajaxUnprivError() {
-		echo "Error: You must log in to edit PMPro Sequences";
-		wp_die();
+
+		wp_send_json( array(
+			'success' => false,
+			'html' => '',
+			'message' => __('Error: You must be logged in to edit PMPro Sequences', 'pmprosequence')
+		));
+
 	}
 endif;
 
@@ -141,6 +153,8 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
     function pmpro_sequence_add_post_callback()
     {
 	    check_ajax_referer('pmpro-sequence-add-post', 'pmpro_sequence_addpost_nonce');
+
+	    $result = __('No data found', 'pmprosequence'); // Pre-declare
 
 	    // Fetch the ID of the sequence to add the post to
         $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null;
@@ -175,32 +189,59 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 
 				    $sequence->dbgOut('Adding post ' . $seq_post_id . ' to sequence ' . $sequence->sequence_id);
 				    $sequence->addPost($seq_post_id, $delay);
+				    $success = true;
+				    $sequence->setError( null );
+			    }
+			    else {
+				    $success = false;
+				    $sequence->setError( __('Not permitted to modify the sequence', 'pmprosequence'));
 			    }
 
 		    }
 		    else {
 			    // Ignore this post & return error message to display for the user/admin
-			    $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __('date: YYYY-MM-DD') : __('number: Days since membership started');
+			    // NOTE: Format of date is not translatable
+			    $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __('date: YYYY-MM-DD', 'pmprosequence') : __('number: Days since membership started', 'pmprosequence');
 
 			    $sequence->dbgOut( 'pmpro_sequence_add_post_callback(): Invalid delay value specified, not adding the post: ' . $_POST['pmpro_sequencedelay'] );
-			    $sequence->setError( sprintf( __( 'Error: Invalid delay specified (%s). Expected format is a %s', esc_attr($_POST['pmpro_sequencedelay']), $expectedDelay ) ));
+			    $sequence->setError( sprintf( __( 'Invalid delay specified (%1$s). Expected format is a %2$s', 'pmprosequence'), esc_attr($_POST['pmpro_sequencedelay']), $expectedDelay ) );
 
 			    $delay       = null;
 			    $seq_post_id = null;
 
-			    $status = $sequence->getError();
+			    $success = false;
 
 		    }
 	    }
 
-        if ( preg_match("/^Error/", $status) )
-            $sequence->dbgOut('getPostListForMetaBox() returned error');
+	    if (empty($sequence_id)) {
+		    $success = false;
+		    $sequence->setError( sprintf( __( 'No sequence ID specified', 'pmprosequence' ) ) );
+	    }
+	    elseif (empty($seq_post_id)) {
+		    $success = false;
+		    $sequence->setError( sprintf( __( 'Did not specify post/page to add to this sequence', 'pmprosequence' ) ) );
+	    }
+
+	    $result = $sequence->getPostListForMetaBox();
+
+	    if ( $result['success'] )
+		    wp_send_json( $result );
 	    else
-		    $status = $sequence->getPostListForMetaBox();
+		    wp_send_json( array(
+				    'success' => $success,
+				    'message' => $sequence->getError(),
+				    'html' => null,
+			    )
+		    );
 
-	    echo $status;
-        wp_die();
-
+/*	    else
+		    wp_send_json( array(
+			    'success' => false,
+			    'result' => $result['result'],
+			    'error' => $result['error']
+		    ));
+*/
     }
 endif;
 
@@ -220,6 +261,9 @@ if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 
 		check_ajax_referer('pmpro-sequence-rm-post', 'pmpro_sequence_rmpost_nonce');
 
+		$result = '';
+		$success = false;
+
 		$sequence_id = ( isset( $_POST['pmpro_sequence_id']) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null );
 		$seq_post_id = ( isset( $_POST['pmpro_seq_post']) && '' != $_POST['pmpro_seq_post'] ? intval($_POST['pmpro_seq_post']) : null );
 
@@ -227,14 +271,33 @@ if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 
 		// Remove the post (if the user is allowed to)
 		if ( current_user_can( 'edit_posts' ) && ! is_null($seq_post_id) ) {
+
 			$sequence->removePost($seq_post_id);
+			//$result = __('The post has been removed', 'pmprosequence');
+			$success = true;
+
+		}
+		else {
+
+			$success = false;
+			$sequence->setError( __( 'Incorrect privileges to remove posts from this sequence', 'pmprosequence'));
 		}
 
 		// Return the content for the new listbox (sans the deleted item)
-		$response = $sequence->getPostListForMetaBox();
+		$result = $sequence->getPostListForMetaBox();
 
-		echo $response;
-		wp_die();
+		if ( is_null( $result['message'] ) && is_null( $sequence->getError() ) && ($success)) {
+			$sequence->dbgOut('In Ajax Routine: ' . print_r($result, true));
+			wp_send_json($result);
+		}
+		else
+			wp_send_json( array(
+				'success' => $success,
+				'message' => ( ! is_null($sequence->getError() ) ? $sequence->getError() : $result['message']),
+				'html' => ( ! is_null($result['html']) ? $result['html'] : ''),
+			)
+		);
+
 	}
 
 endif;
@@ -251,6 +314,9 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
 	    // Validate that the ajax referrer is secure
 	    check_ajax_referer('pmpro-sequence-save-settings', 'pmpro_sequence_settings_nonce');
 
+	    $sequence = new PMProSequences();
+	    $result = '';
+
 	    // Clear the sequence metadata if the sequence type (by date or by day count) changed.
         if (isset($_POST['pmpro_sequence_clear']))
         {
@@ -258,35 +324,42 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
             {
                 $sequence_id = intval($_POST['pmpro_sequence_id']);
                 $sequence = new PMProSequences($sequence_id);
+
+	            $sequence->dbgOut('Deleting all entries in sequence # ' .$sequence_id);
+
+	            if (! delete_post_meta($sequence_id, '_sequence_posts'))
+	            {
+		            $sequence->dbgOut('Unable to delete the posts in sequence # ' . $sequence_id);
+		            $sequence->setError( __('Could not delete posts from this sequence', 'pmprosequence'));
+		            $success = false;
+
+	            }
+	            else {
+		            $result = $sequence->getPostListForMetaBox();
+	            }
+
             }
             else
             {
-                echo __('Error: Unable to identify the Sequence');
-                exit;
-            }
-	        /*
-            if (! pmpro_sequence_settings_save($sequence_id, $sequence))
-            {
-                echo 'Error: Unable to save Sequence settings';
-                exit;
-            }
-			*/
-            $sequence->dbgOut('Deleting all entries in sequence # ' .$sequence_id);
-            if (! delete_post_meta($sequence_id, '_sequence_posts'))
-            {
-                $sequence->dbgOut('Unable to delete the posts in sequence # ' . $sequence_id);
-                echo __('Error: Unable to delete posts from sequence');
-	            exit;
-            }
-            else {
-	            echo $sequence->getPostListForMetaBox();
-	            exit;
+                $sequence->setError( __('Unable to identify the Sequence', 'pmprosequence'));
+	            $success = false;
             }
         }
         else {
-	        echo __('Error: Unknown request');
-	        wp_die();
+	        $sequence->setError( __('Unknown request', 'pmprosequence'));
+	        $success = false;
         }
+
+	    // Return the status to the calling web page
+	    if ( $result['success'] )
+	        wp_send_json( $result );
+	    else
+		    wp_send_json( array(
+				    'success' => $success,
+				    'message' => $sequence->getError(),
+				    'html' => null,
+			    )
+		    );
 
     }
 
@@ -301,7 +374,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
     {
         global $current_user, $wpdb;
 
-        $response = array();
+	    $result = '';
 
         try {
 	        $seq = new PMProSequences();
@@ -310,12 +383,6 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
 	        // $seq->dbgOut('optinsave(): ' . print_r( $_POST, true));
 
-	        /*
-	         * $optIn->sequence[$sequence->sequence_id]->sendNotice = 1|0;
-	         * $optIn->sequence[$sequence->sequence_id]->notifiedPosts = array();
-	         *
-	         */
-
 	        if ( isset($_POST['hidden_pmpro_seq_uid'])) {
 
 		        $user_id = intval($_POST['hidden_pmpro_seq_uid']);
@@ -323,9 +390,14 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 	        }
 	        else {
 		        $seq->dbgOut( 'No user ID specified. Ignoring settings!' );
-		        $response = json_encode(array('success' => 'success'));
-		        echo $response;
-		        wp_die();
+
+		        wp_send_json( array(
+				        'success' => false,
+				        'message' => __('Unable to save your settings', 'pmprosequence'),
+				        'result' => '',
+			        )
+		        );
+
 	        }
 
 	        if ( isset($_POST['hidden_pmpro_seq_id'])) {
@@ -333,10 +405,15 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 		        $seqId = intval( $_POST['hidden_pmpro_seq_id']);
 	        }
 	        else {
+
 		        $seq->dbgOut( 'No sequence number specified. Ignoring settings for user' );
-		        $response = json_encode(array('success' => 'success'));
-		        echo $response;
-		        wp_die();
+
+		        wp_send_json( array(
+			            'success' => false,
+				        'message' => __('Unable to save your settings', 'pmprosequence'),
+				        'result' => '',
+			        )
+		        );
 	        }
 
 	        $seq = new PMProSequences( $seqId );
@@ -373,21 +450,29 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
 	            // $seq->dbgOut('Saving user_meta for UID ' . $user_id . ' Settings: ' . print_r($usrSettings, true));
 	            update_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence_notices', $usrSettings );
-	            $response = json_encode( array( 'success' => 'success' ) );
+	            $status = true;
+	            $seq->setError(null);
             }
             else {
 
                 $seq->dbgOut('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID);
-                $response = json_encode(array('error' => 'Error saving settings'));
+	            $seq->setError( __('Unable to save your settings'));
+	            $status = false;
             }
         }
         catch (Exception $e) {
-            // $response = array( 'result' => 'Error: ' . $e->getMessage());
-            $response = json_encode(array('error' => __('Error: ') . $e->getMessage()));
-	        $usrSettings->dbgOut('optin_save() - Exception error: ' . $e->getMessage());
+	        $seq->setError( __( sprintf('Error: %s'), $e->getMessage()) );
+	        $status = false;
+	        $seq->dbgOut('optin_save() - Exception error: ' . $e->getMessage());
         }
 
-        echo $response;
+	    echo json_encode( array(
+			    'success' => $status,
+			    'result' => $result,
+			    'message' => $seq->getError(),
+		    )
+	    );
+
         wp_die();
     }
 endif;
@@ -407,12 +492,10 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 	    // Validate that the ajax referrer is secure
 	    check_ajax_referer('pmpro-sequence-save-settings', 'pmpro_sequence_settings_nonce');
 
-	    // Is this an auto save routine? If our form has not been submitted (clicked "save"), we'd probably not want to save anything yet
-	    if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE )
-		    return;
+	    $status = false;
+	    $response = '';
 
-	    $error = false;
-	    $response = array();
+	    $sequence = new PMProSequences();
 
 	    try {
 
@@ -422,11 +505,9 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
                 $sequence = new PMProSequences($sequence_id);
 	            $sequence->dbgOut('ajaxSaveSettings() - Saving settings for ' . $sequence_id);
 
-                if ( ($retval = pmpro_sequence_settings_save($sequence_id, $sequence)) === true) {
+                if ( ($status = pmpro_sequence_settings_save($sequence_id, $sequence)) === true) {
 
 	                $sequence->dbgOut('ajaxSaveSettings() - Saved settings using Ajax call');
-	                // $response = array( 'result' => 'success' );
-	                $response = '';
 
 	                if ( isset($_POST['hidden_pmpro_seq_wipesequence'])) {
 
@@ -442,39 +523,44 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 				                if ( ! delete_post_meta( $sequence_id, '_sequence_posts' ) ) {
 
 					                $sequence->dbgOut( 'ajaxSaveSettings() - Unable to delete the posts in sequence # ' . $sequence_id );
-					                $error = __('Error: Unable to delete posts from sequence');
+					                $sequence->setError( __('Unable to remove posts from sequence', 'pmprosequence') );
+					                $status = false;
 				                }
+				                else
+					                $status = true;
 			                }
 
 			                $sequence->dbgOut( 'ajaxSaveSettings() - Deleted all posts in the sequence' );
 	                    }
 	                }
                 }
-	            else
-		            $error = __('Error: Unable to save the settings for this sequence: ' . $retval);
+	            else {
+		            $sequence->setError( printf( __('Save status returned was: %s', 'pmprosequence'), $status ) );
+	            }
 
 	            $response = $sequence->getPostListForMetaBox();
             }
-		    else
-			    $error = __('Error: No sequence ID found/specified');
+		    else {
+			    $sequence->setError( __( 'No sequence ID found/specified', 'pmprosequence' ) );
+			    $status = false;
+		    }
 
-		        //$response = array( 'result' => 'Error: No post ID specified');
         } catch (Exception $e) {
-		    // $response = array( 'result' => 'Error: ' . $e->getMessage());
-		    // $response = array( 'result' => 'Error: ' . $e->getMessage());
-		    $error = 'Error: ' . $e->getMessage();
-		    $sequence->dbgOut(print_r($error, true));
+
+		    $status = false;
+		    $sequence->setError( printf( __('(exception) %s', 'pmprosequence'), $e->getMessage()) );
+		    $sequence->dbgOut(print_r($sequence->getError(), true));
         }
-
-	    if ($error)
-		    $response = $error;
-
 
 
 	    // header('Content-Type: application/json');
-        //echo json_encode($response);
-	    echo $response;
-	    $sequence->dbgOut('Returned status to site: ' .  print_r($response, true));
+	    echo json_encode( array(
+			    'success' => $status,
+			    'result' => $response['result'],
+			    'message' => $sequence->getError(),
+		    )
+	    );
+
 	    wp_die();
     }
 
@@ -499,17 +585,22 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 		// Check that the function was called correctly. If not, just return
 		if(empty($sequence_id)) {
 			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): No sequence ID supplied...');
+			$sequenceObj->setError( __('No sequence ID provided', 'pmprosequence'));
 			return false;
 		}
 
 		// Is this an auto save routine? If our form has not been submitted (clicked "save"), we'd probably not want to save anything yet
-		if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE )
+		if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
+			$sequenceObj->setError(null);
 			return $sequence_id;
+		}
+
 
 		// Verify that we're allowed to update the sequence data
 		if ( !current_user_can( 'edit_post', $sequence_id ) ) {
 			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): User is not allowed to edit this post type');
-			return $sequence_id;
+			$sequenceObj->setError( __('Not permitted to modify settings', 'pmprosequence'));
+			return false;
 		}
 
 		$sequenceObj->dbgOut('pmpro_sequence_settings_save(): About to save settings for sequence ' . $sequence_id);
@@ -625,7 +716,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 			$sequenceObj->dbgOut('pmpro_sequence_settings_save(): POST value for settings->subject: ' . esc_attr($_POST['hidden_pmpro_seq_subject']) );
 		}
 		else
-			$sequenceObj->options->subject = 'New: ';
+			$sequenceObj->options->subject = __('New: ', 'pmprosequence');
 
 		// $sequence->options = $settings;
 		if ( $sequenceObj->options->sendNotice == 1 ) {
@@ -662,7 +753,7 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
 
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
             if ( intval($sequence->options->lengthVisible) == 1 )
-                $content .= "<p>" . _e("You are on day ") . intval(pmpro_getMemberDays()) . _e(" of your membership.") . "</p>";
+                $content .= "<p>" . printf( __("You are on day %s of your membership"), intval(pmpro_getMemberDays() ) ) . "</p>";
 
 	        if ( intval($sequence->options->sendNotice) == 1)
 		        $content .= $sequence->pmpro_sequence_addUserNoticeOptIn( $sequence );
@@ -845,14 +936,14 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                 if($insequence)
                 {
                     //user has one of the sequence levels, find out which one and tell him how many days left
-	                $text = _e('This content managed as part of the ') . ' <a href="' . get_permalink($post->ID) . '">' . get_the_title($post->ID) . '</a>' . _e('sequence.') .'<br/>';
+	                $text = printf( __('This content managed as part of the <a href="%1$s">%2$s</a> sequence <br/>', 'pmprosequence'), get_permalink($post->ID), get_the_title($post->ID) );
 
 	                switch ($sequence->options->delayType) {
 		                case 'byDays':
-							$text .= _e('You will gain access to ') . get_the_title($post->ID) . _e(' on day ') . $delay . _e(' of your membership.');
+							$text .= printf( __('You will get access to %1$s on day %2$s of your membership', 'pmprosequence'), get_the_title($post->ID), $delay);
 			                break;
 		                case 'byDate':
-			                $text .= _e('You will gain access on ') . $delay;
+			                $text .= printf( __('You will get access to %1$s on %2$s', 'pmprosequence'), get_the_title($post->ID), $delay );
 			                break;
 		                default:
 
@@ -864,11 +955,12 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                     // User has to sign up for one of the sequence(s)
                     if(count($post_sequence) == 1)
                     {
-                        $text = _e('This content is part of the ') . '<a href="' . get_permalink($post_sequence[0]) . '">' . get_the_title($post_sequence[0]) . '</a>' . _e('sequence.');
+	                    $text = printf( __('This content is part of the <a href="%1$s">%2$s</a> sequence <br/>', 'pmprosequence'), get_permalink($post_sequence[0]), get_the_title($post_sequence[0]) );
+	                    // $text = _e('This content is part of the ') . '<a href="' . get_permalink($post_sequence[0]) . '">' . get_the_title($post_sequence[0]) . '</a>' . _e('sequence.');
                     }
                     else
                     {
-                        $text = _e('This content is included and managed by the following sequences: ');
+                        $text = _e('This content is included and managed by the following sequences: ', 'pmprosequence');
                         $seq_links = array();
 
                         foreach($post_sequence as $sequence_id) {
