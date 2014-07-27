@@ -26,7 +26,7 @@ function pmpro_sequence_optinSelect( sequence_id, user_id ) {
         url: pmpro_sequence.ajaxurl,
         type: 'POST',
         timeout: 5000,
-        dataType: 'html',
+        dataType: 'JSON',
         data: {
             action: 'pmpro_sequence_save_user_optin',
             hidden_pmpro_seq_id: jQuery('#hidden_pmpro_seq_id').val(),
@@ -34,17 +34,17 @@ function pmpro_sequence_optinSelect( sequence_id, user_id ) {
             hidden_pmpro_seq_uid: jQuery('#hidden_pmpro_seq_uid').val(),
             pmpro_sequence_optin_nonce: jQuery('#pmpro_sequence_optin_nonce').val()
         },
-        error: function(responseHTML)
+        error: function(data)
         {
-            if ( responseHTML.match("^Error") )
-                alert(responseHTML);
+            if ( ! data.success )
+                alert(data.error);
 
         },
-        success: function(responseHTML) {
-            if ( responseHTML.match("^Error") )
-                alert(responseHTML);
+        success: function(data) {
+            if ( ! data.success )
+                alert(data.error);
         },
-        complete: function() {
+        complete: function(data) {
 
             var doCheck = (jQuery('#hidden_pmpro_seq_useroptin').val() == 1 ? true : false);
             jQuery('#pmpro_sequence_useroptin').prop('checked', doCheck);

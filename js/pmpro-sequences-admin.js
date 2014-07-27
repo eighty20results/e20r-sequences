@@ -287,26 +287,25 @@ jQuery(document).ready(function(){
 
 function setLabels()
 {
-
     var delayType = jQuery('#pmpro_sequence_delaytype').val();
     var headerHTML_start = '<th id="pmpro_sequence_delaytype">';
     var headerHTML_end = '</th>';
     var entryHTML_start = '<th id="pmpro_sequence_delayentrytype">';
     var entryHTML_end = '</th>';
 
-    var labelText = 'Not Defined';
-    var entryText = 'Not Defined';
+    var labelText = pmpro_sequence.lang.undefined; // 'Not Defined';
+    var entryText = pmpro_sequence.lang.undefined;
 
     if (delayType == 'byDays')
     {
-        labelText = "Delay";
-        entryText = "Days to delay";
+        labelText = pmpro_sequence.lang.daysLabel; // "Delay";
+        entryText = pmpro_sequence.lang.daysText; //"Days to delay";
     }
 
     if (delayType == 'byDate')
     {
-        labelText = "Avail. on";
-        entryText = "Release on (YYYY-MM-DD)";
+        labelText = pmpro_sequence.lang.dateLabel; // "Avail. on";
+        entryText = pmpro_sequence.lang.dateText; // "Release on (YYYY-MM-DD)";
     }
 
     jQuery('#pmpro_sequence_delaylabel').html( headerHTML_start + labelText + headerHTML_end);
@@ -366,24 +365,23 @@ function pmpro_sequence_addPost() {
             pmpro_sequencedelay: jQuery('#pmpro_sequencedelay').val(),
             pmpro_sequence_addpost_nonce: jQuery('#pmpro_sequence_addpost_nonce').val()
         },
-        error: function(xml){
-            alert(pmpro_sequence.lang.saving_error_1);
-            // alert('Website error while saving sequence post');
+        error: function(data){
+            if (! data.success)
+                alert(data.error);
+        },
+        success: function(data){
+            if ( ! data.success )
+                alert(data.error);
+            else
+                jQuery('#pmpro_sequence_posts').html(data.result);
+
+        },
+        complete: function(){
+
             // Re-enable save button
             jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.save);
-        },
-        success: function(responseHTML){
-            if ( responseHTML.match("^Error") )
-            {
-                // alert(responseHTML);
-                alert(pmpro_sequence.lang.saving_error_2);
-                // Re-enable save button
-                jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.save);
-            }
-            else
-            {
-                jQuery('#pmpro_sequence_posts').html(responseHTML);
-            }
+            jQuery('#pmpro_sequencesave').removeAttr('disabled');
+
         }
     });
 }
@@ -398,6 +396,9 @@ function pmpro_sequence_editPost(post_id, delay)
 
 function pmpro_sequence_removePost(post_id)
 {
+    jQuery('#pmpro_sequencesave').attr('disabled', 'disabled');
+    // jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.saving);
+
     jQuery.ajax({
         url: pmpro_sequence.ajaxurl,
         type:'POST',
@@ -409,20 +410,15 @@ function pmpro_sequence_removePost(post_id)
             pmpro_seq_post: post_id,
             pmpro_sequence_rmpost_nonce: jQuery('#pmpro_sequence_rmpost_nonce').val()
         },
-        error: function(xml){
-            alert('pmpro_sequence.lang.remove_error_1: '+ xml);
-            //enable save button
-            jQuery('#pmpro_sequencesave').removeAttr('disabled');
+        error: function(data){
+            if (! data.success)
+                alert(data.error);
         },
-        success: function(responseHTML){
-            if (responseHTML.match("^Error"))
-            {
-                alert(responseHTML);
-            }
+        success: function(data){
+            if (! data.success)
+                alert(data.error);
             else
-            {
-                jQuery('#pmpro_sequence_posts').html(responseHTML);
-            }
+                jQuery('#pmpro_sequence_posts').html(data.result);
         },
         complete: function() {
             // Enable the Save button again.
@@ -464,13 +460,13 @@ function pmpro_sequence_delayTypeChange( sequence_id ) {
     }
 }
 
+// For the Sequence Settings 'Save Settings' button
 function pmpro_sequence_saveSettings( sequence_id ) {
-    // For the Sequence Settings 'Save Settings' button
-    // jQuery('#pmpro_settings_save').click(function(){
 
     if (undefined != jQuery('#pmpro_settings_save').attr('disabled'))
         return false;
 
+    // Enable the spinner
     jQuery('div .seq_spinner').show();
 
     // Disable save button
@@ -501,29 +497,33 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_subject: jQuery('#hidden_pmpro_seq_subject').val(),
             hidden_pmpro_seq_wipesequence: jQuery('#hidden_pmpro_seq_wipesequence').val()
         },
-        error: function(xml){
-            alert(pmpro_sequence.lang.settings_error + xml);
-            //enable save button
-            jQuery('#pmpro_settings_save').removeAttr('disabled');
+        error: function(data){
+
+            if (! data.success)
+                alert(data.error);
         },
-        success: function(responseHTML){
-            if (responseHTML.match("^Error"))
-            {
-                alert(responseHTML);
-            }
+        success: function(data){
+
+            if (! data.success )
+                alert(data.error);
             else
             {
                 setLabels();
 
-                if (status != '')
-                    jQuery('#pmpro_sequence_posts').html(responseHTML);
+                // Refresh the sequence post list (include the new post.
+                if (data.result != '')
+                    jQuery('#pmpro_sequence_posts').html(data.result);
             }
         },
         complete: function() {
+
             // Enable the Save button again.
             jQuery('#pmpro_settings_save').removeAttr('disabled');
-            // jQuery('#pmpro_settings_save').html('Save Settings');
+
+            // Reset the text for the 'Save Settings" button
             jQuery('#pmpro_settings_save').html(pmpro_sequence.lang.saveSettings);
+
+            // Disable the spinner again
             jQuery('div .seq_spinner').hide();
         }
     });
