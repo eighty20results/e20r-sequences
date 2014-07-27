@@ -347,7 +347,6 @@ function pmpro_sequence_addPost() {
     if ('' == jQuery('#pmpro_sequence_post').val() || undefined != jQuery('#pmpro_sequencesave').attr('disabled'))
         return false; //already processing, ignore this request
 
-
     // Disable save button
     jQuery('#pmpro_sequencesave').attr('disabled', 'disabled');
     jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.saving);
@@ -357,7 +356,7 @@ function pmpro_sequence_addPost() {
         url: pmpro_sequence.ajaxurl,
         type:'POST',
         timeout:5000,
-        dataType: 'html',
+        dataType: 'JSON',
         data: {
             action: 'pmpro_sequence_add_post',
             pmpro_sequence_id: jQuery('#pmpro_sequence_id').val(),
@@ -366,14 +365,12 @@ function pmpro_sequence_addPost() {
             pmpro_sequence_addpost_nonce: jQuery('#pmpro_sequence_addpost_nonce').val()
         },
         error: function(data){
-            if (! data.success)
-                alert(data.error);
+            if (data.message != null)
+                alert(data.message);
         },
         success: function(data){
-            if ( ! data.success )
-                alert(data.error);
-            else
-                jQuery('#pmpro_sequence_posts').html(data.result);
+            if (data.success)
+                jQuery('#pmpro_sequence_posts').html(data.html);
 
         },
         complete: function(){
@@ -403,7 +400,7 @@ function pmpro_sequence_removePost(post_id)
         url: pmpro_sequence.ajaxurl,
         type:'POST',
         timeout:5000,
-        dataType: 'html',
+        dataType: 'JSON',
         data: {
             action: 'pmpro_sequence_rm_post',
             pmpro_sequence_id: jQuery('#pmpro_sequence_id').val(),
@@ -411,14 +408,12 @@ function pmpro_sequence_removePost(post_id)
             pmpro_sequence_rmpost_nonce: jQuery('#pmpro_sequence_rmpost_nonce').val()
         },
         error: function(data){
-            if (! data.success)
-                alert(data.error);
+            if (data.message != null)
+                alert(data.message);
         },
         success: function(data){
-            if (! data.success)
-                alert(data.error);
-            else
-                jQuery('#pmpro_sequence_posts').html(data.result);
+            if (data.success)
+                jQuery('#pmpro_sequence_posts').html(data.html);
         },
         complete: function() {
             // Enable the Save button again.
@@ -478,7 +473,7 @@ function pmpro_sequence_saveSettings( sequence_id ) {
         url: pmpro_sequence.ajaxurl,
         type: 'POST',
         timeout: 5000,
-        dataType: 'html',
+        dataType: 'JSON',
         data: {
             action: 'pmpro_save_settings',
             pmpro_sequence_settings_nonce: jQuery('#pmpro_sequence_settings_nonce').val(),
@@ -499,21 +494,16 @@ function pmpro_sequence_saveSettings( sequence_id ) {
         },
         error: function(data){
 
-            if (! data.success)
-                alert(data.error);
+            if (data.message != null)
+                alert(data.message);
         },
         success: function(data){
 
-            if (! data.success )
-                alert(data.error);
-            else
-            {
-                setLabels();
+            setLabels();
 
-                // Refresh the sequence post list (include the new post.
-                if (data.result != '')
-                    jQuery('#pmpro_sequence_posts').html(data.result);
-            }
+            // Refresh the sequence post list (include the new post.
+            if (data.html != '')
+                jQuery('#pmpro_sequence_posts').html(data.html);
         },
         complete: function() {
 
