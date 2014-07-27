@@ -61,3 +61,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Added support for pre PHP v5.3 releases. (tentative - not been able to test)
 * Bugfix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
 * Multiple bug fixes and updates.
+* Optimized settings save functionality (one instance of the save functionality).
+* Separated out Javascript & cleaned up AJAX handling for sequence handling, post addition/removal & settings. (Askelon)
+* Started work to support translations (I8N) based on work by Askelon (Charlie Merland)
+* Split admin & user Javascript functionality.
