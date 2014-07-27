@@ -111,6 +111,22 @@ if (! function_exists('pmpro_sequence_admin_scripts')):
     }
 endif;
 
+/**
+ * Load and use L8N based text (if available)
+ */
+if (! function_exists('pmpro_sequence_load_textdomain')):
+
+	add_action("init", "pmpro_sequence_load_textdomain");
+
+	function pmpro_sequence_load_textdomain() {
+
+		$locale = apply_filters("plugin_locale", get_locale(), "pmprosequence");
+		load_textdomain("pmprosequence", trailingslashit( WP_LANG_DIR) . basename( __DIR__) . "/languages/pmpro-sequence-" . $locale . ".mo");
+		load_plugin_textdomain("pmprosequence", FALSE, basename( __DIR__ ) . "/languages/");
+	}
+
+endif;
+
 if (! function_exists('pmpro_sequence_ajaxUnprivError')):
 	/**
 	 * Functions returns error message. Used by nopriv Ajax traps.
@@ -234,14 +250,6 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 				    'html' => null,
 			    )
 		    );
-
-/*	    else
-		    wp_send_json( array(
-			    'success' => false,
-			    'result' => $result['result'],
-			    'error' => $result['error']
-		    ));
-*/
     }
 endif;
 
