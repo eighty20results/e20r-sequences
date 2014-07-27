@@ -890,7 +890,10 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 	        // Instantiate the settings & grab any existing settings if they exist.
 	     ?>
 			<div id="pmpro_sequence_posts">
-			<?php echo $sequence->getPostListForMetaBox()['html']; ?>
+			<?php
+				$box = $sequence->getPostListForMetaBox();
+				echo $box['html'];
+			?>
 			</div>
 			<?php
 		}
