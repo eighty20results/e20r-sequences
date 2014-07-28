@@ -295,7 +295,7 @@ if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 		$result = $sequence->getPostListForMetaBox();
 
 		if ( is_null( $result['message'] ) && is_null( $sequence->getError() ) && ($success)) {
-			$sequence->dbgOut('In Ajax Routine: ' . print_r($result, true));
+			// $sequence->dbgOut('In Ajax Routine: ' . print_r($result, true));
 			wp_send_json($result);
 		}
 		else
