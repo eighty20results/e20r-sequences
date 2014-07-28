@@ -474,7 +474,7 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             action: 'pmpro_save_settings',
             pmpro_sequence_settings_nonce: jQuery('#pmpro_sequence_settings_nonce').val(),
             pmpro_sequence_id: sequence_id,
-            hidden_pmpro_seq_hidden: isHidden(),
+            hidden_pmpro_seq_future: isHidden(),
             hidden_pmpro_seq_lengthvisible: showLength(),
             hidden_pmpro_seq_startwhen: jQuery('#pmpro_sequence_startwhen').val(),
             hidden_pmpro_seq_sortorder: jQuery('#hidden_pmpro_seq_sortorder').val(),
