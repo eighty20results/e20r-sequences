@@ -966,7 +966,7 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 				<th></th>
 				<th></th>
 			</thead>
-			<tbody>
+			<tbody class="pmpro_sequence_postlist">
 			<?php
 			$count = 1;
 

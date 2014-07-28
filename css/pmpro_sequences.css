@@ -123,3 +123,9 @@ input#pmpro_sequence_excerpt {
     height: 16px;
     margin: 5px 5px 0;
 }
+
+.pmpro_sequence_postlist {
+    height: 450px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
