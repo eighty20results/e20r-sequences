@@ -152,7 +152,7 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 	    {
 	        $settings = new stdClass();
 
-	        $settings->hidden =  0; // 'hidden'
+	        $settings->hidden =  0; // 'hidden' (Show them)
 	        $settings->lengthVisible = 1; //'lengthVisible'
 	        $settings->sortOrder = SORT_ASC; // 'sortOrder'
 	        $settings->delayType = 'byDays'; // 'delayType'
@@ -634,8 +634,10 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 		        $this->dbgOut('convertToDays() - Start Date: ' . $startDate);
 		        try {
 
-			        // Use v5.2 and v5.3 compatible function
-			        $days = pmpro_seq_datediff($startDate, current_time('timestamp'));
+			        // Use v5.2 and v5.3 compatible function to calculate difference
+			        $compDate = strtotime($date);
+			        $days = pmpro_seq_datediff($startDate, $compDate); // current_time('timestamp')
+
 
 		        } catch (Exception $e) {
 			        $this->dbgOut('convertToDays() - Error calculating days: ' . $e->getMessage());
@@ -1484,23 +1486,27 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 				?>
 				<ul id="pmpro_sequence-<?php echo $this->id; ?>" class="pmpro_sequence_list">
 				<?php
+					$this->dbgOut('Post count: ' . count($this->posts));
 					foreach($this->posts as $sp)
 					{
 	                    $memberFor = pmpro_getMemberDays();
 
-	                    if ($this->isPastDelay( $memberFor, $sp->delay )) {
+						if ($this->isPastDelay( $memberFor, $sp->delay )):
 	                ?>
 	                    <li>
 	                        <?php $this->dbgOut('Post ' . $sp->id . ' delay: ' . $sp->delay); ?>
 							<span class="pmpro_sequence_item-title"><a href="<?php echo get_permalink($sp->id);?>"><?php echo get_the_title($sp->id);?></a></span>
 							<span class="pmpro_sequence_item-available"><a class="pmpro_btn pmpro_btn-primary" href="<?php echo get_permalink($sp->id);?>"> <?php _e("Available Now", 'pmprosequence'); ?></a></span>
 	                    </li>
-	                    <?php } elseif ( ! ($this->isPastDelay( $memberFor, $sp->delay )) && ( ! $this->hideUpcomingPosts() ) ) { ?>
+	                    <?php elseif ( (! $this->isPastDelay( $memberFor, $sp->delay )) && ( ! $this->hideUpcomingPosts() ) ): ?>
 	                    <li>
+		                    <?php $this->dbgOut('Show future post:' . $sp->id); ?>
 							<span class="pmpro_sequence_item-title"><?php echo get_the_title($sp->id);?></span>
-							<span class="pmpro_sequence_item-unavailable"><?php sprintf( __('available on %s'), ($this->options->delayType == 'byDays' ? __('day', 'pmprosequence') : '')); ?> <?php echo $sp->delay;?></span>
+
+		                    <span class="pmpro_sequence_item-unavailable"><?php echo sprintf( __('available on %s'), ($this->options->delayType == 'byDays' ? __('day', 'pmprosequence') : '')); ?> <?php echo $sp->delay;?></span>
 	                    </li>
-						<?php } ?>
+						<?php endif; ?>
+						<!-- TODO: Add text for when there are no posts shown because they're all hidden (future) & all future posts are to be "hidden" -->
 						<div class="clear"></div>
 					<?php
 					}
@@ -1539,10 +1545,10 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 	            $delayTime = strtotime( $delay . ' 00:00:00.0' );
 	            $this->dbgOut('isPastDelay() - Now = ' . $now . ' and delay time = ' . $delayTime );
 
-	            return ( $now >= $delayTime) ? true : false; // a date specified as the $delay
+	            return ( $now >= $delayTime ? true : false ); // a date specified as the $delay
 	        }
-	        return ( $memberFor >= $delay ) ? true : false;
 
+	        return ( $memberFor >= $delay ? true : false );
 	    }
 
 	    /**
