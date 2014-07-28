@@ -179,15 +179,29 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 	     */
 	    function pmpro_sequence_meta_save( $post_id )
 	    {
+		    global $post;
+
 	        // Check that the function was called correctly. If not, just return
 	        if(empty($post_id)) {
 		        self::dbgOut('pmpro_sequence_meta_save(): No post ID supplied...');
 		        return false;
 	        }
 
+		    self::dbgOut('Attempting to save post meta');
+
+		    if ( wp_is_post_revision( $post_id ) )
+			    return $post_id;
+
+		    if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
+			    return $post_id;
+		    }
+
+		    if ( $post->post_type !== 'pmpro_sequence' )
+			    return $post_id;
+
 		    $sequence = new PMProSequences($post_id);
 
-	        self::dbgOut('pmpro_sequence_meta_save(): About to save settings for sequence ' . $post_id);
+	        self::dbgOut('pmpro_sequence_meta_save(): Saving settings for sequence ' . $post_id);
 	        // self::dbgOut('From Web: ' . print_r($_REQUEST, true));
 
 	        // OK, we're authenticated: we need to find and save the data
@@ -413,11 +427,29 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 	            else {
 
 	                // Bug Fix: Never checked if the Post/Page ID was already listed in the sequence.
-	                if ( !in_array( $this->id, $post_sequence) ) {
+		            $tmp = array_count_values($post_sequence);
+		            $cnt = $tmp[$this->id];
 
-	                    // If not, add it.
+	                if ( $cnt == 0 ) {
+
+	                    // This is the first sequence this post is added to
 	                    $post_sequence[] = $this->id;
 	                    $this->dbgOut('addPost(): Appended post (ID: ' . $temp->id . ') to sequence ' . $this->id);
+
+	                }
+	                else {
+
+		                // Check whether there are repeat entries for the current sequence
+		                if ($cnt > 1) {
+
+			                // There are so get rid of the extras (this is a backward compatibility feature due to a bug.)
+			                $this->dbgOut('addPost() - More than one entry in the array. Clean it up!');
+
+			                $clean = array_unique( $post_sequence );
+
+			                $this->dbgOut('addPost() - Cleaned array: ' . print_r($clean, true));
+			                $post_sequence = $clean;
+		                }
 	                }
 	            }
 
