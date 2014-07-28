@@ -474,14 +474,13 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 	        $seq->dbgOut('optin_save() - Exception error: ' . $e->getMessage());
         }
 
-	    echo json_encode( array(
+	    wp_send_json( array(
 			    'success' => $status,
 			    'result' => $result,
 			    'message' => $seq->getError(),
 		    )
 	    );
 
-        wp_die();
     }
 endif;
 
@@ -562,14 +561,13 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 
 
 	    // header('Content-Type: application/json');
-	    echo json_encode( array(
+	    wp_send_json( array(
 			    'success' => $status,
 			    'result' => $response['result'],
 			    'message' => $sequence->getError(),
 		    )
 	    );
 
-	    wp_die();
     }
 
 
@@ -588,7 +586,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 		$sequenceObj->dbgOut('Saving settings for Sequence w/ID: ' . $sequence_id);
 
 		// $sequenceObj->dbgOut('Pre-Save settings are: ' . print_r($sequenceObj->options, true));
-		$sequenceObj->dbgOut('POST: ' . print_r($_POST, true));
+		// $sequenceObj->dbgOut('POST: ' . print_r($_POST, true));
 
 		// Check that the function was called correctly. If not, just return
 		if(empty($sequence_id)) {
