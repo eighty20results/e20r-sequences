@@ -761,7 +761,7 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
 
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
             if ( intval($sequence->options->lengthVisible) == 1 )
-                $content .= "<p>" . printf( __("You are on day %s of your membership"), intval(pmpro_getMemberDays() ) ) . "</p>";
+                $content .= sprintf("<p>%s</p>", sprintf( __("You are on day %s of your membership", "pmprosequence"), intval(pmpro_getMemberDays()) ));
 
 	        if ( intval($sequence->options->sendNotice) == 1)
 		        $content .= $sequence->pmpro_sequence_addUserNoticeOptIn( $sequence );
@@ -944,7 +944,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                 if($insequence)
                 {
                     //user has one of the sequence levels, find out which one and tell him how many days left
-	                $text = printf( __('This content managed as part of the <a href="%1$s">%2$s</a> sequence <br/>', 'pmprosequence'), get_permalink($post->ID), get_the_title($post->ID) );
+	                $text = sprintf("%s<br/>", sprintf( __("This content managed as part of the <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($post->ID), get_the_title($post->ID)) );
 
 	                switch ($sequence->options->delayType) {
 		                case 'byDays':
@@ -963,19 +963,19 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                     // User has to sign up for one of the sequence(s)
                     if(count($post_sequence) == 1)
                     {
-	                    $text = printf( __('This content is part of the <a href="%1$s">%2$s</a> sequence <br/>', 'pmprosequence'), get_permalink($post_sequence[0]), get_the_title($post_sequence[0]) );
+	                    $text = sprintf("%s<br/>", sprintf( __("This content is part of the <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($post_sequence[0]), get_the_title($post_sequence[0])) );
 	                    // $text = _e('This content is part of the ') . '<a href="' . get_permalink($post_sequence[0]) . '">' . get_the_title($post_sequence[0]) . '</a>' . _e('sequence.');
                     }
                     else
                     {
-                        $text = _e('This content is included and managed by the following sequences: ', 'pmprosequence');
+                        $text = sprintf("%s<br/>", __('This content is included and managed by the following sequences: ', 'pmprosequence'));
                         $seq_links = array();
 
                         foreach($post_sequence as $sequence_id) {
                             $seq_links[] = "<a href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a>";
                         }
 
-                        $text .= implode( _e(" and "), $seq_links) . ".";
+                        $text .= implode( __(" and ", 'pmprosequence'), $seq_links) . ".";
                     }
                 }
             }
