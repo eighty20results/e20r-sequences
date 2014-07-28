@@ -966,14 +966,14 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                     }
                     else
                     {
-                        $text = sprintf("%s<br/>", __('This content is included and managed by the following sequences: ', 'pmprosequence'));
+                        $text = sprintf("<p>%s</p>", __('This content is part of the following sequences: ', 'pmprosequence'));
                         $seq_links = array();
 
                         foreach($post_sequence as $sequence_id) {
-                            $seq_links[] = "<a href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a>";
+                            $seq_links[] = "<p><a href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a></p>";
                         }
 
-                        $text .= implode( __(" and ", 'pmprosequence'), $seq_links) . ".";
+                        $text .= implode( $seq_links);
                     }
                 }
             }
