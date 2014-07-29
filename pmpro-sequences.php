@@ -43,8 +43,8 @@ define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.3.0');
 	Include the class for PMProSequences
 */
 if (! class_exists( 'PMProSequences' )):
-    require_once(dirname(__FILE__) . "/classes/class.pmprosequences.php");
-	require_once(dirname(__FILE__) . "/scheduled/crons.php");
+    require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.pmprosequences.php");
+	require_once(dirname(__FILE__) . DIRECTORY_SEPARATOR ."scheduled" .DIRECTORY_SEPARATOR. "crons.php");
 endif;
 
 /*
@@ -57,7 +57,7 @@ if (! function_exists('pmpro_sequence_scripts')):
 
 	function pmpro_sequence_scripts() {
 
-		wp_register_script('pmpro_sequence_script', plugins_url('js/pmpro-sequences.js',__FILE__), array('jquery'), null, true);
+		wp_register_script('pmpro_sequence_script', plugins_url('js' . DIRECTORY_SEPARATOR . 'pmpro-sequences.js',__FILE__), array('jquery'), null, true);
 
 		wp_localize_script('pmpro_sequence_script', 'pmpro_sequence',
 			array(
@@ -65,7 +65,7 @@ if (! function_exists('pmpro_sequence_scripts')):
 			)
 		);
 
-		wp_enqueue_style("pmpro_sequence_css", plugins_url('css/pmpro_sequences.css',__FILE__ ));
+		wp_enqueue_style("pmpro_sequence_css", plugins_url('css' . DIRECTORY_SEPARATOR . 'pmpro_sequences.css',__FILE__ ));
 		wp_enqueue_script('pmpro_sequence_script');
 	}
 endif;
@@ -79,7 +79,7 @@ if (! function_exists('pmpro_sequence_admin_scripts')):
 	function pmpro_sequence_admin_scripts()
     {
 
-	    wp_register_script('pmpro_sequence_admin_script', plugins_url('js/pmpro-sequences-admin.js',__FILE__), array('jquery'), null, true);
+	    wp_register_script('pmpro_sequence_admin_script', plugins_url('js' . DIRECTORY_SEPARATOR . 'pmpro-sequences-admin.js',__FILE__), array('jquery'), null, true);
 
 	    /* Localize ajax script */
 	    wp_localize_script('pmpro_sequence_admin_script', 'pmpro_sequence',
@@ -121,8 +121,8 @@ if (! function_exists('pmpro_sequence_load_textdomain')):
 	function pmpro_sequence_load_textdomain() {
 
 		$locale = apply_filters("plugin_locale", get_locale(), "pmprosequence");
-		load_textdomain("pmprosequence", trailingslashit( WP_LANG_DIR) . basename( __DIR__) . "/languages/pmpro-sequence-" . $locale . ".mo");
-		load_plugin_textdomain("pmprosequence", FALSE, basename( __DIR__ ) . "/languages/");
+		load_textdomain("pmprosequence", trailingslashit( WP_LANG_DIR) . basename( __DIR__) . DIRECTORY_SEPARATOR . "languages" .DIRECTORY_SEPARATOR ."pmpro-sequence-" . $locale . ".mo");
+		load_plugin_textdomain("pmprosequence", FALSE, basename( __DIR__ ) . DIRECTORY_SEPARATOR . "languages" . DIRECTORY_SEPARATOR);
 	}
 
 endif;

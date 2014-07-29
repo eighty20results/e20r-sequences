@@ -124,8 +124,16 @@ input#pmpro_sequence_excerpt {
     margin: 5px 5px 0;
 }
 
-.pmpro_sequence_postlist {
+/* .pmpro_sequence_postscroll {
+    width: 100%;
+    display: inline-block;
+}
+.pmpro_sequence_postscroll thead {
+    display: inline-block;
+}
+.pmpro_sequence_postscroll tbody {
     height: 450px;
     overflow-y: auto;
     overflow-x: hidden;
 }
+*/

@@ -118,7 +118,8 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 	    {
 	        if (PMPRO_SEQUENCE_DEBUG)
 	        {
-	            $tmpFile = 'sequence_debug_log.txt';
+	            $dbg_loc = dirname( __FILE__ );
+		        $tmpFile = $dbg_loc . DIRECTORY_SEPARATOR . 'sequence_debug_log.txt';
 	            $fh = fopen($tmpFile, 'a');
 	            fwrite($fh, $msg . "\r\n");
 	            fclose($fh);
@@ -805,7 +806,7 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 
 
 			$email->template = $templ[0];
-			$email->body = file_get_contents(plugins_url('email/'. $settings->noticeTemplate, dirname(__FILE__)));
+			$email->body = file_get_contents(plugins_url('email' . DIRECTORY_SEPARATOR . $settings->noticeTemplate, dirname(__FILE__)));
 
 			// All of the array list names are !!<name>!! escaped values.
 
@@ -880,8 +881,8 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 			//add meta boxes
 			if (is_admin())
 			{
-				wp_enqueue_style('pmpros-select2', plugins_url('css/select2.css', dirname(__FILE__)), '', '3.1', 'screen');
-				wp_enqueue_script('pmpros-select2', plugins_url('js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
+				wp_enqueue_style('pmpros-select2', plugins_url('css' . DIRECTORY_SEPARATOR . 'select2.css', dirname(__FILE__)), '', '3.1', 'screen');
+				wp_enqueue_script('pmpros-select2', plugins_url('js' . DIRECTORY_SEPARATOR . 'select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
 
 				add_action('admin_menu', array("PMProSequences", "defineMetaBoxes"));
 	            add_action('save_post', array('PMProSequences', 'pmpro_sequence_meta_save'), 10, 2);
@@ -951,7 +952,7 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 			<?php if(!empty($this->error)) { ?>
 				<div class="message error"><p><?php echo $this->error;?></p></div>
 			<?php } ?>
-			<table id="pmpro_sequencetable" class="wp-list-table widefat fixed">
+			<table id="pmpro_sequencetable" class="pmpro_sequence_postscroll wp-list-table widefat fixed">
 			<thead>
 				<th><?php _e('Order'); ?></th>
 				<th width="50%"><?php _e('Title', 'pmprosequence'); ?></th>
@@ -966,7 +967,7 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 				<th></th>
 				<th></th>
 			</thead>
-			<tbody class="pmpro_sequence_postlist">
+			<tbody>
 			<?php
 			$count = 1;
 
@@ -1467,7 +1468,7 @@ define('PMPRO_SEQUENCE_DEBUG', true);
 			$files = array();
 
 			$this->dbgOut('Directory containing templates: ' . dirname(__DIR__) . '/email/');
-			$templ_dir = dirname(__DIR__) . '/email';
+			$templ_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'email';
 
 			chdir($templ_dir);
 			foreach ( glob('*.html') as $file)
