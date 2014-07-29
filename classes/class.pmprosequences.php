@@ -770,7 +770,7 @@
 		function sendEmail($post_id, $user_id, $seq_id)
 		{
 			$email = new PMProEmail();
-	        $sequence = new PMProSequences($seq_id);
+	        // $sequence = new PMProSequences($seq_id);
 	        $settings = $this->options;
 
 			$user = get_user_by('id', $user_id);
@@ -788,7 +788,15 @@
 
 
 			$email->template = $templ[0];
-			$email->body = file_get_contents(plugins_url('email' . DIRECTORY_SEPARATOR . $settings->noticeTemplate, dirname(__FILE__)));
+
+			$template_file_path = PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'email' . DIRECTORY_SEPARATOR . $settings->noticeTemplate;
+
+			if (false === ($template_content = file_get_contents( $template_file_path) ) ) {
+				dbgOut('sendEmail() - Could not read content from template file: '. $settings->noticeTemplate);
+				return false;
+			}
+
+			$email->body = $template_content;
 
 			// All of the array list names are !!<name>!! escaped values.
 
@@ -810,6 +818,8 @@
 				$email->data['excerpt'] = '';
 
 			$email->sendEmail();
+
+			return true;
 		}
 
 		/*
@@ -863,8 +873,8 @@
 			//add meta boxes
 			if (is_admin())
 			{
-				wp_enqueue_style('pmpros-select2', plugins_url('css' . DIRECTORY_SEPARATOR . 'select2.css', dirname(__FILE__)), '', '3.1', 'screen');
-				wp_enqueue_script('pmpros-select2', plugins_url('js' . DIRECTORY_SEPARATOR . 'select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
+				wp_enqueue_style('pmpros-select2', plugins_url('css' . DIRECTORY_SEPARATOR . 'select2.css', PMPRO_SEQUENCE_PLUGIN_DIR), '', '3.1', 'screen');
+				wp_enqueue_script('pmpros-select2', plugins_url('js' . DIRECTORY_SEPARATOR . 'select2.js', PMPRO_SEQUENCE_PLUGIN_DIR), array( 'jquery' ), '3.1' );
 
 				add_action('admin_menu', array("PMProSequences", "defineMetaBoxes"));
 	            add_action('save_post', array('PMProSequences', 'pmpro_sequence_meta_save'), 10, 2);
@@ -1195,6 +1205,9 @@
 
 	        // dbgOut('pmpro_sequence_settings_meta_box() - Loaded settings: ' . print_r($settings, true));
 
+		    // Buffer the HTML so we can pick it up in a variable.
+		    ob_start();
+
 	        ?>
 	        <div class="submitbox" id="pmpro_sequence_meta">
 	            <div id="minor-publishing">
@@ -1433,6 +1446,11 @@
 	            </div>
 	        </div>
 		<?php
+		    $metabox = ob_get_clean();
+
+		    dbgOut('pmpro_sequence_settings_meta_box() - Display the settings meta.');
+		    // Display the metabox (print it)
+		    echo $metabox;
 	    }
 
 		/**
