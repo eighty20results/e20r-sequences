@@ -7,7 +7,8 @@
 	    public $options;
 	    public $sequence_id = 0;
 		private $id;
-		private $posts;
+		private $posts; // List of posts
+		private $post; // Individual post
 		private $error = null;
 
 		//constructor
@@ -765,6 +766,8 @@
 		 *
 		 * @param $post_id -- ID of post to send email about
 		 * @param $user_id -- ID of user to send the email to.
+		 * @param $seq_id -- ID of sequence to process (not used)
+		 * @return bool - True if sent successfully. False otherwise.
 		 *
 		 */
 		function sendEmail($post_id, $user_id, $seq_id)
@@ -809,6 +812,8 @@
 
 			if(!empty($post->post_excerpt)) {
 
+				dbgOut("Adding the post excerpt to email notice");
+
 	            if ( empty( $settings->excerpt_intro ) )
 	                $settings->excerpt_intro = __('A summary of the post follows below:', 'pmprosequence');
 
@@ -817,9 +822,8 @@
 	        else
 				$email->data['excerpt'] = '';
 
-			$email->sendEmail();
+			return $email->sendEmail();
 
-			return true;
 		}
 
 		/*
@@ -1102,7 +1106,8 @@
 		//this function returns a UL with the current posts
 
 	    /**
-	     * @param $sequence -- The Sequence Settings object (contains settings)
+	     * Adds notification opt-in to list of posts/pages in sequence.
+	     *
 	     * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
 	     */
 	    function pmpro_sequence_addUserNoticeOptIn( )
