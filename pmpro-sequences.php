@@ -40,7 +40,7 @@ define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
 define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.3.0');
 
 /* Set the path to the PMPRO Sequence plugin */
-define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ));
+define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 
 /*
 	Include the class for PMProSequences
@@ -60,7 +60,7 @@ if (! function_exists('pmpro_sequence_scripts')):
 
 	function pmpro_sequence_scripts() {
 
-		wp_register_script('pmpro_sequence_script', plugins_url('js' . DIRECTORY_SEPARATOR . 'pmpro-sequences.js', PMPRO_SEQUENCE_PLUGIN_DIR), array('jquery'), null, true);
+		wp_register_script('pmpro_sequence_script', plugins_url('/js/pmpro-sequences.js', __FILE__), array('jquery'), null, true);
 
 		wp_localize_script('pmpro_sequence_script', 'pmpro_sequence',
 			array(
@@ -68,7 +68,7 @@ if (! function_exists('pmpro_sequence_scripts')):
 			)
 		);
 
-		wp_enqueue_style("pmpro_sequence_css", plugins_url('css' . DIRECTORY_SEPARATOR . 'pmpro_sequences.css', PMPRO_SEQUENCE_PLUGIN_DIR ));
+		wp_enqueue_style("pmpro_sequence_css", plugins_url('/css/pmpro_sequences.css', __FILE__ ));
 		wp_enqueue_script('pmpro_sequence_script');
 	}
 endif;
@@ -82,7 +82,7 @@ if (! function_exists('pmpro_sequence_admin_scripts')):
 	function pmpro_sequence_admin_scripts()
     {
 
-	    wp_register_script('pmpro_sequence_admin_script', plugins_url('js' . DIRECTORY_SEPARATOR . 'pmpro-sequences-admin.js', PMPRO_SEQUENCE_PLUGIN_DIR), array('jquery'), null, true);
+	    wp_register_script('pmpro_sequence_admin_script', plugins_url('/js/pmpro-sequences-admin.js', __FILE__), array('jquery'), null, true);
 
 	    /* Localize ajax script */
 	    wp_localize_script('pmpro_sequence_admin_script', 'pmpro_sequence',
@@ -108,7 +108,7 @@ if (! function_exists('pmpro_sequence_admin_scripts')):
 		    )
 	    );
 
-	    wp_enqueue_style("pmpro_sequence_css", plugins_url('css/pmpro_sequences.css', PMPRO_SEQUENCE_PLUGIN_DIR ));
+	    wp_enqueue_style("pmpro_sequence_css", plugins_url('/css/pmpro_sequences.css', __FILE__ ));
 	    wp_enqueue_script('pmpro_sequence_admin_script');
 
     }
@@ -125,7 +125,7 @@ if (! function_exists('pmpro_sequence_load_textdomain')):
 
 		$locale = apply_filters("plugin_locale", get_locale(), "pmprosequence");
 		load_textdomain("pmprosequence", trailingslashit( WP_LANG_DIR ) . basename( __DIR__) . DIRECTORY_SEPARATOR . "languages" .DIRECTORY_SEPARATOR ."pmpro-sequence-" . $locale . ".mo");
-		load_plugin_textdomain("pmprosequence", FALSE, PMPRO_SEQUENCE_PLUGIN_DIR . "languages" . DIRECTORY_SEPARATOR);
+		load_plugin_textdomain("pmprosequence", FALSE, dirname(__FILE__) . "languages" . DIRECTORY_SEPARATOR);
 	}
 
 endif;
