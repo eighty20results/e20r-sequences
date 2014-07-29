@@ -877,8 +877,8 @@
 			//add meta boxes
 			if (is_admin())
 			{
-				wp_enqueue_style('pmpros-select2', plugins_url('css' . DIRECTORY_SEPARATOR . 'select2.css', PMPRO_SEQUENCE_PLUGIN_DIR), '', '3.1', 'screen');
-				wp_enqueue_script('pmpros-select2', plugins_url('js' . DIRECTORY_SEPARATOR . 'select2.js', PMPRO_SEQUENCE_PLUGIN_DIR), array( 'jquery' ), '3.1' );
+				wp_enqueue_style('pmpros-select2', plugins_url('css/select2.css', dirname(__FILE__)), '', '3.1', 'screen');
+				wp_enqueue_script('pmpros-select2', plugins_url('js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
 
 				add_action('admin_menu', array("PMProSequences", "defineMetaBoxes"));
 	            add_action('save_post', array('PMProSequences', 'pmpro_sequence_meta_save'), 10, 2);
@@ -980,9 +980,9 @@
 				{
 				?>
 					<tr>
-						<td><?php echo $count?>.</td>
-						<td><?php echo get_the_title($post->id)?></td>
-						<td><?php echo $post->delay ?></td>
+						<td class="pmpro_sequence_tblNumber"><?php echo $count?>.</td>
+						<td class="pmpro_sequence_tblPostname"><?php echo get_the_title($post->id)?></td>
+						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay ?></td>
 	                    <?php dbgOut('Sequence entry # ' . $count . ' for post ' . $post->id . ' delayed ' . $this->normalizeDelay($post->delay)); ?>
 						<td>
 							<a href="javascript:pmpro_sequence_editPost('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);">Edit</a>
