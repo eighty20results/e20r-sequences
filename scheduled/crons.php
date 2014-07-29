@@ -50,14 +50,14 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 		{
 			// Grab a sequence object
 			$sequence = new PMProSequences( $s->seq_id );
-			$sequence->dbgOut('Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
+			dbgOut('cron() - Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
 
 			$schedHr = date('H', strtotime($sequence->options->noticeTime));
 
 			// Check whether the Hour (time) is correct. Adjusted for 12 or 24 hour clock.
 			if ( $schedHr != date('H', current_time('timestamp')) ) {
 
-				$sequence->dbgOut('cron() - Not the right time of day. We are done --> Calculated Hour: ' .  $schedHr . ' Current Hour: ' . date('H', current_time('timestamp')));
+				dbgOut('cron() - Not the right time of day. We are done --> Calculated Hour: ' .  $schedHr . ' Current Hour: ' . date('H', current_time('timestamp')));
 				continue;
 			}
 
@@ -71,26 +71,26 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				( empty( $noticeSettings->sequence[ $sequence->sequence_id ]->sendNotice ) &&
 				  ( $sequence->options->sendNotice == 1 ) ) ) {
 
-				$sequence->dbgOut('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
+				dbgOut('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
 
                 // Get all posts belonging to this sequence.
 				$sequence_posts = $sequence->getPosts();
 
-				$sequence->dbgOut("# of posts in sequence (" . count($sequence_posts) . ") vs number of posts we've notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
+				dbgOut("cron() - # of posts in sequence (" . count($sequence_posts) . ") vs number of posts we've notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
 
 				// Iterate through all of the posts in the sequence
 				foreach ( $sequence_posts as $post ) {
 
 					if ($sendCount[$s->user_id] >= PMPRO_SEQUENCE_MAX_EMAILS) {
 
-						$sequence->dbgOut('Send Count exceeds MAX_EMAILS');
+						dbgOut('Send Count exceeds MAX_EMAILS');
 						break;
 					}
 
-					$sequence->dbgOut('Post ID: ' . $post->id .
-					                  ', user ID: ' . $s->user_id .
-					                  ', in_array: ' . ( in_array( $post->id, $noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts, true ) == false ? 'false' : 'true') .
-					                  ', hasAccess: ' . (pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false') );
+					dbgOut('cron() - Post ID: ' . $post->id .
+		                  ', user ID: ' . $s->user_id .
+		                  ', in_array: ' . ( in_array( $post->id, $noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts, true ) == false ? 'false' : 'true') .
+		                  ', hasAccess: ' . (pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false') );
 
 					// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
 					if ( (!empty($post->id)) && pmpro_sequence_hasAccess( $s->user_id, $post->id ) &&
@@ -98,7 +98,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
 						// Send the email notice to the user
 						$sequence->sendEmail( $post->id, $s->user_id, $sequence->sequence_id );
-						$sequence->dbgOut( 'Sent email to user ' . $s->user_id . ' about post ' .
+						dbgOut( 'cron() - Sent email to user ' . $s->user_id . ' about post ' .
 						                   $post->id . ' in sequence: ' . $sequence->sequence_id . '. SendCount = ' . $sendCount[$s->user_id]);
 
 						// Update the sequence metadata that user has been notified
@@ -108,20 +108,20 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 						$sendCount[$s->user_id]++;
 					}
 					else {
-						$sequence->dbgOut( 'User with ID ' . $s->user_id . ' does not need alert for post #' .
-						                   $post->id . ' in sequence ' . $sequence->sequence_id . ' Or the sendCount ('. $sendCount[$s->user_id] .')has been exceeded for now');
+						dbgOut( 'cron() - User with ID ' . $s->user_id . ' does not need alert for post #' .
+			                   $post->id . ' in sequence ' . $sequence->sequence_id . ' Or the sendCount ('. $sendCount[$s->user_id] .')has been exceeded for now');
 
 					} // End of access test.
 
 				} // End foreach for sequence posts
 
 				update_user_meta( $s->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $noticeSettings );
-				$sequence->dbgOut('Updated user meta for the notices');
+				dbgOut('cron() - Updated user meta for the notices');
 
 			} // End if
 			else {
 				// Move on to the next one since this one isn't configured to send notices
-				$sequence->dbgOut( 'cron() - Sequence ' . $s->seq_id . ' is not configured to send notices. Skipping...' );
+				dbgOut( 'cron() - Sequence ' . $s->seq_id . ' is not configured to send notices. Skipping...' );
 			} // End of sendNotice test
 		} // End of data processing loop
 	}
