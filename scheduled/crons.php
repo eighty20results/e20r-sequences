@@ -15,6 +15,9 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
 		// Get all sequences and users associated in the system who _may_ need to be notified
 		if ( empty($sequenceId) || ($sequenceId == 0)) {
+
+			dbgOut('cron() - No Sequence ID specified. Processing for all sequences');
+
 			$sql = $wpdb->prepare("
 				SELECT usrs.*, pgs.page_id AS seq_id
 				FROM $wpdb->pmpro_memberships_users AS usrs
@@ -27,6 +30,9 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 		}
 		// Get the specified sequence and its associated users
 		else {
+
+			dbgOut('cron() - Sequence ID specified in function argument. Processing for sequence: ' . $sequenceId);
+
 			$sql = $wpdb->prepare("
 				SELECT usrs.*, pgs.page_id AS seq_id
 				FROM $wpdb->pmpro_memberships_users AS usrs
@@ -57,13 +63,13 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 			// Check whether the Hour (time) is correct. Adjusted for 12 or 24 hour clock.
 			if ( $schedHr != date('H', current_time('timestamp')) ) {
 
-				dbgOut('cron() - Not the right time of day. We are done --> Calculated Hour: ' .  $schedHr . ' Current Hour: ' . date('H', current_time('timestamp')));
+				dbgOut('cron() - Not the right time of day. Skipping for now! Calculated Hour: ' .  $schedHr . ' Current Hour: ' . date('H', current_time('timestamp')));
 				continue;
 			}
 
 			// Get user specific settings regarding sequence alerts.
 			$noticeSettings = get_user_meta( $s->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
-			// $sequence->dbgOut( 'Notice settings: ' . print_r( $noticeSettings, true ) );
+			// dbgOut( 'Notice settings: ' . print_r( $noticeSettings, true ) );
 
 			// Check if this user wants new content notices/alerts
 			// OR, if they have not opted out, but the admin has set the sequence to allow notices
