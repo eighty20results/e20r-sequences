@@ -175,7 +175,7 @@ if ( ! function_exists('dbgOut') ):
 				}
 			}
 
-			$dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log' . date('Y-m-d') . '.txt';
+			$dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d') . '.txt';
 
 			if ( ($fh = fopen($dbgFile, 'a')) !== false ) {
 
