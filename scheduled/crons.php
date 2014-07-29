@@ -103,15 +103,18 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 					     !in_array( $post->id, $noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts, true ) ) {
 
 						// Send the email notice to the user
-						$sequence->sendEmail( $post->id, $s->user_id, $sequence->sequence_id );
-						dbgOut( 'cron() - Sent email to user ' . $s->user_id . ' about post ' .
-						                   $post->id . ' in sequence: ' . $sequence->sequence_id . '. SendCount = ' . $sendCount[$s->user_id]);
+						if ($sequence->sendEmail( $post->id, $s->user_id, $sequence->sequence_id )) {
 
-						// Update the sequence metadata that user has been notified
-						$noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts[] = $post->id;
+							// Update the sequence metadata that user has been notified
+							$noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts[] = $post->id;
 
-						// Increment send count.
-						$sendCount[$s->user_id]++;
+							// Increment send count.
+							$sendCount[$s->user_id]++;
+
+							dbgOut( 'cron() - Sent email to user ' . $s->user_id . ' about post ' .
+							        $post->id . ' in sequence: ' . $sequence->sequence_id . '. SendCount = ' . $sendCount[ $s->user_id ] );
+						}
+
 					}
 					else {
 						dbgOut( 'cron() - User with ID ' . $s->user_id . ' does not need alert for post #' .
