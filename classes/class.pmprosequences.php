@@ -786,7 +786,7 @@
 			$email->email = $user->user_email;
 			$email->ptitle = $post->post_title;
 
-			$email->subject = printf(__('%1$s: %2$s', 'pmprosequence'), $settings->subject, $post->post_title);
+			$email->subject = sprintf('%s: %s', $settings->subject, $post->post_title);
 			// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
 
 
