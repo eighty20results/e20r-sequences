@@ -102,9 +102,12 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 					if ( (!empty($post->id)) && pmpro_sequence_hasAccess( $s->user_id, $post->id ) &&
 					     !in_array( $post->id, $noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts, true ) ) {
 
+						dbgOut('cron() - Preparing the email message');
+
 						// Send the email notice to the user
 						if ($sequence->sendEmail( $post->id, $s->user_id, $sequence->sequence_id )) {
 
+							dbgOut('cron() - Email was successfully sent');
 							// Update the sequence metadata that user has been notified
 							$noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts[] = $post->id;
 
@@ -114,6 +117,8 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 							dbgOut( 'cron() - Sent email to user ' . $s->user_id . ' about post ' .
 							        $post->id . ' in sequence: ' . $sequence->sequence_id . '. SendCount = ' . $sendCount[ $s->user_id ] );
 						}
+						else
+							dbgOut('cron() - Error sending email message!');
 
 					}
 					else {

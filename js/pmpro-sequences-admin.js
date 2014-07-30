@@ -18,8 +18,8 @@ jQuery(document).ready(function(){
         var $template = $('#pmpro_sequence_template option:selected').val();
         var $alertText = $('#pmpro_sequence_noticetime option:selected').text();
         var $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
-        var dateformatTxt = $('#pmpro_sequence_dateformat option:selected').text();
-        var dateformatVal = $('#pmpro_sequence_dateformat option:selected').val();
+        var $dateformatTxt = $('#pmpro_sequence_dateformat option:selected').text();
+        var $dateformatVal = $('#pmpro_sequence_dateformat option:selected').val();
         var $excerpt = $('#pmpro_sequence_excerpt').val();
         var dateformat = $('pmpro_sequence_dateformat').val();
         var $subject = $('#pmpro_sequence_subject').val();
@@ -32,6 +32,7 @@ jQuery(document).ready(function(){
  //           console.log('Show all notice related variables');
             $('.pmpro-sequence-email').show();
             $('.pmpro-sequence-template').show();
+            $('.pmpro-sequence-dateformat').show();
             $('.pmpro-sequence-noticetime').show();
         }
 
@@ -64,7 +65,7 @@ jQuery(document).ready(function(){
         $('#pmpro-seq-edit-dateformat').click(function(){
             //           console.log('Edit button for delay type clicked');
             $('#pmpro-seq-edit-dateformat').slideToggle();
-            $('#pmpro-seq-delay-dateformat').slideToggle();
+            $('#pmpro-seq-dateformat-select').slideToggle();
         });
 
         /* Save the value for the setting for the 'hide future posts in sequence' checkbox*/
@@ -251,12 +252,12 @@ jQuery(document).ready(function(){
 
         $('#ok-pmpro-seq-dateformat').click(function(){
             //           console.log('OK button for Sort order was clicked');
-            if ( $('#pmpro-seq-dateformat-status option:selected').val != $sortOrder) {
+            if ( $('#pmpro-seq-dateformat-status option:selected').val != $dateformatVal) {
                 /* Save the new sortOrder setting */
-                $sortText = $('#pmpro_sequence_dateformat option:selected').text();
-                $sortOrder = $('#pmpro_sequence_dateformat option:selected').val();
-                $('#pmpro-seq-dateformat-status').text($sortText);
-                $('#hidden_pmpro_seq_dateformat').val($sortOrder);
+                // $dateformatTxt = $('#pmpro_sequence_dateformat option:selected').text();
+                $dateformatVal = $('#pmpro_sequence_dateformat option:selected').val();
+                $('#pmpro-seq-dateformat-status').text('"' + $dateformatVal + '"');
+                $('#hidden_pmpro_seq_dateformat').val($dateformatVal);
 //                console.log('Sort order was changed and is now: ' + $sortText);
             }
             $('#pmpro-seq-dateformat-select').slideToggle();

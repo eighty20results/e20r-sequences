@@ -783,26 +783,28 @@
 			$post = get_post($post_id);
 			$templ = preg_split('/\./', $settings->noticeTemplate); // Parse the template name
 
+			dbgOut('sendEmail() - Setting sender information');
+
 			$email->from = $settings->replyto; // = pmpro_getOption('from_email');
 			$email->fromname = $settings->fromname; // = pmpro_getOption('from_name');
 
 			$email->email = $user->user_email;
 			$email->ptitle = $post->post_title;
 
-
-
 			$email->subject = sprintf('%s: %s', $settings->subject, $post->post_title);
 			// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
-
 
 			$email->template = $templ[0];
 
 			$template_file_path = PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'email' . DIRECTORY_SEPARATOR . $settings->noticeTemplate;
 
+			dbgOut('sendEmail() - Loading template for email message');
 			if (false === ($template_content = file_get_contents( $template_file_path) ) ) {
 				dbgOut('sendEmail() - Could not read content from template file: '. $settings->noticeTemplate);
 				return false;
 			}
+
+			$email->dateformat = $this->options->dateformat;
 
 			$email->body = $template_content;
 
@@ -812,9 +814,10 @@
 				"name" => $user->first_name, // Options are: display_name, first_name, last_name, nickname
 				"sitename" => get_option("blogname"),
 				"post_link" => '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>',
-                'dateformat' => $this->options->dateformat,
+				"today" => date($settings->dateformat, current_time('timestamp')),
 			);
 
+			dbgOut('sendEmail() - Array contains: ' . print_r($email->data, true));
 
 			if(!empty($post->post_excerpt)) {
 
@@ -828,8 +831,10 @@
 	        else
 				$email->data['excerpt'] = '';
 
-			return $email->sendEmail();
 
+			$email->sendEmail();
+
+			return true;
 		}
 
 		/*
@@ -1389,24 +1394,6 @@
 							            <a href="#pmproseq_subject" id="cancel-pmpro-seq-subject" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
 						            </div>
 					            </div>
-                                <div class="pmpro-sequence-dateformat">
-                                    <label for="pmpro-seq-dateformat"><?php _e('Date format:', 'pmprosequence'); ?> </label>
-                                    <span id="pmpro-seq-dateformat-status">"<?php echo ( $settings->dateformat != '' ? esc_attr($settings->dateformat) : 'd-m-Y' ); ?>"</span>
-                                    <a href="#pmpro-seq-dateformat" id="pmpro-seq-edit-dateformat" class="edit-pmpro-seq-dateformat">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Update/Edit format of the !!today!! placeholder', 'pmprosequence'); ?></span>
-                                    </a>
-                                    <div id="pmpro-seq-dateformat-input" style="display: none;">
-                                        <input type="hidden" name="hidden_pmpro_seq_dateformat" id="hidden_pmpro_seq_dateformat" value="<?php ($settings->dateformat != '' ? esc_attr($settings->dateformat) : __('d-m-Y:', 'pmprosequence') ); ?>" />
-                                        <select name="pmpro_sequence_dateformat" id="pmpro_sequence_dateformat">
-                                            <?php echo $sequence->pmpro_sequence_listDateformats( $settings ); ?>
-                                        </select>
-
-                                        <a href="#pmproseq_dateformat" id="ok-pmpro-seq-dateformat" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                        <a href="#pmproseq_dateformat" id="cancel-pmpro-seq-dateformat" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
-                                    </div>
-                                </div>
-
 					            <div class="pmpro-sequence-excerpt">
 						            <label for="pmpro-seq-excerpt"><?php _e('Intro:', 'pmprosequence'); ?> </label>
 						            <span id="pmpro-seq-excerpt-status">"<?php echo ( $settings->excerpt_intro != '' ? esc_attr($settings->excerpt_intro) : __('A summary of the post follows below:', 'pmprosequence') ); ?>"</span>
@@ -1419,6 +1406,23 @@
 							            <input type="text" name="pmpro_sequence_excerpt" id="pmpro_sequence_excerpt" value="<?php ($settings->excerpt_intro != '' ? esc_attr($settings->excerpt_intro) : __('A summary of the post follows below:', 'pmprosequence') ); ?>"/>
 							            <a href="#pmproseq_excerpt" id="ok-pmpro-seq-excerpt" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
 							            <a href="#pmproseq_excerpt" id="cancel-pmpro-seq-excerpt" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+						            </div>
+					            </div>
+					            <div class="pmpro-sequence-dateformat">
+						            <label for="pmpro-seq-dateformat"><?php _e('Date Type:', 'pmprosequence'); ?> </label>
+						            <span id="pmpro-seq-dateformat-status">"<?php echo ( $settings->dateformat != '' ? esc_attr($settings->dateformat) : 'd-m-Y' ); ?>"</span>
+						            <a href="#pmpro-seq-dateformat" id="pmpro-seq-edit-dateformat" class="edit-pmpro-seq-dateformat">
+							            <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
+							            <span class="screen-reader-text"><?php _e('Update/Edit format of the !!today!! placeholder', 'pmprosequence'); ?></span>
+						            </a>
+						            <div id="pmpro-seq-dateformat-select" style="display: none;">
+							            <input type="hidden" name="hidden_pmpro_seq_dateformat" id="hidden_pmpro_seq_dateformat" value="<?php ($settings->dateformat != '' ? esc_attr($settings->dateformat) : __('d-m-Y:', 'pmprosequence') ); ?>" />
+							            <select name="pmpro_sequence_dateformat" id="pmpro_sequence_dateformat">
+								            <?php echo $sequence->pmpro_sequence_listDateformats( $settings ); ?>
+							            </select>
+
+							            <a href="#pmproseq_dateformat" id="ok-pmpro-seq-dateformat" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
+							            <a href="#pmproseq_dateformat" id="cancel-pmpro-seq-dateformat" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
 						            </div>
 					            </div>
 				            </div>
@@ -1493,44 +1497,6 @@
 	    }
 
         /**
-         *
-         * List the available date formats to select from.
-         *
-         * value = valid dateformat
-         * text = dateformat example.
-         *
-         * @param $settings
-         */
-        function pmpro_sequence_listDateformats( $settings ) {
-            ob_start();
-
-            $formats = array(
-                "l, F jS, Y" => "Sunday January 25th, 2014",
-                "l the jS" => "Sunday the 25th",
-                "M. js, " => "Jan. 24th",
-                "M. js, Y" => "Jan. 24th, 2014",
-                "M. js, 'y" => "Jan. 24th, '14",
-                "m-d-Y" => "01-25-2014",
-                "m/d/Y" => "01/25/2014",
-                "m-d-y" => "01-25-14",
-                "m/d/y" => "01/25/14",
-                "d-m-Y" => "25-01-2014",
-                "d/m/Y" => "25/01/2014",
-                "d-m-y" => "25-01-14",
-                "d/m/y" => "25/01/14",
-            );
-
-            foreach ( $formats as $key => $val)
-            {
-                echo('<option value="' . esc_attr($key) . '" ' . selected( esc_attr($settings->dateformat), esc_attr($key) ) . ' >' . esc_attr($val) .'</option>');
-            }
-
-            $selectList = ob_get_clean();
-
-            return $selectList;
-        }
-
-        /**
 		 * List all template files in email directory for this plugin.
 		 *
 		 * @param $settings (stdClass) - The settings for the sequence.
@@ -1590,6 +1556,45 @@
 
             return $selectList;
 		}
+
+        /**
+         *
+         * List the available date formats to select from.
+         *
+         * value = valid dateformat
+         * text = dateformat example.
+         *
+         * @param $settings
+         */
+        function pmpro_sequence_listDateformats( $settings ) {
+            ob_start();
+
+            $formats = array(
+                "l, F jS, Y" => "Sunday January 25th, 2014",
+                "l, F jS," => "Sunday, January 25th,",
+                "l \\t\\h\\e jS" => "Sunday the 25th",
+                "M. js, " => "Jan. 24th",
+                "M. js, Y" => "Jan. 24th, 2014",
+                "M. js, 'y" => "Jan. 24th, '14",
+                "m-d-Y" => "01-25-2014",
+                "m/d/Y" => "01/25/2014",
+                "m-d-y" => "01-25-14",
+                "m/d/y" => "01/25/14",
+                "d-m-Y" => "25-01-2014",
+                "d/m/Y" => "25/01/2014",
+                "d-m-y" => "25-01-14",
+                "d/m/y" => "25/01/14",
+            );
+
+            foreach ( $formats as $key => $val)
+            {
+                echo('<option value="' . esc_attr($key) . '" ' . selected( esc_attr($settings->dateformat), esc_attr($key) ) . ' >' . esc_attr($val) .'</option>');
+            }
+
+            $selectList = ob_get_clean();
+
+            return $selectList;
+        }
 
         /**
          * Fetches the posts associated with this sequence, then generates HTML containing the list.

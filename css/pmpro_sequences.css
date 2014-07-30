@@ -11,6 +11,7 @@
 
 .pmpro-sequence-template,
 .pmpro-sequence-noticetime,
+.pmpro-sequence-dateformat,
 .pmpro-sequence-email,
 #save_pmpro-seq-useroptin {
     display: none;
@@ -20,6 +21,7 @@
 .pmpro-sequence-delaytype label,
 .pmpro-sequence-template label,
 .pmpro-sequence-noticetime label,
+.pmpro-sequence-dateformat label,
 .pmpro-sequence-excerpt label,
 .pmpro-sequence-subject label,
 .pmpro-sequence-email label {
@@ -34,9 +36,6 @@
     font-size: 12px;
     font-weight: bold;
 
-}
-table#newmeta td {
-    vertical-align: middle !important;
 }
 
 span#pmpro-seq-noticetimetz-status {
@@ -60,6 +59,7 @@ span#pmpro-seq-template-status,
 span#pmpro-seq-noticetime-status,
 span#pmpro-seq-fromname-status,
 span#pmpro-seq-replyto-status,
+span#pmpro-seq-dateformat-status,
 span#pmpro-seq-subject-status,
 span#pmpro-seq-excerpt-status {
     display: inline-block;
@@ -79,6 +79,7 @@ span#pmpro-seq-excerpt-status {
 .edit-pmpro-seq-delay,
 .edit-pmpro-seq-template,
 .edit-pmpro-seq-noticetime,
+.edit-pmpro-seq-dateformat,
 .edit-pmpro-seq-email,
 .edit-pmpro-seq-subject,
 .edit-pmpro-seq-excerpt {
@@ -122,6 +123,10 @@ input#pmpro_sequence_excerpt {
     width: 16px;
     height: 16px;
     margin: 5px 5px 0;
+}
+
+table#newmeta td {
+    vertical-align: middle !important;
 }
 
 .pmpro_sequence_postscroll {

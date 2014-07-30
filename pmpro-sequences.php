@@ -1046,14 +1046,16 @@ if ( ! function_exists('pmpro_sequence_email_body')):
 	 *
 	 *  !!excerpt_intro!! --> The introduction to the excerpt (Configure in "Sequence" editor ("Sequence Settings pane")
 	 *  !!lesson_title!! --> The title of the lesson/post we're emailing an alert about.
-	 *  !!today!! --> Today's date (in format '[day], [month][st|rd|th], [year]).
+	 *  !!today!! --> Today's date (in the configured format).
 	 *
 	 * @param $phpmailer -- PMPro Mail object (contains the Body of the message)
 	 */
 	function pmpro_sequence_email_body( $phpmailer )
 	{
+	//	debug('email_body filter() -  Mailer Obj contains: ' . print_r($phpmailer, true));
+
 		$phpmailer->Body = str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body );
-		$phpmailer->Body = str_replace( "!!today!!", date($phpmailer->dateformat, current_time('timestamp')), $phpmailer->Body );
+		// $phpmailer->Body = str_replace( "!!today!!", date($phpmailer->dateformat, current_time('timestamp')), $phpmailer->Body );
 		$phpmailer->Body = str_replace( "!!ptitle!!", $phpmailer->ptitle , $phpmailer->Body );
 
 	}
