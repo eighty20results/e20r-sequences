@@ -1324,7 +1324,7 @@
 						            <div class="pmpro-sequence-fromname">
 							            <label for="pmpro-seq-fromname"><?php _e('Name:', 'pmprosequence'); ?> </label>
 							            <span id="pmpro-seq-fromname-status"><?php _e( ($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name")) ); ?></span>
-							            <a href="#pmpro-seq-fromname" id="pmpro-seq-edit-fromname" class="edit-pmpro-seq-fromname">
+							            <a href="#pmpro-seq-fromname" id="pmpro-seq-edit-fromname" class="pmpro-seq-edit-fromname">
 								            <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
 								            <span class="screen-reader-text"><?php _e('Enter the name to use for the sender of the alert', 'pmprosequence'); ?></span>
 							            </a>
