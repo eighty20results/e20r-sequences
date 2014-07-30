@@ -1500,7 +1500,7 @@
 		 * List all template files in email directory for this plugin.
 		 *
 		 * @param $settings (stdClass) - The settings for the sequence.
-		 *
+		 * @return bool| mixed - HTML containing the Option list
 		 */
 		function pmpro_sequence_listEmailTemplates( $settings )
 		{
@@ -1530,6 +1530,7 @@
 		 * Create list of options for time.
 		 *
 		 * @param $settings -- (array) Sequence specific settings
+		 * @return bool| mixed - HTML containing the Option list
 		 */
 		function pmpro_sequence_createTimeOpts( $settings )
 		{
@@ -1561,10 +1562,11 @@
          *
          * List the available date formats to select from.
          *
-         * value = valid dateformat
-         * text = dateformat example.
+         * key = valid dateformat
+         * value = dateformat example.
          *
-         * @param $settings
+         * @param $settings -- Settings for the sequence
+         * @return bool| mixed - HTML containing the Option list
          */
         function pmpro_sequence_listDateformats( $settings ) {
             ob_start();
