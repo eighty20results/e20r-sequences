@@ -1389,12 +1389,12 @@
 							            <a href="#pmproseq_subject" id="cancel-pmpro-seq-subject" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
 						            </div>
 					            </div>
-                                <div class="pmpro-sequence-dateformatt">
-                                    <label for="pmpro-seq-dateformat"><?php _e('Intro:', 'pmprosequence'); ?> </label>
-                                    <span id="pmpro-seq-dateformat-status">"<?php echo ( $settings->dateformat != '' ? esc_attr($settings->dateformat) : __('d-m-Y', 'pmprosequence') ); ?>"</span>
+                                <div class="pmpro-sequence-dateformat">
+                                    <label for="pmpro-seq-dateformat"><?php _e('Date format:', 'pmprosequence'); ?> </label>
+                                    <span id="pmpro-seq-dateformat-status">"<?php echo ( $settings->dateformat != '' ? esc_attr($settings->dateformat) : 'd-m-Y' ); ?>"</span>
                                     <a href="#pmpro-seq-dateformat" id="pmpro-seq-edit-dateformat" class="edit-pmpro-seq-dateformat">
                                         <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Update/Edit format of the "today" value (date)', 'pmprosequence'); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Update/Edit format of the !!today!! placeholder', 'pmprosequence'); ?></span>
                                     </a>
                                     <div id="pmpro-seq-dateformat-input" style="display: none;">
                                         <input type="hidden" name="hidden_pmpro_seq_dateformat" id="hidden_pmpro_seq_dateformat" value="<?php ($settings->dateformat != '' ? esc_attr($settings->dateformat) : __('d-m-Y:', 'pmprosequence') ); ?>" />
@@ -1503,9 +1503,6 @@
          */
         function pmpro_sequence_listDateformats( $settings ) {
             ob_start();
-            ?>
-            <option value=""></option>
-            <?php
 
             $formats = array(
                 "l, F jS, Y" => "Sunday January 25th, 2014",
