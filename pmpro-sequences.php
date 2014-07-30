@@ -751,7 +751,15 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 		else
 			$sequenceObj->options->fromname = pmpro_getOption('from_name');
 
-		if ( isset($_POST['hidden_pmpro_seq_replyto']) )
+        if ( isset($_POST['hidden_pmpro_seq_dateformat']) )
+        {
+            $sequenceObj->options->dateformat = esc_attr($_POST['hidden_pmpro_seq_dateformat']);
+            dbgOut('pmpro_sequence_settings_save(): POST value for settings->dateformat: ' . esc_attr($_POST['hidden_pmpro_seq_dateformat']) );
+        }
+        else
+            $sequenceObj->options->dateformat = 'm-d-Y';
+
+        if ( isset($_POST['hidden_pmpro_seq_replyto']) )
 		{
 			$sequenceObj->options->replyto = esc_attr($_POST['hidden_pmpro_seq_replyto']);
 			dbgOut('pmpro_sequence_settings_save(): POST value for settings->replyto: ' . esc_attr($_POST['hidden_pmpro_seq_replyto']) );
@@ -1045,7 +1053,7 @@ if ( ! function_exists('pmpro_sequence_email_body')):
 	function pmpro_sequence_email_body( $phpmailer )
 	{
 		$phpmailer->Body = str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body );
-		$phpmailer->Body = str_replace( "!!today!!", date('l, F jS, Y', current_time('timestamp')), $phpmailer->Body );
+		$phpmailer->Body = str_replace( "!!today!!", date($phpmailer->dateformat, current_time('timestamp')), $phpmailer->Body );
 		$phpmailer->Body = str_replace( "!!ptitle!!", $phpmailer->ptitle , $phpmailer->Body );
 
 	}

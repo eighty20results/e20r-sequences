@@ -149,6 +149,7 @@
 		    $settings->replyto = pmpro_getOption("from_email");
 		    $settings->fromname = pmpro_getOption("from_name");
 		    $settings->subject = 'New: ';
+            $settings->dateformat = 'm-d-Y'; // Using American DD-MM-YYYY format.
 
 	        $this->options = $settings; // Save as options for this sequence
 
@@ -788,6 +789,8 @@
 			$email->email = $user->user_email;
 			$email->ptitle = $post->post_title;
 
+
+
 			$email->subject = sprintf('%s: %s', $settings->subject, $post->post_title);
 			// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
 
@@ -808,7 +811,8 @@
 			$email->data = array(
 				"name" => $user->first_name, // Options are: display_name, first_name, last_name, nickname
 				"sitename" => get_option("blogname"),
-				"post_link" => '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>'
+				"post_link" => '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>',
+                'dateformat' => $this->options->dateformat,
 			);
 
 
@@ -1341,7 +1345,7 @@
 						            <div id="pmpro-seq-template-select" style="display: none;">
 							            <input type="hidden" name="hidden_pmpro_seq_noticetemplate" id="hidden_pmpro_seq_noticetemplate" value="<?php echo esc_attr($settings->noticeTemplate); ?>" >
 							            <select name="pmpro_sequence_template" id="pmpro_sequence_template">
-								            <?php $sequence->pmpro_sequence_listEmailTemplates( $settings ); ?>
+								            <?php echo $sequence->pmpro_sequence_listEmailTemplates( $settings ); ?>
 							            </select>
 							            <a href="#pmproseq_template" id="ok-pmpro-seq-template" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
 							            <a href="#pmproseq_template" id="cancel-pmpro-seq-template" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
@@ -1362,7 +1366,7 @@
 					            <div id="pmpro-seq-noticetime-select" style="display: none;">
 						            <input type="hidden" name="hidden_pmpro_seq_noticetime" id="hidden_pmpro_seq_noticetime" value="<?php echo esc_attr($settings->noticeTime); ?>" >
 						            <select name="pmpro_sequence_noticetime" id="pmpro_sequence_noticetime">
-						                <?php $sequence->pmpro_sequence_createTimeOpts( $settings ); ?>
+						                <?php echo $sequence->pmpro_sequence_createTimeOpts( $settings ); ?>
 						            </select>
 						            <a href="#pmproseq_noticetime" id="ok-pmpro-seq-noticetime" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
 						            <a href="#pmproseq_noticetime" id="cancel-pmpro-seq-noticetime" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
@@ -1385,6 +1389,23 @@
 							            <a href="#pmproseq_subject" id="cancel-pmpro-seq-subject" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
 						            </div>
 					            </div>
+                                <div class="pmpro-sequence-dateformatt">
+                                    <label for="pmpro-seq-dateformat"><?php _e('Intro:', 'pmprosequence'); ?> </label>
+                                    <span id="pmpro-seq-dateformat-status">"<?php echo ( $settings->dateformat != '' ? esc_attr($settings->dateformat) : __('d-m-Y', 'pmprosequence') ); ?>"</span>
+                                    <a href="#pmpro-seq-dateformat" id="pmpro-seq-edit-dateformat" class="edit-pmpro-seq-dateformat">
+                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Update/Edit format of the "today" value (date)', 'pmprosequence'); ?></span>
+                                    </a>
+                                    <div id="pmpro-seq-dateformat-input" style="display: none;">
+                                        <input type="hidden" name="hidden_pmpro_seq_dateformat" id="hidden_pmpro_seq_dateformat" value="<?php ($settings->dateformat != '' ? esc_attr($settings->dateformat) : __('d-m-Y:', 'pmprosequence') ); ?>" />
+                                        <select name="pmpro_sequence_dateformat" id="pmpro_sequence_dateformat">
+                                            <?php echo $sequence->pmpro_sequence_listDateformats( $settings ); ?>
+                                        </select>
+
+                                        <a href="#pmproseq_dateformat" id="ok-pmpro-seq-dateformat" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
+                                        <a href="#pmproseq_dateformat" id="cancel-pmpro-seq-dateformat" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    </div>
+                                </div>
 
 					            <div class="pmpro-sequence-excerpt">
 						            <label for="pmpro-seq-excerpt"><?php _e('Intro:', 'pmprosequence'); ?> </label>
@@ -1471,7 +1492,48 @@
 		    echo $metabox;
 	    }
 
-		/**
+        /**
+         *
+         * List the available date formats to select from.
+         *
+         * value = valid dateformat
+         * text = dateformat example.
+         *
+         * @param $settings
+         */
+        function pmpro_sequence_listDateformats( $settings ) {
+            ob_start();
+            ?>
+            <option value=""></option>
+            <?php
+
+            $formats = array(
+                "l, F jS, Y" => "Sunday January 25th, 2014",
+                "l the jS" => "Sunday the 25th",
+                "M. js, " => "Jan. 24th",
+                "M. js, Y" => "Jan. 24th, 2014",
+                "M. js, 'y" => "Jan. 24th, '14",
+                "m-d-Y" => "01-25-2014",
+                "m/d/Y" => "01/25/2014",
+                "m-d-y" => "01-25-14",
+                "m/d/y" => "01/25/14",
+                "d-m-Y" => "25-01-2014",
+                "d/m/Y" => "25/01/2014",
+                "d-m-y" => "25-01-14",
+                "d/m/y" => "25/01/14",
+            );
+
+            foreach ( $formats as $key => $val)
+            {
+                echo('<option value="' . esc_attr($key) . '" ' . selected( esc_attr($settings->dateformat), esc_attr($key) ) . ' >' . esc_attr($val) .'</option>');
+            }
+
+            $selectList = ob_get_clean();
+
+            return $selectList;
+        }
+
+        /**
 		 * List all template files in email directory for this plugin.
 		 *
 		 * @param $settings (stdClass) - The settings for the sequence.
@@ -1479,6 +1541,8 @@
 		 */
 		function pmpro_sequence_listEmailTemplates( $settings )
 		{
+            ob_start();
+
 			?>
 				<!-- Default template (blank) -->
 				<option value=""></option>
@@ -1493,6 +1557,10 @@
 			{
 				echo('<option value="' . sanitize_file_name($file) . '" ' . selected( esc_attr( $settings->noticeTemplate), sanitize_file_name($file) ) . ' >' . sanitize_file_name($file) .'</option>');
 			}
+
+            $selectList = ob_get_clean();
+
+            return $selectList;
 		}
 
 		/**
@@ -1511,6 +1579,8 @@
 			// $minutes    = array_merge($prepend_mins, range(10, 55, 5)); // For debug
 			// $selTime = preg_split('/\:/', $settings->noticeTime);
 
+            ob_start();
+
 			foreach ($hours as $hour) {
 				foreach ($minutes as $minute) {
 					?>
@@ -1518,9 +1588,19 @@
 					<?php
 				}
 			}
+
+            $selectList = ob_get_clean();
+
+            return $selectList;
 		}
 
-		function getPostList($echo = false)
+        /**
+         * Fetches the posts associated with this sequence, then generates HTML containing the list.
+         *
+         * @param bool $echo -- Whether to immediately 'echo' the value or return the HTML to the calling function
+         * @return bool|mixed|string -- The HTML containing the list of posts in the sequence
+         */
+        function getPostList($echo = false)
 		{
 			global $current_user;
 			$this->getPosts();
@@ -1604,6 +1684,8 @@
 
 	    /**
 	     * Test whether to show future sequence posts (i.e. not yet available to member)
+         *
+         * @returns bool -- True if the admin has requested that unavailable posts not be displayed.
 	     */
 	    public function hideUpcomingPosts()
 	    {

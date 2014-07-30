@@ -6,7 +6,10 @@
 jQuery.noConflict();
 jQuery(document).ready(function(){
     (function($){
-        /* Get the current sortOrder values */
+
+        /* Controls that are reused (optimization) */
+
+        /* Get the current values */
         var $sortOrder = $('#pmpro_sequence_sortorder option:selected').val();
         var $sortText = $('#pmpro_sequence_sortorder option:selected').text();
         var $delayText = $('#pmpro_sequence_delaytype option:selected').text();
@@ -15,7 +18,10 @@ jQuery(document).ready(function(){
         var $template = $('#pmpro_sequence_template option:selected').val();
         var $alertText = $('#pmpro_sequence_noticetime option:selected').text();
         var $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
+        var dateformatTxt = $('#pmpro_sequence_dateformat option:selected').text();
+        var dateformatVal = $('#pmpro_sequence_dateformat option:selected').val();
         var $excerpt = $('#pmpro_sequence_excerpt').val();
+        var dateformat = $('pmpro_sequence_dateformat').val();
         var $subject = $('#pmpro_sequence_subject').val();
         var $fromname = $('#pmpro_sequence_fromname').val();
         var $replyto = $('#pmpro_sequence_replyto').val();
@@ -52,6 +58,13 @@ jQuery(document).ready(function(){
             $('.pmpro-sequence-template').slideToggle();
             $('.pmpro-sequence-noticetime').slideToggle();
             $('.pmpro-sequence-email').slideToggle();
+        });
+
+        /* Admin clicked the 'Edit' button for the delayType settings. Show the select field & hide the "edit" button */
+        $('#pmpro-seq-edit-dateformat').click(function(){
+            //           console.log('Edit button for delay type clicked');
+            $('#pmpro-seq-edit-dateformat').slideToggle();
+            $('#pmpro-seq-delay-dateformat').slideToggle();
         });
 
         /* Save the value for the setting for the 'hide future posts in sequence' checkbox*/
@@ -140,6 +153,18 @@ jQuery(document).ready(function(){
         });
 
         /**
+         * Admin clicked the 'Cancel' button for the date format edit settings. Reset
+         * the value of the label & select, then hide everything again.
+         */
+        $('#cancel-pmpro-seq-dateformat').click(function(){
+//            console.log('Cancel button to set date format was clicked');
+            // $('#pmpro_sequence_dateformat').getAttribute('hidden_pmpro_seq_sortorder');
+            $('#pmpro-seq-dateformat-select').slideToggle();
+            $('#pmpro-seq-edit-dateformat').slideToggle();
+
+        });
+
+        /**
          * Admin clicked the 'Cancel' button for the New content alert Template edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
@@ -222,6 +247,20 @@ jQuery(document).ready(function(){
             }
             $('#pmpro-seq-template-select').slideToggle();
             $('#pmpro-seq-edit-template').slideToggle();
+        });
+
+        $('#ok-pmpro-seq-dateformat').click(function(){
+            //           console.log('OK button for Sort order was clicked');
+            if ( $('#pmpro-seq-dateformat-status option:selected').val != $sortOrder) {
+                /* Save the new sortOrder setting */
+                $sortText = $('#pmpro_sequence_dateformat option:selected').text();
+                $sortOrder = $('#pmpro_sequence_dateformat option:selected').val();
+                $('#pmpro-seq-dateformat-status').text($sortText);
+                $('#hidden_pmpro_seq_dateformat').val($sortOrder);
+//                console.log('Sort order was changed and is now: ' + $sortText);
+            }
+            $('#pmpro-seq-dateformat-select').slideToggle();
+            $('#pmpro-seq-edit-dateformat').slideToggle();
         });
 
         $('#ok-pmpro-seq-noticetime').click(function(){
@@ -493,6 +532,7 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_fromname: jQuery('#hidden_pmpro_seq_fromname').val(),
             hidden_pmpro_seq_replyto: jQuery('#hidden_pmpro_seq_replyto').val(),
             hidden_pmpro_seq_excerpt: jQuery('#hidden_pmpro_seq_excerpt').val(),
+            hidden_pmpro_seq_dateformat: jQuery('#hidden_pmpro_seq_dateformat').val(),
             hidden_pmpro_seq_subject: jQuery('#hidden_pmpro_seq_subject').val(),
             hidden_pmpro_seq_wipesequence: jQuery('#hidden_pmpro_seq_wipesequence').val()
         },
