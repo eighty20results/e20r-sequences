@@ -1269,7 +1269,7 @@
 				                </a>
 				                <div id="pmpro-seq-delay-select" style="display: none;">
 					                <input type="hidden" name="hidden_pmpro_seq_delaytype" id="hidden_pmpro_seq_delaytype" value="<?php echo esc_attr($settings->delayType); ?>" >
-					                <select name="pmpro_sequence_delaytype" id="pmpro_sequence_delaytype">
+					                <select onchange="javascript:pmpro_sequence_delayTypeChange(<?php echo $sequence->sequence_id; ?>); return false;" name="pmpro_sequence_delaytype" id="pmpro_sequence_delaytype">
 						                <option value="byDays" <?php selected( $settings->delayType, 'byDays'); ?> ><?php _e('Days since sign-up', 'pmprosequence'); ?></option>
 						                <option value="byDate" <?php selected( $settings->delayType, 'byDate'); ?> ><?php _e('A specific date', 'pmprosequence'); ?></option>
 					                </select>

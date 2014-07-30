@@ -606,7 +606,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 	    // header('Content-Type: application/json');
 	    wp_send_json( array(
 			    'success' => $status,
-			    'result' => $response['result'],
+			    'html' => $response['html'],
 			    'message' => $sequence->getError(),
 		    )
 	    );
