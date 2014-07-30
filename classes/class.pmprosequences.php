@@ -962,6 +962,7 @@
 	            <?php endif; ?>
 				<th></th>
 				<th></th>
+				<th></th>
 			</thead>
 			<tbody>
 			<?php
@@ -984,11 +985,12 @@
 						<td class="pmpro_sequence_tblPostname"><?php echo get_the_title($post->id)?></td>
 						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay ?></td>
 	                    <?php dbgOut('Sequence entry # ' . $count . ' for post ' . $post->id . ' delayed ' . $this->normalizeDelay($post->delay)); ?>
+						<td><a href="javascript:pmpro_sequence_editPost('<?php echo $post->id; ?>'); void(0); "><?php _e('Edit','pmprosequence'); ?></a></td>
 						<td>
-							<a href="javascript:pmpro_sequence_editPost('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);">Edit</a>
+							<a href="javascript:pmpro_sequence_editEntry('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);"><?php _e('Update', 'pmprosequence'); ?></a>
 						</td>
 						<td>
-							<a href="javascript:pmpro_sequence_removePost('<?php echo $post->id;?>'); void(0);">Remove</a>
+							<a href="javascript:pmpro_sequence_removeEntry('<?php echo $post->id;?>'); void(0);"><?php _e('Remove', 'pmprosequence'); ?></a>
 						</td>
 					</tr>
 				<?php
@@ -1044,7 +1046,7 @@
 								<?php wp_nonce_field('pmpro-sequence-add-post', 'pmpro_sequence_addpost_nonce'); ?>
 								<?php wp_nonce_field('pmpro-sequence-rm-post', 'pmpro_sequence_rmpost_nonce'); ?>
 							</td>
-							<td><a class="button" id="pmpro_sequencesave" onclick="javascript:pmpro_sequence_addPost(); return false;"><?php _e('Update Sequence', 'pmprosequence'); ?></a></td>
+							<td><a class="button" id="pmpro_sequencesave" onclick="javascript:pmpro_sequence_addEntry(); return false;"><?php _e('Update Sequence', 'pmprosequence'); ?></a></td>
 						</tr>
 					</tbody>
 				</table>

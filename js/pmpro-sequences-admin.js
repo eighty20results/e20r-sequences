@@ -342,7 +342,7 @@ function formatTime($h_24) {
     return ($h < 10 ? "0" + $h : $h) + ":" + $time[1] + ($h_24 < 12 ? ' AM' : ' PM');
 }
 
-function pmpro_sequence_addPost() {
+function pmpro_sequence_addEntry() {
 
     if ('' == jQuery('#pmpro_sequence_post').val() || undefined != jQuery('#pmpro_sequencesave').attr('disabled'))
         return false; //already processing, ignore this request
@@ -383,7 +383,15 @@ function pmpro_sequence_addPost() {
     });
 }
 
-function pmpro_sequence_editPost(post_id, delay)
+function pmpro_sequence_editPost(post_id) {
+    var win = window.open('/wp-admin/post.php?post=' + post_id + '&action=edit', '_blank');
+    if (win)
+        win.focus();
+    else
+        alert('Your browser settings prevents this action. You need to allow pop-ups');
+}
+
+function pmpro_sequence_editEntry(post_id, delay)
 {
     jQuery('#newmeta').focus();
     jQuery('#pmpro_sequencepost').val(post_id).trigger("change");
@@ -391,7 +399,7 @@ function pmpro_sequence_editPost(post_id, delay)
     jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.save);
 }
 
-function pmpro_sequence_removePost(post_id)
+function pmpro_sequence_removeEntry(post_id)
 {
     jQuery('#pmpro_sequencesave').attr('disabled', 'disabled');
     // jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.saving);
