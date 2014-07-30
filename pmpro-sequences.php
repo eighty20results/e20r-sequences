@@ -757,7 +757,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
             dbgOut('pmpro_sequence_settings_save(): POST value for settings->dateformat: ' . esc_attr($_POST['hidden_pmpro_seq_dateformat']) );
         }
         else
-            $sequenceObj->options->dateformat = 'm-d-Y';
+            $sequenceObj->options->dateformat = 'd-m-Y'; // Default is Day-Month-Year
 
         if ( isset($_POST['hidden_pmpro_seq_replyto']) )
 		{
