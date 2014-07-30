@@ -219,7 +219,6 @@
 		/**
 		 * Update the when we're supposed to run the New Content Notice cron job for this sequence.
 	     *
-	     * @param $sequence -- stdObject - PMPro Sequence Object
 		 */
 		function updateNoticeCron()
 		{
@@ -450,6 +449,9 @@
 
 	    /**
 	     * Validates that the value received follows a valid "delay" format for the post/page sequence
+	     *
+	     * @param $delay (string) - The specified post delay value
+	     * @returns bool - Delay is recognized (parsable).
 	     */
 	    public function isValidDelay( $delay )
 	    {
@@ -834,10 +836,11 @@
 		{
 			//don't want to do this when deactivating
 			global $pmpro_sequencedeactivating;
+
 			if(!empty($pmpro_sequencedeactivating))
 				return false;
 
-			register_post_type('pmpro_sequence',
+			$error = register_post_type('pmpro_sequence',
 					array(
 							'labels' => array(
 	                                'name' => __( 'Sequences', 'pmprosequence'  ),
@@ -870,6 +873,14 @@
 					'has_archive' => 'sequences'
 				)
 			);
+
+			if (! is_wp_error($error) )
+				return true;
+			else {
+				dbgOut('Error creating post type: ' . $error->get_error_message());
+				wp_die($error->get_error_message());
+				return false;
+			}
 		}
 
 		function checkForMetaBoxes()
