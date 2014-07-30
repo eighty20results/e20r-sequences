@@ -9,26 +9,42 @@ jQuery(document).ready(function(){
 
         /* Controls that are reused (optimization) */
 
+        /* Select */
+        var $sendAlertCtl   = $('#pmpro_sequence_sendnotice');
+        var $sortOrderCtl   = $('#pmpro_sequence_sortorder');
+        var $delayCtl       = $('#pmpro_sequence_delaytype');
+        var $templCtl       = $('#pmpro_sequence_template');
+        var $timeCtl        = $('#pmpro_sequence_noticetime');
+        var $dateCtl        = $('#pmpro_sequence_dateformat');
+
+        /* Input */
+        var $excerptCtl     = $('#pmpro_sequence_excerpt');
+        var $subjCtl        = $('#pmpro_sequence_subject');
+        var $fromCtl        = $('#pmpro_sequence_fromname');
+        var $replyCtl       = $('#pmpro_sequence_replyto');
+
+        console.log('Sort Order on load: ' + $sortOrderCtl.find('option:selected').val());
+
         /* Get the current values */
-        var $sortOrder = $('#pmpro_sequence_sortorder option:selected').val();
-        var $sortText = $('#pmpro_sequence_sortorder option:selected').text();
-        var $delayText = $('#pmpro_sequence_delaytype option:selected').text();
-        var $delayType = $('#pmpro_sequence_delaytype option:selected').val();
-        var $templateName = $('#pmpro_sequence_template option:selected').text();
-        var $template = $('#pmpro_sequence_template option:selected').val();
-        var $alertText = $('#pmpro_sequence_noticetime option:selected').text();
-        var $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
-        var $dateformatTxt = $('#pmpro_sequence_dateformat option:selected').text();
-        var $dateformatVal = $('#pmpro_sequence_dateformat option:selected').val();
-        var $excerpt = $('#pmpro_sequence_excerpt').val();
-        var dateformat = $('pmpro_sequence_dateformat').val();
-        var $subject = $('#pmpro_sequence_subject').val();
-        var $fromname = $('#pmpro_sequence_fromname').val();
-        var $replyto = $('#pmpro_sequence_replyto').val();
+        var $sortOrder = $sortOrderCtl.find('option:selected').val();
+        var $sortText = $sortOrderCtl.find('option:selected').text();
+        var $delayText = $delayCtl.find('option:selected').text();
+        var $delayType = $delayCtl.find('option:selected').val();
+        var $templateName = $templCtl.find('option:selected').text();
+        var $template = $templCtl.find('option:selected').val();
+        var $alertText = $timeCtl.find('option:selected').text();
+        var $alertTime = $timeCtl.find('option:selected').val();
+        var $dateformatTxt = $dateCtl.find('option:selected').text();
+        var $dateformatVal = $dateCtl.find('option:selected').val();
+
+        var $excerpt = $excerptCtl.val();
+        var $subject = $subjCtl.val();
+        var $fromname = $fromCtl.val();
+        var $replyto = $replyCtl.val();
 
         // console.log('Sort Order is: ' + jQuery('#pmpro_sequence_sortorder option:selected').text());
 
-        if ( $('#pmpro_sequence_sendnotice').is(':checked') ) {
+        if ( $sendAlertCtl.is(':checked') ) {
  //           console.log('Show all notice related variables');
             $('.pmpro-sequence-email').show();
             $('.pmpro-sequence-template').show();
@@ -53,7 +69,7 @@ jQuery(document).ready(function(){
         });
 
         /* Show/Hide the alert template information */
-        $('#pmpro_sequence_sendnotice').click(function(){
+        $sendAlertCtl.click(function(){
  //           console.log('Checkbox to allow sending notice clicked');
             $('#hidden_pmpro_seq_sendnotice').val( this.checked ? 1 : 0 );
             $('.pmpro-sequence-template').slideToggle();
@@ -135,7 +151,7 @@ jQuery(document).ready(function(){
          */
         $('#cancel-pmpro-seq-delay').click(function(){
 //            console.log('Cancel button for Delay type was clicked');
-            // $('#pmpro_sequence_delaytype').getAttribute('hidden_pmpro_seq_delaytype');
+            // $delayCtl.getAttribute('hidden_pmpro_seq_delaytype');
             $('#pmpro-seq-delay-select').slideToggle();
             $('#pmpro-seq-edit-delay').slideToggle();
 
@@ -205,41 +221,84 @@ jQuery(document).ready(function(){
 
         });
 
-
-
         /** OK button events **/
+
         $('#ok-pmpro-seq-sort').click(function(){
+
  //           console.log('OK button for Sort order was clicked');
-            if ( $('#pmpro-seq-sort-status option:selected').val != $sortOrder) {
-                /* Save the new sortOrder setting */
-                $sortText = $('#pmpro_sequence_sortorder option:selected').text();
-                $sortOrder = $('#pmpro_sequence_sortorder option:selected').val();
+            var $hCtl = $('#hidden_pmpro_seq_sortorder');
+
+            configSelected(
+                $sortOrderCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-sort-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-sort'),
+                $('#pmpro-seq-sort-select')
+            );
+/*
+            if ( sortOrderCtl.find('option:selected').val() != $sortOrder) {
+
+                // Save the new sortOrder setting
+                $sortText = sortOrderCtl.find('option:selected').text();
+                $sortOrder = sortOrderCtl.find('option:selected').val();
+
                 $('#pmpro-seq-sort-status').text($sortText);
                 $('#hidden_pmpro_seq_sortorder').val($sortOrder);
-//                console.log('Sort order was changed and is now: ' + $sortText);
             }
+            // Hide the select info and enable the edit button.
             $('#pmpro-seq-sort-select').slideToggle();
             $('#pmpro-seq-edit-sort').slideToggle();
+            */
         });
 
         $('#ok-pmpro-seq-delay').click(function(){
-//            console.log('OK button for delay type was clicked');
-            if ( $('#pmpro-seq-delay-status option:selected').val != $delayType) {
-                /* Save the new sortOrder setting */
-                $delayText = $('#pmpro_sequence_delaytype option:selected').text();
-                $delayType = $('#pmpro_sequence_delaytype option:selected').val();
+
+            var $hCtl = $('#hidden_pmpro_seq_delaytype');
+
+            configSelected(
+                $delayCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-delay-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-delay'),
+                $('#pmpro-seq-delay-select')
+            );
+
+            /*
+            if ( $delayCtl.find('option:selected').val() != $delayType) {
+
+                // Save the new sortOrder setting
+                $delayText = $delayCtl.find('option:selected').text();
+                $delayType = $delayCtl.find('option:selected').val();
+
                 $('#pmpro-seq-delay-status').text($delayText);
                 $('#hidden_pmpro_seq_delaytype').val($delayType);
-//                console.log('Sort order was changed and is now: ' + $delayText);
             }
+
+            // Hide the select info and enable the edit button.
             $('#pmpro-seq-delay-select').slideToggle();
             $('#pmpro-seq-edit-delay').slideToggle();
+            */
         });
 
         $('#ok-pmpro-seq-template').click(function(){
+
+            var $hCtl = $('#hidden_pmpro_seq_noticetemplate');
+
+            configSelected(
+                $templCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-template-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-template'),
+                $('#pmpro-seq-template-select')
+            );
+
+            /*
 //            console.log('OK button for template was clicked');
-            if ( $('#pmpro-seq-template-status option:selected').val != $template) {
-                /* Save the new sortOrder setting */
+            if ( $('#pmpro-seq-template-status option:selected').val() != $template) {
+                // Save the new sortOrder setting
                 $templateName = $('#pmpro_sequence_template option:selected').text();
                 $template = $('#pmpro_sequence_template option:selected').val();
                 $('#pmpro-seq-template-status').text($templateName);
@@ -248,12 +307,26 @@ jQuery(document).ready(function(){
             }
             $('#pmpro-seq-template-select').slideToggle();
             $('#pmpro-seq-edit-template').slideToggle();
+            */
         });
 
         $('#ok-pmpro-seq-dateformat').click(function(){
+
+            var $hCtl = $('#hidden_pmpro_seq_dateformat');
+
+            configSelected(
+                $dateCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-dateformat-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-dateformat'),
+                $('#pmpro-seq-dateformat-select')
+            );
+
+            /*
             //           console.log('OK button for Sort order was clicked');
-            if ( $('#pmpro-seq-dateformat-status option:selected').val != $dateformatVal) {
-                /* Save the new sortOrder setting */
+            if ( $('#pmpro-seq-dateformat-status option:selected').val() != $dateformatVal) {
+                // Save the new sortOrder setting
                 // $dateformatTxt = $('#pmpro_sequence_dateformat option:selected').text();
                 $dateformatVal = $('#pmpro_sequence_dateformat option:selected').val();
                 $('#pmpro-seq-dateformat-status').text('"' + $dateformatVal + '"');
@@ -262,12 +335,26 @@ jQuery(document).ready(function(){
             }
             $('#pmpro-seq-dateformat-select').slideToggle();
             $('#pmpro-seq-edit-dateformat').slideToggle();
+            */
         });
 
         $('#ok-pmpro-seq-noticetime').click(function(){
+
+            var $hCtl = $('#hidden_pmpro_seq_noticetime');
+
+            configSelected(
+                $timeCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-noticetime-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-noticetime'),
+                $('#pmpro-seq-noticetime-select')
+            );
+
+            /*
 //            console.log('OK button for alert notice time was clicked');
-            if ( $('#pmpro-seq-noticetime-status option:selected').val != $alertTime) {
-                /* Save the new sortOrder setting */
+            if ( $('#pmpro-seq-noticetime-status option:selected').val() != $alertTime) {
+                // Save the new sortOrder setting
                 $alertText = $('#pmpro_sequence_noticetime option:selected').text();
                 $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
                 $('#pmpro-seq-noticetime-status').text($alertText);
@@ -276,25 +363,41 @@ jQuery(document).ready(function(){
             }
             $('#pmpro-seq-noticetime-select').slideToggle();
             $('#pmpro-seq-edit-noticetime').slideToggle();
+            */
         });
 
         $('#ok-pmpro-seq-excerpt').click(function(){
-//            console.log('OK button for Excerpt Intro was clicked');
-            if ( $('#pmpro_sequence_excerpt').val != $excerpt) {
-                /* Save the new excerpt info */
-                $excerpt = $('#pmpro_sequence_excerpt').val();
-                $('#hidden_pmpro_seq_excerpt').val($excerpt);
-                $('#pmpro-seq-excerpt-status').text('"' + $excerpt + '"');
-//                console.log('Content of Excerpt Intro was changed and is now: ' + $excerpt);
-            }
-            $('#pmpro-seq-excerpt-input').slideToggle();
-            $('#pmpro-seq-edit-excerpt').slideToggle();
+
+            var $hCtl = $('#hidden_pmpro_seq_excerpt');
+
+            configInput(
+                $excerptCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-excerpt-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-excerpt'),
+                $('#pmpro-seq-excerpt-input')
+            );
+
         });
 
         $('#ok-pmpro-seq-subject').click(function(){
+
+            var $hCtl = $('#hidden_pmpro_seq_subject');
+
+            configInput(
+                $subjCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-subject-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-subject'),
+                $('#pmpro-seq-subject-input')
+            );
+
+            /*
 //            console.log('OK button for Subject Intro was clicked');
-            if ( $('#pmpro_sequence_subject').val != $subject) {
-                /* Save the new excerpt info */
+            if ( $('#pmpro_sequence_subject').val() != $subject) {
+                // Save the new excerpt info
                 $subject = $('#pmpro_sequence_subject').val();
                 $('#hidden_pmpro_seq_subject').val($subject);
                 $('#pmpro-seq-subject-status').text('"' + $subject + '"');
@@ -302,24 +405,32 @@ jQuery(document).ready(function(){
             }
             $('#pmpro-seq-subject-input').slideToggle();
             $('#pmpro-seq-edit-subject').slideToggle();
+            */
         });
 
         $('#ok-pmpro-seq-email').click(function(){
- //           console.log('An OK button for email settings was clicked');
-            if ( ( $('#pmpro_sequence_fromname').val != $fromname)  ||
-                 ( $('#pmpro_sequence_replyto').val() != $replyto) ) {
-                /* Save the new excerpt info */
-                $fromname = $('#pmpro_sequence_fromname').val();
-                $replyto = $('#pmpro_sequence_replyto').val();
-                $('#hidden_pmpro_seq_fromname').val($fromname);
-                $('#hidden_pmpro_seq_replyto').val($replyto);
-                $('#pmpro-seq-fromname-status').text('"' + $fromname + '"');
-                $('#pmpro-seq-replyto-status').text('"' + $replyto + '"');
- //               console.log('Content of email settings was changed and is now: ' + $fromname + ' and ' + $replyto);
+
+            // Declare variables we need/want
+            var $newfrom;
+            var $newreply;
+
+            // Check whether the settings have been changed
+            if ( ( ($newfrom = $('#pmpro_sequence_fromname').val()) != $fromname)  ||
+                 ( ($newreply = $('#pmpro_sequence_replyto').val()) != $replyto) )
+            {
+
+                $('#hidden_pmpro_seq_fromname').val($newfrom);
+                $('#hidden_pmpro_seq_replyto').val($newreply);
+
+                $('#pmpro-seq-fromname-status').text('"' + $newfrom + '"');
+                $('#pmpro-seq-replyto-status').text('"' + $newreply + '"');
             }
+
+            // Toogle visibility of related edit buttons and input fields
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
             $('#pmpro-seq-edit-fromname').slideToggle();
+
         });
 
     })(jQuery);
@@ -372,6 +483,61 @@ function showLength()
     }
     else
         return 0;
+}
+
+/**
+ *
+ * Will update the hidden input field for the setting & toggle visible/invisible controls as needed.
+ *
+ * @param $selectCtl -- jQuery control for selected item ( jQuery('#id').find('option:selected') )
+ * @param $oldValue -- Contains original configured value for this setting
+ * @param $statusCtl -- The displayed text for the setting
+ * @param $hiddenCtl -- Hidden input field containing actual setting value
+ * @param $editBtn -- The 'Edit' button
+ * @param $selCtl -- The '<select><option>' (normally hidden unless it's being edited)
+ */
+function configSelected( $selectCtl, $oldValue, $statusCtl, $hiddenCtl, $editBtn, $selCtl) {
+
+    /* Check whether the setting has changed */
+    var $val;
+
+    if ( ($val = $selectCtl.find('option:selected').val()) != $oldValue ) {
+
+        /* Save the new text (for label) */
+        var $text = $selectCtl.find('option:selected').text();
+
+        $statusCtl.text($text); // Displayed setting value in label
+        $hiddenCtl.val($val); // Set the value='' for the hidden input field
+    }
+
+    $selCtl.slideToggle(); // Hide the Input field + OK & Cancel buttons
+    $editBtn.slideToggle(); // Show edit button again
+}
+
+/**
+ * Will update the hidden input field for the specific setting and toggle visible/invisible controls as needed
+ *
+ * @param $inputCtl -- jQuery control for the Input field
+ * @param $oldValue -- Value stored in settings (hidden field). Saved setting.
+ * @param $statusCtl -- The displayed text for this setting
+ * @param $hiddenCtl -- Hidden input field control (contains setting value)
+ * @param $editBtn -- Edit button
+ * @param $inpCtl -- The hidden (editable) input, OK and Cancel form entries
+ */
+function configInput( $inputCtl, $oldValue, $statusCtl, $hiddenCtl, $editBtn, $inpCtl ) {
+
+    var $val;
+
+    // Only update if the new value is different from the current (may not yet be saved) setting.
+    if ( ( $val = $inputCtl.val() ) != $oldValue) {
+
+        $hiddenCtl.val($val);
+        $statusCtl.text('"' + $val + '"');
+    }
+
+    $inpCtl.slideToggle(); // Hide the Input field + OK & Cancel buttons
+    $editBtn.slideToggle(); // Show edit button again
+
 }
 
 function formatTime($h_24) {
