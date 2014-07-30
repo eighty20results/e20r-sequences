@@ -1052,7 +1052,7 @@ if ( ! function_exists('pmpro_sequence_email_body')):
 	 */
 	function pmpro_sequence_email_body( $phpmailer )
 	{
-	//	debug('email_body filter() -  Mailer Obj contains: ' . print_r($phpmailer, true));
+	//	dbgOut('email_body filter() -  Mailer Obj contains: ' . print_r($phpmailer, true));
 
 		$phpmailer->Body = str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body );
 		// $phpmailer->Body = str_replace( "!!today!!", date($phpmailer->dateformat, current_time('timestamp')), $phpmailer->Body );
