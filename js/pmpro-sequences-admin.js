@@ -473,13 +473,15 @@ function isHidden()
 }
 function showLength()
 {
-    var lengthVisible = jQuery('input#pmpro_sequence_lengthvisible').val();
+    var lvCtl = jQuery('input#pmpro_sequence_lengthvisible');
+
+    // var lengthVisible = lvCtl.val();
 //    console.log('lengthVisible checkbox value: ' + lengthVisible);
 
-    if ( jQuery('#pmpro_sequence_lengthvisible').is(":checked"))
+    if ( lvCtl.is(":checked"))
     {
 //        console.log('lengthVisible setting is checked');
-        return jQuery('input#pmpro_sequence_lengthvisible').val();;
+        return lvCtl.val();
     }
     else
         return 0;
@@ -540,6 +542,7 @@ function configInput( $inputCtl, $oldValue, $statusCtl, $hiddenCtl, $editBtn, $i
 
 }
 
+/* -- Commented out until we support 24/12 hour clock choices
 function formatTime($h_24) {
     var $time = $h_24.split(':');
 
@@ -547,15 +550,18 @@ function formatTime($h_24) {
     if ($h === 0) $h = 12;
     return ($h < 10 ? "0" + $h : $h) + ":" + $time[1] + ($h_24 < 12 ? ' AM' : ' PM');
 }
+*/
 
 function pmpro_sequence_addEntry() {
 
-    if ('' == jQuery('#pmpro_sequence_post').val() || undefined != jQuery('#pmpro_sequencesave').attr('disabled'))
+    var saveBtn = jQuery('#pmpro_sequencesave');
+
+    if ('' == jQuery('#pmpro_sequence_post').val() || undefined != saveBtn.attr('disabled'))
         return false; //already processing, ignore this request
 
     // Disable save button
-    jQuery('#pmpro_sequencesave').attr('disabled', 'disabled');
-    jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.saving);
+    saveBtn.attr('disabled', 'disabled');
+    saveBtn.html(pmpro_sequence.lang.saving);
 
     //pass field values to AJAX service and refresh table above - Timeout is 5 seconds
     jQuery.ajax({
@@ -582,8 +588,8 @@ function pmpro_sequence_addEntry() {
         complete: function(){
 
             // Re-enable save button
-            jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.save);
-            jQuery('#pmpro_sequencesave').removeAttr('disabled');
+            saveBtn.html(pmpro_sequence.lang.save);
+            saveBtn.removeAttr('disabled');
 
         }
     });
@@ -668,15 +674,17 @@ function pmpro_sequence_delayTypeChange( sequence_id ) {
 // For the Sequence Settings 'Save Settings' button
 function pmpro_sequence_saveSettings( sequence_id ) {
 
-    if (undefined != jQuery('#pmpro_settings_save').attr('disabled'))
+    var saveBtn = jQuery('#pmpro_settings_save');
+
+    if (undefined != saveBtn.attr('disabled'))
         return false;
 
     // Enable the spinner
     jQuery('div .seq_spinner').show();
 
     // Disable save button
-    jQuery('#pmpro_settings_save').attr('disabled', 'disabled');
-    jQuery('#pmpro_settings_save').html(pmpro_sequence.lang.saving);
+    saveBtn.attr('disabled', 'disabled');
+    saveBtn.html(pmpro_sequence.lang.saving);
 
 
     jQuery.ajax({
@@ -719,10 +727,10 @@ function pmpro_sequence_saveSettings( sequence_id ) {
         complete: function() {
 
             // Enable the Save button again.
-            jQuery('#pmpro_settings_save').removeAttr('disabled');
+            saveBtn.removeAttr('disabled');
 
             // Reset the text for the 'Save Settings" button
-            jQuery('#pmpro_settings_save').html(pmpro_sequence.lang.saveSettings);
+            saveBtn.html(pmpro_sequence.lang.saveSettings);
 
             // Disable the spinner again
             jQuery('div .seq_spinner').hide();
