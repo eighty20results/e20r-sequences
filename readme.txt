@@ -50,18 +50,20 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Renamed from "Series" to try and avoid namespace collisions and allow people to transition manually to this plugin if desirable.
 
 = .1.1 =
-* Version bump to signify fixes added after the initial version (minor typo & namespace bugs)
+* Version bump for fixes added after the initial version (minor typo & namespace bugs)
 
 = .1.2 =
 * Bug Fix: Incorrect page ID supplied when filtering sequence member pages
 
 = .2 =
-* Added support for templated and configurable new content alerts. Includes scheduling by sequence.
+* Added support for templated and configurable new content alerts. Includes scheduling by sequence
 * Reformatted Sequence Settings metabox.
 * Added support for pre PHP v5.3 releases. (tentative - not been able to test)
+* Optimized settings save functionality (one instance of the save functionality).
+* Separated out Javascript & cleaned up AJAX handling for sequence handling, post addition/removal & settings. (@Askelon)
+* Started adding support translations (I8N) based on work by Askelon (@Charlie Merland)
+* Split admin & user Javascript functionality.
+* Added support for all public & searchable CTPs plus Pages & Posts to the list of posts in a sequence (drip)
+* Added support for admin configurable format of !!today!! (date) placeholder in email templates
 * Bugfix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
 * Multiple bug fixes and updates.
-* Optimized settings save functionality (one instance of the save functionality).
-* Separated out Javascript & cleaned up AJAX handling for sequence handling, post addition/removal & settings. (Askelon)
-* Started work to support translations (I8N) based on work by Askelon (Charlie Merland)
-* Split admin & user Javascript functionality.

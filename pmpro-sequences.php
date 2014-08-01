@@ -489,8 +489,17 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 		        $usrSettings = $new;
 	        }
 
+
 	        $usrSettings->sequence[$seqId]->sendNotice = ( isset( $_POST['pmpro_sequence_optIn'] ) ?
 		        intval($_POST['pmpro_sequence_optIn']) : $seq->options->sendNotice );
+
+	        // If the user opted in to receiving alerts, set the opt-in timestamp to the current time.
+	        // If they opted out, set the opt-in timestamp to -1
+	        if ($usrSettings->sequence[$seqId]->sendNotice == 1)
+		        // Set the timestamp when the user opted in.
+		        $usrSettings->sequence[$seqId]->optinTS = current_time('timestamp');
+	        else
+		        $usrSettings->sequence[$seqId]->optinTS = -1; // Opted out.
 
 	        // Add an empty array to store posts that the user has already been notified about
 	        if ( empty( $usrSettings->sequence[$seqId]->notifiedPosts ) )
@@ -1034,6 +1043,39 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
     }
 endif;
 
+if ( !  function_exists('pmpro_seqeuence_included_cpts')):
+
+	add_filter('pmpro_sequencepost_types', 'pmpro_seqeuence_included_cpts');
+
+	/**
+	 * Get a list of Custom Post Types to include in the list of available posts for a sequence (drip)
+	 *
+	 * @param $defaults -- Default post types to include (regardless)
+	 *
+	 * @return array -- Array of publicly available post types
+	 */
+	function pmpro_seqeuence_included_cpts( $defaults ) {
+
+		$cpt_args = array(
+			'public'                => true,
+			'exclude_from_search'   => false,
+			'_builtin'              => false,
+		);
+
+		$output = 'names';
+		$operator = 'and';
+
+		$post_types = get_post_types($cpt_args, $output, 'and');
+		$postTypeList = array();
+
+		foreach ($post_types as $post_type) {
+			$postTypeList[] = $post_type;
+		}
+
+		return array_merge( $defaults, $postTypeList);
+	}
+endif;
+
 /**
  * Filter to replace the !!excerpt_intro!! variable content in a "new content alert" message.
  */
@@ -1071,18 +1113,22 @@ if ( ! function_exists( 'pmpro_seq_datediff') ):
 	 * @param $enddate (timestamp) - timestamp value for end date
 	 * @return int
 	 */
-	function pmpro_seq_datediff( $startdate, $enddate ) {
+	function pmpro_seq_datediff( $startdate, $enddate = null ) {
+
+		// use current day as $enddate if nothing is specified
+		if (! $enddate)
+			$enddate = current_time('timestamp');
 
 		// Create two DateTime objects
 		$dStart = new DateTime( date( 'Y-m-d', $startdate ) );
-		$dEnd   = new DateTime( date( 'Y-m-d', $enddate ) ); // Today's date
+		$dEnd   = new DateTime( date( 'Y-m-d', $enddate ) );
 
 		if ( version_compare( PHP_VERSION, PMPRO_SEQ_REQUIRED_PHP_VERSION, '>=' ) ) {
 
 			/* Calculate the difference using 5.3 supported logic */
 			$dDiff  = $dStart->diff( $dEnd );
 			$dDiff->format( '%d' );
-			// $dDiff->format('%R%a');
+			//$dDiff->format('%R%a');
 
 			$days = $dDiff->days;
 
@@ -1257,8 +1303,7 @@ if ( ! function_exists('pmpro_sequence_activation')):
         PMProSequences::createCPT();
         flush_rewrite_rules();
 
-	    /* Register Cron job for new content check */
-	    // Set time (what time) to run this cron job the first time.
+	    /* Register the default cron job to send out new content alerts */
 	    wp_schedule_event(current_time('timestamp'), 'daily', 'pmpro_sequence_cron_hook');
     }
 
@@ -1270,14 +1315,40 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
 
     function pmpro_sequence_deactivation()
     {
-        global $pmpros_deactivating;
+        global $pmpros_deactivating, $wpdb;
         $pmpros_deactivating = true;
         flush_rewrite_rules();
 
-	    /* Unregister Cron jobs for new content check */
-	    $ts = current_time('timestamp');
-	    // TODO: Iterate through all sequences and see if they can be disabled
-	    wp_clear_scheduled_hook($ts, 'daily', 'pmpro_sequence_cron_hook');
+	    // Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
+	    /* Hack: Disable all sequence alerts */
+	    $sql = $wpdb->prepare("
+	        SELECT *
+	        FROM $wpdb->posts
+	        WHERE post_type = 'pmpro_sequence'
+	    ");
+
+	    $seqs = $wpdb->get_results($sql);
+
+	    // Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
+	    foreach($seqs as $s) {
+
+		    $sequence = new PMProSequences($s->ID);
+
+		    if ($sequence->options->sendNotice == 1) {
+
+			    // Set the alert flag to 'off'
+			    $sequence->options->sendNotice = 0;
+
+			    // save meta for the sequence.
+			    $sequence->save_sequence_meta();
+
+			    wp_clear_scheduled_hook('pmpro_sequence_cron_hook', array( $s->ID ));
+			    dbgOut('Deactivated email alerts for sequence ' . $s->ID);
+		    }
+	    }
+
+	    /* Unregister the default Cron job for new content alert(s) */
+        wp_clear_scheduled_hook('pmpro_sequence_cron_hook');
     }
 endif;
 
@@ -1294,8 +1365,18 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 	 */
 
 	function pmpro_sequence_member_links_bottom() {
-	/* 	// TODO: Add pagination and optional display of these links.
+
+		// TODO: Use split to support Short-code and the 'pmpro_member_links_bottom' action
+
+		// TODO: Add admin configurable setting to allow/disallow showing of the link data
+		echo pmpro_sequence_build_linkData();
+
+	}
+
+	function pmpro_sequence_build_linkData() {
+
 		global $wpdb, $current_user;
+		$html = '';
 
 		//get all series
 		$seqs = $wpdb->get_results("
@@ -1304,31 +1385,59 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 	        WHERE post_type = 'pmpro_sequence'
 	    ");
 
-
+		// Process the list of sequences
 		foreach($seqs as $s)
 		{
-			$sequence = new PMProSequences($s->ID);
-			$sequence->fetchOptions($s->ID);
 
-            // Check whether to process this sequence or move on to the next one.
-            if ( $sequence->options->sendNotice != 1) {
-                dbgOut('pmpro_sequence_member_links() - Sequence ' . $sequence->sequence_id . ' is not configured for alerts. Skipping.');
-                continue;
-            }
+			$sequence = new PMProSequences($s->ID);
 
 			$sequence_posts = $sequence->getPosts();
 
+			// Generate a list of posts for the sequence (used in WP_Query object)
 			foreach($sequence_posts as $sequence_post)
-			{
-				if(pmpro_sequence_hasAccess($current_user->user_id, $sequence_post->id))
-				{
-					?>
-					<li><a href="<?php echo get_permalink($sequence_post->id); ?>" title="<?php echo get_the_title($sequence_post->id); ?>"><?php echo get_the_title($sequence_post->id); ?></a></li>
-				<?php
-				}
-			}
-		}
-	*/
-	}
+				$post_list[] = $sequence_post->id;
 
+			$query_args = array(
+				'post_type' => apply_filters('pmpro_sequencepost_types', array('post', 'page')), // Filter returns an array()
+				'post__in' => $post_list,
+				'ignore_sticky_posts' => 1,
+				'paged' => (get_query_var('paged')) ? absint(get_query_var('paged')) : 1,
+				'posts_per_page' => 10,
+
+			);
+
+			$seqEntries = new WP_Query( $query_args );
+
+			ob_start();
+
+			while ($seqEntries->have_posts()) : $seqEntries->the_post();
+				if(pmpro_sequence_hasAccess($current_user->user_id, $sequence_post->id))
+					if (! $sequence->isMostRecentlyAvailable(the_ID()))
+						// TODO: Add Sequence Title info to top of sequence.
+						?>
+						<li <?php post_class(); ?> ><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><?php the_title(); ?></a></li>
+			<?php
+
+			endwhile;
+
+			$translated = __('Page', 'pmprosequence');
+			$big = 99999999999;
+
+			$link_args = array(
+				'base' => str_replace($big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+				'format' => '?paged=%#%',
+				'current' => max( 1, get_query_var('paged') ),
+				'total' => $seqEntries->max_num_pages,
+				'before_page_number' => '<span class="screen-reader-text">' . $translated . '</span>',
+			);
+
+			echo paginate_links( $link_args );
+
+			wp_reset_postdata();
+
+			$html .= ob_get_clean();
+		}
+
+		return $html;
+	}
 endif;

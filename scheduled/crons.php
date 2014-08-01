@@ -13,6 +13,13 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
 		global $wpdb;
 
+		/** TODO: Skip sequence entries that are older than 'today', unless admin configures otherwise.
+		 *  This means we'll have to use the 'show' logic and compare $sequence_post->delay
+		 *      (converted to timestamp based on $PMProSequence($sequenceId)->options->delayType) to
+		 *      $user_settings->sequence[sequence_id]->optinTS. We'll only process posts that have a 'delay' value >= $user_settings->sequence[sequence_id]->optinTS
+		 *
+		 */
+
 		// Get all sequences and users associated in the system who _may_ need to be notified
 		if ( empty($sequenceId) || ($sequenceId == 0)) {
 
@@ -77,6 +84,11 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				( empty( $noticeSettings->sequence[ $sequence->sequence_id ]->sendNotice ) &&
 				  ( $sequence->options->sendNotice == 1 ) ) ) {
 
+				// Set the optin timestamp if this is the first time we're processing this users alert settings.
+				if ( empty( $noticeSettings->sequence[ $sequence->sequence_id ]->optinTS ) )
+					// First time this user has a notice processed. Set the timestamp to now.
+					$noticeSettings->sequence[ $sequence->sequence_id ]->optinTS = current_time('timestamp');
+
 				dbgOut('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
 
                 // Get all posts belonging to this sequence.
@@ -87,11 +99,27 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				// Iterate through all of the posts in the sequence
 				foreach ( $sequence_posts as $post ) {
 
-					if ($sendCount[$s->user_id] >= PMPRO_SEQUENCE_MAX_EMAILS) {
+
+					/**
+					 * if 'byDays':
+					 *  Find the post that would be displayed "today" per the sequence rules
+					 *      This is the post that has the same delay as the user's #of days since 'startdate'
+					 *          use convertToDays( date('Y-m-d', strtotime($s->startdate) ) ) for user day count
+					 *          use $post->delay for post day count (since start)
+					 *
+					 * if 'byDate':
+					 *    $days-since-start-for-this-user = $sequence->convertToDays($post->delay, $s->user_id, $s->membership_id);
+					 *
+					 *  Compare earliest $post->delay value to
+					 */
+					if (
+						($sendCount[$s->user_id] >= PMPRO_SEQUENCE_MAX_EMAILS)) {
 
 						dbgOut('Send Count exceeds MAX_EMAILS');
 						break;
 					}
+
+					// Test if $post->delay >= maxNotifyDelay
 
 					dbgOut('cron() - Post ID: ' . $post->id .
 		                  ', user ID: ' . $s->user_id .

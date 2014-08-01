@@ -310,27 +310,33 @@
 	     * Save the settings to the Wordpress DB.
 	     *
 	     * @param $settings (array) -- Settings for the Sequence
-	     * @param $post_id (int) -- The ID for the Sequence
+	     * @param $sequence_id (int) -- The ID for the Sequence
 	     * @return bool - Success or failure for the save operation
 	     */
-	    function save_sequence_meta( $settings, $post_id )
+	    function save_sequence_meta( $settings = null, $sequence_id = 0)
 	    {
 	        // Make sure the settings array isn't empty (no settings defined)
-	        if (! empty( $settings ))
-	        {
-	            try {
+	        if ( empty( $settings ) )
+		        $settings = $this->options;
 
-	                // Update the *_postmeta table for this sequence
-	                update_post_meta($post_id, '_pmpro_sequence_settings', $settings );
+		    if (($sequence_id != 0) && ($sequence_id != $this->sequence_id)) {
+			    dbgOut( 'save_sequence_meta() - Unknown sequence ID. Need to instantiate the correct sequence first!' );
+			    return false;
+		    }
 
-	                // Preserve the settings in memory / class context
-	                dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $post_id);
-	            }
-	            catch (Exception $e)
-	            {
-	                return false;
-	            }
-	        }
+            try {
+
+                // Update the *_postmeta table for this sequence
+                update_post_meta($this->sequence_id, '_pmpro_sequence_settings', $settings );
+
+                // Preserve the settings in memory / class context
+                dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $this->sequence_id);
+            }
+            catch (Exception $e)
+            {
+	            dbgOut('save_sequence_meta() - Error saving sequence settings for ' . $this->sequence_id . ' Msg: ' . $e->getMessage());
+                return false;
+            }
 
 	        return true;
 	    }
@@ -387,7 +393,7 @@
 			usort($this->posts, array("PMProSequences", "sortByDelay"));
 
 			//save
-			update_post_meta($this->id, "_sequence_posts", $this->posts);
+			update_post_meta($this->sequence_id, "_sequence_posts", $this->posts);
 
 			//Get any previously existing sequences this post/page is linked to
 			$post_sequence = get_post_meta($post_id, "_post_sequences", true);
@@ -426,7 +432,7 @@
 		                // Check whether there are repeat entries for the current sequence
 		                if ($cnt > 1) {
 
-			                // There are so get rid of the extras (this is a backward compatibility feature due to a bug.)
+			                // There are so get rid of the extras (this is a backward compatibility feature due to a previous bug.)
 			                dbgOut('addPost() - More than one entry in the array. Clean it up!');
 
 			                $clean = array_unique( $post_sequence );
@@ -626,9 +632,11 @@
 	     * This allows us to mix sequences containing days since membership start and fixed dates for content drips
 	     *
 	     * @param $date - Take a date in the format YYYY-MM-DD and convert it to a number of days since membership start (for the current member)
+	     * @param $userId - Optional ID for the user being processed
+	     * @param $levelId - Optional ID for the level of the user
 	     * @return mixed -- Return the # of days calculated
 	     */
-	    public function convertToDays( $date )
+	    public function convertToDays( $date, $userId = null, $levelId = null )
 	    {
 		    $days = 0;
 
@@ -672,6 +680,22 @@
 
 	        return $days;
 	    }
+
+		/**
+		 * Check whether the specific user should receive a notice for the specific post
+		 *    FALSE if the $post->delay means the today is NOT the first time this user can access the post
+		 *
+		 *
+		 * @param $user - $wpdb object containing user info
+		 * @param $post -- $sequence post object containing post ID & delay
+		 *
+		 * @return bool -- TRUE if we should let the user get notified about this post, false otherwise.
+		 */
+		public function isAfterOptIn( $user, $post ) {
+
+
+			return true;
+		}
 
 	    /**
 	     *
@@ -991,7 +1015,7 @@
 			if(empty($this->posts))
 			{
 	            dbgOut('No Posts found?');
-				$this->setError( __('No posts/pages in Sequence', 'pmprosequence'));
+				$this->setError( __('No posts/pages in this sequence yet', 'pmprosequence'));
 			?>
 			<?php
 			}
@@ -1043,14 +1067,15 @@
 							<select id="pmpro_sequencepost" name="pmpro_sequencepost">
 								<option value=""></option>
 							<?php
-								$pmpro_sequencepost_types = apply_filters("pmpro_sequencepost_types", array("post", "page"));
-								$allposts = $wpdb->get_results("SELECT ID, post_title, post_status FROM $wpdb->posts WHERE post_status IN('publish', 'draft', 'future', 'pending', 'private') AND post_type IN ('" . implode("','", $pmpro_sequencepost_types) . "') AND post_title <> '' ORDER BY post_title");
-								foreach($allposts as $p)
-								{
-								?>
-								<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php echo $this->setPostStatus( $p->post_status );?>)</option>
-								<?php
-								}
+								if ( ($allposts = $this->getPostListFromDB()) !== FALSE)
+									foreach($allposts as $p)
+									{
+									?>
+									<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php echo $this->setPostStatus( $p->post_status );?>)</option>
+									<?php
+									}
+								else
+									$this->setError(__('Error during database search', 'pmprosequence'));
 							?>
 							</select>
 							<style>
@@ -1082,6 +1107,31 @@
 			);
 		}
 
+		/**
+		 * Get all posts with status 'published', 'draft', 'scheduled', 'pending review' or 'private' from the DB
+		 *
+		 * @return array | bool -- All posts of the post_types defined in the pmpro_sequencepost_types filter)
+		 */
+		function getPostListFromDB() {
+
+			global $wpdb;
+
+			$pmpro_sequencepost_types = apply_filters("pmpro_sequencepost_types", array("post", "page") );
+
+			$sql = $wpdb->prepare("
+						SELECT ID, post_title, post_status
+						FROM $wpdb->posts
+						WHERE post_status IN('publish', 'draft', 'future', 'pending', 'private')
+						AND post_type IN ('" . implode("','", $pmpro_sequencepost_types) . "')
+						AND post_title <> ''
+						ORDER BY post_title
+					");
+
+			if ( NULL !== ($allposts = $wpdb->get_results($sql)) )
+				return $allposts;
+			else
+				return FALSE;
+		}
 	    /**
 	     * Used to label the post list in the metabox
 	     *
@@ -1696,6 +1746,11 @@
 	        // dbgOut('hideUpcomingPosts(): Do we show or hide upcoming posts?');
 	        return $this->options->hidden == 1 ? true : false;
 	    }
+
+		public function isMostRecentlyAvailable( $post_id ) {
+			//TODO: Implement - Will return true if the specified post_id is the post in the sequence that is the post with a delay closest to 'today' out of all the posts.
+			return false;
+		}
 	}
 
 //	$GLOBALS['pmpro-sequences'] = new PMProSequences();
