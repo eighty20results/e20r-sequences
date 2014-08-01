@@ -930,7 +930,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
                                     dbgOut('Delay Type is # of days since membership start');
                                     // BUG: Assumes the # of days is the right ay to
-                                    if(pmpro_getMemberDays($user_id, $level_id) >= ($sp->delay + $offset))
+                                    if( (pmpro_getMemberDays($user_id, $level_id) + $offset) >= $sp->delay)
                                         return true;	//user has access to this sequence and has been a member for longer than this post's delay
                                 }
                                 elseif ( $tmpSequence->options->delayType == 'byDate' ) {
