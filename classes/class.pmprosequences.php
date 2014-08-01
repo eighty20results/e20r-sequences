@@ -297,44 +297,6 @@
 	        return $timestamp;
 	    }
 
-	    /**
-	     *
-	     * Save the settings to the Wordpress DB.
-	     *
-	     * @param $settings (array) -- Settings for the Sequence
-	     * @param $sequence_id (int) -- The ID for the Sequence
-	     * @return bool - Success or failure for the save operation
-	     */
-	    function save_sequence_meta( $settings = null, $sequence_id = 0)
-	    {
-	        // Make sure the settings array isn't empty (no settings defined)
-	        if ( empty( $settings ) )
-		        $settings = $this->options;
-
-		    if (($sequence_id != 0) && ($sequence_id != $this->sequence_id)) {
-			    dbgOut( 'save_sequence_meta() - Unknown sequence ID. Need to instantiate the correct sequence first!' );
-			    return false;
-		    }
-
-            try {
-
-                // Update the *_postmeta table for this sequence
-                update_post_meta($this->sequence_id, '_pmpro_sequence_settings', $settings );
-
-                // Preserve the settings in memory / class context
-                dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $this->sequence_id);
-            }
-            catch (Exception $e)
-            {
-	            dbgOut('save_sequence_meta() - Error saving sequence settings for ' . $this->sequence_id . ' Msg: ' . $e->getMessage());
-                return false;
-            }
-
-	        return true;
-	    }
-
-	    //add a post to this sequence
-
 		function addPost($post_id, $delay)
 		{
 
@@ -444,7 +406,7 @@
 			return true;
 	    }
 
-		//remove a post from this sequence
+	    //add a post to this sequence
 
 	    /**
 	     * Validates that the value received follows a valid "delay" format for the post/page sequence
@@ -474,10 +436,7 @@
 	        }
 	    }
 
-		/*
-			get array of all posts in this sequence
-			force = ignore cache and get data from DB
-		*/
+		//remove a post from this sequence
 
 	    /**
 	     * Pattern recognize whether the data is a valid date format for this plugin
@@ -498,6 +457,11 @@
 	        return false;
 	    }
 
+		/*
+			get array of all posts in this sequence
+			force = ignore cache and get data from DB
+		*/
+
 		function getPosts($force = false)
 		{
 			if(!isset($this->posts) || $force)
@@ -505,8 +469,6 @@
 
 			return $this->posts;
 		}
-
-		//get key of post with id = $post_id
 
 		/**
 		 * @param $post_id (int) -- Page/post ID to check for inclusion in this sequence.
@@ -531,6 +493,8 @@
 
 			return false;
 		}
+
+		//get key of post with id = $post_id
 
 		function removePost($post_id)
 		{
@@ -569,8 +533,6 @@
 			return true;
 		}
 
-	    // Returns a "days to delay" value for the posts $a & $b, even if the delay value is a date.
-
 		function getDelayForPost($post_id)
 		{
 			$key = $this->getPostKey($post_id);
@@ -588,6 +550,8 @@
 	        }
 		}
 
+	    // Returns a "days to delay" value for the posts $a & $b, even if the delay value is a date.
+
 		function getPostKey($post_id)
 		{
 			$this->getPosts();
@@ -603,7 +567,6 @@
 
 			return false;
 		}
-
 
 	    /**
 	     *
@@ -755,15 +718,6 @@
 	    {
 	        return array($this->convertToDays($a->delay), $this->convertToDays($b->delay));
 	    }
-	/*
-	    public function convertToDate( $days )
-	    {
-	        $startDate = pmpro_getMemberStartdate();
-	        $endDate = date( 'Y-m-d', strtotime( $startDate . " +" . $days . ' days' ));
-	        dbgOut('C2Date - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $endDate .  ' for delay day count: ' . $days);
-	        return $endDate;
-	    }
-	*/
 
 	    /**
 	     * @param $a -- Post to compare (including delay variable)
@@ -779,10 +733,15 @@
 	        // Descending Sort Order
 	        return ($aDelay > $bDelay) ? -1 : +1;
 	    }
-
-		/*
-			Create the Custom Post Type for the Sequence/Sequences
-		*/
+	/*
+	    public function convertToDate( $days )
+	    {
+	        $startDate = pmpro_getMemberStartdate();
+	        $endDate = date( 'Y-m-d', strtotime( $startDate . " +" . $days . ' days' ));
+	        dbgOut('C2Date - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $endDate .  ' for delay day count: ' . $days);
+	        return $endDate;
+	    }
+	*/
 
 		/**
 		 *
@@ -859,7 +818,7 @@
 		}
 
 		/*
-			Include the CSS, Javascript and load/define Visual editor Meta boxes
+			Create the Custom Post Type for the Sequence/Sequences
 		*/
 
 		function createCPT()
@@ -913,6 +872,10 @@
 			}
 		}
 
+		/*
+			Include the CSS, Javascript and load/define Visual editor Meta boxes
+		*/
+
 		function checkForMetaBoxes()
 		{
 			//add meta boxes
@@ -944,8 +907,6 @@
 
 	    }
 
-	    //this is the Sequence meta box
-
 		function sequenceMetaBox()
 		{
 			global $post;
@@ -969,6 +930,8 @@
 			</div>
 			<?php
 		}
+
+	    //this is the Sequence meta box
 
 		/**
 		 * 	   Refreshes the Post list for the sequence
@@ -1129,6 +1092,7 @@
 			else
 				return FALSE;
 		}
+
 	    /**
 	     * Used to label the post list in the metabox
 	     *
@@ -1171,8 +1135,6 @@
 		public function setError( $msg ) {
 			$this->error = $msg;
 		}
-
-		//this function returns a UL with the current posts
 
 	    /**
 	     * Adds notification opt-in to list of posts/pages in sequence.
@@ -1245,6 +1207,8 @@
 
 	        return $optinForm;
 		}
+
+		//this function returns a UL with the current posts
 
 	    /**
 	     * Define and create the metabox for the Sequence Settings (per sequence page/list)
@@ -1720,9 +1684,21 @@
 	     */
 	    public function isPastDelay( $memberFor, $delay )
 	    {
-	        if ($this->isValidDate($delay))
+		    // Get the preview offset (if it's defined). If not, set it to 0
+		    // for compatibility
+		    if ( empty($this->options->previewOffset) || is_null($this->options->previewOffset) ) {
+
+			    $this->options->previewOffset = 0;
+			    $offset = 0;
+			    $this->save_sequence_meta(); // Save the settings (only the first this variable is empty)
+
+		    } else
+			    $offset = $this->options->previewOffset;
+
+		    if ($this->isValidDate($delay))
 	        {
-	            $now = current_time('timestamp');
+
+	            $now = current_time('timestamp') + ($offset * 86400);
 	            // TODO: Add support for startWhen options (once the plugin supports differentiating on when the drip starts)
 	            $delayTime = strtotime( $delay . ' 00:00:00.0' );
 	            dbgOut('isPastDelay() - Now = ' . $now . ' and delay time = ' . $delayTime );
@@ -1730,7 +1706,43 @@
 	            return ( $now >= $delayTime ? true : false ); // a date specified as the $delay
 	        }
 
-	        return ( $memberFor >= $delay ? true : false );
+	        return ( ($memberFor + $offset) >= $delay ? true : false );
+	    }
+
+	    /**
+	     *
+	     * Save the settings to the Wordpress DB.
+	     *
+	     * @param $settings (array) -- Settings for the Sequence
+	     * @param $sequence_id (int) -- The ID for the Sequence
+	     * @return bool - Success or failure for the save operation
+	     */
+	    function save_sequence_meta( $settings = null, $sequence_id = 0)
+	    {
+	        // Make sure the settings array isn't empty (no settings defined)
+	        if ( empty( $settings ) )
+		        $settings = $this->options;
+
+		    if (($sequence_id != 0) && ($sequence_id != $this->sequence_id)) {
+			    dbgOut( 'save_sequence_meta() - Unknown sequence ID. Need to instantiate the correct sequence first!' );
+			    return false;
+		    }
+
+            try {
+
+                // Update the *_postmeta table for this sequence
+                update_post_meta($this->sequence_id, '_pmpro_sequence_settings', $settings );
+
+                // Preserve the settings in memory / class context
+                dbgOut('save_sequence_meta(): Saved Sequence Settings for ' . $this->sequence_id);
+            }
+            catch (Exception $e)
+            {
+	            dbgOut('save_sequence_meta() - Error saving sequence settings for ' . $this->sequence_id . ' Msg: ' . $e->getMessage());
+                return false;
+            }
+
+	        return true;
 	    }
 
 	    /**
@@ -1762,7 +1774,6 @@
 
 		public function get_closestPost( $user_id = null ) {
 
-			//TODO: Implement - Will return true if the specified post_id is the post in the sequence that is the post with a delay closest to 'today' out of all the posts.
             $membershipDay = pmpro_getMemberDays( $user_id, null );
 
             // Load all posts in the sequence
