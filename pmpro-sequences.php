@@ -912,11 +912,11 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
                         if ( empty($sp->options->previewOffset) || is_null($sp->options->previewOffset) ) {
 
                             $sp->options->previewOffset = 0;
-                            $offset = 0;
                             $tmpSequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
 
-                        } else
-                            $offset = $sp->options->previewOffset;
+                        }
+
+                        $offset = $sp->options->previewOffset;
 
                         //this post we are checking is in this sequence
                         if ( $sp->id == $post_id ) {
@@ -929,14 +929,16 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
                                 if ( $tmpSequence->options->delayType == 'byDays' ) {
 
                                     dbgOut('Delay Type is # of days since membership start');
-                                    // BUG: Assumes the # of days is the right ay to
+
                                     if( (pmpro_getMemberDays($user_id, $level_id) + $offset) >= $sp->delay)
                                         return true;	//user has access to this sequence and has been a member for longer than this post's delay
                                 }
                                 elseif ( $tmpSequence->options->delayType == 'byDate' ) {
 
                                     dbgOut('Delay Type is a fixed date');
+
                                     $today = date( 'Y-m-d', ( current_time('timestamp') + ($offset * 86400) ) );
+
                                     dbgOut('Today: ' . $today . ' and delay: ' . $sp->delay );
 
                                     if ( $today >= $sp->delay )

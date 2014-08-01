@@ -1651,6 +1651,7 @@
 
 		                    <span class="pmpro_sequence_item-unavailable"><?php echo sprintf( __('available on %s'), ($this->options->delayType == 'byDays' ? __('day', 'pmprosequence') : '')); ?> <?php echo $sp->delay;?></span>
 	                    </li>
+						<?php // elseif ( count($this->posts) == 0 ): ?>
 						<?php endif; ?>
 						<!-- TODO: Add text for when there are no posts shown because they're all hidden (future) & all future posts are to be "hidden" -->
 						<div class="clear"></div>
@@ -1688,12 +1689,14 @@
 		    // for compatibility
 		    if ( empty($this->options->previewOffset) || is_null($this->options->previewOffset) ) {
 
+			    dbgOut("isPastDelay() - the previewOffset value doesn't exist yet. Fixing it now");
 			    $this->options->previewOffset = 0;
-			    $offset = 0;
 			    $this->save_sequence_meta(); // Save the settings (only the first this variable is empty)
+			    dbgOut("isPastDelay() - the previewOffset value being saved");
 
-		    } else
-			    $offset = $this->options->previewOffset;
+		    }
+
+	        $offset = $this->options->previewOffset;
 
 		    if ($this->isValidDate($delay))
 	        {
