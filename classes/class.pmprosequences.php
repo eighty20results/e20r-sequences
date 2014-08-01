@@ -131,6 +131,7 @@
 	        $settings->lengthVisible = 1; //'lengthVisible'
 	        $settings->sortOrder = SORT_ASC; // 'sortOrder'
 	        $settings->delayType = 'byDays'; // 'delayType'
+            $settings->showDelayAs = PMPRO_SEQ_AS_DAYNO; // How to display the time until available
             $settings->previewOffset = 0; // How many days into the future the sequence should allow somebody to see.
 	        $settings->startWhen =  0; // startWhen == immediately (in current_time('timestamp') + n seconds)
 		    $settings->sendNotice = 1; // sendNotice == Yes
@@ -641,7 +642,21 @@
 	        return $days;
 	    }
 
-		/**
+        public function displayDelay( $delay ) {
+
+            if ( $this->options->showDelayAs == PMPRO_SEQ_AS_DATE) {
+                // Convert the delay to a date
+                $memberDays = pmpro_getMemberDays();
+
+                $delayDiff = $delay - $memberDays;
+
+                return date('Y-m-d', strtotime("+" . $delayDiff ." days"));
+            }
+
+            return $delay; // It's stored as a number, not a date
+
+        }
+        /**
 		 * Check whether the specific user should receive a notice for the specific post
 		 *    FALSE if the $post->delay means the today is NOT the first time this user can access the post
 		 *
@@ -1298,15 +1313,34 @@
 					                <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
 					                <span class="screen-reader-text"><?php _e('Edit the delay type for this sequence', 'pmprosequence'); ?></span>
 				                </a>
-				                <div id="pmpro-seq-delay-select" style="display: none;">
-					                <input type="hidden" name="hidden_pmpro_seq_delaytype" id="hidden_pmpro_seq_delaytype" value="<?php echo esc_attr($settings->delayType); ?>" >
-					                <select onchange="javascript:pmpro_sequence_delayTypeChange(<?php echo $sequence->sequence_id; ?>); return false;" name="pmpro_sequence_delaytype" id="pmpro_sequence_delaytype">
-						                <option value="byDays" <?php selected( $settings->delayType, 'byDays'); ?> ><?php _e('Days since sign-up', 'pmprosequence'); ?></option>
-						                <option value="byDate" <?php selected( $settings->delayType, 'byDate'); ?> ><?php _e('A specific date', 'pmprosequence'); ?></option>
-					                </select>
-					                <a href="#pmproseq_delaytype" id="ok-pmpro-seq-delay" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-					                <a href="#pmproseq_delaytype" id="cancel-pmpro-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
-				                </div>
+                                <div id="pmpro-seq-delay-select" style="display: none;">
+                                    <input type="hidden" name="hidden_pmpro_seq_delaytype" id="hidden_pmpro_seq_delaytype" value="<?php echo esc_attr($settings->delayType); ?>" >
+                                    <select onchange="javascript:pmpro_sequence_delayTypeChange(<?php echo $sequence->sequence_id; ?>); return false;" name="pmpro_sequence_delaytype" id="pmpro_sequence_delaytype">
+                                        <option value="byDays" <?php selected( $settings->delayType, 'byDays'); ?> ><?php _e('Days since sign-up', 'pmprosequence'); ?></option>
+                                        <option value="byDate" <?php selected( $settings->delayType, 'byDate'); ?> ><?php _e('A specific date', 'pmprosequence'); ?></option>
+                                    </select>
+                                    <a href="#pmproseq_delaytype" id="ok-pmpro-seq-delay" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
+                                    <a href="#pmproseq_delaytype" id="cancel-pmpro-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                </div>
+                            </div>
+                            <div class="pmpro-seq-showdelayas">
+                                <label for="pmpro-seq-showdelayas"><?php _e('Show as:', 'pmprosequence'); ?></label>
+                                <span id="pmpro-seq-showdelayas-status"><?php echo ($settings->showDelayAs == PMPRO_SEQ_AS_DATE ? __('A date', 'pmprosequence') : __('Number of days', 'pmprosequence') ); ?></span>
+                                <a href="#pmpro-seq-showdelayas" id="pmpro-seq-edit-showdelayas" class="edit-pmpro-seq-showdelayas">
+                                    <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
+                                    <span class="screen-reader-text"><?php _e('Select how to indicate when the post is available to the user', 'pmprosequence'); ?></span>
+                                </a>
+                                <div id="pmpro-seq-showdelayas-select" style="display: none;">
+                                    <!-- Only show this if 'hidden_pmpro_seq_delaytype' == 'byDays' -->
+                                    <input type="hidden" name="hidden_pmpro_seq_showdelayas" id="hidden_pmpro_seq_showdelayas" value="<?php echo esc_attr($settings->showDelayAs); ?>" >
+                                    <select name="pmpro_sequence_showdelayas" id="pmpro_sequence_showdelayas">
+                                        <option value="<?php echo PMPRO_SEQ_AS_DAYNO; ?>" <?php selected( $settings->showDelayAs, PMPRO_SEQ_AS_DAYNO); ?> ><?php _e('Days', 'pmprosequence'); ?></option>
+                                        <option value="<?php echo PMPRO_SEQ_AS_DATE; ?>" <?php selected( $settings->showDelayAs, PMPRO_SEQ_AS_DATE); ?> ><?php _e('Date', 'pmprosequence'); ?></option>
+                                    </select>
+                                    <a href="#pmproseq_showdelayas" id="ok-pmpro-seq-showdelayas" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
+                                    <a href="#pmproseq_showdelayas" id="cancel-pmpro-seq-showdelayas" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+
+                                </div>
 			                </div>
 		                </td>
 	                </tr>

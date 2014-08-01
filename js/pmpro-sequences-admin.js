@@ -15,6 +15,7 @@ jQuery(document).ready(function(){
         var $sendAlertCtl   = $('#pmpro_sequence_sendnotice');
         var $sortOrderCtl   = $('#pmpro_sequence_sortorder');
         var $delayCtl       = $('#pmpro_sequence_delaytype');
+        var $showDelayCtl   = $('#pmpro_sequence_showdelayas');
         var $templCtl       = $('#pmpro_sequence_template');
         var $timeCtl        = $('#pmpro_sequence_noticetime');
         var $dateCtl        = $('#pmpro_sequence_dateformat');
@@ -32,6 +33,8 @@ jQuery(document).ready(function(){
         var $sortText = $sortOrderCtl.find('option:selected').text();
         var $delayText = $delayCtl.find('option:selected').text();
         var $delayType = $delayCtl.find('option:selected').val();
+        var $showasText = $showDelayCtl.find('option:selected').text();
+        var $showasType = $showDelayCtl.find('option:selected').val();
         var $templateName = $templCtl.find('option:selected').text();
         var $template = $templCtl.find('option:selected').val();
         var $alertText = $timeCtl.find('option:selected').text();
@@ -68,6 +71,8 @@ jQuery(document).ready(function(){
  //           console.log('Edit button for delay type clicked');
             $('#pmpro-seq-edit-delay').slideToggle();
             $('#pmpro-seq-delay-select').slideToggle();
+            // TODO: Validate that this will do what we expect: Show the 'show delay as' option if the user clicks 'edit'
+            delayAsChoice();
         });
 
         /* Show/Hide the alert template information */
@@ -156,6 +161,9 @@ jQuery(document).ready(function(){
             // $delayCtl.getAttribute('hidden_pmpro_seq_delaytype');
             $('#pmpro-seq-delay-select').slideToggle();
             $('#pmpro-seq-edit-delay').slideToggle();
+
+            // TODO: Add toggle for pmpro-seq-edit-showdelayas & related elements
+            delayAsChoice();
 
         });
 
@@ -255,6 +263,21 @@ jQuery(document).ready(function(){
 
         });
 
+        $('#ok-pmpro-seq-showdelayas').click(function(){
+
+            var $hCtl = $('#hidden_pmpro_seq_showdelayas');
+
+            configSelected(
+                $showDelayCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-showdelayas-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-showdelayas'),
+                $('#pmpro-seq-showdelayas-select')
+            );
+
+        });
+
         $('#ok-pmpro-seq-template').click(function(){
 
             var $hCtl = $('#hidden_pmpro_seq_noticetemplate');
@@ -299,6 +322,8 @@ jQuery(document).ready(function(){
             );
 
         });
+
+
 
         $('#ok-pmpro-seq-excerpt').click(function(){
 
@@ -489,6 +514,22 @@ function configInput( $inputCtl, $oldValue, $statusCtl, $hiddenCtl, $editBtn, $i
 
 }
 
+function delayAsChoice() {
+
+    // TODO: (done?) This needs to take both the current value of the delayType and the edit visibility of delayType into account
+
+    // Checking whether the user set the value to 'byDays'
+    if ( ( jQuery('#pmpro_sequence_delaytype').val() == 'byDays' ) &&
+        ( jQuery('#pmpro_sequence_delaytype').is(':visible')) )
+    {
+        jQuery('#pmpro-seq-edit-showdelayas').hide();
+        jQuery('#pmpro-seq-showdelayas-select').show();
+    }
+    else {
+        jQuery('#pmpro-seq-edit-showdelayas').show();
+        jQuery('#pmpro-seq-showdelayas-select').hide();
+    }
+}
 /* -- Commented out until we support 24/12 hour clock choices
 function formatTime($h_24) {
     var $time = $h_24.split(':');
@@ -615,6 +656,9 @@ function pmpro_sequence_delayTypeChange( sequence_id ) {
             jQuery('#pmpro_sequence_delaytype').val(jQuery.data('#pmpro_sequence_delaytype', 'pmpro_sequence_settings_hidden_delay'));
             jQuery('#pmpro_sequence_delaytype').val(current);
             jQuery('#hidden_pmpro_seq_wipesequence').val(0);
+
+            delayAsChoice();
+
             return false;
         } else
             jQuery('#hidden_pmpro_seq_wipesequence').val(1);
@@ -656,6 +700,7 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_startwhen: jQuery('#pmpro_sequence_startwhen').val(),
             hidden_pmpro_seq_sortorder: jQuery('#hidden_pmpro_seq_sortorder').val(),
             hidden_pmpro_seq_delaytype: jQuery('#hidden_pmpro_seq_delaytype').val(),
+            hidden_pmpro_seq_showdelayas: jQuery('#hidden_pmpro_seq_showdelayas').val(),
             hidden_pmpro_seq_sendnotice: jQuery('#hidden_pmpro_seq_sendnotice').val(),
             hidden_pmpro_seq_noticetime: jQuery('#hidden_pmpro_seq_noticetime').val(),
             hidden_pmpro_seq_noticetemplate: jQuery('#hidden_pmpro_seq_noticetemplate').val(),

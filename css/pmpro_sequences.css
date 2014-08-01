@@ -25,6 +25,7 @@ div#pmpro-seq-error {
 }
 .pmpro-sequence-sortorder label,
 .pmpro-sequence-delaytype label,
+.pmpro-sequence-showdelayas label,
 .pmpro-sequence-template label,
 .pmpro-sequence-noticetime label,
 .pmpro-sequence-dateformat label,
@@ -61,6 +62,7 @@ span#pmpro-seq-noticetimetz-status {
 
 span#pmpro-seq-sort-status,
 span#pmpro-seq-delay-status,
+span#pmpro-seq-showdelayas-status,
 span#pmpro-seq-template-status,
 span#pmpro-seq-noticetime-status,
 span#pmpro-seq-fromname-status,
@@ -83,6 +85,7 @@ span#pmpro-seq-excerpt-status {
 
 .edit-pmpro-seq-sort,
 .edit-pmpro-seq-delay,
+.edit-pmpro-seq-showdelayas,
 .edit-pmpro-seq-template,
 .edit-pmpro-seq-noticetime,
 .edit-pmpro-seq-dateformat,

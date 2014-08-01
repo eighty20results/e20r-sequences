@@ -42,6 +42,10 @@ define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.3.0');
 /* Set the path to the PMPRO Sequence plugin */
 define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 
+define('PMPRO_SEQ_AS_DAYNO', 1);
+define('PMPRO_SEQ_AS_DATE', 2);
+
+
 /*
 	Include the class for PMProSequences
 */
@@ -718,6 +722,15 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 		elseif (empty($sequenceObj->options->delayType))
 			$sequenceObj->options->delayType = 'byDays';
 
+        // options->showDelayAs
+        if ( isset($_POST['hidden_pmpro_seq_showdelayas']) )
+        {
+            $sequenceObj->options->showDelayAs = esc_attr($_POST['hidden_pmpro_seq_showdelayas']);
+            dbgOut('pmpro_sequence_settings_save(): POST value for settings->showDelayAs: ' . esc_attr($_POST['hidden_pmpro_seq_showdelayas']) );
+        }
+        elseif (empty($sequenceObj->options->showDelayAs))
+            $sequenceObj->options->delayType = PMPRO_SEQ_AS_DAYNO;
+
         if ( isset($_POST['hidden_pmpro_seq_previewoffset']) )
         {
             $sequenceObj->options->previewOffset = esc_attr($_POST['hidden_pmpro_seq_previewoffset']);
@@ -1036,7 +1049,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
 
 	                switch ($sequence->options->delayType) {
 		                case 'byDays':
-							$text .= printf( __('You will get access to %1$s on day %2$s of your membership', 'pmprosequence'), get_the_title($post->ID), $delay);
+							$text .= printf( __('You will get access to %1$s on day %2$s of your membership', 'pmprosequence'), get_the_title($post->ID), $equence->displayDelay( $delay ) );
 			                break;
 		                case 'byDate':
 			                $text .= printf( __('You will get access to %1$s on %2$s', 'pmprosequence'), get_the_title($post->ID), $delay );
