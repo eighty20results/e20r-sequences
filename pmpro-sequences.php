@@ -705,7 +705,15 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 		elseif (empty($sequenceObj->options->delayType))
 			$sequenceObj->options->delayType = 'byDays';
 
-		if ( isset($_POST['hidden_pmpro_seq_startwhen']) )
+        if ( isset($_POST['hidden_pmpro_seq_previewoffset']) )
+        {
+            $sequenceObj->options->previewOffset = esc_attr($_POST['hidden_pmpro_seq_previewoffset']);
+            dbgOut('pmpro_sequence_settings_save(): POST value for settings->previewOffset: ' . esc_attr($_POST['hidden_pmpro_seq_previewOffset']) );
+        }
+        elseif (empty($sequenceObj->options->previewOffset))
+            $sequenceObj->options->previewOffset = 0;
+
+        if ( isset($_POST['hidden_pmpro_seq_startwhen']) )
 		{
 			$sequenceObj->options->startWhen = esc_attr($_POST['hidden_pmpro_seq_startwhen']);
 			dbgOut('pmpro_sequence_settings_save(): POST value for settings->startWhen: ' . esc_attr($_POST['hidden_pmpro_seq_startwhen']) );
@@ -869,7 +877,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 	         */
 
 	        $tmpSequence = new PMProSequences($sequence_id);
-	        $tmpSequence->fetchOptions($sequence_id);
+	        // $tmpSequence->fetchOptions($sequence_id);
 	        dbgOut('pmpro_sequence_hasAccess() - Processing for sequence: ' . $sequence_id);
 
             //Does user have access to the sequence page? (and thus any of the posts/pages included in the sequence)?
@@ -877,18 +885,25 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
             if ( $results[0] )	{ // First item in results array == true if user has access
 
-                // dbgOut('pmpro_sequence_hasAccess() - User (' . $user_id . ') has membership level that sequence requires: ' . print_r($results, true));
-
                 //has the user been around long enough for any of the delays?
                 $sequence_posts = get_post_meta($sequence_id, "_sequence_posts", true);
-
-                // dbgOut('Fetched PostMeta: ' . print_r($sequence_posts, true));
 
                 if ( !empty( $sequence_posts ) ) {
 
                     foreach ( $sequence_posts as $sp ) {
 
                         // dbgOut('Checking post for access - contains: ' . print_r($sp, true));
+
+                        // Get the preview offset (if it's defined). If not, set it to 0
+                        // for compatibility
+                        if ( empty($sp->options->previewOffset) || is_null($sp->options->previewOffset) ) {
+
+                            $sp->options->previewOffset = 0;
+                            $offset = 0;
+                            $tmpSequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
+
+                        } else
+                            $offset = $sp->options->previewOffset;
 
                         //this post we are checking is in this sequence
                         if ( $sp->id == $post_id ) {
@@ -902,14 +917,14 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
                                     dbgOut('Delay Type is # of days since membership start');
                                     // BUG: Assumes the # of days is the right ay to
-                                    if(pmpro_getMemberDays($user_id, $level_id) >= $sp->delay)
+                                    if(pmpro_getMemberDays($user_id, $level_id) >= ($sp->delay + $offset))
                                         return true;	//user has access to this sequence and has been a member for longer than this post's delay
                                 }
                                 elseif ( $tmpSequence->options->delayType == 'byDate' ) {
 
                                     dbgOut('Delay Type is a fixed date');
-                                    $today = date('Y-m-d');
-                                    dbgOut('Today: ' . $today . ' and delay: ' . $sp->delay);
+                                    $today = date( 'Y-m-d', ( current_time('timestamp') + ($offset * 86400) ) );
+                                    dbgOut('Today: ' . $today . ' and delay: ' . $sp->delay );
 
                                     if ( $today >= $sp->delay )
                                         return true;
@@ -1161,13 +1176,9 @@ endif;
 */
 if( ! function_exists("pmpro_getMemberStartdate") ):
 
-	/*
-		Get a member's start date... either in general or for a specific level_id.
-	*/
-
     /**
      *
-     * Returns the member's start date (either generally speaking or for a specific level)
+     * Get the member's start date (either generally speaking or for a specific level)
      *
      * @param $user_id (int) - ID of user who's start date we're finding
      * @param $level_id (int) - ID of the level to find the start date for (optional)
@@ -1356,6 +1367,27 @@ endif;
 // register_activation_hook(__FILE__, 'pmpros_activation');
 // register_deactivation_hook(__FILE__, 'pmpros_deactivation');
 
+if ( ! function_exists('pmpro_sequence_links_shortcode')):
+
+    add_shortcode( 'sequence_links', array( $this, 'pmpro_sequence_links_shortcode'));
+
+    function pmpro_sequence_links_shortcode( $attributes ) {
+
+        $highlight = false;
+        $id = null;
+
+        extract( shortcode_atts( array(
+            'id' => 'null',
+            'highlight' => 'false',
+        ), $attributes ) );
+
+        $html = pmpro_sequence_build_linkData( $id, $highlight);
+
+        if (! empty($html))
+            return $html;
+    }
+endif;
+
 if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 
 	add_action('pmpro_member_links_bottom', 'pmpro_sequence_member_links_bottom');
@@ -1364,33 +1396,49 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 	 * Add series post links to the account page for the user.
 	 */
 
-	function pmpro_sequence_member_links_bottom() {
-
-		// TODO: Use split to support Short-code and the 'pmpro_member_links_bottom' action
+	function pmpro_sequence_member_links_bottom( $seq_id = null ) {
 
 		// TODO: Add admin configurable setting to allow/disallow showing of the link data
-		echo pmpro_sequence_build_linkData();
+
+        echo pmpro_sequence_build_linkData($seq_id, true);
 
 	}
 
-	function pmpro_sequence_build_linkData() {
+    /**
+     * Create a list of posts/pages/cpts that are included in the specified sequence (or all sequences, if needed)
+     *
+     * TODO: Format the output to look good on the page (table for header/links?)
+     *
+     * @param null $seq_id -- The ID for the sequence to process (can be empty. If so, process all sequences)
+     * @param bool $highlight -- Whether to highlight the Post that is the closest to the users current membership day
+     * @return string -- The HTML we generated.
+     */
+	function pmpro_sequence_build_linkData( $seq_id = null, $highlight = false ) {
 
 		global $wpdb, $current_user;
 		$html = '';
 
-		//get all series
-		$seqs = $wpdb->get_results("
-	        SELECT *
-	        FROM $wpdb->posts
-	        WHERE post_type = 'pmpro_sequence'
-	    ");
-
+        if (is_null($seq_id))
+    		//get all series
+            $seqs = $wpdb->get_results("
+                SELECT *
+                FROM $wpdb->posts
+                WHERE post_type = 'pmpro_sequence'
+            ");
+        else {
+            $sql = $wpdb->prepare("
+                SELECT *
+                FROM $wpdb->posts
+                WHERE post_type = 'pmpro_sequence' AND ID = %s
+            ",
+                $seq_id
+            );
+        }
 		// Process the list of sequences
 		foreach($seqs as $s)
 		{
 
 			$sequence = new PMProSequences($s->ID);
-
 			$sequence_posts = $sequence->getPosts();
 
 			// Generate a list of posts for the sequence (used in WP_Query object)
@@ -1410,13 +1458,24 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 
 			ob_start();
 
+            // Preface the table of links with the title of the sequence.
+            echo '<h3>'  . get_the_title($sequence->sequence_id); '</h3>';
+
+            /* Get the ID of the post in the sequence who's delay is the closest
+               to the members 'days since start of membership' */
+
+            $closestPostId = $sequence->get_closestPost( $current_user->ID );
+
+            // Loop through all of the posts in the sequence
 			while ($seqEntries->have_posts()) : $seqEntries->the_post();
 				if(pmpro_sequence_hasAccess($current_user->user_id, $sequence_post->id))
-					if (! $sequence->isMostRecentlyAvailable(the_ID()))
-						// TODO: Add Sequence Title info to top of sequence.
+					if ( ( the_ID() == $closestPostId  ) && $highlight):
 						?>
-						<li <?php post_class(); ?> ><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><?php the_title(); ?></a></li>
-			<?php
+                        <!-- The next entry is the post that is current or 'next' -->
+                        <li <?php post_class(); ?> ><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><strong><?php the_title(); ?></strong></a></li>
+                    <?php   else: ?>
+                        <li <?php post_class(); ?> ><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><?php the_title(); ?></a></li>
+            <?php   endif;
 
 			endwhile;
 

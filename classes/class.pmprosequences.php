@@ -14,36 +14,27 @@
 		//constructor
 		function PMProSequences($id = null)
 		{
-			if ( ! empty($id) || ($this->sequence_id != 0))
-	        {
-	            // dbgOut('__constructor() - Sequence ID: ' . $id);
+            if (is_null($id) && ($this->sequence_id == 0) ) {
+                // Have no sequence ID to play off of..
+                dbgOut('No sequence ID or options defined! Checking against global variables');
+                global $wp_query;
 
-	            $this->sequence_id = $this->getSequenceByID($id);
-		        $this->options = $this->fetchOptions();
+                if ($wp_query->post->ID) {
 
-	        }
-	        else {
+                    dbgOut('Found Post ID and loading options if not already loaded ' . $wp_query->post->ID);
+                    $this->sequence_id = $wp_query->post->ID;
+                } else
+                    return false; // ERROR. No sequence ID provided.
+            }
+            elseif ( ! is_null($id) )
+                $this->sequence_id = $this->getSequenceByID($id);
+			else
+                $this->sequence_id = $id;
 
-	            if ($this->sequence_id != 0) {
+            dbgOut('__construct() - Loading sequence options');
 
-	                dbgOut('No ID supplied to __construct(), but ID was set before, so loading options');
-		            $this->options = $this->fetchOptions( $this->sequence_id );
-	            }
-	            else {
-
-	                dbgOut('No sequence ID or options defined! Checking against global variables');
-		            $this->options = $this->defaultOptions();
-
-		            global $wp_query;
-
-	                if ($wp_query->post->ID) {
-
-	                    dbgOut('Found Post ID and loading options if not already loaded ' . $wp_query->post->ID);
-	                    $this->sequence_id = $wp_query->post->ID;
-		                $this->options = $this->fetchOptions($this->sequence_id);
-	                }
-	            }
-	        }
+            // Set options for the sequence
+            $this->options = $this->fetchOptions($this->sequence_id);
 
 			return $this->sequence_id;
 		}
@@ -73,25 +64,25 @@
 	    public function fetchOptions( $sequence_id = 0 )
 	    {
 	        // Did we receive an ID to process/use?
-	        if ($sequence_id != 0)
-	        {
-	            dbgOut('fetchOptions() - Sequence ID supplied by callee: ' . $sequence_id);
+	        if ($sequence_id != 0) {
+                dbgOut('fetchOptions() - Sequence ID supplied by callee: ' . $sequence_id);
+            }
 
-	            // Does the ID differ from the one this object has stored already?
-	            if ( ( $this->sequence_id != 0 ) && ( $this->sequence_id != $sequence_id ))
-	            {
-	                dbgOut('fetchOptions() - ID defined in class but callee supplied different sequence ID!');
-	                $this->sequence_id = $sequence_id;
-	            }
-	            elseif ($this->sequence_id == 0)
-	            {
-	                // This shouldn't be possible... (but never say never!)
-	                $this->sequence_id = $sequence_id;
-	            }
-	        }
+            // Does the ID differ from the one this object has stored already?
+            if ( ( $this->sequence_id != 0 ) && ( $this->sequence_id != $sequence_id ))
+            {
+                dbgOut('fetchOptions() - ID defined in class but callee supplied different sequence ID!');
+                $this->sequence_id = $sequence_id;
+            }
+            elseif ($this->sequence_id == 0)
+            {
+                // This shouldn't be possible... (but never say never!)
+                $this->sequence_id = $sequence_id;
+            }
 
 	        // Check that we're being called in context of an actual Sequence 'edit' operation
 	        dbgOut('fetchOptions(): Attempting to load settings from DB for (' . $this->sequence_id . ') "' . get_the_title($this->sequence_id) . '"');
+
 	        $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', false);
 	        $options = $settings[0];
 
@@ -100,7 +91,7 @@
 	        if ( empty($options) ) {
 
 	            dbgOut('fetchOptions(): No settings found. Using defaults');
-	            $options = self::defaultOptions();
+	            $options = $this->defaultOptions();
 	        }
 
 		    dbgOut('fetchOptions() - Returning the options/settings');
@@ -140,6 +131,7 @@
 	        $settings->lengthVisible = 1; //'lengthVisible'
 	        $settings->sortOrder = SORT_ASC; // 'sortOrder'
 	        $settings->delayType = 'byDays'; // 'delayType'
+            $settings->previewOffset = 0; // How many days into the future the sequence should allow somebody to see.
 	        $settings->startWhen =  0; // startWhen == immediately (in current_time('timestamp') + n seconds)
 		    $settings->sendNotice = 1; // sendNotice == Yes
 		    $settings->noticeTemplate = 'new_content.html'; // Default plugin template
@@ -608,6 +600,7 @@
 			return false;
 		}
 
+
 	    /**
 	     *
 	     * Convert any date string to a number of days worth of delay (since membership started for the current user)
@@ -990,7 +983,7 @@
 			?>
 
 			<?php if(!empty($this->error)) { ?>
-				<div class="message error"><p><?php echo $this->error;?></p></div>
+				<div class="pmpro_seq_error message error"><p><?php echo $this->error;?></p></div>
 			<?php } ?>
 			<table id="pmpro_sequencetable" class="pmpro_sequence_postscroll wp-list-table widefat fixed">
 			<thead>
@@ -1747,8 +1740,35 @@
 	        return $this->options->hidden == 1 ? true : false;
 	    }
 
-		public function isMostRecentlyAvailable( $post_id ) {
+
+        public function get_closestByDelay( $delayVal, $objArr, $userId = null ) {
+
+            $closest = null;
+
+            foreach($objArr as $item) {
+
+                if ( ($closest == null) || (
+                    ( abs($delayVal - $closest) > abs($this->normalizeDelay($item->delay) - $delayVal) )
+                     && pmpro_sequence_hasAccess( $userId, $item->id ) ) )
+                    $cllosest = $item->id;
+            }
+
+            return $closest;
+        }
+
+		public function get_closestPost( $user_id = null ) {
+
 			//TODO: Implement - Will return true if the specified post_id is the post in the sequence that is the post with a delay closest to 'today' out of all the posts.
+            $membershipDay = pmpro_getMemberDays( $user_id, null );
+
+            // Load all posts in the sequence
+            $postList = $this->getPosts();
+
+            $closestPostId = getClosestByDelay( $user_id, $membershipDay , $postList );
+
+            if ( !empty( $closestPostId ) )
+                return $closestPostId;
+
 			return false;
 		}
 	}

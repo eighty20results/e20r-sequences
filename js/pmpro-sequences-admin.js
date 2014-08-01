@@ -236,20 +236,6 @@ jQuery(document).ready(function(){
                 $('#pmpro-seq-edit-sort'),
                 $('#pmpro-seq-sort-select')
             );
-/*
-            if ( sortOrderCtl.find('option:selected').val() != $sortOrder) {
-
-                // Save the new sortOrder setting
-                $sortText = sortOrderCtl.find('option:selected').text();
-                $sortOrder = sortOrderCtl.find('option:selected').val();
-
-                $('#pmpro-seq-sort-status').text($sortText);
-                $('#hidden_pmpro_seq_sortorder').val($sortOrder);
-            }
-            // Hide the select info and enable the edit button.
-            $('#pmpro-seq-sort-select').slideToggle();
-            $('#pmpro-seq-edit-sort').slideToggle();
-            */
         });
 
         $('#ok-pmpro-seq-delay').click(function(){
@@ -265,21 +251,6 @@ jQuery(document).ready(function(){
                 $('#pmpro-seq-delay-select')
             );
 
-            /*
-            if ( $delayCtl.find('option:selected').val() != $delayType) {
-
-                // Save the new sortOrder setting
-                $delayText = $delayCtl.find('option:selected').text();
-                $delayType = $delayCtl.find('option:selected').val();
-
-                $('#pmpro-seq-delay-status').text($delayText);
-                $('#hidden_pmpro_seq_delaytype').val($delayType);
-            }
-
-            // Hide the select info and enable the edit button.
-            $('#pmpro-seq-delay-select').slideToggle();
-            $('#pmpro-seq-edit-delay').slideToggle();
-            */
         });
 
         $('#ok-pmpro-seq-template').click(function(){
@@ -295,19 +266,6 @@ jQuery(document).ready(function(){
                 $('#pmpro-seq-template-select')
             );
 
-            /*
-//            console.log('OK button for template was clicked');
-            if ( $('#pmpro-seq-template-status option:selected').val() != $template) {
-                // Save the new sortOrder setting
-                $templateName = $('#pmpro_sequence_template option:selected').text();
-                $template = $('#pmpro_sequence_template option:selected').val();
-                $('#pmpro-seq-template-status').text($templateName);
-                $('#hidden_pmpro_seq_noticetemplate').val($template);
- //               console.log('Template was changed and is now: ' + $templateName);
-            }
-            $('#pmpro-seq-template-select').slideToggle();
-            $('#pmpro-seq-edit-template').slideToggle();
-            */
         });
 
         $('#ok-pmpro-seq-dateformat').click(function(){
@@ -323,19 +281,6 @@ jQuery(document).ready(function(){
                 $('#pmpro-seq-dateformat-select')
             );
 
-            /*
-            //           console.log('OK button for Sort order was clicked');
-            if ( $('#pmpro-seq-dateformat-status option:selected').val() != $dateformatVal) {
-                // Save the new sortOrder setting
-                // $dateformatTxt = $('#pmpro_sequence_dateformat option:selected').text();
-                $dateformatVal = $('#pmpro_sequence_dateformat option:selected').val();
-                $('#pmpro-seq-dateformat-status').text('"' + $dateformatVal + '"');
-                $('#hidden_pmpro_seq_dateformat').val($dateformatVal);
-//                console.log('Sort order was changed and is now: ' + $sortText);
-            }
-            $('#pmpro-seq-dateformat-select').slideToggle();
-            $('#pmpro-seq-edit-dateformat').slideToggle();
-            */
         });
 
         $('#ok-pmpro-seq-noticetime').click(function(){
@@ -351,19 +296,6 @@ jQuery(document).ready(function(){
                 $('#pmpro-seq-noticetime-select')
             );
 
-            /*
-//            console.log('OK button for alert notice time was clicked');
-            if ( $('#pmpro-seq-noticetime-status option:selected').val() != $alertTime) {
-                // Save the new sortOrder setting
-                $alertText = $('#pmpro_sequence_noticetime option:selected').text();
-                $alertTime = $('#pmpro_sequence_noticetime option:selected').val();
-                $('#pmpro-seq-noticetime-status').text($alertText);
-                $('#hidden_pmpro_seq_noticetime').val($alertTime);
-//                console.log('Content change notice was changed and is now: ' + $alertText);
-            }
-            $('#pmpro-seq-noticetime-select').slideToggle();
-            $('#pmpro-seq-edit-noticetime').slideToggle();
-            */
         });
 
         $('#ok-pmpro-seq-excerpt').click(function(){
@@ -394,18 +326,6 @@ jQuery(document).ready(function(){
                 $('#pmpro-seq-subject-input')
             );
 
-            /*
-//            console.log('OK button for Subject Intro was clicked');
-            if ( $('#pmpro_sequence_subject').val() != $subject) {
-                // Save the new excerpt info
-                $subject = $('#pmpro_sequence_subject').val();
-                $('#hidden_pmpro_seq_subject').val($subject);
-                $('#pmpro-seq-subject-status').text('"' + $subject + '"');
-//                console.log('Content of Subject Intro was changed and is now: ' + $subject);
-            }
-            $('#pmpro-seq-subject-input').slideToggle();
-            $('#pmpro-seq-edit-subject').slideToggle();
-            */
         });
 
         $('#ok-pmpro-seq-email').click(function(){
@@ -464,6 +384,21 @@ function setLabels()
 
 }
 
+
+/**
+ * Set the pmpro_seq_error element in the Sequence Posts meta box
+ */
+
+function pmpro_seq_setErroMsg( $msg ) {
+    jQuery('#pmpro_seq_error').text($msg);
+}
+
+/**
+ *
+ * Check whether to hide all future posts for the sequence.
+ *
+ * @returns {0|1} -
+ */
 function isHidden()
 {
     if (jQuery('#pmpro_sequence_hidden').is(":checked"))
@@ -577,8 +512,10 @@ function pmpro_sequence_addEntry() {
             pmpro_sequence_addpost_nonce: jQuery('#pmpro_sequence_addpost_nonce').val()
         },
         error: function(data){
-            if (data.message != null)
+            if (data.message != null) {
                 alert(data.message);
+                pmpro_seq_setErroMsg(data.message);
+            }
         },
         success: function(data){
             if (data.success)
@@ -628,8 +565,11 @@ function pmpro_sequence_removeEntry(post_id)
             pmpro_sequence_rmpost_nonce: jQuery('#pmpro_sequence_rmpost_nonce').val()
         },
         error: function(data){
-            if (data.message != null)
+            if (data.message != null) {
                 alert(data.message);
+                pmpro_seq_setErroMsg(data.message);
+            }
+
         },
         success: function(data){
             if (data.success)
