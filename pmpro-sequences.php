@@ -224,9 +224,10 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 	    // Get the Post ID to add to this sequence
 	    $seq_post_id = isset($_POST['pmpro_sequencepost']) && '' != $_POST['pmpro_sequencepost'] ? intval($_REQUEST['pmpro_sequencepost']) : null;
 
+	    dbgOut('add_post_callback() - Checking whether delay value is correct');
+
 	    // Get the Delay to use for the post (depends on type of delay configured)
-	    if ( isset($_POST['pmpro_sequencedelay']) &&
-	         $sequence->isValidDelay(esc_attr($_POST['pmpro_sequencedelay'])) ) {
+	    if ( isset($_POST['pmpro_sequencedelay']) && ! empty($_POST['pmpro_sequencedelay']) ) {
 
 		    // Check that the provided delay format matches the configured value.
 		    if ( $sequence->isValidDelay( $_POST['pmpro_sequencedelay'] ) ) {
@@ -260,7 +261,7 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 		    else {
 			    // Ignore this post & return error message to display for the user/admin
 			    // NOTE: Format of date is not translatable
-			    $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __('date: YYYY-MM-DD', 'pmprosequence') : __('number: Days since membership started', 'pmprosequence');
+			    $expectedDelay = ( $sequence->options->delayType == 'byDate' ) ? __('date: YYYY-MM-DD', 'pmprosequence') : __('number: Days since membership started', 'pmprosequence');
 
 			    dbgOut( 'pmpro_sequence_add_post_callback(): Invalid delay value specified, not adding the post: ' . $_POST['pmpro_sequencedelay'] );
 			    $sequence->setError( sprintf( __( 'Invalid delay specified (%1$s). Expected format is a %2$s', 'pmprosequence'), esc_attr($_POST['pmpro_sequencedelay']), $expectedDelay ) );
@@ -271,15 +272,27 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 			    $success = false;
 
 		    }
+	    } else {
+
+		    dbgOut( 'pmpro_sequence_add_post_callback(): Delay value was not specified. Not adding the post: ' . esc_attr($_POST['pmpro_sequencedelay']) );
+
+		    if ( empty($seq_post_id) && ($sequence->getError() == null) )
+			    $sequence->setError( sprintf( __( 'Did not specify a post/page to add', 'pmprosequence' ) ) );
+
+		    elseif (empty($delay))
+		       $sequence->setError( __( 'No delay has been specified', 'pmprosequence') );
+
+		    $success = false;
+
 	    }
 
-	    if (empty($sequence_id)) {
+	    if ( empty($seq_post_id) && ($sequence->getError() == null) )  {
 		    $success = false;
-		    $sequence->setError( sprintf( __( 'No sequence ID specified', 'pmprosequence' ) ) );
+		    $sequence->setError( sprintf( __( 'Did not specify a post/page to add', 'pmprosequence' ) ) );
 	    }
-	    elseif (empty($seq_post_id)) {
+	    elseif ( empty($sequence_id) && ($sequence->getError() == null) ) {
 		    $success = false;
-		    $sequence->setError( sprintf( __( 'Did not specify post/page to add to this sequence', 'pmprosequence' ) ) );
+		    $sequence->setError( sprintf( __( 'This sequence was not found on the server!', 'pmprosequence' ) ) );
 	    }
 
 	    $result = $sequence->getPostListForMetaBox();
@@ -1418,14 +1431,15 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 		global $wpdb, $current_user;
 		$html = '';
 
-        if (is_null($seq_id))
-    		//get all series
-            $seqs = $wpdb->get_results("
+        if (is_null($seq_id)) {
+	        dbgOut('no sequence ID provided. Listing all sequences');
+	        //get all series
+	        $seqs = $wpdb->get_results( "
                 SELECT *
                 FROM $wpdb->posts
                 WHERE post_type = 'pmpro_sequence'
-            ");
-        else {
+            " );
+        } else {
             $sql = $wpdb->prepare("
                 SELECT *
                 FROM $wpdb->posts

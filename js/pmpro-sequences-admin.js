@@ -7,6 +7,8 @@ jQuery.noConflict();
 jQuery(document).ready(function(){
     (function($){
 
+        jQuery('div#pmpro-seq-error').hide();
+
         /* Controls that are reused (optimization) */
 
         /* Select */
@@ -390,7 +392,17 @@ function setLabels()
  */
 
 function pmpro_seq_setErroMsg( $msg ) {
-    jQuery('#pmpro_seq_error').text($msg);
+    var errCtl = jQuery('div#pmpro-seq-error');
+
+    errCtl.text($msg);
+    errCtl.show()
+
+    var timeout = window.setTimeout(function() {
+        console.log('Hiding the error status again');
+        errCtl.hide();
+    }, 15000);
+
+    console.log('Message: ' + $msg);
 }
 
 /**
@@ -512,6 +524,9 @@ function pmpro_sequence_addEntry() {
             pmpro_sequence_addpost_nonce: jQuery('#pmpro_sequence_addpost_nonce').val()
         },
         error: function(data){
+
+            console.log('Return value for error: ' + data.message);
+
             if (data.message != null) {
                 alert(data.message);
                 pmpro_seq_setErroMsg(data.message);

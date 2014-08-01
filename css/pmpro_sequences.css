@@ -17,6 +17,12 @@
     display: none;
 }
 
+div#pmpro-seq-error {
+    display: inherit;
+    color: #9C0000;
+    font-weight: bold;
+    font-size: 10pt;
+}
 .pmpro-sequence-sortorder label,
 .pmpro-sequence-delaytype label,
 .pmpro-sequence-template label,

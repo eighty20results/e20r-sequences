@@ -488,8 +488,12 @@
 	     */
 	    public function isValidDate( $data )
 	    {
-	        if ( preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $data) )
-	            return true;
+		    // TODO: This - isValidDate() needs to support an international date format.
+	        if ( preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $data) ) {
+		        dbgOut('Date value is correcly formatted');
+		        return true;
+	        }
+
 
 	        return false;
 	    }
@@ -982,9 +986,9 @@
 			ob_start();
 			?>
 
-			<?php if(!empty($this->error)) { ?>
-				<div class="pmpro_seq_error message error"><p><?php echo $this->error;?></p></div>
-			<?php } ?>
+			<?php // if(!empty($this->error)) { ?>
+				<div id="pmpro-seq-error" class="message error"><?php echo $this->error;?></div>
+			<?php //} ?>
 			<table id="pmpro_sequencetable" class="pmpro_sequence_postscroll wp-list-table widefat fixed">
 			<thead>
 				<th><?php _e('Order'); ?></th>
