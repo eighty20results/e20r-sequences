@@ -96,7 +96,7 @@ if (! function_exists('pmpro_sequence_admin_scripts')):
 				    'save' => __('Update Sequence', 'pmprosequence'),
 				    'saving' => __('Saving', 'pmprosequence'),
 				    'saveSettings' => __('Update Settings', 'pmprosequence'),
-				    'delay_change_confirmation' => __('Changing the delay type will erase all\n existing posts or pages in the Sequence list.\n\nAre you sure?\n (Cancel if "No")\n\n', 'pmprosequence'),
+				    'delay_change_confirmation' => __('Changing the delay type will erase all existing posts or pages in the Sequence list. (Cancel if your are unsure)', 'pmprosequence'),
 				    'saving_error_1' => __('Error saving sequence post [1]', 'pmprosequence'),
 				    'saving_error_2' => __('Error saving sequence post [2]', 'pmprosequence'),
 				    'remove_error_1' => __('Error deleting sequence post [1]', 'pmprosequence'),
