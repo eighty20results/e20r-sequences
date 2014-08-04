@@ -246,6 +246,27 @@
 			}
 		}
 
+		public function postDelayAsTS($delay, $user_id = null, $level_id = null) {
+
+			$timestamp = current_time('timestamp'); // Default is 'now'
+
+			$startTS = pmpro_getMemberStartdate($user_id, $level_id);
+
+			dbgOut('postDelayAsTS() - Start date: ' . $startTS);
+
+			switch ($this->options->delayType) {
+				case 'byDays':
+					$delayTS = strtotime( '+' . $delay . 'days', $startTS);
+					break;
+
+				case 'byDate':
+
+					break;
+			}
+
+			return $timestamp;
+		}
+
 	    /**
 	     * Converts a timeString to a timestamp value (UTC compliant).
 	     * Will use the supplied timeString to calculate & return the UTC seconds-since-epoch for that clock time tomorrow.
@@ -1667,6 +1688,9 @@
 
 	            // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
 				dbgOut('getPostsLists() - Sorted posts in configured order');
+
+				// TODO: Urgent --- Add support for pagination for this page!
+
 				$posts_listed = false;
 				$empty_notification = false;
 
