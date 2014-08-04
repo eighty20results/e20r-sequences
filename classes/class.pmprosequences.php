@@ -264,6 +264,40 @@
 			}
 		}
 
+		/**
+		 * Check whether the specific user should receive a notice for the specific post
+		 *    FALSE if the $post->delay means the today is NOT the first time this user can access the post
+		 *
+		 *
+		 * @param $user - $wpdb object containing user info
+		 * @param $post -- $sequence post object containing post ID & delay
+		 *
+		 * @return bool -- TRUE if we should let the user get notified about this post, false otherwise.
+		 */
+		public function isAfterOptIn( $user_id, $user_settings, $post ) {
+
+			$optinTS = $user_settings->sequence[ $this->sequence_id ]->optinTS;
+
+			if ($optinTS != -1) {
+				dbgOut( 'isAfterOptIn() -- User: ' . $user_id . ' Optin TS: ' . $optinTS .
+				        ', Optin Date: ' . date( 'Y-m-d', $optinTS )
+				);
+
+
+				if ( $optinTS < $this->postDelayAsTS( $post->delay, $user_id ) ) {
+
+					dbgOut( "The timestamp for the Post->delay < less than the timestamp (earlier) for when the user opted in" );
+					return false;
+				} else {
+					dbgOut('The timestamp for the Post->delay > (greater than) the timestamp (later) when the user opted in');
+					return true;
+				}
+			} else {
+				dbgOut('isAfterOptIn() - Negative optinTS. User  ' . $user_id . ' is not opted in any longer');
+				return false;
+			}
+		}
+
         /**
          * Calculate the delay for a post as a 'seconds since UNIX epoch' value
          *
@@ -277,18 +311,21 @@
         public function postDelayAsTS($delay, $user_id = null, $level_id = null) {
 
 			$delayTS = current_time('timestamp'); // Default is 'now'
+	        dbgOut('postDelayAsTS() - User: ' . $user_id . ' Delay: ' . $delay . ' delayTS: ' . $delayTS);
 
 			$startTS = pmpro_getMemberStartdate($user_id, $level_id);
 
-			dbgOut('postDelayAsTS() - Start date ts: ' . $startTS);
+			dbgOut('postDelayAsTS() - Start date (ts?): ' . $startTS);
 
 			switch ($this->options->delayType) {
 				case 'byDays':
 					$delayTS = strtotime( '+' . $delay . ' days', $startTS);
+					dbgOut('postDelayAsTS() -  byDays delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
 					break;
 
 				case 'byDate':
                     $delayTS = strtotime( $delay );
+					dbgOut('postDelayAsTS() -  byDate delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
 					break;
 			}
 
@@ -593,6 +630,10 @@
 				}
 			}
 
+			// Remove post from user settings...
+			// Remove the post ($post_id) from all cases where a User has been notified.
+			$this->removeNotifiedFlagForPost($post_id);
+
 			//remove this sequence from the post
 			$post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
@@ -608,20 +649,53 @@
 			return true;
 		}
 
-        /**
-		 * Check whether the specific user should receive a notice for the specific post
-		 *    FALSE if the $post->delay means the today is NOT the first time this user can access the post
+		/**
+		 * Function will remove the flag indicating that the user has been notified already for this post.
+		 * Searches through all active User IDs with the same level as the Sequence requires.
 		 *
+		 * @param $post_id - The ID of the post to search through the active member list for
 		 *
-		 * @param $user - $wpdb object containing user info
-		 * @param $post -- $sequence post object containing post ID & delay
-		 *
-		 * @return bool -- TRUE if we should let the user get notified about this post, false otherwise.
+		 * @access private
 		 */
-		public function isAfterOptIn( $user, $post ) {
+		private function removeNotifiedFlagForPost( $post_id ) {
 
+			global $wpdb;
 
-			return true;
+			dbgOut('Preparing SQL. Using sequence ID: ' . $this->sequence_id);
+
+			// Find all users that are active members of this sequence.
+			$sql = $wpdb->prepare(
+				"
+					SELECT *
+					FROM $wpdb->pmpro_memberships_pages AS pages
+						INNER JOIN $wpdb->pmpro_memberships_users AS users
+						ON (users.membership_id = pages.membership_id)
+					WHERE page_id = %d AND status = %s
+				",
+				$this->sequence_id,
+				'active'
+			);
+
+			$users = $wpdb->get_results($sql);
+
+			foreach ($users as $user) {
+
+				dbgOut('removeNotifiedFlagForPost() - Searching for Post ID ' . $post_id .' in notification settings for user with ID: ' . $user->user_id);
+				$userSettings = get_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
+
+				$notifiedPosts = $userSettings->sequence[ $this->sequence_id ]->notifiedPosts;
+
+				if ( is_array($notifiedPosts) &&
+				     ($key = array_search( $post_id, $notifiedPosts) ) !== false ) {
+
+					dbgOut('Found post # ' . $post_id . ' in the notification settings for user_id ' . $user->user_id . ' with key: ' . $key);
+					dbgOut('Found in settings: ' . $userSettings->sequence[ $this->sequence_id ]->notifiedPosts[ $key ]);
+					unset( $userSettings->sequence[ $this->sequence_id ]->notifiedPosts[ $key ] );
+
+					update_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $userSettings );
+					dbgOut('Deleted post # ' . $post_id . ' in the notification settings for user with id ' . $user->user_id);
+				}
+			}
 		}
 
 		/**
@@ -882,7 +956,7 @@
 						<td class="pmpro_sequence_tblNumber"><?php echo $count?>.</td>
 						<td class="pmpro_sequence_tblPostname"><?php echo get_the_title($post->id)?></td>
 						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay ?></td>
-	                    <?php dbgOut('Sequence entry # ' . $count . ' for post ' . $post->id . ' delayed ' . $this->normalizeDelay($post->delay)); ?>
+	                    <?php // dbgOut('Sequence entry # ' . $count . ' for post ' . $post->id . ' delayed ' . $this->normalizeDelay($post->delay)); ?>
 						<td><a href="javascript:pmpro_sequence_editPost('<?php echo $post->id; ?>'); void(0); "><?php _e('Edit','pmprosequence'); ?></a></td>
 						<td>
 							<a href="javascript:pmpro_sequence_editEntry('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);"><?php _e('Update', 'pmprosequence'); ?></a>
@@ -1669,7 +1743,7 @@
 
 							$empty_notification = true;
 							?>
-							<span><center>There is <em>no content available</em> for you at this time. Please check back later.</center></span>
+							<span style="text-align: center;">There is <em>no content available</em> for you at this time. Please check back later.</span>
 				<?php   }; ?>
 						<div class="clear"></div>
 					<?php
@@ -1705,7 +1779,7 @@
 	    {
 		    // Get the preview offset (if it's defined). If not, set it to 0
 		    // for compatibility
-		    if ( empty($this->options->previewOffset) || is_null($this->options->previewOffset) ) {
+		    if ( empty($this->options->previewOffset) ) {
 
 			    dbgOut("isPastDelay() - the previewOffset value doesn't exist yet. Fixing it now");
 			    $this->options->previewOffset = 0;
@@ -1892,10 +1966,10 @@
 	    {
 
 	        if ( $this->isValidDate($delay) ) {
-	            dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
+	            // dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
 	            return $this->convertToDays($delay);
 	        }
-	        dbgOut('normalizeDelay(): Delay specified as # of days since membership start: ' . $delay);
+	        //dbgOut('normalizeDelay(): Delay specified as # of days since membership start: ' . $delay);
 	        return $delay;
 	    }
 

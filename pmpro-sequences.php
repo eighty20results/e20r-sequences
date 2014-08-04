@@ -506,15 +506,14 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 		        $usrSettings = $new;
 	        }
 
-
-	        $usrSettings->sequence[$seqId]->sendNotice = ( isset( $_POST['pmpro_sequence_optIn'] ) ?
-		        intval($_POST['pmpro_sequence_optIn']) : $seq->options->sendNotice );
+	        $usrSettings->sequence[$seqId]->sendNotice = ( isset( $_POST['hidden_pmpro_seq_useroptin'] ) ?
+		        intval($_POST['hidden_pmpro_seq_useroptin']) : $seq->options->sendNotice );
 
 	        // If the user opted in to receiving alerts, set the opt-in timestamp to the current time.
 	        // If they opted out, set the opt-in timestamp to -1
 	        if ($usrSettings->sequence[$seqId]->sendNotice == 1)
 		        // Set the timestamp when the user opted in.
-		        $usrSettings->sequence[$seqId]->optinTS = current_time('timestamp');
+		        $usrSettings->sequence[$seqId]->optinTS = current_time('timestamp', 1);
 	        else
 		        $usrSettings->sequence[$seqId]->optinTS = -1; // Opted out.
 
@@ -524,7 +523,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
             /* Save the user options we just defined */
             if ( $user_id == $current_user->ID ) {
-
+	            dbgOut('Opt-In Timestamp is: ' . $usrSettings->sequence[$seqId]->optinTS);
 	            // dbgOut('Saving user_meta for UID ' . $user_id . ' Settings: ' . print_r($usrSettings, true));
 	            update_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence_notices', $usrSettings );
 	            $status = true;
@@ -903,10 +902,22 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 	         */
 
 	        $tmpSequence = new PMProSequences($sequence_id);
+	        dbgOut( ( empty($tmpSequence->options->previewOffset) ? 'no Preview offset configured' : 'Preview offset has been configured: ' . $sequence_id) );
+
 	        // $tmpSequence->fetchOptions($sequence_id);
 	        dbgOut('pmpro_sequence_hasAccess() - Processing for sequence: ' . $sequence_id);
 
-            //Does user have access to the sequence page? (and thus any of the posts/pages included in the sequence)?
+	        // Get the preview offset (if it's defined). If not, set it to 0
+	        // for compatibility
+	        if ( empty($tmpSequence->options->previewOffset) ) {
+
+		        $tmpSequence->options->previewOffset = 0;
+		        dbgOut('Saving settings due to post # ', $post_id);
+		        $tmpSequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
+
+	        }
+
+	        //Does user have access to the sequence page? (and thus any of the posts/pages included in the sequence)?
             $results = pmpro_has_membership_access($sequence_id, $user_id, true); //Using true to return all level IDs that have access to the sequence
 
             if ( $results[0] )	{ // First item in results array == true if user has access
@@ -920,16 +931,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
                         // dbgOut('Checking post for access - contains: ' . print_r($sp, true));
 
-                        // Get the preview offset (if it's defined). If not, set it to 0
-                        // for compatibility
-                        if ( empty($sp->options->previewOffset) || is_null($sp->options->previewOffset) ) {
-
-                            $sp->options->previewOffset = 0;
-                            $tmpSequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
-
-                        }
-
-                        $offset = $sp->options->previewOffset;
+                        $offset = $tmpSequence->options->previewOffset;
 
                         //this post we are checking is in this sequence
                         if ( $sp->id == $post_id ) {

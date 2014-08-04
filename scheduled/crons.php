@@ -20,6 +20,8 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 		 *
 		 */
 
+
+
 		// Get all sequences and users associated in the system who _may_ need to be notified
 		if ( empty($sequenceId) || ($sequenceId == 0)) {
 
@@ -99,7 +101,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				// Iterate through all of the posts in the sequence
 				foreach ( $sequence_posts as $post ) {
 
-
+					dbgOut('Evaluating whether to send alert for "' . get_the_title($post->id) .'"');
 					/**
 					 * if 'byDays':
 					 *  Find the post that would be displayed "today" per the sequence rules
@@ -112,50 +114,46 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 					 *
 					 *  Compare earliest $post->delay value (as a timestamp) to the User specific optinTS. If Greater or equal, then send.
 					 */
-					if ( ($sequence->postDelayAsTS( $post->delay ) >=
-					      $noticeSettings->sequence[ $sequence->sequence_id ]->optinTS ) &&
-						($sendCount[$s->user_id] >= PMPRO_SEQUENCE_MAX_EMAILS) ) {
+					if ( $sequence->isAfterOptIn($s->user_id, $noticeSettings, $post ) &&
+						($sendCount[$s->user_id] < PMPRO_SEQUENCE_MAX_EMAILS) ) {
 
-						dbgOut("Not sending this post (" . $post->id . ")");
-						continue;
+						// Test if $post->delay >= maxNotifyDelay
+
+						dbgOut( 'cron() - Post: ' . get_the_title($post->id) .
+						        ', user ID: ' . $s->user_id .
+						        ', in_array: ' . ( in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
+						        ', hasAccess: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false' ) );
+
+						// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
+						if ( ( ! empty( $post->id ) ) && pmpro_sequence_hasAccess( $s->user_id, $post->id ) &&
+						     ! in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true )
+						) {
+
+							dbgOut( 'cron() - Preparing the email message' );
+
+							// Send the email notice to the user
+							if ( $sequence->sendEmail( $post->id, $s->user_id, $sequence->sequence_id ) ) {
+
+								dbgOut( 'cron() - Email was successfully sent' );
+								// Update the sequence metadata that user has been notified
+								$noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts[] = $post->id;
+
+								// Increment send count.
+								$sendCount[ $s->user_id ] ++;
+
+								dbgOut( 'cron() - Sent email to user ' . $s->user_id . ' about post ' .
+								        $post->id . ' in sequence: ' . $sequence->sequence_id . '. SendCount = ' . $sendCount[ $s->user_id ] );
+							} else {
+								dbgOut( 'cron() - Error sending email message!' );
+							}
+
+						} else {
+							dbgOut( 'cron() - User with ID ' . $s->user_id . ' does not need alert for post #' .
+							        $post->id . ' in sequence ' . $sequence->sequence_id . ' Or the sendCount (' . $sendCount[ $s->user_id ] . ')has been exceeded for now' );
+
+						} // End of access test.
+
 					}
-
-					// Test if $post->delay >= maxNotifyDelay
-
-					dbgOut('cron() - Post ID: ' . $post->id .
-		                  ', user ID: ' . $s->user_id .
-		                  ', in_array: ' . ( in_array( $post->id, $noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts, true ) == false ? 'false' : 'true') .
-		                  ', hasAccess: ' . (pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false') );
-
-					// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
-					if ( (!empty($post->id)) && pmpro_sequence_hasAccess( $s->user_id, $post->id ) &&
-					     !in_array( $post->id, $noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts, true ) ) {
-
-						dbgOut('cron() - Preparing the email message');
-
-						// Send the email notice to the user
-						if ($sequence->sendEmail( $post->id, $s->user_id, $sequence->sequence_id )) {
-
-							dbgOut('cron() - Email was successfully sent');
-							// Update the sequence metadata that user has been notified
-							$noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts[] = $post->id;
-
-							// Increment send count.
-							$sendCount[$s->user_id]++;
-
-							dbgOut( 'cron() - Sent email to user ' . $s->user_id . ' about post ' .
-							        $post->id . ' in sequence: ' . $sequence->sequence_id . '. SendCount = ' . $sendCount[ $s->user_id ] );
-						}
-						else
-							dbgOut('cron() - Error sending email message!');
-
-					}
-					else {
-						dbgOut( 'cron() - User with ID ' . $s->user_id . ' does not need alert for post #' .
-			                   $post->id . ' in sequence ' . $sequence->sequence_id . ' Or the sendCount ('. $sendCount[$s->user_id] .')has been exceeded for now');
-
-					} // End of access test.
-
 				} // End foreach for sequence posts
 
 				update_user_meta( $s->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $noticeSettings );
