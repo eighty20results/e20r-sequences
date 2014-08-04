@@ -110,13 +110,14 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 					 * if 'byDate':
 					 *    $days-since-start-for-this-user = $sequence->convertToDays($post->delay, $s->user_id, $s->membership_id);
 					 *
-					 *  Compare earliest $post->delay value to
+					 *  Compare earliest $post->delay value (as a timestamp) to the User specific optinTS. If Greater or equal, then send.
 					 */
-					if (
-						($sendCount[$s->user_id] >= PMPRO_SEQUENCE_MAX_EMAILS)) {
+					if ( ($sequence->postDelayAsTS( $post->delay ) >=
+					      $noticeSettings->sequence[ $sequence->sequence_id ]->optinTS ) &&
+						($sendCount[$s->user_id] >= PMPRO_SEQUENCE_MAX_EMAILS) ) {
 
-						dbgOut('Send Count exceeds MAX_EMAILS');
-						break;
+						dbgOut("Not sending this post (" . $post->id . ")");
+						continue;
 					}
 
 					// Test if $post->delay >= maxNotifyDelay
