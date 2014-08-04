@@ -49,6 +49,12 @@ jQuery(document).ready(function(){
 
         // console.log('Sort Order is: ' + jQuery('#pmpro_sequence_sortorder option:selected').text());
 
+        if ( $delayCtl.find('option:selected').val() == 'byDate') {
+            delayAsChoice( 'hide' );
+        }
+
+        manageDelayLabels( $delayCtl.val() );
+
         if ( $sendAlertCtl.is(':checked') ) {
  //           console.log('Show all notice related variables');
             $('.pmpro-sequence-email').show();
@@ -67,12 +73,18 @@ jQuery(document).ready(function(){
         });
 
         /* Admin clicked the 'Edit' button for the delayType settings. Show the select field & hide the "edit" button */
+        /* Also need to decide whether the 'List delay as' editable settings need to be shown.
+        *  Only show the edit controls for the 'list delay as' if the _current_ 'Delay type' value is or gets set to ('byDays') (i.e. 'delayType == byDays')
+         *
+        * */
         $('#pmpro-seq-edit-delay').click(function(){
- //           console.log('Edit button for delay type clicked');
-            $('#pmpro-seq-edit-delay').slideToggle();
-            $('#pmpro-seq-delay-select').slideToggle();
-            // TODO: Validate that this will do what we expect: Show the 'show delay as' option if the user clicks 'edit'
-            delayAsChoice();
+
+            editDelaySettings();
+        });
+
+        $('#pmpro-seq-edit-showdelayas').click(function(){
+
+            editDelaySettings();
         });
 
         /* Show/Hide the alert template information */
@@ -129,19 +141,29 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-subject-input').slideToggle();
         });
 
+        /** The Email and Name for the "From" line **/
         $('#pmpro-seq-edit-fromname').click(function(){
  //           console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-fromname').slideToggle();
+            $('#pmpro-seq-edit-replyto').slideToggle();
         });
 
         $('#pmpro-seq-edit-replyto').click(function(){
  //           console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
+            $('#pmpro-seq-edit-fromname').slideToggle();
         });
+        /** Done processing Email and Name for the "From" line **/
 
-        /** Cancel button events **/
+        /**
+         *
+         *
+         * Cancel button events
+         *
+         *
+         **/
 
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
@@ -153,18 +175,24 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-edit-sort').slideToggle();
 
         });
+
         /** Admin clicked the 'Cancel' button for the DelayType edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
         $('#cancel-pmpro-seq-delay').click(function(){
 //            console.log('Cancel button for Delay type was clicked');
             // $delayCtl.getAttribute('hidden_pmpro_seq_delaytype');
-            $('#pmpro-seq-delay-select').slideToggle();
-            $('#pmpro-seq-edit-delay').slideToggle();
 
-            // TODO: Add toggle for pmpro-seq-edit-showdelayas & related elements
-            delayAsChoice();
+            manageDelayLabels( $delayCtl.val() );
 
+            $('#pmpro-seq-delay-select').hide();
+            $('#pmpro-seq-showdelayas-select').hide();
+
+            $('#pmpro-seq-edit-delay').show();
+            $('#pmpro-seq-edit-showdelayas').show();
+            $('#pmpro-seq-delay-btns').hide();
+
+            setDelayEditBtns();
         });
 
         /**
@@ -250,31 +278,29 @@ jQuery(document).ready(function(){
 
         $('#ok-pmpro-seq-delay').click(function(){
 
-            var $hCtl = $('#hidden_pmpro_seq_delaytype');
+            var $hCtl1 = $('#hidden_pmpro_seq_delaytype');
+            var $hCtl2 = $('#hidden_pmpro_seq_showdelayas');
 
             configSelected(
                 $delayCtl,
-                $hCtl.val(),
+                $hCtl1.val(),
                 $('#pmpro-seq-delay-status'),
-                $hCtl,
+                $hCtl1,
                 $('#pmpro-seq-edit-delay'),
                 $('#pmpro-seq-delay-select')
             );
 
-        });
-
-        $('#ok-pmpro-seq-showdelayas').click(function(){
-
-            var $hCtl = $('#hidden_pmpro_seq_showdelayas');
-
             configSelected(
                 $showDelayCtl,
-                $hCtl.val(),
+                $hCtl2.val(),
                 $('#pmpro-seq-showdelayas-status'),
-                $hCtl,
+                $hCtl2,
                 $('#pmpro-seq-edit-showdelayas'),
                 $('#pmpro-seq-showdelayas-select')
             );
+
+            jQuery('#pmpro-seq-showdelayas').css('margin-top', '0px');
+            $('#pmpro-seq-delay-btns').hide();
 
         });
 
@@ -322,8 +348,6 @@ jQuery(document).ready(function(){
             );
 
         });
-
-
 
         $('#ok-pmpro-seq-excerpt').click(function(){
 
@@ -417,10 +441,13 @@ function setLabels()
  */
 
 function pmpro_seq_setErroMsg( $msg ) {
+
+    console.log('Showing error message in meta box: ' + $msg);
+
     var errCtl = jQuery('div#pmpro-seq-error');
 
     errCtl.text($msg);
-    errCtl.show()
+    errCtl.show();
 
     var timeout = window.setTimeout(function() {
         console.log('Hiding the error status again');
@@ -484,8 +511,8 @@ function configSelected( $selectCtl, $oldValue, $statusCtl, $hiddenCtl, $editBtn
         $hiddenCtl.val($val); // Set the value='' for the hidden input field
     }
 
-    $selCtl.slideToggle(); // Hide the Input field + OK & Cancel buttons
-    $editBtn.slideToggle(); // Show edit button again
+    $selCtl.hide(); // Hide the Input field + OK & Cancel buttons
+    $editBtn.show(); // Show edit button again
 }
 
 /**
@@ -509,26 +536,105 @@ function configInput( $inputCtl, $oldValue, $statusCtl, $hiddenCtl, $editBtn, $i
         $statusCtl.text('"' + $val + '"');
     }
 
-    $inpCtl.slideToggle(); // Hide the Input field + OK & Cancel buttons
-    $editBtn.slideToggle(); // Show edit button again
+    $inpCtl.hide(); // Hide the Input field + OK & Cancel buttons
+    $editBtn.show(); // Show edit button again
 
 }
 
-function delayAsChoice() {
+function editDelaySettings() {
+    console.log('Edit button for delay type clicked');
+
+    jQuery('#pmpro-seq-edit-delay').hide();
+    jQuery('#pmpro-seq-edit-showdelayas').hide();
+    jQuery('#pmpro-seq-delay-select').show();
+
+    console.log('Show the select boxes for the delay type and the "show availability as" variables');
+    manageDelayEditCtrls( jQuery('#pmpro_sequence_delaytype').val() );
+
+}
+
+function manageDelayLabels( $currentDelayType ) {
+
+    console.log('In manageDelayLabels()');
+
+    if ($currentDelayType == 'byDays') {
+        jQuery('#pmpro-seq-showdelayas').show(); // Show
+        jQuery('#pmpro-seq-showdelayas').css('margin-top', '0px');
+        jQuery('#pmpro-seq-edit-showdelayas').show(); // Show
+    }
+    else {
+        jQuery('#pmpro-seq-showdelayas').hide(); // Hide
+        jQuery('#pmpro-seq-edit-showdelayas').hide(); // Hide
+    }
+}
+
+function manageDelayEditCtrls( $currentDelayType ) {
+    console.log('In manageDelayEditCtrls()');
+
+    if ($currentDelayType == 'byDays') {
+        jQuery('#pmpro-seq-edit-showdelayas').hide(); // Hide
+        jQuery('#pmpro-seq-showdelayas').show(); // Show
+        jQuery('#pmpro-seq-showdelayas').css('margin-top', '10px');
+
+        setDelayEditBtns();
+
+        jQuery('#pmpro-seq-showdelayas-select').show() //Show
+    }
+
+    if ($currentDelayType == 'byDate') {
+        console.log('Showing select controls');
+        jQuery('#pmpro-seq-edit-showdelayas').show(); // Show
+        jQuery('#pmpro-seq-showdelayas').hide(); // Hide
+
+        setDelayEditBtns();
+
+        jQuery('#pmpro-seq-showdelayas-select').hide() // hide
+    }
+}
+
+function setDelayEditBtns() {
+    console.log('In setDelayEditBtns()');
+
+    if ( jQuery('#pmpro-seq-edit-delay').is(':visible') ||
+        jQuery('#pmpro-seq-edit-showdelayas').is(':visible') ) {
+        console.log('Edit button is visible');
+        jQuery('pmpro-seq-delay-btns').hide(); // Show
+    } else {
+        console.log('Edit button is hidden');
+        jQuery('#pmpro-seq-delay-btns').show(); // Hide
+    }
+
+}
+
+function delayAsChoice( $visibility ) {
 
     // TODO: (done?) This needs to take both the current value of the delayType and the edit visibility of delayType into account
 
+    if ($visibility == 'hide') {
+        console.log('Hide the showDelayAs options');
+        jQuery('.pmpro-seq-showdelayas').hide(); // hide
+        jQuery('#pmpro-seq-showdelayas-select').hide(); // hide
+        jQuery('.pmpro-seq-delay-btns').hide(); // hide
+    }
+    else {
+        jQuery('.pmpro-seq-showdelayas').show(); // show
+        jQuery('.pmpro-seq-delay-btns').show(); // show
+        jQuery('#pmpro-seq-showdelayas-select').show(); // hide
+    }
+
+
+    /*
     // Checking whether the user set the value to 'byDays'
     if ( ( jQuery('#pmpro_sequence_delaytype').val() == 'byDays' ) &&
-        ( jQuery('#pmpro_sequence_delaytype').is(':visible')) )
+        (! jQuery('#pmpro_sequence_delaytype').is(':visible')) )
     {
+        console.log('Make "days" visible');
         jQuery('#pmpro-seq-edit-showdelayas').hide();
         jQuery('#pmpro-seq-showdelayas-select').show();
     }
     else {
-        jQuery('#pmpro-seq-edit-showdelayas').show();
-        jQuery('#pmpro-seq-showdelayas-select').hide();
     }
+    */
 }
 /* -- Commented out until we support 24/12 hour clock choices
 function formatTime($h_24) {
@@ -640,7 +746,9 @@ function pmpro_sequence_removeEntry(post_id)
 
 function pmpro_sequence_delayTypeChange( sequence_id ) {
 
-    var selected = jQuery('#pmpro_sequence_delaytype').val();
+    var dtCtl = jQuery('#pmpro_sequence_delaytype');
+
+    var selected = dtCtl.val();
     var current = jQuery('input[name=pmpro_sequence_settings_hidden_delay]').val();
 
 //    console.log('Process changes to delayType option');
@@ -648,25 +756,27 @@ function pmpro_sequence_delayTypeChange( sequence_id ) {
 //    console.log('delayType: ' + selected);
 //    console.log('Current: ' + current);
 
-    if (jQuery('#pmpro_sequence_delaytype').val() != jQuery('#pmpro_sequence_settings_hidden_delay').val()) {
-
-        // if (! confirm("Changing the delay type will erase all\n existing posts or pages in the Sequence list.\n\nAre you sure?\n (Cancel if 'No')\n\n"))
+    if (dtCtl.val() != jQuery('#pmpro_sequence_settings_hidden_delay').val()) {
 
         if (!confirm(pmpro_sequence.lang.delay_change_confirmation)) {
-            jQuery('#pmpro_sequence_delaytype').val(jQuery.data('#pmpro_sequence_delaytype', 'pmpro_sequence_settings_hidden_delay'));
-            jQuery('#pmpro_sequence_delaytype').val(current);
+            dtCtl.val( jQuery.data('delayType') );
+            dtCtl.val(current);
             jQuery('#hidden_pmpro_seq_wipesequence').val(0);
-
-            delayAsChoice();
 
             return false;
         } else
             jQuery('#hidden_pmpro_seq_wipesequence').val(1);
 
-        jQuery.data('#pmpro_sequence_delaytype', 'pmpro_sequence_settings_delaytype', jQuery('#pmpro_sequence_delaytype').val());
+        if (dtCtl.val() == 'byDate')
+            delayAsChoice( 'hide' );
+        else if (dtCtl.val() == 'byDays')
+            delayAsChoice( 'show' );
 
-        // console.log('Selected: ' + jQuery('#pmpro_sequence_delaytype').val());
+        console.log('Selected: ' + dtCtl.val());
         // console.log('Current (hidden): ' + jQuery('input[name=pmpro_sequence_settings_hidden_delay]').val());
+
+        jQuery.data('delayType', dtCtl.val() );
+
     }
 }
 
@@ -712,9 +822,10 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_wipesequence: jQuery('#hidden_pmpro_seq_wipesequence').val()
         },
         error: function(data){
-
-            if (data.message != null)
+            if (data.message != null) {
                 alert(data.message);
+                pmpro_seq_setErroMsg(data.message);
+            }
         },
         success: function(data){
 

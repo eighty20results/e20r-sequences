@@ -9,67 +9,36 @@
 .pmpro_sequence_item-available {display: inline-block; float: right; width: auto; }
 .pmpro_sequence_item-unavailable {display: inline-block; float: right; width: auto; font-style: italic; font-size: .9em; text-align: center;  }
 
-.pmpro-sequence-template,
-.pmpro-sequence-noticetime,
-.pmpro-sequence-dateformat,
-.pmpro-sequence-email,
-#save_pmpro-seq-useroptin {
+.pmpro-seq-centered {
+    text-align: center;
+}
+
+.pmpro-sequence-hidden {
     display: none;
 }
 
 div#pmpro-seq-error {
-    display: inherit;
+    height: 40px;
+    display: none;
     color: #9C0000;
     font-weight: bold;
     font-size: 10pt;
 }
-.pmpro-sequence-sortorder label,
-.pmpro-sequence-delaytype label,
-.pmpro-sequence-showdelayas label,
-.pmpro-sequence-template label,
-.pmpro-sequence-noticetime label,
-.pmpro-sequence-dateformat label,
-.pmpro-sequence-excerpt label,
-.pmpro-sequence-subject label,
-.pmpro-sequence-email label {
+
+.pmpro-seq-btns {
+    left: 20px;
+    white-space: nowrap;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+.pmpro-sequence-label {
     vertical-align: bottom;
     width: 67px;
     overflow: hidden;
 }
 
-.pmpro-seq-email-hl {
-    margin-bottom: 3px;
-    margin-top: 3px;
-    font-size: 12px;
-    font-weight: bold;
-
-}
-
-span#pmpro-seq-noticetimetz-status {
-    display: inline-block;
-    vertical-align: bottom;
-    overflow: hidden;
-    width: 150px;
-    white-space: nowrap;
-    text-overflow: ellipsis;
-    /* -o-text-overflow: ellipsis; */
-    /* -moz-binding: url('assets/xml/ellipsis.xml#ellipsis'); */
-    height: 18px;
-    font-weight: bold;
-    color: #666666;
-
-}
-
-span#pmpro-seq-sort-status,
-span#pmpro-seq-delay-status,
-span#pmpro-seq-showdelayas-status,
-span#pmpro-seq-template-status,
-span#pmpro-seq-noticetime-status,
-span#pmpro-seq-fromname-status,
-span#pmpro-seq-replyto-status,
-span#pmpro-seq-dateformat-status,
-span#pmpro-seq-subject-status,
-span#pmpro-seq-excerpt-status {
+.pmpro-sequence-status {
     display: inline-block;
     vertical-align: bottom;
     overflow: hidden;
@@ -83,15 +52,41 @@ span#pmpro-seq-excerpt-status {
     color: #3875d7;
 }
 
-.edit-pmpro-seq-sort,
-.edit-pmpro-seq-delay,
-.edit-pmpro-seq-showdelayas,
-.edit-pmpro-seq-template,
-.edit-pmpro-seq-noticetime,
-.edit-pmpro-seq-dateformat,
-.edit-pmpro-seq-email,
-.edit-pmpro-seq-subject,
-.edit-pmpro-seq-excerpt {
+#pmpro-seq-showdelayas-status {
+    width: 100px;
+}
+
+#pmpro-seq-showdelayas {
+    margin: 10px 0px 0px 0px;
+}
+.pmpro-seq-email-hl {
+    margin-bottom: 3px;
+    margin-top: 3px;
+    font-size: 12px;
+    font-weight: bold;
+
+}
+
+#pmpro-seq-noticetimetz-status {
+    color: #666666;
+}
+
+.pmpro-seq-edit {
+    position: absolute;
+    right: 20px;
+    display: inline-block;
+}
+
+#pmpro-seq-edit-showdelayas,
+#pmpro-seq-edit-delay {
+    position: relative;
+    right: 2px;
+    display: inline-block;
+}
+
+
+.cancel-pmproseq {
+    position: relative;
     display: inline-block;
 }
 
@@ -113,13 +108,14 @@ input#pmpro_sequence_excerpt {
 }
 
 .pmpro_sequence_useroptin {
+    height: 30px;
     border:1px solid #c5c5c5;
     display: inline-block;
-    width: 550px;
+    width: 650px;
     text-align: center;
-    margin-left: auto;
-    margin-right: auto;
-    vertical-align: middle;
+    margin: 0 auto;
+    padding-top: 5px;
+    /* vertical-align: baseline; */
 }
 
 .seq_spinner {
