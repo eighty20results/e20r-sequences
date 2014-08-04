@@ -609,125 +609,6 @@
 		}
 
         /**
-         * Return a normalized (as 'days since membership started') number indicating the delay for the post content
-         * to become available/accessible to the user
-         *
-         * @param $post_id -- The ID of the post
-         * @return bool|int -- The delay value for this post (numerical - even when delayType is byDate)
-         *
-         * @access private
-         */
-        private function getDelayForPost($post_id)
-		{
-			$key = $this->getPostKey($post_id);
-
-			if($key === false)
-	        {
-	            dbgOut('No key found in getDelayForPost');
-				return false;
-	        }
-	        else {
-
-	            $delay = $this->normalizeDelay( $this->posts[$key]->delay );
-	            dbgOut('getDelayForPost(): Delay for post with id = ' . $post_id . ' is ' .$delay);
-	            return $delay;
-	        }
-		}
-
-
-        /**
-         * Find the post in the sequence and return its key
-         *
-         * @param $post_id -- The ID of the post
-         * @return bool|int|string -- The key for the post
-         *
-         * @access private
-         */
-        private function getPostKey($post_id)
-		{
-			$this->getPosts();
-
-			if(empty($this->posts))
-				return false;
-
-			foreach($this->posts as $key => $post)
-			{
-				if($post->id == $post_id)
-					return $key;
-			}
-
-			return false;
-		}
-
-	    /**
-	     *
-	     * Convert any date string to a number of days worth of delay (since membership started for the current user)
-	     *
-	     * @param $delay (int | string) -- The delay value (either a # of days or a date YYYY-MM-DD)
-	     * @return mixed (int) -- The # of days since membership started (for this user)
-         *
-         * @access public
-	     */
-	    public function normalizeDelay( $delay )
-	    {
-
-	        if ( $this->isValidDate($delay) ) {
-	            dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
-	            return $this->convertToDays($delay);
-	        }
-	        dbgOut('normalizeDelay(): Delay specified as # of days since membership start: ' . $delay);
-	        return $delay;
-	    }
-
-	    /**
-	     *
-	     * Returns a number of days since the users membership started based on the supplied date.
-	     * This allows us to mix sequences containing days since membership start and fixed dates for content drips
-	     *
-	     * @param $date - Take a date in the format YYYY-MM-DD and convert it to a number of days since membership start (for the current member)
-	     * @param $userId - Optional ID for the user being processed
-	     * @param $levelId - Optional ID for the level of the user
-	     * @return mixed -- Return the # of days calculated
-         *
-         * @access public
-	     */
-	    public function convertToDays( $date, $userId = null, $levelId = null )
-	    {
-		    $days = 0;
-
-	        if ( $this->isValidDate( $date ) )
-	        {
-		        dbgOut('convertToDays() - Date is valid: ' . $date);
-
-	            $startDate = pmpro_getMemberStartdate(); /* Needs userID & Level ID ... */
-
-		        if (empty($startDate))
-			            $startDate = 0;
-
-		        dbgOut('convertToDays() - Start Date: ' . $startDate);
-		        try {
-
-			        // Use v5.2 and v5.3 compatible function to calculate difference
-			        $compDate = strtotime($date);
-			        $days = pmpro_seq_datediff($startDate, $compDate); // current_time('timestamp')
-
-
-		        } catch (Exception $e) {
-			        dbgOut('convertToDays() - Error calculating days: ' . $e->getMessage());
-		        }
-
-	            // dbgOut('convertToDays() - Member with start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
-
-	        }
-	        else {
-	            $days = $date;
-	            // dbgOut('convertToDays() - Member: days of delay from start: ' . $date);
-	        }
-
-	        return $days;
-	    }
-
-        /**
 		 * Check whether the specific user should receive a notice for the specific post
 		 *    FALSE if the $post->delay means the today is NOT the first time this user can access the post
 		 *
@@ -742,98 +623,6 @@
 
 			return true;
 		}
-
-	    /**
-	     *
-	     * Sort the two post objects (order them) according to the defined sortOrder
-	     *
-	     * @param $a (post object)
-	     * @param $b (post object)
-	     * @return int | bool - The usort() return value
-         *
-         * @access private
-	     */
-	    private function sortByDelay($a, $b)
-	    {
-	        if (empty($this->options->sortOrder))
-	        {
-	            dbgOut('sortByDelay(): Need sortOrder option to base sorting decision on...');
-	            // $sequence = $this->getSequenceByID($a->id);
-	            if ( $this->sequence_id !== null)
-	            {
-	                dbgOut('sortByDelay(): Have valid sequence post ID saved: ' . $this->sequence_id);
-	                $this->fetchOptions( $this->sequence_id );
-	            }
-	        }
-
-	        switch ($this->options->sortOrder)
-	        {
-	            case SORT_ASC:
-	                // dbgOut('sortByDelay(): Sorted in Ascending order');
-	                return $this->sortAscending($a, $b);
-	                break;
-	            case SORT_DESC:
-	                // dbgOut('sortByDelay(): Sorted in Descending order');
-	                return $this->sortDescending($a, $b);
-	                break;
-	            default:
-	                dbgOut('sortByDelay(): sortOrder not defined');
-	        }
-
-		    return false;
-	    }
-
-	    /**
-	     * @param $a -- Post to compare (including delay variable)
-	     * @param $b -- Post to compare against (including delay variable)
-	     * @return int -- Return +1 if the Delay for post $a is greater than the delay for post $b (i.e. delay for b is
-	     *                  less than delay for a)
-         *
-         * @access private
-	     */
-		private function sortAscending($a, $b)
-		{
-	        list($aDelay, $bDelay) = $this->normalizeDelays($a, $b);
-			// dbgOut('sortAscending() - Delays have been normalized');
-
-	        // Now sort the data
-	        if ($aDelay == $bDelay)
-	            return 0;
-	        // Ascending sort order
-	        return ($aDelay > $bDelay) ? +1 : -1;
-
-		}
-
-        /**
-         * Get the delays (days since membership started) for both post objects
-         *
-         * @param $a -- Post object to compare
-         * @param $b -- Post object to compare against
-         * @return array -- Array containing delay(s) for the two posts objects (as days since start of membership)
-         *
-         * @access private
-         */
-        private function normalizeDelays($a, $b)
-	    {
-	        return array($this->convertToDays($a->delay), $this->convertToDays($b->delay));
-	    }
-
-	    /**
-	     * @param $a -- Post to compare (including delay variable)
-	     * @param $b -- Post to compare against (including delay variable)
-	     * @return int -- Return -1 if the Delay for post $a is greater than the delay for post $b
-         *
-         * @access private
-	     */
-	    private function sortDescending($a, $b)
-	    {
-	        list($aDelay, $bDelay) = $this->normalizeDelays($a, $b);
-
-	        if ($aDelay == $bDelay)
-	            return 0;
-	        // Descending Sort Order
-	        return ($aDelay > $bDelay) ? -1 : +1;
-	    }
 
 		/**
 		 *
@@ -909,15 +698,6 @@
 
 			return true;
 		}
-	/*
-	    public function convertToDate( $days )
-	    {
-	        $startDate = pmpro_getMemberStartdate();
-	        $endDate = date( 'Y-m-d', strtotime( $startDate . " +" . $days . ' days' ));
-	        dbgOut('C2Date - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $endDate .  ' for delay day count: ' . $days);
-	        return $endDate;
-	    }
-	*/
 
         /**
          * Creates the Sequence Custom Post Type
@@ -977,10 +757,6 @@
 				return false;
 			}
 		}
-
-		/*
-			Create the Custom Post Type for the Sequence/Sequences
-		*/
 
         /**
          * Loads the metaboxes in the back-end admin page for the managing the sequence
@@ -1262,6 +1038,15 @@
         public function getError() {
 			return $this->error;
 		}
+	/*
+	    public function convertToDate( $days )
+	    {
+	        $startDate = pmpro_getMemberStartdate();
+	        $endDate = date( 'Y-m-d', strtotime( $startDate . " +" . $days . ' days' ));
+	        dbgOut('C2Date - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $endDate .  ' for delay day count: ' . $days);
+	        return $endDate;
+	    }
+	*/
 
         /**
          * Set the private $error value
@@ -1273,6 +1058,10 @@
         public function setError( $msg ) {
 			$this->error = $msg;
 		}
+
+		/*
+			Create the Custom Post Type for the Sequence/Sequences
+		*/
 
 	    /**
 	     * Adds notification opt-in to list of posts/pages in sequence.
@@ -1402,34 +1191,46 @@
 	                    </td>
 	                    <td style="width: 160px"><label class="selectit"><?php _e('Hide all future posts', 'pmprosequence'); ?></label></td>
 	                </tr>
-	                <tr>
+		            <tr>
+			            <td>
+				            <input type="checkbox" value="1" id="pmpro_sequence_offsetchk" name="pmpro_sequence_offsetchk" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', 'pmprosequence'); ?>" <?php echo ($settings->previewOffset != 0 ? ' checked="checked"' : ''); ?> />
+				            <input type="hidden" name="hidden_pmpro_seq_offset" id="hidden_pmpro_seq_offset" value="<?php echo esc_attr($settings->previewOffset); ?>" >
+			            </td>
+			            <td><label class="selectit"><?php _e('Allow "sneak previews"', 'pmprosequence'); ?></label>
+			            </td>
+		            </tr>
+		            <tr>
+			            <td colspan="2">
+				            <div class="pmpro-sequence-hidden pmpro-sequence-offset">
+					            <label class="pmpro-sequence-label" for="pmpro-seq-offset"><?php _e('Days of prev:', 'pmprosequence'); ?> </label>
+					            <span id="pmpro-seq-offset-status" class="pmpro-sequence-status"><?php echo ( $settings->previewOffset == 0 ? 'None' : $settings->previewOffset ); ?></span>
+					            <a href="#pmpro-seq-offset" id="pmpro-seq-edit-offset" class="pmpro-seq-edit">
+						            <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
+						            <span class="screen-reader-text"><?php _e('Change the number of days to preview', 'pmprosequence'); ?></span>
+					            </a>
+					            <div id="pmpro-seq-offset-select" class="pmpro-sequence-hidden">
+						            <select name="pmpro_sequence_offset" id="pmpro_sequence_offset">
+							            <option value="0">None</option>
+							            <?php foreach (range(1, 5) as $previewOffset) { ?>
+								            <option value="<?php echo esc_attr($previewOffset); ?>" <?php selected( intval($settings->previewOffset), $previewOffset); ?> ><?php echo $previewOffset; ?></option>
+							            <?php } ?>
+						            </select>
+						            <p class="pmpro-seq-btns">
+							            <a href="#pmproseq_offset" id="ok-pmpro-seq-offset" class="save-pmproseq-offset button"><?php _e('OK', 'pmprosequence'); ?></a>
+							            <a href="#pmproseq_offset" id="cancel-pmpro-seq-offset" class="cancel-pmproseq-offset button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+						            </p>
+					            </div>
+				            </div>
+			            </td>
+		            </tr>
+		            <tr>
 	                    <td>
 		                    <input type="checkbox" value="1" id="pmpro_sequence_lengthvisible" name="pmpro_sequence_lengthvisible" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text', 'pmprosequence'); ?>" <?php checked($settings->lengthVisible, 1); ?> />
 		                    <input type="hidden" name="hidden_pmpro_seq_lengthvisible" id="hidden_pmpro_seq_lengthvisible" value="<?php echo esc_attr($settings->lengthVisible); ?>" >
 	                    </td>
-	                    <td><label class="selectit"><?php _e('Show membership length info', 'pmprosequence'); ?></label></td>
+	                    <td><label class="selectit"><?php _e("Show user membership length", 'pmprosequence'); ?></label></td>
 	                </tr>
-                    <tr>
-                        <td>
-                            <input type="checkbox" value="1" id="pmpro_sequence_preview" name="pmpro_sequence_preview" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text', 'pmprosequence'); ?>" <?php echo ($settings->previewOffset != 0 ? ' checked="checked"' : ''); ?> />
-                            <input type="hidden" name="hidden_pmpro_seq_previewoffset" id="hidden_pmpro_seq_previewoffset" value="<?php echo ( $settings->previewOffset); ?>" >
-                        </td>
-                        <td><label class="selectit"><?php _e('Show a "preview" of upcoming posts', 'pmprosequence'); ?></label>
-                            <div id="pmpro-seq-previewoffset-select" class="pmpro-sequence-hidden">
-                                <select name="pmpro_sequence_previewoffset" id="pmpro_sequence_previewoffset">
-                                    <?php foreach (range(0, 5) as $previewOffset) { ?>
-                                        <option value="<?php echo esc_attr($previewOffset); ?>" <?php selected( intval($settings->previewOffset), $previewOffset); ?> > <?php echo $previewOffset; ?></option>
-                                    <?php } ?>
-                                </select>
-                                <p class="pmpro-seq-btns">
-                                    <a href="#pmproseq_previewoffset" id="ok-pmpro-seq-previewoffset" class="save-pmproseq-sortorder button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#pmproseq_previewoffset" id="cancel-pmpro-seq-previewoffset" class="cancel-pmproseq-sortorder button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
-                                </p>
-                            </div>
-                        </td>
-                    </tr>
-
-                    <tr><td colspan="2"><hr/></td></tr>
+		            <tr><td colspan="2"><hr/></td></tr>
 	                <tr>
 		                <td colspan="2">
 			                <div class="pmpro-sequence-sortorder">
@@ -1703,8 +1504,6 @@
 		    echo $metabox;
 	    }
 
-		//this function returns a UL with the current posts
-
         /**
 		 * List all template files in email directory for this plugin.
 		 *
@@ -1872,7 +1671,6 @@
 							?>
 							<span><center>There is <em>no content available</em> for you at this time. Please check back later.</center></span>
 				<?php   }; ?>
-						<!-- TODO: Add text for when there are no posts shown because they're all hidden (future) & all future posts are to be "hidden" -->
 						<div class="clear"></div>
 					<?php
 					};
@@ -2006,29 +1804,7 @@
 	        return $this->options->hidden == 1 ? true : false;
 	    }
 
-        /**
-         * Compares the object to the
-         * @param $delayVal -- Delay value to compare to
-         * @param $objArr -- The post object
-         * @param null $userId -- The User ID to use
-         * @return null|int -- The post ID of the post with the delay value closest to the $delayVal
-         *
-         * @access private
-         */
-        private function get_closestByDelay( $delayVal, $objArr, $userId = null ) {
-
-            $closest = null;
-
-            foreach($objArr as $item) {
-
-                if ( ($closest == null) || (
-                    ( abs($delayVal - $closest) > abs($this->normalizeDelay($item->delay) - $delayVal) )
-                     && pmpro_sequence_hasAccess( $userId, $item->id ) ) )
-                    $closest = $item->id;
-            }
-
-            return $closest;
-        }
+		//this function returns a UL with the current posts
 
         /**
          * Returns
@@ -2052,6 +1828,240 @@
 
 			return false;
 		}
+
+        /**
+         * Return a normalized (as 'days since membership started') number indicating the delay for the post content
+         * to become available/accessible to the user
+         *
+         * @param $post_id -- The ID of the post
+         * @return bool|int -- The delay value for this post (numerical - even when delayType is byDate)
+         *
+         * @access private
+         */
+        private function getDelayForPost($post_id)
+		{
+			$key = $this->getPostKey($post_id);
+
+			if($key === false)
+	        {
+	            dbgOut('No key found in getDelayForPost');
+				return false;
+	        }
+	        else {
+
+	            $delay = $this->normalizeDelay( $this->posts[$key]->delay );
+	            dbgOut('getDelayForPost(): Delay for post with id = ' . $post_id . ' is ' .$delay);
+	            return $delay;
+	        }
+		}
+
+        /**
+         * Find the post in the sequence and return its key
+         *
+         * @param $post_id -- The ID of the post
+         * @return bool|int|string -- The key for the post
+         *
+         * @access private
+         */
+        private function getPostKey($post_id)
+		{
+			$this->getPosts();
+
+			if(empty($this->posts))
+				return false;
+
+			foreach($this->posts as $key => $post)
+			{
+				if($post->id == $post_id)
+					return $key;
+			}
+
+			return false;
+		}
+
+	    /**
+	     *
+	     * Convert any date string to a number of days worth of delay (since membership started for the current user)
+	     *
+	     * @param $delay (int | string) -- The delay value (either a # of days or a date YYYY-MM-DD)
+	     * @return mixed (int) -- The # of days since membership started (for this user)
+         *
+         * @access public
+	     */
+	    public function normalizeDelay( $delay )
+	    {
+
+	        if ( $this->isValidDate($delay) ) {
+	            dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
+	            return $this->convertToDays($delay);
+	        }
+	        dbgOut('normalizeDelay(): Delay specified as # of days since membership start: ' . $delay);
+	        return $delay;
+	    }
+
+	    /**
+	     *
+	     * Returns a number of days since the users membership started based on the supplied date.
+	     * This allows us to mix sequences containing days since membership start and fixed dates for content drips
+	     *
+	     * @param $date - Take a date in the format YYYY-MM-DD and convert it to a number of days since membership start (for the current member)
+	     * @param $userId - Optional ID for the user being processed
+	     * @param $levelId - Optional ID for the level of the user
+	     * @return mixed -- Return the # of days calculated
+         *
+         * @access public
+	     */
+	    public function convertToDays( $date, $userId = null, $levelId = null )
+	    {
+		    $days = 0;
+
+	        if ( $this->isValidDate( $date ) )
+	        {
+		        dbgOut('convertToDays() - Date is valid: ' . $date);
+
+	            $startDate = pmpro_getMemberStartdate(); /* Needs userID & Level ID ... */
+
+		        if (empty($startDate))
+			            $startDate = 0;
+
+		        dbgOut('convertToDays() - Start Date: ' . $startDate);
+		        try {
+
+			        // Use v5.2 and v5.3 compatible function to calculate difference
+			        $compDate = strtotime($date);
+			        $days = pmpro_seq_datediff($startDate, $compDate); // current_time('timestamp')
+
+
+		        } catch (Exception $e) {
+			        dbgOut('convertToDays() - Error calculating days: ' . $e->getMessage());
+		        }
+
+	            // dbgOut('convertToDays() - Member with start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
+
+	        }
+	        else {
+	            $days = $date;
+	            // dbgOut('convertToDays() - Member: days of delay from start: ' . $date);
+	        }
+
+	        return $days;
+	    }
+
+	    /**
+	     *
+	     * Sort the two post objects (order them) according to the defined sortOrder
+	     *
+	     * @param $a (post object)
+	     * @param $b (post object)
+	     * @return int | bool - The usort() return value
+         *
+         * @access private
+	     */
+	    private function sortByDelay($a, $b)
+	    {
+	        if (empty($this->options->sortOrder))
+	        {
+	            dbgOut('sortByDelay(): Need sortOrder option to base sorting decision on...');
+	            // $sequence = $this->getSequenceByID($a->id);
+	            if ( $this->sequence_id !== null)
+	            {
+	                dbgOut('sortByDelay(): Have valid sequence post ID saved: ' . $this->sequence_id);
+	                $this->fetchOptions( $this->sequence_id );
+	            }
+	        }
+
+	        switch ($this->options->sortOrder)
+	        {
+	            case SORT_ASC:
+	                // dbgOut('sortByDelay(): Sorted in Ascending order');
+	                return $this->sortAscending($a, $b);
+	                break;
+	            case SORT_DESC:
+	                // dbgOut('sortByDelay(): Sorted in Descending order');
+	                return $this->sortDescending($a, $b);
+	                break;
+	            default:
+	                dbgOut('sortByDelay(): sortOrder not defined');
+	        }
+
+		    return false;
+	    }
+
+	    /**
+	     * @param $a -- Post to compare (including delay variable)
+	     * @param $b -- Post to compare against (including delay variable)
+	     * @return int -- Return +1 if the Delay for post $a is greater than the delay for post $b (i.e. delay for b is
+	     *                  less than delay for a)
+         *
+         * @access private
+	     */
+		private function sortAscending($a, $b)
+		{
+	        list($aDelay, $bDelay) = $this->normalizeDelays($a, $b);
+			// dbgOut('sortAscending() - Delays have been normalized');
+
+	        // Now sort the data
+	        if ($aDelay == $bDelay)
+	            return 0;
+	        // Ascending sort order
+	        return ($aDelay > $bDelay) ? +1 : -1;
+
+		}
+
+        /**
+         * Get the delays (days since membership started) for both post objects
+         *
+         * @param $a -- Post object to compare
+         * @param $b -- Post object to compare against
+         * @return array -- Array containing delay(s) for the two posts objects (as days since start of membership)
+         *
+         * @access private
+         */
+        private function normalizeDelays($a, $b)
+	    {
+	        return array($this->convertToDays($a->delay), $this->convertToDays($b->delay));
+	    }
+
+	    /**
+	     * @param $a -- Post to compare (including delay variable)
+	     * @param $b -- Post to compare against (including delay variable)
+	     * @return int -- Return -1 if the Delay for post $a is greater than the delay for post $b
+         *
+         * @access private
+	     */
+	    private function sortDescending($a, $b)
+	    {
+	        list($aDelay, $bDelay) = $this->normalizeDelays($a, $b);
+
+	        if ($aDelay == $bDelay)
+	            return 0;
+	        // Descending Sort Order
+	        return ($aDelay > $bDelay) ? -1 : +1;
+	    }
+
+        /**
+         * Compares the object to the
+         * @param $delayVal -- Delay value to compare to
+         * @param $objArr -- The post object
+         * @param null $userId -- The User ID to use
+         * @return null|int -- The post ID of the post with the delay value closest to the $delayVal
+         *
+         * @access private
+         */
+        private function get_closestByDelay( $delayVal, $objArr, $userId = null ) {
+
+            $closest = null;
+
+            foreach($objArr as $item) {
+
+                if ( ($closest == null) || (
+                    ( abs($delayVal - $closest) > abs($this->normalizeDelay($item->delay) - $delayVal) )
+                     && pmpro_sequence_hasAccess( $userId, $item->id ) ) )
+                    $closest = $item->id;
+            }
+
+            return $closest;
+        }
 	}
 
 //	$GLOBALS['pmpro-sequences'] = new PMProSequences();

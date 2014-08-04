@@ -5,7 +5,7 @@
 
 jQuery.noConflict();
 jQuery(document).ready(function(){
-    (function($){
+    ( function($){
 
         jQuery('div#pmpro-seq-error').hide();
 
@@ -19,7 +19,8 @@ jQuery(document).ready(function(){
         var $templCtl       = $('#pmpro_sequence_template');
         var $timeCtl        = $('#pmpro_sequence_noticetime');
         var $dateCtl        = $('#pmpro_sequence_dateformat');
-        var $previewCtl     = $('#pmpro_sequence_previewoffset'); // TODO: Add OK & Cancel actions for previewOffset!
+        var $offsetCtl      = $('#pmpro_sequence_offset');
+        var $offsetChkCtl   = $('#pmpro_sequence_offsetchk');
 
         /* Input */
         var $excerptCtl     = $('#pmpro_sequence_excerpt');
@@ -55,6 +56,13 @@ jQuery(document).ready(function(){
         }
 
         manageDelayLabels( $delayCtl.val() );
+
+       // Set the visibility of the
+        if ( $offsetChkCtl.is(':checked') ) {
+            $('.pmpro-sequence-offset').show();
+        } else {
+            $('.pmpro-sequence-offset').hide();
+        }
 
         if ( $sendAlertCtl.is(':checked') ) {
  //           console.log('Show all notice related variables');
@@ -97,8 +105,22 @@ jQuery(document).ready(function(){
             $('.pmpro-sequence-email').slideToggle();
         });
 
-        $('#pmpro_sequence_preview').click(function() {
+        $offsetChkCtl.click(function() {
+            console.log('Clicked on the checkbox for Preview option(s)');
+            if (this.checked) {
+                // Show the 'Posts to show' status
+                $('div.pmpro-sequence-offset').show();
+            }
+            else {
+                $('div.pmpro-sequence-offset').hide();
+                $('#hidden_pmpro_seq_offset').val(0); // Set to "Not Applicable"
+            }
+        });
 
+        $('#pmpro-seq-edit-offset').click(function(){
+            //           console.log('Edit button for delay type clicked');
+            $('#pmpro-seq-edit-offset').slideToggle();
+            $('#pmpro-seq-offset-select').slideToggle();
         });
 
         /* Admin clicked the 'Edit' button for the delayType settings. Show the select field & hide the "edit" button */
@@ -173,11 +195,11 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-preview').click(function(){
+        $('#cancel-pmpro-seq-offset').click(function(){
 //            console.log('Cancel button for Sort order was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
-            $('#pmpro-seq-sort-select').slideToggle();
-            $('#pmpro-seq-edit-sort').slideToggle();
+            $('#pmpro-seq-offset-select').slideToggle();
+            $('#pmpro-seq-edit-offset').slideToggle();
 
         });
 
@@ -276,6 +298,21 @@ jQuery(document).ready(function(){
         });
 
         /** OK button events **/
+
+        $('#ok-pmpro-seq-offset').click(function(){
+
+            // console.log('OK button for Preview Offset value was clicked');
+            var $hCtl = $('#hidden_pmpro_seq_offset');
+
+            configSelected(
+                $offsetCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-offset-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-offset'),
+                $('#pmpro-seq-offset-select')
+            );
+        });
 
         $('#ok-pmpro-seq-sort').click(function(){
 
@@ -624,8 +661,6 @@ function setDelayEditBtns() {
 
 function delayAsChoice( $visibility ) {
 
-    // TODO: (done?) This needs to take both the current value of the delayType and the edit visibility of delayType into account
-
     if ($visibility == 'hide') {
         console.log('Hide the showDelayAs options');
         jQuery('.pmpro-seq-showdelayas').hide(); // hide
@@ -827,7 +862,7 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_sortorder: jQuery('#hidden_pmpro_seq_sortorder').val(),
             hidden_pmpro_seq_delaytype: jQuery('#hidden_pmpro_seq_delaytype').val(),
             hidden_pmpro_seq_showdelayas: jQuery('#hidden_pmpro_seq_showdelayas').val(),
-            hidden_pmpro_seq_previewoffset: jQuery('#hidden_pmpro_seq_previewoffset').val(),
+            hidden_pmpro_seq_offset: jQuery('#hidden_pmpro_seq_offset').val(),
             hidden_pmpro_seq_sendnotice: jQuery('#hidden_pmpro_seq_sendnotice').val(),
             hidden_pmpro_seq_noticetime: jQuery('#hidden_pmpro_seq_noticetime').val(),
             hidden_pmpro_seq_noticetemplate: jQuery('#hidden_pmpro_seq_noticetemplate').val(),

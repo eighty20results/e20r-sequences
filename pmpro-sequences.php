@@ -731,10 +731,10 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
         elseif (empty($sequenceObj->options->showDelayAs))
             $sequenceObj->options->delayType = PMPRO_SEQ_AS_DAYNO;
 
-        if ( isset($_POST['hidden_pmpro_seq_previewoffset']) )
+        if ( isset($_POST['hidden_pmpro_seq_offset']) )
         {
-            $sequenceObj->options->previewOffset = esc_attr($_POST['hidden_pmpro_seq_previewoffset']);
-            dbgOut('pmpro_sequence_settings_save(): POST value for settings->previewOffset: ' . esc_attr($_POST['hidden_pmpro_seq_previewOffset']) );
+            $sequenceObj->options->previewOffset = esc_attr($_POST['hidden_pmpro_seq_offset']);
+            dbgOut('pmpro_sequence_settings_save(): POST value for settings->previewOffset: ' . esc_attr($_POST['hidden_pmpro_seq_offset']) );
         }
         elseif (empty($sequenceObj->options->previewOffset))
             $sequenceObj->options->previewOffset = 0;
