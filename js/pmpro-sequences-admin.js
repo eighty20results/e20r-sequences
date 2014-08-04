@@ -19,6 +19,7 @@ jQuery(document).ready(function(){
         var $templCtl       = $('#pmpro_sequence_template');
         var $timeCtl        = $('#pmpro_sequence_noticetime');
         var $dateCtl        = $('#pmpro_sequence_dateformat');
+        var $previewCtl     = $('#pmpro_sequence_previewoffset'); // TODO: Add OK & Cancel actions for previewOffset!
 
         /* Input */
         var $excerptCtl     = $('#pmpro_sequence_excerpt');
@@ -96,6 +97,10 @@ jQuery(document).ready(function(){
             $('.pmpro-sequence-email').slideToggle();
         });
 
+        $('#pmpro_sequence_preview').click(function() {
+
+        });
+
         /* Admin clicked the 'Edit' button for the delayType settings. Show the select field & hide the "edit" button */
         $('#pmpro-seq-edit-dateformat').click(function(){
             //           console.log('Edit button for delay type clicked');
@@ -164,6 +169,17 @@ jQuery(document).ready(function(){
          *
          *
          **/
+
+        /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
+         * the value of the label & select, then hide everything again.
+         */
+        $('#cancel-pmpro-seq-preview').click(function(){
+//            console.log('Cancel button for Sort order was clicked');
+            // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
+            $('#pmpro-seq-sort-select').slideToggle();
+            $('#pmpro-seq-edit-sort').slideToggle();
+
+        });
 
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
@@ -811,6 +827,7 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_sortorder: jQuery('#hidden_pmpro_seq_sortorder').val(),
             hidden_pmpro_seq_delaytype: jQuery('#hidden_pmpro_seq_delaytype').val(),
             hidden_pmpro_seq_showdelayas: jQuery('#hidden_pmpro_seq_showdelayas').val(),
+            hidden_pmpro_seq_previewoffset: jQuery('#hidden_pmpro_seq_previewoffset').val(),
             hidden_pmpro_seq_sendnotice: jQuery('#hidden_pmpro_seq_sendnotice').val(),
             hidden_pmpro_seq_noticetime: jQuery('#hidden_pmpro_seq_noticetime').val(),
             hidden_pmpro_seq_noticetemplate: jQuery('#hidden_pmpro_seq_noticetemplate').val(),

@@ -11,8 +11,15 @@
 		private $post; // Individual post
 		private $error = null;
 
-		//constructor
-		function PMProSequences($id = null)
+        /**
+         * Constructor for the PMProSequences class
+         *
+         * @param null $id -- The ID of the sequence to load/construct
+         * @return bool|null -- ID of the sequence loaded/constructed.
+         *
+         * @access public
+         */
+        function PMProSequences($id = null)
 		{
             if (is_null($id) && ($this->sequence_id == 0) ) {
                 // Have no sequence ID to play off of..
@@ -39,7 +46,13 @@
 			return $this->sequence_id;
 		}
 
-		function getSequenceByID($id)
+        /**
+         * Fetches the post data for this sequence
+         *
+         * @param $id -- ID of sequence to fetch data for
+         * @return bool | int -- The ID of the sequence or false if unsuccessful
+         */
+        public function getSequenceByID($id)
 		{
 			$this->post = get_post($id);
 
@@ -101,6 +114,7 @@
 	    //populate sequence data by post id passed
 
 	    /**
+         *
 	     * Return the default options for a sequence
 	     *  stdClass content:
 	     *      hidden (boolean) - Whether to show or hide upcoming (future) posts in sequence from display.
@@ -122,6 +136,7 @@
 	     *      excerpt_intro (string) - The introductory text used before the message (page/post) excerpt.
 	     *
 	     * @return array -- Default options for the sequence
+         * @access public
 	     */
 	    public function defaultOptions()
 	    {
@@ -154,8 +169,10 @@
 	     *
 	     * @param $post_id -- ID of the sequence these options belong to.
 	     * @return int | mixed - Either the ID of the Sequence or its content
+         *
+         * @access public
 	     */
-	    function pmpro_sequence_meta_save( $post_id )
+	    public function pmpro_sequence_meta_save( $post_id )
 	    {
 		    global $post;
 
@@ -213,8 +230,9 @@
 		/**
 		 * Update the when we're supposed to run the New Content Notice cron job for this sequence.
 	     *
+         * @access public
 		 */
-		function updateNoticeCron()
+		public function updateNoticeCron()
 		{
 			try {
 
@@ -246,25 +264,37 @@
 			}
 		}
 
-		public function postDelayAsTS($delay, $user_id = null, $level_id = null) {
+        /**
+         * Calculate the delay for a post as a 'seconds since UNIX epoch' value
+         *
+         * @param $delay -- The delay value (can be a YYYY-MM-DD date string or a number)
+         * @param null $user_id -- The User ID
+         * @param null $level_id -- The User's membership level (if applicable)
+         * @return int|string -- Returns the timestamp (seconds since epoch) for when the delay will be available.
+         *
+         * @access public
+         */
+        public function postDelayAsTS($delay, $user_id = null, $level_id = null) {
 
-			$timestamp = current_time('timestamp'); // Default is 'now'
+			$delayTS = current_time('timestamp'); // Default is 'now'
 
 			$startTS = pmpro_getMemberStartdate($user_id, $level_id);
 
-			dbgOut('postDelayAsTS() - Start date: ' . $startTS);
+			dbgOut('postDelayAsTS() - Start date ts: ' . $startTS);
 
 			switch ($this->options->delayType) {
 				case 'byDays':
-					$delayTS = strtotime( '+' . $delay . 'days', $startTS);
+					$delayTS = strtotime( '+' . $delay . ' days', $startTS);
 					break;
 
 				case 'byDate':
-
+                    $delayTS = strtotime( $delay );
 					break;
 			}
 
-			return $timestamp;
+            dbgOut('postDelayAsTS() - The delay timestamp is: ' . $delayTS);
+
+			return $delayTS;
 		}
 
 	    /**
@@ -273,6 +303,8 @@
 	     *
 	     * @param $timeString (string) -- A clock value ('12:00 AM' for instance)
 	     * @return int -- The calculated timestamp value
+         *
+         * @access public
 	     */
 	    public function calculateTimestamp( $timeString )
 	    {
@@ -319,7 +351,16 @@
 	        return $timestamp;
 	    }
 
-		function addPost($post_id, $delay)
+        /**
+         * Adds the specified post to this sequence
+         *
+         * @param $post_id -- The ID of the post to add to this sequence
+         * @param $delay -- The delay to apply to the post
+         * @return bool -- Success or failure
+         *
+         * @access public
+         */
+        public function addPost($post_id, $delay)
 		{
 
 	        if (! $this->isValidDelay($delay) )
@@ -428,13 +469,13 @@
 			return true;
 	    }
 
-	    //add a post to this sequence
-
 	    /**
 	     * Validates that the value received follows a valid "delay" format for the post/page sequence
 	     *
 	     * @param $delay (string) - The specified post delay value
-	     * @returns bool - Delay is recognized (parsable).
+	     * @return bool - Delay is recognized (parseable).
+         *
+         * @access public
 	     */
 	    public function isValidDelay( $delay )
 	    {
@@ -458,20 +499,20 @@
 	        }
 	    }
 
-		//remove a post from this sequence
-
 	    /**
 	     * Pattern recognize whether the data is a valid date format for this plugin
 	     * Expected format: YYYY-MM-DD
 	     *
 	     * @param $data -- Data to test
 	     * @return bool -- true | false
+         *
+         * @access public
 	     */
 	    public function isValidDate( $data )
 	    {
-		    // TODO: This - isValidDate() needs to support an international date format.
+		    // TODO: This - isValidDate() needs to support all expected date format.
 	        if ( preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $data) ) {
-		        dbgOut('Date value is correcly formatted');
+		        dbgOut('Date value is correctly formatted');
 		        return true;
 	        }
 
@@ -479,12 +520,15 @@
 	        return false;
 	    }
 
-		/*
-			get array of all posts in this sequence
-			force = ignore cache and get data from DB
-		*/
-
-		function getPosts($force = false)
+        /**
+         * Load the private class variable $posts with the list of posts belonging to this sequence
+         *
+         * @param bool $force -- Ignore the cache and force fetch from the DB
+         * @return mixed -- Returns the aray of posts belonging to this sequence
+         *
+         * @access public
+         */
+        public function getPosts($force = false)
 		{
 			if(!isset($this->posts) || $force)
 				$this->posts = get_post_meta($this->sequence_id, "_sequence_posts", true);
@@ -493,11 +537,15 @@
 		}
 
 		/**
+         * Returns true if the post is found
+         *
 		 * @param $post_id (int) -- Page/post ID to check for inclusion in this sequence.
 		 *
 		 * @return bool -- True if the post is already included in the sequence. False otherwise
+         *
+         * @access private
 		 */
-		function hasPost($post_id)
+		private function hasPost($post_id)
 		{
 			$this->getPosts();
 
@@ -507,18 +555,23 @@
 			foreach($this->posts as $key => $post)
 			{
 				if($post->id == $post_id) {
-					dbgOut('Post # ' . $post_id . ' is already in the sequence.');
+					dbgOut('Post # ' . $post_id . ' is found in this sequence.');
 					return true;
 				}
-					return true;
 			}
 
 			return false;
 		}
 
-		//get key of post with id = $post_id
-
-		function removePost($post_id)
+        /**
+         * Removes a post from the list of posts belonging to this sequence
+         *
+         * @param $post_id -- The ID of the post to remove from the sequence
+         * @return bool - returns TRUE if the post was removed and the metadata for the sequence was updated successfully
+         *
+         * @access public
+         */
+        public function removePost($post_id)
 		{
 			if(empty($post_id))
 				return false;
@@ -555,7 +608,16 @@
 			return true;
 		}
 
-		function getDelayForPost($post_id)
+        /**
+         * Return a normalized (as 'days since membership started') number indicating the delay for the post content
+         * to become available/accessible to the user
+         *
+         * @param $post_id -- The ID of the post
+         * @return bool|int -- The delay value for this post (numerical - even when delayType is byDate)
+         *
+         * @access private
+         */
+        private function getDelayForPost($post_id)
 		{
 			$key = $this->getPostKey($post_id);
 
@@ -572,9 +634,16 @@
 	        }
 		}
 
-	    // Returns a "days to delay" value for the posts $a & $b, even if the delay value is a date.
 
-		function getPostKey($post_id)
+        /**
+         * Find the post in the sequence and return its key
+         *
+         * @param $post_id -- The ID of the post
+         * @return bool|int|string -- The key for the post
+         *
+         * @access private
+         */
+        private function getPostKey($post_id)
 		{
 			$this->getPosts();
 
@@ -596,6 +665,8 @@
 	     *
 	     * @param $delay (int | string) -- The delay value (either a # of days or a date YYYY-MM-DD)
 	     * @return mixed (int) -- The # of days since membership started (for this user)
+         *
+         * @access public
 	     */
 	    public function normalizeDelay( $delay )
 	    {
@@ -617,20 +688,13 @@
 	     * @param $userId - Optional ID for the user being processed
 	     * @param $levelId - Optional ID for the level of the user
 	     * @return mixed -- Return the # of days calculated
+         *
+         * @access public
 	     */
 	    public function convertToDays( $date, $userId = null, $levelId = null )
 	    {
 		    $days = 0;
 
-		    // dbgOut('In convertToDays()');
-		    /*
-		    try {
-			    $level_id = pmpro_getMembershipLevelForUser();
-			    dbgOut('convertToDays() - User Level: ' . $level_id);
-		    } catch (Exception $e) {
-			    dbgOut('Error getting membership level info: ' . $e->getMessage());
-		    }
-			*/
 	        if ( $this->isValidDate( $date ) )
 	        {
 		        dbgOut('convertToDays() - Date is valid: ' . $date);
@@ -686,8 +750,10 @@
 	     * @param $a (post object)
 	     * @param $b (post object)
 	     * @return int | bool - The usort() return value
+         *
+         * @access private
 	     */
-	    function sortByDelay($a, $b)
+	    private function sortByDelay($a, $b)
 	    {
 	        if (empty($this->options->sortOrder))
 	        {
@@ -722,8 +788,10 @@
 	     * @param $b -- Post to compare against (including delay variable)
 	     * @return int -- Return +1 if the Delay for post $a is greater than the delay for post $b (i.e. delay for b is
 	     *                  less than delay for a)
+         *
+         * @access private
 	     */
-		public function sortAscending($a, $b)
+		private function sortAscending($a, $b)
 		{
 	        list($aDelay, $bDelay) = $this->normalizeDelays($a, $b);
 			// dbgOut('sortAscending() - Delays have been normalized');
@@ -736,7 +804,16 @@
 
 		}
 
-	    function normalizeDelays($a, $b)
+        /**
+         * Get the delays (days since membership started) for both post objects
+         *
+         * @param $a -- Post object to compare
+         * @param $b -- Post object to compare against
+         * @return array -- Array containing delay(s) for the two posts objects (as days since start of membership)
+         *
+         * @access private
+         */
+        private function normalizeDelays($a, $b)
 	    {
 	        return array($this->convertToDays($a->delay), $this->convertToDays($b->delay));
 	    }
@@ -745,8 +822,10 @@
 	     * @param $a -- Post to compare (including delay variable)
 	     * @param $b -- Post to compare against (including delay variable)
 	     * @return int -- Return -1 if the Delay for post $a is greater than the delay for post $b
+         *
+         * @access private
 	     */
-	    public function sortDescending($a, $b)
+	    private function sortDescending($a, $b)
 	    {
 	        list($aDelay, $bDelay) = $this->normalizeDelays($a, $b);
 
@@ -765,8 +844,9 @@
 		 * @param $seq_id -- ID of sequence to process (not used)
 		 * @return bool - True if sent successfully. False otherwise.
 		 *
+         * @access public
 		 */
-		function sendEmail($post_id, $user_id, $seq_id)
+		public function sendEmail($post_id, $user_id, $seq_id)
 		{
 			$email = new PMProEmail();
 	        // $sequence = new PMProSequences($seq_id);
@@ -839,7 +919,15 @@
 	    }
 	*/
 
-		function createCPT()
+        /**
+         * Creates the Sequence Custom Post Type
+         *
+         * @return bool -- True if successful
+         *
+         * @access public
+         *
+         */
+        public function createCPT()
 		{
 			//don't want to do this when deactivating
 			global $pmpro_sequencedeactivating;
@@ -894,7 +982,12 @@
 			Create the Custom Post Type for the Sequence/Sequences
 		*/
 
-		function checkForMetaBoxes()
+        /**
+         * Loads the metaboxes in the back-end admin page for the managing the sequence
+         *
+         * @public
+         */
+		public function checkForMetaBoxes()
 		{
 			//add meta boxes
 			if (is_admin())
@@ -907,15 +1000,13 @@
 			}
 		}
 
-		/*
-			Include the CSS, Javascript and load/define Visual editor Meta boxes
-		*/
-
 	    /**
 	     * Add the actual meta box definitions as add_meta_box() functions (3 meta boxes; One for the page meta,
 	     * one for the Settings & one for the sequence posts/page definitions.
+         *
+         * @access public
 	     */
-	    function defineMetaBoxes()
+	    public function defineMetaBoxes()
 		{
 			//PMPro box
 			add_meta_box('pmpro_page_meta', __('Require Membership', 'pmprosequence'), 'pmpro_page_meta', 'pmpro_sequence', 'side');
@@ -929,7 +1020,12 @@
 
 	    }
 
-		function sequenceMetaBox()
+        /**
+         * Defines the Admin UI interface for adding posts to the sequence
+         *
+         * @access public
+         */
+        public function sequenceMetaBox()
 		{
 			global $post;
 
@@ -954,9 +1050,11 @@
 		}
 
 		/**
-		 * 	   Refreshes the Post list for the sequence
+         * Refreshes the Post list for the sequence
+         *
+         * @access public
 		 */
-		function getPostListForMetaBox()
+		public function getPostListForMetaBox()
 		{
 			global $wpdb;
 
@@ -1090,14 +1188,14 @@
 
 		}
 
-	    //this is the Sequence meta box
-
 		/**
 		 * Get all posts with status 'published', 'draft', 'scheduled', 'pending review' or 'private' from the DB
 		 *
 		 * @return array | bool -- All posts of the post_types defined in the pmpro_sequencepost_types filter)
+         *
+         * @access private
 		 */
-		function getPostListFromDB() {
+		private function getPostListFromDB() {
 
 			global $wpdb;
 
@@ -1123,8 +1221,10 @@
 	     *
 	     * @param $post_state -- The current post state (Draft, Scheduled, Under Review, Private, other)
 	     * @return null|string -- Return the correct postfix for the post
+         *
+         * @access private
 	     */
-	    function setPostStatus( $post_state )
+	    private function setPostStatus( $post_state )
 	    {
 	        $txtState = null;
 
@@ -1153,11 +1253,24 @@
 	        return $txtState;
 	    }
 
-		public function getError() {
+        /**
+         * Access the private $error value
+         *
+         * @return string|null -- Error message or NULL
+         * @access public
+         */
+        public function getError() {
 			return $this->error;
 		}
 
-		public function setError( $msg ) {
+        /**
+         * Set the private $error value
+         *
+         * @param $msg -- The error message to set
+         *
+         * @access public
+         */
+        public function setError( $msg ) {
 			$this->error = $msg;
 		}
 
@@ -1165,8 +1278,10 @@
 	     * Adds notification opt-in to list of posts/pages in sequence.
 	     *
 	     * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
+         *
+         * @access public
 	     */
-	    function pmpro_sequence_addUserNoticeOptIn( )
+	    public function pmpro_sequence_addUserNoticeOptIn( )
 		{
 			$optinForm = '';
 	        global $current_user, $wpdb;
@@ -1236,13 +1351,15 @@
 		}
 
 	    /**
-	     * Define and create the metabox for the Sequence Settings (per sequence page/list)
+	     * Defines the metabox for the Sequence Settings (per sequence page/list) on the Admin page
 	     *
 	     * @param $object -- The class object (sequence class)
 	     * @param $box -- The metabox object
+         *
+         * @access public
 	     *
 	     */
-	    function pmpro_sequence_settings_meta_box( $object, $box )
+	    public function pmpro_sequence_settings_meta_box( $object, $box )
 	    {
 	        global $post;
 
@@ -1292,7 +1409,27 @@
 	                    </td>
 	                    <td><label class="selectit"><?php _e('Show membership length info', 'pmprosequence'); ?></label></td>
 	                </tr>
-		            <tr><td colspan="2"><hr/></td></tr>
+                    <tr>
+                        <td>
+                            <input type="checkbox" value="1" id="pmpro_sequence_preview" name="pmpro_sequence_preview" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text', 'pmprosequence'); ?>" <?php echo ($settings->previewOffset != 0 ? ' checked="checked"' : ''); ?> />
+                            <input type="hidden" name="hidden_pmpro_seq_previewoffset" id="hidden_pmpro_seq_previewoffset" value="<?php echo ( $settings->previewOffset); ?>" >
+                        </td>
+                        <td><label class="selectit"><?php _e('Show a "preview" of upcoming posts', 'pmprosequence'); ?></label>
+                            <div id="pmpro-seq-previewoffset-select" class="pmpro-sequence-hidden">
+                                <select name="pmpro_sequence_previewoffset" id="pmpro_sequence_previewoffset">
+                                    <?php foreach (range(0, 5) as $previewOffset) { ?>
+                                        <option value="<?php echo esc_attr($previewOffset); ?>" <?php selected( intval($settings->previewOffset), $previewOffset); ?> > <?php echo $previewOffset; ?></option>
+                                    <?php } ?>
+                                </select>
+                                <p class="pmpro-seq-btns">
+                                    <a href="#pmproseq_previewoffset" id="ok-pmpro-seq-previewoffset" class="save-pmproseq-sortorder button"><?php _e('OK', 'pmprosequence'); ?></a>
+                                    <a href="#pmproseq_previewoffset" id="cancel-pmpro-seq-previewoffset" class="cancel-pmproseq-sortorder button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                </p>
+                            </div>
+                        </td>
+                    </tr>
+
+                    <tr><td colspan="2"><hr/></td></tr>
 	                <tr>
 		                <td colspan="2">
 			                <div class="pmpro-sequence-sortorder">
@@ -1573,8 +1710,10 @@
 		 *
 		 * @param $settings (stdClass) - The settings for the sequence.
 		 * @return bool| mixed - HTML containing the Option list
+         *
+         * @access private
 		 */
-		function pmpro_sequence_listEmailTemplates( $settings )
+		private function pmpro_sequence_listEmailTemplates( $settings )
 		{
             ob_start();
 
@@ -1603,8 +1742,10 @@
 		 *
 		 * @param $settings -- (array) Sequence specific settings
 		 * @return bool| mixed - HTML containing the Option list
+         *
+         * @access private
 		 */
-		function pmpro_sequence_createTimeOpts( $settings )
+		private function pmpro_sequence_createTimeOpts( $settings )
 		{
 
 			$prepend    = array('00','01','02','03','04','05','06','07','08','09');
@@ -1639,8 +1780,11 @@
          *
          * @param $settings -- Settings for the sequence
          * @return bool| mixed - HTML containing the Option list
+         *
+         * @access private
          */
-        function pmpro_sequence_listDateformats( $settings ) {
+        private function pmpro_sequence_listDateformats( $settings ) {
+
             ob_start();
 
             $formats = array(
@@ -1675,8 +1819,10 @@
          *
          * @param bool $echo -- Whether to immediately 'echo' the value or return the HTML to the calling function
          * @return bool|mixed|string -- The HTML containing the list of posts in the sequence
+         *
+         * @access public
          */
-        function getPostList($echo = false)
+        public function getPostList($echo = false)
 		{
 			global $current_user;
 			$this->getPosts();
@@ -1755,6 +1901,7 @@
 	     * @param $delay -- The specified delay to test against
 	     * @return bool -- True if delay is less than the time the member has been a member for.
 	     *
+         * @access public
 	     */
 	    public function isPastDelay( $memberFor, $delay )
 	    {
@@ -1792,8 +1939,10 @@
 	     * @param $settings (array) -- Settings for the Sequence
 	     * @param $sequence_id (int) -- The ID for the Sequence
 	     * @return bool - Success or failure for the save operation
+         *
+         * @access public
 	     */
-	    function save_sequence_meta( $settings = null, $sequence_id = 0)
+	    public function save_sequence_meta( $settings = null, $sequence_id = 0)
 	    {
 	        // Make sure the settings array isn't empty (no settings defined)
 	        if ( empty( $settings ) )
@@ -1821,6 +1970,14 @@
 	        return true;
 	    }
 
+        /**
+         * Selects & formats the correct delay value in the list of posts, based on admin settings
+         *
+         * @param $delay (int) -- The delay value
+         * @return bool|string -- The number
+         *
+         * @access public
+         */
         public function displayDelay( $delay ) {
 
             if ( $this->options->showDelayAs == PMPRO_SEQ_AS_DATE) {
@@ -1839,7 +1996,9 @@
 	    /**
 	     * Test whether to show future sequence posts (i.e. not yet available to member)
          *
-         * @returns bool -- True if the admin has requested that unavailable posts not be displayed.
+         * @return bool -- True if the admin has requested that unavailable posts not be displayed.
+         *
+         * @access public
 	     */
 	    public function hideUpcomingPosts()
 	    {
@@ -1847,8 +2006,16 @@
 	        return $this->options->hidden == 1 ? true : false;
 	    }
 
-
-        public function get_closestByDelay( $delayVal, $objArr, $userId = null ) {
+        /**
+         * Compares the object to the
+         * @param $delayVal -- Delay value to compare to
+         * @param $objArr -- The post object
+         * @param null $userId -- The User ID to use
+         * @return null|int -- The post ID of the post with the delay value closest to the $delayVal
+         *
+         * @access private
+         */
+        private function get_closestByDelay( $delayVal, $objArr, $userId = null ) {
 
             $closest = null;
 
@@ -1857,20 +2024,28 @@
                 if ( ($closest == null) || (
                     ( abs($delayVal - $closest) > abs($this->normalizeDelay($item->delay) - $delayVal) )
                      && pmpro_sequence_hasAccess( $userId, $item->id ) ) )
-                    $cllosest = $item->id;
+                    $closest = $item->id;
             }
 
             return $closest;
         }
 
-		public function get_closestPost( $user_id = null ) {
+        /**
+         * Returns
+         * @param null $user_id -- ID of the user
+         * @return bool -- Post ID or FALSE (if error)
+         *
+         * @access public
+         */
+        public function get_closestPost( $user_id = null ) {
 
-            $membershipDay = pmpro_getMemberDays( $user_id, null );
+            $membershipDay = pmpro_getMemberDays( $user_id );
 
             // Load all posts in the sequence
             $postList = $this->getPosts();
 
-            $closestPostId = getClosestByDelay( $user_id, $membershipDay , $postList );
+            // Find the post ID in the postList array that has the delay closest to the membershipday.
+            $closestPostId = getClosestByDelay( $membershipDay, $postList, $user_id );
 
             if ( !empty( $closestPostId ) )
                 return $closestPostId;
