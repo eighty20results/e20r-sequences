@@ -89,14 +89,14 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				// Set the optin timestamp if this is the first time we're processing this users alert settings.
 				if ( empty( $noticeSettings->sequence[ $sequence->sequence_id ]->optinTS ) )
 					// First time this user has a notice processed. Set the timestamp to now.
-					$noticeSettings->sequence[ $sequence->sequence_id ]->optinTS = current_time('timestamp');
+					$noticeSettings->sequence[ $sequence->sequence_id ]->optinTS = current_time('timestamp', true);
 
 				dbgOut('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
 
                 // Get all posts belonging to this sequence.
 				$sequence_posts = $sequence->getPosts();
 
-				dbgOut("cron() - # of posts in sequence (" . count($sequence_posts) . ") vs number of posts we've notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
+				dbgOut("cron() - # of posts in sequence (" . count($sequence_posts) . ") vs number of posts we've already notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
 
 				// Iterate through all of the posts in the sequence
 				foreach ( $sequence_posts as $post ) {
@@ -114,7 +114,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 					 *
 					 *  Compare earliest $post->delay value (as a timestamp) to the User specific optinTS. If Greater or equal, then send.
 					 */
-					if ( $sequence->isAfterOptIn($s->user_id, $noticeSettings, $post ) &&
+					if ( $sequence->isAfterOptIn($s->user_id, $noticeSettings->sequence[$sequence->sequence_id]->optinTS, $post ) &&
 						($sendCount[$s->user_id] < PMPRO_SEQUENCE_MAX_EMAILS) ) {
 
 						// Test if $post->delay >= maxNotifyDelay

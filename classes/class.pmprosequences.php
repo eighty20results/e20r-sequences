@@ -274,26 +274,28 @@
 		 *
 		 * @return bool -- TRUE if we should let the user get notified about this post, false otherwise.
 		 */
-		public function isAfterOptIn( $user_id, $user_settings, $post ) {
+		public function isAfterOptIn( $user_id, $optinTS, $post ) {
 
-			$optinTS = $user_settings->sequence[ $this->sequence_id ]->optinTS;
+			 // = $user_settings->sequence[ $this->sequence_id ]->optinTS;
 
 			if ($optinTS != -1) {
+
 				dbgOut( 'isAfterOptIn() -- User: ' . $user_id . ' Optin TS: ' . $optinTS .
 				        ', Optin Date: ' . date( 'Y-m-d', $optinTS )
 				);
 
+                $delayTS = $this->postDelayAsTS( $post->delay, $user_id );
 
-				if ( $optinTS < $this->postDelayAsTS( $post->delay, $user_id ) ) {
+				if ( $delayTS >= $optinTS ) {
 
-					dbgOut( "The timestamp for the Post->delay < less than the timestamp (earlier) for when the user opted in" );
-					return false;
-				} else {
-					dbgOut('The timestamp for the Post->delay > (greater than) the timestamp (later) when the user opted in');
+					dbgOut( "isAfterOptIn() - The timestamp for the Post->delay (' . $delayTS . ') >= (GE) than Opt-in (' . $optinTS . ') timestamp (Delay is later - allow)" );
 					return true;
+				} else {
+					dbgOut('isAfterOptIn() - The timestamp for the Post->delay (' . $delayTS . ') < (LT) than Opt-In (' . $optinTS . ') timestamp (Delay is earlier - disallow)');
+					return false;
 				}
 			} else {
-				dbgOut('isAfterOptIn() - Negative optinTS. User  ' . $user_id . ' is not opted in any longer');
+				dbgOut('isAfterOptIn() - Negative optin timestamp value. The user  (' . $user_id . ') does not want to receive alerts');
 				return false;
 			}
 		}
@@ -310,22 +312,23 @@
          */
         public function postDelayAsTS($delay, $user_id = null, $level_id = null) {
 
-			$delayTS = current_time('timestamp'); // Default is 'now'
+			$delayTS = current_time('timestamp', true); // Default is 'now'
+
 	        dbgOut('postDelayAsTS() - User: ' . $user_id . ' Delay: ' . $delay . ' delayTS: ' . $delayTS);
 
 			$startTS = pmpro_getMemberStartdate($user_id, $level_id);
 
-			dbgOut('postDelayAsTS() - Start date (ts?): ' . $startTS);
+			dbgOut('postDelayAsTS() - Start timestamp: ' . $startTS);
 
 			switch ($this->options->delayType) {
 				case 'byDays':
 					$delayTS = strtotime( '+' . $delay . ' days', $startTS);
-					dbgOut('postDelayAsTS() -  byDays delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
+					dbgOut('postDelayAsTS() -  byDays:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
 					break;
 
 				case 'byDate':
                     $delayTS = strtotime( $delay );
-					dbgOut('postDelayAsTS() -  byDate delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
+					dbgOut('postDelayAsTS() -  byDate:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
 					break;
 			}
 
