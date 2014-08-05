@@ -465,7 +465,6 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 				        'result' => '',
 			        )
 		        );
-
 	        }
 
 	        if ( isset($_POST['hidden_pmpro_seq_id'])) {
@@ -489,7 +488,6 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
 	        // Grab the metadata from the database
 	        $usrSettings = get_user_meta($user_id, $wpdb->prefix . 'pmpro_sequence_notices', true);
-	        //dbgOut( 'User options (fetched):' . print_r( $usrSettings, true ) );
 
 	        if ( empty($usrSettings->sequence) || empty( $usrSettings->sequence[$seqId] ) ) {
 
@@ -513,7 +511,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 	        // If they opted out, set the opt-in timestamp to -1
 	        if ($usrSettings->sequence[$seqId]->sendNotice == 1)
 		        // Set the timestamp when the user opted in.
-		        $usrSettings->sequence[$seqId]->optinTS = current_time('timestamp', 1);
+		        $usrSettings->sequence[$seqId]->optinTS = current_time('timestamp', true);
 	        else
 		        $usrSettings->sequence[$seqId]->optinTS = -1; // Opted out.
 
@@ -523,6 +521,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
             /* Save the user options we just defined */
             if ( $user_id == $current_user->ID ) {
+
 	            dbgOut('Opt-In Timestamp is: ' . $usrSettings->sequence[$seqId]->optinTS);
 	            // dbgOut('Saving user_meta for UID ' . $user_id . ' Settings: ' . print_r($usrSettings, true));
 	            update_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence_notices', $usrSettings );
@@ -570,27 +569,22 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 	    $status = false;
 	    $response = '';
 
-	    $sequence = new PMProSequences();
-
 	    try {
 
             if ( isset($_POST['pmpro_sequence_id']) ) {
 
                 $sequence_id = intval($_POST['pmpro_sequence_id']);
                 $sequence = new PMProSequences($sequence_id);
+
 	            dbgOut('ajaxSaveSettings() - Saving settings for ' . $sequence_id);
 
                 if ( ($status = pmpro_sequence_settings_save($sequence_id, $sequence)) === true) {
-
-	                dbgOut('ajaxSaveSettings() - Saved settings using Ajax call');
 
 	                if ( isset($_POST['hidden_pmpro_seq_wipesequence'])) {
 
 		                if (intval($_POST['hidden_pmpro_seq_wipesequence']) == 1) {
 
 			                // Wipe the list of posts in the sequence.
-			                dbgOut( 'ajaxSaveSettings() - Deleting all entries in sequence # ' . $sequence_id );
-
 			                $sposts = get_post_meta( $sequence_id, '_sequence_posts' );
 
 			                if ( count($sposts) > 0) {
@@ -598,7 +592,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 				                if ( ! delete_post_meta( $sequence_id, '_sequence_posts' ) ) {
 
 					                dbgOut( 'ajaxSaveSettings() - Unable to delete the posts in sequence # ' . $sequence_id );
-					                $sequence->setError( __('Unable to remove posts from sequence', 'pmprosequence') );
+					                $sequence->setError( __('Unable to wipe existing posts', 'pmprosequence') );
 					                $status = false;
 				                }
 				                else
@@ -653,13 +647,10 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 		$settings = $sequenceObj->options;
 		dbgOut('Saving settings for Sequence w/ID: ' . $sequence_id);
 
-		// dbgOut('Pre-Save settings are: ' . print_r($sequenceObj->options, true));
-		// dbgOut('POST: ' . print_r($_POST, true));
-
 		// Check that the function was called correctly. If not, just return
 		if(empty($sequence_id)) {
 			dbgOut('pmpro_sequence_settings_save(): No sequence ID supplied...');
-			$sequenceObj->setError( __('No sequence ID provided', 'pmprosequence'));
+			$sequenceObj->setError( __('No sequence provided', 'pmprosequence'));
 			return false;
 		}
 
@@ -669,18 +660,12 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 			return $sequence_id;
 		}
 
-
 		// Verify that we're allowed to update the sequence data
 		if ( !current_user_can( 'edit_post', $sequence_id ) ) {
 			dbgOut('pmpro_sequence_settings_save(): User is not allowed to edit this post type');
-			$sequenceObj->setError( __('Not permitted to modify settings', 'pmprosequence'));
+			$sequenceObj->setError( __('User is not allowed to change settings', 'pmprosequence'));
 			return false;
 		}
-
-		dbgOut('pmpro_sequence_settings_save(): About to save settings for sequence ' . $sequence_id);
-		// dbgOut('From Web: ' . print_r($_REQUEST, true));
-
-		dbgOut('Have to load new instance of Sequence class');
 
 		if (!$sequenceObj->options)
 			$sequenceObj->options = $sequenceObj->defaultOptions();
@@ -799,7 +784,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
             dbgOut('pmpro_sequence_settings_save(): POST value for settings->dateformat: ' . esc_attr($_POST['hidden_pmpro_seq_dateformat']) );
         }
         else
-            $sequenceObj->options->dateformat = 'd-m-Y'; // Default is Day-Month-Year
+            $sequenceObj->options->dateformat = __('m-d-Y', 'pmprosequence'); // Default is MM-DD-YYYY (if translation supports it)
 
         if ( isset($_POST['hidden_pmpro_seq_replyto']) )
 		{
@@ -905,7 +890,6 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 	         */
 
 	        $tmpSequence = new PMProSequences($sequence_id);
-	        dbgOut( ( empty($tmpSequence->options->previewOffset) ? 'no Preview offset configured' : 'Preview offset has been configured: ' . $sequence_id) );
 
 	        // $tmpSequence->fetchOptions($sequence_id);
 	        dbgOut('pmpro_sequence_hasAccess() - Processing for sequence: ' . $sequence_id);
@@ -915,10 +899,13 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 	        if ( empty($tmpSequence->options->previewOffset) ) {
 
 		        $tmpSequence->options->previewOffset = 0;
-		        dbgOut('Saving settings due to post # ', $post_id);
+		        dbgOut('Saving settings due to initial config of previewOffset for post # ', $post_id);
 		        $tmpSequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
-
 	        }
+
+	        $offset = $tmpSequence->options->previewOffset;
+	        dbgOut( "pmpro_sequence_hasAccess() - Preview offset for (" . $sequence_id .") is: " . $offset );
+
 
 	        //Does user have access to the sequence page? (and thus any of the posts/pages included in the sequence)?
             $results = pmpro_has_membership_access($sequence_id, $user_id, true); //Using true to return all level IDs that have access to the sequence
@@ -932,32 +919,20 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
                     foreach ( $sequence_posts as $sp ) {
 
-                        // dbgOut('Checking post for access - contains: ' . print_r($sp, true));
-
-                        $offset = $tmpSequence->options->previewOffset;
-
                         //this post we are checking is in this sequence
                         if ( $sp->id == $post_id ) {
 
                             // Verify for all levels given access to this post
                             foreach ( $results[1] as $level_id ) {
 
-                                dbgOut('pmpro_sequence_hasAccess() - Testing delay type for sequence (ID: ' . $sequence_id . ')');
-
                                 if ( $tmpSequence->options->delayType == 'byDays' ) {
-
-                                    dbgOut('Delay Type is # of days since membership start');
 
                                     if( (pmpro_getMemberDays($user_id, $level_id) + $offset) >= $sp->delay)
                                         return true;	//user has access to this sequence and has been a member for longer than this post's delay
                                 }
                                 elseif ( $tmpSequence->options->delayType == 'byDate' ) {
 
-                                    dbgOut('Delay Type is a fixed date');
-
                                     $today = date( 'Y-m-d', ( current_time('timestamp') + ($offset * 86400) ) );
-
-                                    dbgOut('Today: ' . $today . ' and delay: ' . $sp->delay );
 
                                     if ( $today >= $sp->delay )
                                         return true;
@@ -979,7 +954,7 @@ endif;
 
 if ( ! function_exists( 'pmpro_sequence_pmpro_has_membership_access_filter' ) ):
 
-add_filter("pmpro_has_membership_access_filter", "pmpro_sequence_pmpro_has_membership_access_filter", 10, 4);
+add_filter("pmpro_has_membership_access_filter", "pmpro_sequence_has_membership_access_filter", 10, 4);
 
     /*
         Filter pmpro_has_membership_access based on sequence access.
@@ -994,7 +969,7 @@ add_filter("pmpro_has_membership_access_filter", "pmpro_sequence_pmpro_has_membe
      *
      * @return bool -- True if access is granted, false if not
      */
-    function pmpro_sequence_pmpro_has_membership_access_filter($hasaccess, $mypost, $myuser, $post_membership_levels)
+    function pmpro_sequence_has_membership_access_filter($hasaccess, $mypost, $myuser, $post_membership_levels)
     {
         //If the user doesn't have access already, we won't change that. So only check if they already have access.
         if($hasaccess)
@@ -1011,10 +986,10 @@ add_filter("pmpro_has_membership_access_filter", "pmpro_sequence_pmpro_has_membe
 
 endif;
 
-if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
+if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
 
-    add_filter("pmpro_non_member_text_filter", "pmpro_seuquence_pmpro_text_filter");
-    add_filter("pmpro_not_logged_in_text_filter", "pmpro_seuquence_pmpro_text_filter");
+    add_filter("pmpro_non_member_text_filter", "pmpro_seuquence_text_filter");
+    add_filter("pmpro_not_logged_in_text_filter", "pmpro_seuquence_text_filter");
 
     /**
      * Filter the message for users without access.
@@ -1022,7 +997,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
      * @param $text (string) -- The text to filter
      * @return string -- the filtered text
      */
-    function pmpro_seuquence_pmpro_text_filter($text)
+    function pmpro_seuquence_text_filter($text)
     {
         global $current_user, $post;
 
@@ -1032,7 +1007,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
             {
 	            $post_sequence = get_post_meta($post->ID, "_post_sequences", true);
 
-                //Update text. The either have to wait or sign up.
+                //Update text. The user either will have to wait or sign up.
 
                 $insequence = false;
 
@@ -1070,7 +1045,6 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
                     if(count($post_sequence) == 1)
                     {
 	                    $text = sprintf("%s<br/>", sprintf( __("This content is part of the <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($post_sequence[0]), get_the_title($post_sequence[0])) );
-	                    // $text = _e('This content is part of the ') . '<a href="' . get_permalink($post_sequence[0]) . '">' . get_the_title($post_sequence[0]) . '</a>' . _e('sequence.');
                     }
                     else
                     {
@@ -1227,22 +1201,34 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 		}
 
 		global $pmpro_startdates;	//for cache
+
 		if(empty($pmpro_startdates[$user_id][$level_id]))
 		{			
 			global $wpdb;
 			
 			if(!empty($level_id))
-				$sqlQuery = "
-							SELECT UNIX_TIMESTAMP(startdate)
-							FROM $wpdb->pmpro_memberships_users
-							WHERE status = 'active' AND membership_id IN(" . $wpdb->escape($level_id) . ") AND user_id = '" . $user_id . "'
-							ORDER BY id LIMIT 1";
+				$sqlQuery = $wpdb->prepare(
+					"
+						SELECT UNIX_TIMESTAMP(startdate)
+						FROM {$wpdb->pmpro_memberships_users}
+						WHERE status = %s AND membership_id IN ( %d ) AND user_id = %d
+						ORDER BY id LIMIT 1
+					",
+					'active',
+					$level_id,
+					$user_id
+				);
 			else
-				$sqlQuery = "
-							SELECT UNIX_TIMESTAMP(startdate)
-							FROM $wpdb->pmpro_memberships_users
-							WHERE status = 'active' AND user_id = '" . $user_id . "'
-							ORDER BY id LIMIT 1";
+				$sqlQuery = $wpdb->prepare(
+					"
+						SELECT UNIX_TIMESTAMP(startdate)
+						FROM {$wpdb->pmpro_memberships_users}
+						WHERE status = %s AND user_id = %d
+						ORDER BY id LIMIT 1
+					",
+					'active',
+					$user_id
+				);
 				
 			$startdate = apply_filters("pmpro_member_startdate", $wpdb->get_var($sqlQuery), $user_id, $level_id);
 			
@@ -1365,11 +1351,13 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
 
 	    // Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
 	    /* Hack: Disable all sequence alerts */
-	    $sql = $wpdb->prepare("
-	        SELECT *
-	        FROM $wpdb->posts
-	        WHERE post_type = 'pmpro_sequence'
-	    ");
+	    $sql = $wpdb->prepare(
+		    "
+		        SELECT *
+		        FROM {$wpdb->posts}
+		        WHERE post_type = 'pmpro_sequence'
+	    	"
+	    );
 
 	    $seqs = $wpdb->get_results($sql);
 
@@ -1454,17 +1442,20 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
         if (is_null($seq_id)) {
 	        dbgOut('no sequence ID provided. Listing all sequences');
 	        //get all series
-	        $seqs = $wpdb->get_results( "
-                SELECT *
-                FROM $wpdb->posts
-                WHERE post_type = 'pmpro_sequence'
-            " );
+	        $seqs = $wpdb->get_results(
+		        "
+	                SELECT *
+	                FROM {$wpdb->posts}
+	                WHERE post_type = 'pmpro_sequence'
+            	"
+	        );
         } else {
-            $sql = $wpdb->prepare("
-                SELECT *
-                FROM $wpdb->posts
-                WHERE post_type = 'pmpro_sequence' AND ID = %s
-            ",
+            $sql = $wpdb->prepare(
+	            "
+	                SELECT *
+	                FROM {$wpdb->posts}
+	                WHERE post_type = 'pmpro_sequence' AND ID = %s
+	            ",
                 $seq_id
             );
         }
