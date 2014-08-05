@@ -20,13 +20,15 @@ jQuery(document).ready(function(){
         var $timeCtl        = $('#pmpro_sequence_noticetime');
         var $dateCtl        = $('#pmpro_sequence_dateformat');
         var $offsetCtl      = $('#pmpro_sequence_offset');
-        var $offsetChkCtl   = $('#pmpro_sequence_offsetchk');
 
         /* Input */
         var $excerptCtl     = $('#pmpro_sequence_excerpt');
         var $subjCtl        = $('#pmpro_sequence_subject');
         var $fromCtl        = $('#pmpro_sequence_fromname');
         var $replyCtl       = $('#pmpro_sequence_replyto');
+
+        /* Checkbox */
+        var $offsetChkCtl   = $('#pmpro_sequence_offsetchk');
 
         console.log('Sort Order on load: ' + $sortOrderCtl.find('option:selected').val());
 
@@ -125,59 +127,59 @@ jQuery(document).ready(function(){
 
         /* Admin clicked the 'Edit' button for the delayType settings. Show the select field & hide the "edit" button */
         $('#pmpro-seq-edit-dateformat').click(function(){
-            //           console.log('Edit button for delay type clicked');
+//           console.log('Edit button for delay type clicked');
             $('#pmpro-seq-edit-dateformat').slideToggle();
             $('#pmpro-seq-dateformat-select').slideToggle();
         });
 
         /* Save the value for the setting for the 'hide future posts in sequence' checkbox*/
         $('#pmpro_sequence_hidden').click(function(){
-  //          console.log('Checkbox to hide upcoming posts changed');
+//          console.log('Checkbox to hide upcoming posts changed');
             $('#hidden_pmpro_seq_future').val( this.checked ? 1 : 0 );
         });
 
         /* Save new value for the lengthVisible variable */
         $('#pmpro_sequence_lengthvisible').click(function(){
-  //          console.log('Checkbox to show length of membership notice changed');
+//          console.log('Checkbox to show length of membership notice changed');
             $('#hidden_pmpro_seq_lengthvisible').val( this.checked ? 1 : 0 );
         });
 
         /* Admin clicked the 'Edit' button for the New Content Notice Template settings. Show the select field & hide the "edit" button */
         $('#pmpro-seq-edit-template').click(function(){
-  //          console.log('Edit button for email template selection clicked');
+//          console.log('Edit button for email template selection clicked');
             $('#pmpro-seq-edit-template').slideToggle();
             $('#pmpro-seq-template-select').slideToggle();
         });
 
         /* Admin clicked the 'Edit' button for the New Content Notice Template settings. Show the select field & hide the "edit" button */
         $('#pmpro-seq-edit-noticetime').click(function(){
- //           console.log('Edit button for email template selection clicked');
+//           console.log('Edit button for email template selection clicked');
             $('#pmpro-seq-edit-noticetime').slideToggle();
             $('#pmpro-seq-noticetime-select').slideToggle();
         });
 
         $('#pmpro-seq-edit-excerpt').click(function(){
- //           console.log('Edit button for excerpt intro edit field clicked');
+//           console.log('Edit button for excerpt intro edit field clicked');
             $('#pmpro-seq-edit-excerpt').slideToggle();
             $('#pmpro-seq-excerpt-input').slideToggle();
         });
 
         $('#pmpro-seq-edit-subject').click(function(){
- //           console.log('Edit button for Subject prefix edit field clicked');
+//           console.log('Edit button for Subject prefix edit field clicked');
             $('#pmpro-seq-edit-subject').slideToggle();
             $('#pmpro-seq-subject-input').slideToggle();
         });
 
         /** The Email and Name for the "From" line **/
         $('#pmpro-seq-edit-fromname').click(function(){
- //           console.log('Edit button for email edit field clicked');
+//           console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-fromname').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
         });
 
         $('#pmpro-seq-edit-replyto').click(function(){
- //           console.log('Edit button for email edit field clicked');
+//           console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
             $('#pmpro-seq-edit-fromname').slideToggle();
@@ -845,7 +847,6 @@ function pmpro_sequence_saveSettings( sequence_id ) {
     // Disable save button
     saveBtn.attr('disabled', 'disabled');
     saveBtn.html(pmpro_sequence.lang.saving);
-
 
     jQuery.ajax({
         url: pmpro_sequence.ajaxurl,
