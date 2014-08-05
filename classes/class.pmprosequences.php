@@ -286,12 +286,15 @@
 
                 $delayTS = $this->postDelayAsTS( $post->delay, $user_id );
 
-				if ( $delayTS >= $optinTS ) {
+				// Compare the Delay to the optin (subtract 24 hours worth of time from the opt-in TS)
+				if ( $delayTS >= ($optinTS - (3600 * 24)) ) {
 
 					dbgOut( "isAfterOptIn() - The timestamp for the Post->delay (' . $delayTS . ') >= (GE) than Opt-in (' . $optinTS . ') timestamp (Delay is later - allow)" );
+					dbgOut('isAfterOptIn() - This post SHOULD be allowed to be alerted on');
 					return true;
 				} else {
 					dbgOut('isAfterOptIn() - The timestamp for the Post->delay (' . $delayTS . ') < (LT) than Opt-In (' . $optinTS . ') timestamp (Delay is earlier - disallow)');
+					dbgOut('isAfterOptIn() - This post should NOT be allowed to be alerted on');
 					return false;
 				}
 			} else {
