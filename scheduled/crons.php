@@ -101,7 +101,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				// Iterate through all of the posts in the sequence
 				foreach ( $sequence_posts as $post ) {
 
-					dbgOut('Evaluating whether to send alert for "' . get_the_title($post->id) .'"');
+					dbgOut('cron() - Evaluating whether to send alert for "' . get_the_title($post->id) .'"');
 					/**
 					 * if 'byDays':
 					 *  Find the post that would be displayed "today" per the sequence rules
@@ -114,20 +114,18 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 					 *
 					 *  Compare earliest $post->delay value (as a timestamp) to the User specific optinTS. If Greater or equal, then send.
 					 */
-					if ( $sequence->isAfterOptIn($s->user_id, $noticeSettings->sequence[$sequence->sequence_id]->optinTS, $post ) &&
-						($sendCount[$s->user_id] < PMPRO_SEQUENCE_MAX_EMAILS) ) {
 
-						// Test if $post->delay >= maxNotifyDelay
+					dbgOut( 'cron() - Post: ' . get_the_title($post->id) .
+					        ', user ID: ' . $s->user_id .
+					        ', in_array: ' . ( in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
+					        ', hasAccess: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false' ) );
 
-						dbgOut( 'cron() - Post: ' . get_the_title($post->id) .
-						        ', user ID: ' . $s->user_id .
-						        ', in_array: ' . ( in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
-						        ', hasAccess: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false' ) );
+					// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
+					if ( ( ! empty( $post->id ) ) && pmpro_sequence_hasAccess( $s->user_id, $post->id ) &&
+					     ! in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true )
+					) {
 
-						// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
-						if ( ( ! empty( $post->id ) ) && pmpro_sequence_hasAccess( $s->user_id, $post->id ) &&
-						     ! in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true )
-						) {
+						if ( $sequence->isAfterOptIn($s->user_id, $noticeSettings->sequence[$sequence->sequence_id]->optinTS, $post ) ) {
 
 							dbgOut( 'cron() - Preparing the email message' );
 
@@ -146,15 +144,40 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 							} else {
 								dbgOut( 'cron() - Error sending email message!' );
 							}
-
-						} else {
-							dbgOut( 'cron() - User with ID ' . $s->user_id . ' does not need alert for post #' .
-							        $post->id . ' in sequence ' . $sequence->sequence_id . ' Or the sendCount (' . $sendCount[ $s->user_id ] . ')has been exceeded for now' );
-
-						} // End of access test.
-
+						}
+						else {
+							// Only add this post ID if it's not already present (should be redundant!)
+							if (! in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) ) {
+								dbgOut( "cron() - Adding this previously released (old) post to the notified list" );
+								$noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts[] = $post->id;
+							}
+						}
 					}
+					else {
+
+						dbgOut( 'cron() - User with ID ' . $s->user_id . ' does not need alert for post #' .
+						        $post->id . ' in sequence ' . $sequence->sequence_id . ' Or the sendCount (' . $sendCount[ $s->user_id ] . ')has been exceeded for now' );
+
+					} // End of access test.
+
+					dbgOut("cron() - Cleaning up the notifiedPosts list for this user, just in case");
+					$tmp = array_count_values($noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts);
+					$cnt = $tmp[$post->id];
+
+					// Check whether there are repeat entries for the current sequence
+					if ($cnt > 1) {
+
+						// There are so get rid of the extras (this is a backward compatibility feature due to a previous bug.)
+						dbgOut('cron() - Post appears more than once in the notify list. Clean it up!');
+
+						$clean = array_unique( $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts);
+
+						dbgOut('cron() - Cleaned array: ' . print_r($clean, true));
+						$noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts = $clean;
+					}
+
 				} // End foreach for sequence posts
+
 
 				update_user_meta( $s->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $noticeSettings );
 				dbgOut('cron() - Updated user meta for the notices');
