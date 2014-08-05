@@ -210,11 +210,6 @@
 
 		        if ( ($retval = pmpro_sequence_settings_save( $post_id, $sequence )) === true ) {
 
-			        if ( $sequence->options->sendNotice == 1 ) {
-				        dbgOut( 'pmpro_sequence_meta_save(): Updating the cron job for sequence ' . $sequence->sequence_id );
-				        $sequence->updateNoticeCron();
-			        }
-
 			        dbgOut( 'pmpro_sequence_meta_save(): Saved metadata for sequence #' . $post_id );
 
 			        return true;
@@ -234,6 +229,7 @@
 		 */
 		public function updateNoticeCron()
 		{
+			$prevScheduled = false;
 			try {
 
 	            // Check if the job is previously scheduled. If not, we're using the default cron schedule.
@@ -241,27 +237,80 @@
 
 				    // Clear old cronjob for this sequence
 		            dbgOut('Current cron job for sequence # ' . $this->sequence_id . ' scheduled for ' . $timestamp);
-		            dbgOut('Clearing old cron job for sequence # ' . $this->sequence_id);
-				    wp_clear_scheduled_hook($timestamp, 'pmpro_sequence_cron_hook', array( $this->sequence_id ));
+		            $prevScheduled = true;
+
+				    // wp_clear_scheduled_hook($timestamp, 'pmpro_sequence_cron_hook', array( $this->sequence_id ));
 	            }
 
-				dbgOut('Cron info: ' . print_r(wp_get_schedule('pmpro_sequence_cron_hook', array($this->sequence_id)), true));
+				dbgOut('updateNoticeCron() - Next scheduled at (timestamp): ' . print_r(wp_next_scheduled('pmpro_sequence_cron_hook', array($this->sequence_id)), true));
 
 				// Set time (what time) to run this cron job the first time.
 				dbgOut('Adding cron job for ' . $this->sequence_id . ' at ' . $this->options->noticeTimestamp);
-				wp_schedule_event($this->options->noticeTimestamp, 'hourly', 'pmpro_sequence_cron_hook', array($this->sequence_id));
 
+				if  ( ($prevScheduled) &&
+				      ($this->options->noticeTimestamp != $timestamp) ) {
+
+					dbgOut('updateNoticeCron() - Admin changed when the job is supposed to run. Deleting old cron job for sequence w/ID: ' . $this->sequence_id);
+					wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook', array($this->sequence_id) );
+
+					// Schedule a new event for the specified time
+					if ( false === wp_schedule_event(
+						                $this->options->noticeTimestamp,
+						                'daily',
+						                'pmpro_sequence_cron_hook',
+						                array( $this->sequence_id )
+									)) {
+
+						$this->setError( printf( __('Could not schedule new content alert for %s', 'pmprosequence'), $this->options->noticeTime) );
+				        dbgOut("updateNoticeCron() - Did not schedule the new cron job at ". $this->options->noticeTime . " for this sequence (# " . $this->sequence_id . ')');
+						return false;
+				     }
+				}
+				elseif (! $prevScheduled)
+					wp_schedule_event($this->options->noticeTimestamp, 'daily', 'pmpro_sequence_cron_hook', array($this->sequence_id));
+				else
+					dbgOut("updateNoticeCron() - Timestamp didn't change so leave the schedule as-is");
+
+				// Validate that the event was scheduled as expected.
 				$ts = wp_next_scheduled( 'pmpro_sequence_cron_hook', array($this->sequence_id) );
 
-				dbgOut('According to WP, the job is scheduled for: ' . date('d-m-Y H:i:s', $ts) . ' and we asked for ' . date('d-m-Y H:i:s', $this->options->noticeTimestamp));
+				dbgOut('updateNoticeCron() - According to WP, the job is scheduled for: ' . date('d-m-Y H:i:s', $ts) . ' and we asked for ' . date('d-m-Y H:i:s', $this->options->noticeTimestamp));
 
 				if ($ts != $this->options->noticeTimestamp)
-					dbgOut('Correctly scheduled cron job for content check?');
+					dbgOut("updateNoticeCron() - Timestamp for actual cron entry doesn't match the one in the options...");
 			}
 			catch (Exception $e) {
 				// echo 'Error: ' . $e->getMessage();
 				dbgOut('Error updating cron job(s): ' . $e->getMessage());
+
+				if ( is_null($this->getError()) )
+					$this->setError("Exception in updateNoticeCron(): " . $e->getMessage());
+
+				return false;
 			}
+
+			return true;
+		}
+
+        /**
+         * Access the private $error value
+         *
+         * @return string|null -- Error message or NULL
+         * @access public
+         */
+        public function getError() {
+			return $this->error;
+		}
+
+        /**
+         * Set the private $error value
+         *
+         * @param $msg -- The error message to set
+         *
+         * @access public
+         */
+        public function setError( $msg ) {
+			$this->error = $msg;
 		}
 
 		/**
@@ -351,21 +400,30 @@
 	     */
 	    public function calculateTimestamp( $timeString )
 	    {
-
+		    // Use local time (not UTC) for 'current time' at server location
+		    // This is what Wordpress apparently uses (at least in v3.9) for wp-cron.
 		    $timestamp = current_time('timestamp');
 
 		    try {
 			    /* current time & date */
 	            $schedHour = date( 'H', strtotime($timeString));
+			    $schedMin = date('i', strtotime($timeString));
+
 	            $nowHour = date('H', $timestamp);
+			    $nowMin = date('i', $timestamp);
 
 			    dbgOut('calculateTimestamp() - Timestring: ' . $timeString . ', scheduled Hour: ' . $schedHour . ' and current Hour: ' .$nowHour );
 
-
-	            //             06           05
+	            /*
+	             *  Using these to decide whether or not to assume 'today' or 'tomorrow' for initial schedule for
+			     * this cron() job.
+	             *
+			     * If the admin attempts to schedule a job that's less than 30 minutes away, we'll schedule it for tomorrow.
+	             */
 	            $hourDiff = $schedHour - $nowHour;
+			    $hourDiff += ( ( ($hourDiff == 0) && (($schedMin - $nowMin) <= 0 )) ? 0 : 1);
 
-	            if ($hourDiff >= 1) {
+	            if ( $hourDiff >= 1 ) {
 	                dbgOut('calculateTimestamp() - Assuming current day');
 	                $when = ''; // Today
 	            }
@@ -373,18 +431,11 @@
 		            dbgOut('calculateTimestamp() - Assuming tomorrow');
 	                $when = 'tomorrow ';
 	            }
-
+			    /* Create the string we'll use to generate a timestamp for cron() */
 			    $timeInput = $when . $timeString . ' ' . get_option('timezone_string');
-
-			    /* Various debug information to log */
-			    dbgOut('calculateTimestamp() Supplied timeString: ' . $timeString);
-			    dbgOut('calculateTimestamp() strtotime() input: ' . $timeInput);
-			    dbgOut('calculateTimestamp() Current UTC timestamp: ' . $timestamp);
-
 			    $timestamp = strtotime($timeInput);
-
-			    /* Calculate */
 			    dbgOut('calculateTimestamp() UTC timestamp for timeString (tomorrow): ' . $timestamp);
+
 		    }
 		    catch (Exception $e)
 		    {
@@ -1071,6 +1122,15 @@
 			else
 				return FALSE;
 		}
+	/*
+	    public function convertToDate( $days )
+	    {
+	        $startDate = pmpro_getMemberStartdate();
+	        $endDate = date( 'Y-m-d', strtotime( $startDate . " +" . $days . ' days' ));
+	        dbgOut('C2Date - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $endDate .  ' for delay day count: ' . $days);
+	        return $endDate;
+	    }
+	*/
 
 	    /**
 	     * Used to label the post list in the metabox
@@ -1108,36 +1168,6 @@
 
 	        return $txtState;
 	    }
-
-        /**
-         * Access the private $error value
-         *
-         * @return string|null -- Error message or NULL
-         * @access public
-         */
-        public function getError() {
-			return $this->error;
-		}
-	/*
-	    public function convertToDate( $days )
-	    {
-	        $startDate = pmpro_getMemberStartdate();
-	        $endDate = date( 'Y-m-d', strtotime( $startDate . " +" . $days . ' days' ));
-	        dbgOut('C2Date - Member start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $endDate .  ' for delay day count: ' . $days);
-	        return $endDate;
-	    }
-	*/
-
-        /**
-         * Set the private $error value
-         *
-         * @param $msg -- The error message to set
-         *
-         * @access public
-         */
-        public function setError( $msg ) {
-			$this->error = $msg;
-		}
 
 		/*
 			Create the Custom Post Type for the Sequence/Sequences
@@ -1600,7 +1630,6 @@
 				<!-- Default template (blank) -->
 				<option value=""></option>
 			<?php
-			$files = array();
 
 			dbgOut('Directory containing templates: ' . dirname(__DIR__) . '/email/');
 			$templ_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'email';
@@ -1703,8 +1732,9 @@
          */
         public function getPostList($echo = false)
 		{
-			global $current_user;
+			//global $current_user;
 			$this->getPosts();
+
 			if(!empty($this->posts))
 			{
 	            // Order the posts in accordance with the 'sortOrder' option
@@ -1901,13 +1931,100 @@
             $postList = $this->getPosts();
 
             // Find the post ID in the postList array that has the delay closest to the membershipday.
-            $closestPostId = getClosestByDelay( $membershipDay, $postList, $user_id );
+            $closestPostId = $this->get_closestByDelay( $membershipDay, $postList, $user_id );
 
             if ( !empty( $closestPostId ) )
                 return $closestPostId;
 
 			return false;
 		}
+
+        /**
+         * Compares the object to the
+         * @param $delayVal -- Delay value to compare to
+         * @param $objArr -- The post object
+         * @param null $userId -- The User ID to use
+         * @return null|int -- The post ID of the post with the delay value closest to the $delayVal
+         *
+         * @access private
+         */
+        private function get_closestByDelay( $delayVal, $objArr, $userId = null ) {
+
+            $closest = null;
+
+            foreach($objArr as $item) {
+
+                if ( ($closest == null) || (
+                    ( abs($delayVal - $closest) > abs($this->normalizeDelay($item->delay) - $delayVal) )
+                     && pmpro_sequence_hasAccess( $userId, $item->id ) ) )
+                    $closest = $item->id;
+            }
+
+            return $closest;
+        }
+
+	    /**
+	     *
+	     * Convert any date string to a number of days worth of delay (since membership started for the current user)
+	     *
+	     * @param $delay (int | string) -- The delay value (either a # of days or a date YYYY-MM-DD)
+	     * @return mixed (int) -- The # of days since membership started (for this user)
+         *
+         * @access public
+	     */
+	    public function normalizeDelay( $delay )
+	    {
+
+	        if ( $this->isValidDate($delay) ) {
+	            // dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
+	            return $this->convertToDays($delay);
+	        }
+	        //dbgOut('normalizeDelay(): Delay specified as # of days since membership start: ' . $delay);
+	        return $delay;
+	    }
+
+	    /**
+	     *
+	     * Returns a number of days since the users membership started based on the supplied date.
+	     * This allows us to mix sequences containing days since membership start and fixed dates for content drips
+	     *
+	     * @param $date - Take a date in the format YYYY-MM-DD and convert it to a number of days since membership start (for the current member)
+	     * @param $userId - Optional ID for the user being processed
+	     * @param $levelId - Optional ID for the level of the user
+	     * @return mixed -- Return the # of days calculated
+         *
+         * @access public
+	     */
+	    public function convertToDays( $date, $userId = null, $levelId = null )
+	    {
+		    $days = 0;
+
+	        if ( $this->isValidDate( $date ) )
+	        {
+		        dbgOut('convertToDays() - Date is valid: ' . $date);
+
+	            $startDate = pmpro_getMemberStartdate( $userId, $levelId); /* Needs userID & Level ID ... */
+
+		        if (empty($startDate))
+			            $startDate = 0;
+
+		        dbgOut('convertToDays() - Start Date: ' . $startDate);
+		        try {
+
+			        // Use v5.2 and v5.3 compatible function to calculate difference
+			        $compDate = strtotime($date);
+			        $days = pmpro_seq_datediff($startDate, $compDate); // current_time('timestamp')
+
+
+		        } catch (Exception $e) {
+			        dbgOut('convertToDays() - Error calculating days: ' . $e->getMessage());
+		        }
+	        }
+	        else
+	            $days = $date;
+
+	        return $days;
+	    }
 
         /**
          * Return a normalized (as 'days since membership started') number indicating the delay for the post content
@@ -1958,74 +2075,6 @@
 
 			return false;
 		}
-
-	    /**
-	     *
-	     * Convert any date string to a number of days worth of delay (since membership started for the current user)
-	     *
-	     * @param $delay (int | string) -- The delay value (either a # of days or a date YYYY-MM-DD)
-	     * @return mixed (int) -- The # of days since membership started (for this user)
-         *
-         * @access public
-	     */
-	    public function normalizeDelay( $delay )
-	    {
-
-	        if ( $this->isValidDate($delay) ) {
-	            // dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
-	            return $this->convertToDays($delay);
-	        }
-	        //dbgOut('normalizeDelay(): Delay specified as # of days since membership start: ' . $delay);
-	        return $delay;
-	    }
-
-	    /**
-	     *
-	     * Returns a number of days since the users membership started based on the supplied date.
-	     * This allows us to mix sequences containing days since membership start and fixed dates for content drips
-	     *
-	     * @param $date - Take a date in the format YYYY-MM-DD and convert it to a number of days since membership start (for the current member)
-	     * @param $userId - Optional ID for the user being processed
-	     * @param $levelId - Optional ID for the level of the user
-	     * @return mixed -- Return the # of days calculated
-         *
-         * @access public
-	     */
-	    public function convertToDays( $date, $userId = null, $levelId = null )
-	    {
-		    $days = 0;
-
-	        if ( $this->isValidDate( $date ) )
-	        {
-		        dbgOut('convertToDays() - Date is valid: ' . $date);
-
-	            $startDate = pmpro_getMemberStartdate(); /* Needs userID & Level ID ... */
-
-		        if (empty($startDate))
-			            $startDate = 0;
-
-		        dbgOut('convertToDays() - Start Date: ' . $startDate);
-		        try {
-
-			        // Use v5.2 and v5.3 compatible function to calculate difference
-			        $compDate = strtotime($date);
-			        $days = pmpro_seq_datediff($startDate, $compDate); // current_time('timestamp')
-
-
-		        } catch (Exception $e) {
-			        dbgOut('convertToDays() - Error calculating days: ' . $e->getMessage());
-		        }
-
-	            // dbgOut('convertToDays() - Member with start date: ' . date('Y-m-d', $startDate) . ' and end date: ' . $date .  ' for delay day count: ' . $days);
-
-	        }
-	        else {
-	            $days = $date;
-	            // dbgOut('convertToDays() - Member: days of delay from start: ' . $date);
-	        }
-
-	        return $days;
-	    }
 
 	    /**
 	     *
@@ -2118,30 +2167,6 @@
 	        // Descending Sort Order
 	        return ($aDelay > $bDelay) ? -1 : +1;
 	    }
-
-        /**
-         * Compares the object to the
-         * @param $delayVal -- Delay value to compare to
-         * @param $objArr -- The post object
-         * @param null $userId -- The User ID to use
-         * @return null|int -- The post ID of the post with the delay value closest to the $delayVal
-         *
-         * @access private
-         */
-        private function get_closestByDelay( $delayVal, $objArr, $userId = null ) {
-
-            $closest = null;
-
-            foreach($objArr as $item) {
-
-                if ( ($closest == null) || (
-                    ( abs($delayVal - $closest) > abs($this->normalizeDelay($item->delay) - $delayVal) )
-                     && pmpro_sequence_hasAccess( $userId, $item->id ) ) )
-                    $closest = $item->id;
-            }
-
-            return $closest;
-        }
 	}
 
 //	$GLOBALS['pmpro-sequences'] = new PMProSequences();
