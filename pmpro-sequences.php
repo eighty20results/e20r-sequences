@@ -819,8 +819,11 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 
 		// $sequence->options = $settings;
 		if ( $sequenceObj->options->sendNotice == 1 ) {
+
 			dbgOut( 'pmpro_sequence_meta_save(): Updating the cron job for sequence ' . $sequenceObj->sequence_id );
-			$sequenceObj->updateNoticeCron();
+
+			if (! $sequenceObj->updateNoticeCron() )
+				dbgOut('pmpro_sequence_settings_save() - Error configuring cron() system for sequence ' . $sequenceObj->sequence_id);
 		}
 
 		// dbgOut('pmpro_sequence_settings_save() - Settings are now: ' . print_r($settings, true));
@@ -1051,7 +1054,7 @@ if ( ! function_exists( 'pmpro_seuquence_pmpro_text_filter' )):
 
 	                switch ($sequence->options->delayType) {
 		                case 'byDays':
-							$text .= printf( __('You will get access to %1$s on day %2$s of your membership', 'pmprosequence'), get_the_title($post->ID), $equence->displayDelay( $delay ) );
+							$text .= printf( __('You will get access to %1$s on day %2$s of your membership', 'pmprosequence'), get_the_title($post->ID), $sequence->displayDelay( $delay ) );
 			                break;
 		                case 'byDate':
 			                $text .= printf( __('You will get access to %1$s on %2$s', 'pmprosequence'), get_the_title($post->ID), $delay );
