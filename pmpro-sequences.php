@@ -569,6 +569,8 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 	    $status = false;
 	    $response = '';
 
+	    $sequence = new PMProSequences(); // For error management purposes
+
 	    try {
 
             if ( isset($_POST['pmpro_sequence_id']) ) {
