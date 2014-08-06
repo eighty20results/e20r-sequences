@@ -654,11 +654,12 @@
 
         public function get_postDetails( $post_id ) {
 
-            if ( $this->hasPost($post_id !== false) ) {
+            if ( $this->hasPost($post_id) !== false ) {
 
                 foreach($this->posts as $key => $post)
                 {
                     if($post->id == $post_id) {
+	                    dbgOut("get_postDetails() - Found the post we're looking for");
                         return $post;
                     }
                 }
