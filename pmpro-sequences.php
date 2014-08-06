@@ -887,69 +887,82 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
         foreach ( $post_sequence as $sequence_id ) {
 
 	        /**
-	         * BUG: Assumed that $post_id == the sequence ID, but
+	         * BUG: (Fixed) Assumed that $post_id == the sequence ID, but
 	         * it's not when filtering the actual sequence member
 	         */
 
-	        $tmpSequence = new PMProSequences($sequence_id);
+	        $sequence = new PMProSequences($sequence_id);
 
-	        // $tmpSequence->fetchOptions($sequence_id);
+	        // $sequence->fetchOptions($sequence_id);
 	        dbgOut('pmpro_sequence_hasAccess() - Processing for sequence: ' . $sequence_id);
 
 	        // Get the preview offset (if it's defined). If not, set it to 0
 	        // for compatibility
-	        if ( empty($tmpSequence->options->previewOffset) ) {
+	        if ( empty( $sequence->options->previewOffset ) ) {
 
-		        $tmpSequence->options->previewOffset = 0;
+		        $sequence->options->previewOffset = 0;
 		        dbgOut('Saving settings due to initial config of previewOffset for post # ', $post_id);
-		        $tmpSequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
+		        $sequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
 	        }
 
-	        $offset = $tmpSequence->options->previewOffset;
-	        dbgOut( "pmpro_sequence_hasAccess() - Preview offset for (" . $sequence_id .") is: " . $offset );
-
+	        $offset = $sequence->options->previewOffset;
+	        dbgOut( "pmpro_sequence_hasAccess() - Preview offset for (" . $sequence->sequence_id .") is: " . $offset );
 
 	        //Does user have access to the sequence page? (and thus any of the posts/pages included in the sequence)?
-            $results = pmpro_has_membership_access($sequence_id, $user_id, true); //Using true to return all level IDs that have access to the sequence
+            $results = pmpro_has_membership_access( $sequence->sequence_id, $user_id, true ); //Using true to return all level IDs that have access to the sequence
 
-            if ( $results[0] )	{ // First item in results array == true if user has access
+            if ( $results[0] === true )	{ // First item in results array == true if user has access
 
-                //has the user been around long enough for any of the delays?
-                $sequence_posts = get_post_meta($sequence_id, "_sequence_posts", true);
+                // Grab all posts that are in the sequence.
+                // $sequence_posts = get_post_meta( $sequence_id, "_sequence_posts", true );
+                // $sequence_posts = $sequence->getPosts();
 
-                if ( !empty( $sequence_posts ) ) {
+//                if ( !empty( $sequence_posts ) ) {
 
-                    foreach ( $sequence_posts as $sp ) {
+                    // TODO: Simplify the search and use in_array or some-such to speed things up?
+                    if ( ( $sp = $sequence->get_postDetails($post_id) ) !== null ) {
 
-                        //this post we are checking is in this sequence
-                        if ( $sp->id == $post_id ) {
+                        // Make sure the user also has access to the page itself
+                        $pg_results = pmpro_has_membership_access( $sp->id, $user_id, true );
+
+                        // BUG: Never checked if the user also had access to the page.
+                        // Does the user also have access to the page...
+                        if ( $pg_results[0] === true ) {
+//                    foreach ( $sequence_posts as $sp ) {
+
+                            //this post we are checking is in this sequence
+//                        if ( $sp->id == $post_id ) {
+
+                            dbgOut('hasAccess() - Found the matching post in the list of posts for this sequence');
 
                             // Verify for all levels given access to this post
-                            foreach ( $results[1] as $level_id ) {
+                            foreach ($results[1] as $level_id) {
 
-                                if ( $tmpSequence->options->delayType == 'byDays' ) {
+                                if ($sequence->options->delayType == 'byDays') {
 
-                                    if( (pmpro_getMemberDays($user_id, $level_id) + $offset) >= $sp->delay)
-                                        return true;	//user has access to this sequence and has been a member for longer than this post's delay
-                                }
-                                elseif ( $tmpSequence->options->delayType == 'byDate' ) {
+                                    //user has access to this sequence and has been at the level for longer than this post's delay
+                                    if ( ( pmpro_getMemberDays($user_id, $level_id) + $offset ) >= $sp->delay )
+                                        return true;
 
-                                    $today = date( 'Y-m-d', ( current_time('timestamp') + ($offset * 86400) ) );
+                                } elseif ($sequence->options->delayType == 'byDate') {
 
-                                    if ( $today >= $sp->delay )
+                                    $today = date( __('Y-m-d', 'pmprosequence'), (current_time('timestamp') + ($offset * 86400)));
+
+                                    if ($today >= $sp->delay)
                                         return true;
                                 }
                             }
+                            //}
                         }
                     }
-                }
+                //}
             }
 	        else
-		        dbgOut('pmpro_sequence_hasAccess() - User ' . $user_id . ' does not have access to post ' . $post_id . ' in sequence ' . $sequence_id);
+		        dbgOut('pmpro_sequence_hasAccess() - User ' . $user_id . ' does NOT have access to post ' . $post_id . ' in sequence ' . $sequence->sequence_id);
                 dbgOut('hasAccess() result (test failed): ' . print_r($results, true));
         }
 
-        dbgOut("pmpro_sequence_hasAccess() - User does NOT have access to post " . $post_id ." in sequence " .$tmpSequence->sequence_id);
+        dbgOut("pmpro_sequence_hasAccess() - User does NOT have access to post " . $post_id ." in sequence " .$sequence->sequence_id);
         dbgOut('hasAccess() result: ' . print_r($results, true));
 
         // Haven't found anything yet, so must not have access.
