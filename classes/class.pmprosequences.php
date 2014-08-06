@@ -652,6 +652,21 @@
 			return false;
 		}
 
+        public function get_postDetails( $post_id ) {
+
+            if ( $this->hasPost($post_id !== false) ) {
+
+                foreach($this->posts as $key => $post)
+                {
+                    if($post->id == $post_id) {
+                        return $post;
+                    }
+                }
+            }
+            else
+                return null;
+        }
+
         /**
          * Removes a post from the list of posts belonging to this sequence
          *
