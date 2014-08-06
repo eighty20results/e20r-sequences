@@ -946,7 +946,11 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
             }
 	        else
 		        dbgOut('pmpro_sequence_hasAccess() - User ' . $user_id . ' does not have access to post ' . $post_id . ' in sequence ' . $sequence_id);
+                dbgOut('hasAccess() result (test failed): ' . print_r($results, true));
         }
+
+        dbgOut("pmpro_sequence_hasAccess() - User does NOT have access to post " . $post_id ." in sequence " .$tmpSequence->sequence_id);
+        dbgOut('hasAccess() result: ' . print_r($results, true));
 
         // Haven't found anything yet, so must not have access.
         return false;
