@@ -98,7 +98,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 					dbgOut( 'cron() - Post: "' . get_the_title($post->id) . '"' .
 					        ', user ID: ' . $s->user_id .
 					        ', already notified: ' . ( in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
-					        ', current access: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false' ) );
+					        ', has access: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false' ) );
 
 					// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
 					if ( ( ! empty( $post->id ) ) && pmpro_sequence_hasAccess( $s->user_id, $post->id ) &&
