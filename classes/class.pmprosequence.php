@@ -1768,7 +1768,7 @@
 					dbgOut('Post count: ' . count($this->posts));
 					foreach($this->posts as $sp)
 					{
-	                    $memberFor = pmpro_getMemberDays();
+	                    $memberFor = pmpro_sequence_getMemberDays();
 
 						if ($this->isPastDelay( $memberFor, $sp->delay )) {
 							$posts_listed = true;
@@ -1842,6 +1842,7 @@
 	        {
 
 	            $now = current_time('timestamp') + ($offset * 86400);
+
 	            // TODO: Add support for startWhen options (once the plugin supports differentiating on when the drip starts)
 	            $delayTime = strtotime( $delay . ' 00:00:00.0' );
 	            dbgOut('isPastDelay() - Now = ' . $now . ' and delay time = ' . $delayTime );
