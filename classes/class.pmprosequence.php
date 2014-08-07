@@ -1026,7 +1026,7 @@
 						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay ?></td>
 						<td><a href="javascript:pmpro_sequence_editPost('<?php echo $post->id; ?>'); void(0); "><?php _e('Edit','pmprosequence'); ?></a></td>
 						<td>
-							<a href="javascript:pmpro_sequence_editEntry('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);"><?php _e('Update', 'pmprosequence'); ?></a>
+							<a href="javascript:pmpro_sequence_editEntry('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);"><?php _e('Change', 'pmprosequence'); ?></a>
 						</td>
 						<td>
 							<a href="javascript:pmpro_sequence_removeEntry('<?php echo $post->id;?>'); void(0);"><?php _e('Remove', 'pmprosequence'); ?></a>
