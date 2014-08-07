@@ -1,8 +1,8 @@
 <?php
 
-// if (! array_key_exists('pmpro-sequences', $GLOBALS) ):
+// if (! array_key_exists('pmpro-sequence', $GLOBALS) ):
 
-	class PMProSequences
+	class PMProSequence
 	{
 	    public $options;
 	    public $sequence_id = 0;
@@ -12,14 +12,14 @@
 		private $error = null;
 
         /**
-         * Constructor for the PMProSequences class
+         * Constructor for the PMProSequence class
          *
          * @param null $id -- The ID of the sequence to load/construct
          * @return bool|null -- ID of the sequence loaded/constructed.
          *
          * @access public
          */
-        function PMProSequences($id = null)
+        function PMProSequence($id = null)
 		{
             if (is_null($id) && ($this->sequence_id == 0) ) {
                 // Have no sequence ID to play off of..
@@ -189,7 +189,7 @@
 		    if ( $post->post_type !== 'pmpro_sequence' )
 			    return $post_id;
 
-		    $sequence = new PMProSequences($post_id);
+		    $sequence = new PMProSequence($post_id);
 
 	        dbgOut('pmpro_sequence_meta_save(): Saving settings for sequence ' . $post_id);
 	        // dbgOut('From Web: ' . print_r($_REQUEST, true));
@@ -486,7 +486,7 @@
 
 			//sort
 	        dbgOut('addPost(): Sorting the Sequence by delay');
-			usort($this->posts, array("PMProSequences", "sortByDelay"));
+			usort($this->posts, array("PMProSequence", "sortByDelay"));
 
 			//save
 			update_post_meta($this->sequence_id, "_sequence_posts", $this->posts);
@@ -784,7 +784,7 @@
 		public function sendEmail($post_id, $user_id, $seq_id)
 		{
 			$email = new PMProEmail();
-	        // $sequence = new PMProSequences($seq_id);
+	        // $sequence = new PMProSequence($seq_id);
 	        $settings = $this->options;
 
 			$user = get_user_by('id', $user_id);
@@ -918,8 +918,8 @@
 				wp_enqueue_style('pmpros-select2', plugins_url('css/select2.css', dirname(__FILE__)), '', '3.1', 'screen');
 				wp_enqueue_script('pmpros-select2', plugins_url('js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
 
-				add_action('admin_menu', array("PMProSequences", "defineMetaBoxes"));
-	            add_action('save_post', array('PMProSequences', 'pmpro_sequence_meta_save'), 10, 2);
+				add_action('admin_menu', array("PMProSequence", "defineMetaBoxes"));
+	            add_action('save_post', array('PMProSequence', 'pmpro_sequence_meta_save'), 10, 2);
 			}
 		}
 
@@ -935,10 +935,10 @@
 			add_meta_box('pmpro_page_meta', __('Require Membership', 'pmprosequence'), 'pmpro_page_meta', 'pmpro_sequence', 'side');
 
 			// sequence settings box (for posts & pages)
-	        add_meta_box('pmpros-sequence-settings', __('Settings the Sequence', 'pmprosequence'), array("PMProSequences", 'pmpro_sequence_settings_meta_box'), 'pmpro_sequence', 'side', 'high');
+	        add_meta_box('pmpros-sequence-settings', __('Settings the Sequence', 'pmprosequence'), array("PMProSequence", 'pmpro_sequence_settings_meta_box'), 'pmpro_sequence', 'side', 'high');
 
 			//sequence meta box
-			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', 'pmprosequence'), array("PMProSequences", "sequenceMetaBox"), 'pmpro_sequence', 'normal', 'high');
+			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', 'pmprosequence'), array("PMProSequence", "sequenceMetaBox"), 'pmpro_sequence', 'normal', 'high');
 
 	    }
 
@@ -952,7 +952,7 @@
 			global $post;
 
 			if (empty($this))
-				$sequence = new PMProSequences($post->ID);
+				$sequence = new PMProSequence($post->ID);
 			else
 				$sequence = $this;
 
@@ -1266,7 +1266,7 @@
 	        global $post;
 
 		    if (empty($this))
-			    $sequence = new PMProSequences($post->ID);
+			    $sequence = new PMProSequence($post->ID);
 		    else
 			    $sequence = $this;
 
@@ -1753,7 +1753,7 @@
 			{
 	            // Order the posts in accordance with the 'sortOrder' option
 	            dbgOut('getPostLists(): Sorting posts for display');
-	            usort($this->posts, array("PMProSequences", "sortByDelay"));
+	            usort($this->posts, array("PMProSequence", "sortByDelay"));
 
 	            // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
 				// TODO: Urgent --- Add support for pagination for this page!
@@ -1787,7 +1787,7 @@
 		                    <span class="pmpro_sequence_item-unavailable"><?php echo sprintf( __('available on %s'), ($this->options->delayType == 'byDays' && $this->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ? __('day', 'pmprosequence') : ''); ?> <?php echo $this->displayDelay($sp->delay);?></span>
 	                    </li>
 				<?php   }
-						elseif ( ( $posts_listed == false ) && ($empty_notification == false) ) {
+						elseif ( $this->isPastDelay( $memberFor, $sp->delay ) && ( $posts_listed == false ) && ($empty_notification == false) ) {
 
 							$empty_notification = true;
 							?>
@@ -1831,12 +1831,13 @@
 
 			    dbgOut("isPastDelay() - the previewOffset value doesn't exist yet. Fixing it now");
 			    $this->options->previewOffset = 0;
-			    $this->save_sequence_meta(); // Save the settings (only the first this variable is empty)
+			    $this->save_sequence_meta(); // Save the settings (only the first when this variable is empty)
 			    dbgOut("isPastDelay() - the previewOffset value being saved");
 
 		    }
 
 	        $offset = $this->options->previewOffset;
+		    dbgOut('Preview enabled and set to: ' . $offset);
 
 		    if ($this->isValidDate($delay))
 	        {
@@ -2181,6 +2182,6 @@
 	    }
 	}
 
-//	$GLOBALS['pmpro-sequences'] = new PMProSequences();
+//	$GLOBALS['pmpro-sequence'] = new PMProSequence();
 
 //endif;

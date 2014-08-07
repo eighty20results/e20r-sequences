@@ -59,7 +59,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 		foreach ( $sequences as $s )
 		{
 			// Grab a sequence object
-			$sequence = new PMProSequences( $s->seq_id );
+			$sequence = new PMProSequence( $s->seq_id );
 			dbgOut('cron() - Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
 
 			$schedHr = date('H', strtotime($sequence->options->noticeTime));

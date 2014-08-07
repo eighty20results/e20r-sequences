@@ -49,8 +49,8 @@ define('PMPRO_SEQ_AS_DATE', 2);
 /*
 	Include the class for PMProSequences
 */
-if (! class_exists( 'PMProSequences' )):
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.pmprosequences.php");
+if (! class_exists( 'PMProSequence' )):
+    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.pmprosequence.php");
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR ."scheduled" .DIRECTORY_SEPARATOR. "crons.php");
 endif;
 
@@ -152,12 +152,12 @@ endif;
 /*
 	PMPro Sequence CPT
 */
-add_action("init", array("PMProSequences", "createCPT"));
+add_action("init", array("PMProSequence", "createCPT"));
 
 /*
 	Add the PMPro meta box and the meta box to add posts/pages to sequence
 */
-add_action("init", array("PMProSequences", "checkForMetaBoxes"), 20);
+add_action("init", array("PMProSequence", "checkForMetaBoxes"), 20);
 
 if ( ! function_exists('dbgOut') ):
 	/**
@@ -223,7 +223,7 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
         $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null;
 
 	    // Initiate & configure the Sequence class
-	    $sequence = new PMProSequences($sequence_id);
+	    $sequence = new PMProSequence($sequence_id);
 
 	    // Get the Post ID to add to this sequence
 	    $seq_post_id = isset($_POST['pmpro_sequencepost']) && '' != $_POST['pmpro_sequencepost'] ? intval($_REQUEST['pmpro_sequencepost']) : null;
@@ -335,7 +335,7 @@ if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 		$sequence_id = ( isset( $_POST['pmpro_sequence_id']) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null );
 		$seq_post_id = ( isset( $_POST['pmpro_seq_post']) && '' != $_POST['pmpro_seq_post'] ? intval($_POST['pmpro_seq_post']) : null );
 
-		$sequence = new PMProSequences( $sequence_id );
+		$sequence = new PMProSequence( $sequence_id );
 
 		// Remove the post (if the user is allowed to)
 		if ( current_user_can( 'edit_posts' ) && ! is_null($seq_post_id) ) {
@@ -382,7 +382,7 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
 	    // Validate that the ajax referrer is secure
 	    check_ajax_referer('pmpro-sequence-save-settings', 'pmpro_sequence_settings_nonce');
 
-	    $sequence = new PMProSequences();
+	    $sequence = new PMProSequence();
 	    $result = '';
 
 	    // Clear the sequence metadata if the sequence type (by date or by day count) changed.
@@ -391,7 +391,7 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
             if (isset($_POST['pmpro_sequence_id']))
             {
                 $sequence_id = intval($_POST['pmpro_sequence_id']);
-                $sequence = new PMProSequences($sequence_id);
+                $sequence = new PMProSequence($sequence_id);
 
 	            dbgOut('Deleting all entries in sequence # ' .$sequence_id);
 
@@ -445,7 +445,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 	    $result = '';
 
         try {
-	        $seq = new PMProSequences();
+	        $seq = new PMProSequence();
 
 	        check_ajax_referer('pmpro-sequence-user-optin', 'pmpro_sequence_optin_nonce');
 
@@ -483,7 +483,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 		        );
 	        }
 
-	        $seq = new PMProSequences( $seqId );
+	        $seq = new PMProSequence( $seqId );
 	        dbgOut('Updating user settings for sequence #: ' . $seq->sequence_id);
 
 	        // Grab the metadata from the database
@@ -569,14 +569,14 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 	    $status = false;
 	    $response = '';
 
-	    $sequence = new PMProSequences(); // For error management purposes
+	    $sequence = new PMProSequence(); // For error management purposes
 
 	    try {
 
             if ( isset($_POST['pmpro_sequence_id']) ) {
 
                 $sequence_id = intval($_POST['pmpro_sequence_id']);
-                $sequence = new PMProSequences($sequence_id);
+                $sequence = new PMProSequence($sequence_id);
 
 	            dbgOut('ajaxSaveSettings() - Saving settings for ' . $sequence_id);
 
@@ -643,7 +643,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 	 * @return bool - Returns true if save is successful
 	 */
 
-	function pmpro_sequence_settings_save( $sequence_id, PMProSequences $sequenceObj )
+	function pmpro_sequence_settings_save( $sequence_id, PMProSequence $sequenceObj )
 	{
 
 		$settings = $sequenceObj->options;
@@ -837,7 +837,7 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
 
         if ( ( $post->post_type == "pmpro_sequence" ) && pmpro_has_membership_access() )
         {
-            $sequence = new PMProSequences($post->ID);
+            $sequence = new PMProSequence($post->ID);
 	        // $sequence->options = $sequence->fetchOptions();
 
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
@@ -856,6 +856,39 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
 endif;
 
 
+if (! function_exists('pmpro_sequence_getMemberDays')):
+
+	function pmpro_sequence_getMemberDays( $user_id = NULL, $level_id = 0 ) {
+
+		dbgOut("Using local getMemberDays()");
+
+		if(empty($user_id))
+		{
+			global $current_user;
+			$user_id = $current_user->ID;
+		}
+
+		global $pmpro_member_days;
+		if(empty($pmpro_member_days[$user_id][$level_id]))
+		{
+			$startdate = pmpro_getMemberStartdate($user_id, $level_id);
+
+			//check that there was a startdate at all
+			if(empty($startdate))
+				$pmpro_member_days[$user_id][$level_id] = 0;
+			else
+			{
+				$now = current_time("timestamp");
+				$days = round(abs($now - $startdate) / (60*60*24));
+
+				$pmpro_member_days[$user_id][$level_id] = $days;
+			}
+		}
+
+		return $pmpro_member_days[$user_id][$level_id];
+}
+
+endif;
 
 if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
@@ -893,15 +926,19 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 		        continue;
             }
 
-	        $sequence = new PMProSequences($sequence_id);
+	        $sequence = new PMProSequence($sequence_id);
+
+	        dbgOut('hasAccess() - previewOffset is set to: ' . $sequence->options->previewOffset);
 
             // Get the preview offset (if it's defined). If not, set it to 0 ( for compatibility )
             if (empty($sequence->options->previewOffset)) {
 
                 $sequence->options->previewOffset = 0;
-                dbgOut('Saving settings due to initial config of previewOffset for post # ', $post_id);
+                dbgOut('Saving settings due to initial config of previewOffset for post # ' . $post_id);
                 $sequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
             }
+
+	        // TODO Need to support the previewOffset for access - probably when listing the content (and not in hasAccess?)
 
             // Check if the post exists in the list of posts for the current sequence & return its details if true
             if ( ($sp = $sequence->get_postDetails($post_id)) !== null) {
@@ -920,12 +957,17 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 	            // Verify for all levels given access to this post
 	            foreach ( $results[1] as $level_id ) {
 
-		            dbgOut( 'Looping through results for level ' . $level_id );
+		            dbgOut( 'hasAccess() - Looping through results for level ' . $level_id );
 
 		            if ( $sequence->options->delayType == 'byDays' ) {
 
 			            //user has access to this sequence and has been at the level for longer than this post's delay
-			            if ( pmpro_getMemberDays( $user_id, $level_id ) >= $sp->delay ) {
+			            // $durationOfMembership = pmpro_getMemberDays( $user_id, $level_id ); // Buggy (returns decimal number for day count)
+			            $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id );
+
+			            dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days', $user_id, $level_id, $durationOfMembership) );
+
+			            if ( $durationOfMembership >= $sp->delay ) {
 				            return true;
 			            }
 
@@ -1015,7 +1057,7 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
                     {
                         $insequence = $ps;
 	                    $delay = $ps->delay;
-	                    $sequence = new PMProSequences($ps->ID);
+	                    $sequence = new PMProSequence($ps->ID);
 	                    break;
                     }
                 }
@@ -1328,7 +1370,7 @@ if ( ! function_exists('pmpro_sequence_activation')):
     */
     function pmpro_sequence_activation()
     {
-        PMProSequences::createCPT();
+        PMProSequence::createCPT();
         flush_rewrite_rules();
 
 	    /* Register the default cron job to send out new content alerts */
@@ -1362,7 +1404,7 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
 	    // Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
 	    foreach($seqs as $s) {
 
-		    $sequence = new PMProSequences($s->ID);
+		    $sequence = new PMProSequence($s->ID);
 
 		    if ($sequence->options->sendNotice == 1) {
 
@@ -1463,7 +1505,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 		foreach($seqs as $s)
 		{
 
-			$sequence = new PMProSequences($s->ID);
+			$sequence = new PMProSequence($s->ID);
 			$sequence_posts = $sequence->getPosts();
 
             $post_list = array();
