@@ -860,8 +860,6 @@ if (! function_exists('pmpro_sequence_getMemberDays')):
 
 	function pmpro_sequence_getMemberDays( $user_id = NULL, $level_id = 0 ) {
 
-		dbgOut("Using local getMemberDays()");
-
 		if(empty($user_id))
 		{
 			global $current_user;
