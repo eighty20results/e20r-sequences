@@ -12,11 +12,13 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 	{
 
 		global $wpdb;
+		$all_sequences = false; // Default: Assume only one sequence is being processed.
 
 		// Prepare SQL to get all sequences and users associated in the system who _may_ need to be notified
 		if ( empty($sequenceId) || ($sequenceId == 0)) {
 
 			dbgOut('cron() - No Sequence ID specified. Processing for all sequences');
+			$all_sequences = true;
 
 			$sql = $wpdb->prepare(
 				"
@@ -61,6 +63,11 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 			// Grab a sequence object
 			$sequence = new PMProSequence( $s->seq_id );
 			dbgOut('cron() - Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
+
+			if ( ($sequence->options->sendNotice == 1) && ($all_sequences === true) ) {
+				dbgOut('cron() - This sequence will be processed directly. Skipping it for now (All)');
+				continue;
+			}
 
 			$schedHr = date('H', strtotime($sequence->options->noticeTime));
 
