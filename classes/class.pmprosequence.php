@@ -1774,7 +1774,6 @@
 							$posts_listed = true;
 	                ?>
 	                    <li>
-	                        <?php dbgOut('Post ' . $sp->id . ' delay: ' . $this->displayDelay($sp->delay)); ?>
 							<span class="pmpro_sequence_item-title"><a href="<?php echo get_permalink($sp->id);?>"><?php echo get_the_title($sp->id);?></a></span>
 							<span class="pmpro_sequence_item-available"><a class="pmpro_btn pmpro_btn-primary" href="<?php echo get_permalink($sp->id);?>"> <?php _e("Available Now", 'pmprosequence'); ?></a></span>
 	                    </li>
@@ -1837,7 +1836,7 @@
 		    }
 
 	        $offset = $this->options->previewOffset;
-		    dbgOut('Preview enabled and set to: ' . $offset);
+		    // dbgOut('Preview enabled and set to: ' . $offset);
 
 		    if ($this->isValidDate($delay))
 	        {
