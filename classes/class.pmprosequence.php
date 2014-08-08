@@ -1309,7 +1309,7 @@
 				            <input type="checkbox" value="1" id="pmpro_sequence_offsetchk" name="pmpro_sequence_offsetchk" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', 'pmprosequence'); ?>" <?php echo ($settings->previewOffset != 0 ? ' checked="checked"' : ''); ?> />
 				            <input type="hidden" name="hidden_pmpro_seq_offset" id="hidden_pmpro_seq_offset" value="<?php echo esc_attr($settings->previewOffset); ?>" >
 			            </td>
-			            <td><label class="selectit"><?php _e('Allow "sneak previews"', 'pmprosequence'); ?></label>
+			            <td><label class="selectit"><?php _e('Allow "sneak preview" of sequence', 'pmprosequence'); ?></label>
 			            </td>
 		            </tr>
 		            <tr>
@@ -1827,11 +1827,10 @@
 		    // Get the preview offset (if it's defined). If not, set it to 0
 		    // for compatibility
 		    if ( empty($this->options->previewOffset) ) {
-
+			    // TODO: Figure out why this always runs/get set...
 			    dbgOut("isPastDelay() - the previewOffset value doesn't exist yet. Fixing it now");
 			    $this->options->previewOffset = 0;
 			    $this->save_sequence_meta(); // Save the settings (only the first when this variable is empty)
-			    dbgOut("isPastDelay() - the previewOffset value being saved");
 
 		    }
 
