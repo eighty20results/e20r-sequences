@@ -70,3 +70,6 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Added a message to the front-end sequence page for when there are no released (visible) posts avialable to the user in that sequence.
 * Bugfix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
 * Multiple bug fixes and updates.
+
+= .3 =
+* Translation for Norwegian and English (US)

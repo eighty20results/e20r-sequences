@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sequence
 Plugin URI: http://www.eighty20results.com/pmpro-sequence/
 Description: Offer serialized (drip feed) content to your PMPro members. Based on the PMPro Series plugin by Stranger Studios.
-Version: .2-Beta
+Version: .3
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
@@ -29,6 +29,8 @@ License:
 */
 
 
+/* Version number */
+define('PMPRO_SEQUENCE_VERSION', '0.3');
 
 /* Enable / Disable DEBUG logging to separate file */
 define('PMPRO_SEQUENCE_DEBUG', true);
@@ -76,6 +78,7 @@ if (! function_exists('pmpro_sequence_scripts')):
 		wp_enqueue_script('pmpro_sequence_script');
 	}
 endif;
+
 if (! function_exists('pmpro_sequence_admin_scripts')):
 
 	add_action("admin_enqueue_scripts", "pmpro_sequence_admin_scripts");
@@ -118,6 +121,18 @@ if (! function_exists('pmpro_sequence_admin_scripts')):
     }
 endif;
 
+if (! function_exists('pmpro_sequence_register_shortcodes')):
+
+	add_action("init", "pmpro_sequence_register_shortcodes");
+
+	function pmpro_sequence_register_shortcodes() {
+
+		add_shortcode( 'sequence_links', 'pmpro_sequence_links_shortcode');
+
+	}
+
+endif;
+
 /**
  * Load and use L8N based text (if available)
  */
@@ -140,6 +155,7 @@ if (! function_exists('pmpro_sequence_ajaxUnprivError')):
 	 */
 	function pmpro_sequence_ajaxUnprivError() {
 
+		dbgOut('Unprivileged ajax call attempted');
 		wp_send_json( array(
 			'success' => false,
 			'html' => '',
@@ -150,15 +166,16 @@ if (! function_exists('pmpro_sequence_ajaxUnprivError')):
 endif;
 
 /*
-	PMPro Sequence CPT
-*/
+ *	PMPro Sequence CPT
+ */
 add_action("init", array("PMProSequence", "createCPT"));
 
 /*
-	Add the PMPro meta box and the meta box to add posts/pages to sequence
-*/
+ *	Add the PMPro meta box and the meta box to add posts/pages to sequence
+ */
 add_action("init", array("PMProSequence", "checkForMetaBoxes"), 20);
 
+/** A debug function */
 if ( ! function_exists('dbgOut') ):
 	/**
 	 * Debug function (if executes if DEBUG is defined)
@@ -1428,28 +1445,41 @@ endif;
 
 if ( ! function_exists('pmpro_sequence_links_shortcode')):
 
-    add_shortcode( 'sequence_links', array( $this, 'pmpro_sequence_links_shortcode'));
-
     function pmpro_sequence_links_shortcode( $attributes ) {
 
         $highlight = false;
+	    $pagesize = 10;
         $id = null;
 
         extract( shortcode_atts( array(
-            'id' => 'null',
-            'highlight' => 'false',
+            'id' => 0,
+	        'pagesize' => 0,
+            'highlight' => false,
         ), $attributes ) );
 
-        $html = pmpro_sequence_build_linkData( $id, $highlight);
+	    if ($pagesize == 0)
+		    $pagesize = 15; // Default
 
-        if (! empty($html))
-            return $html;
+	    dbgOut("shortcode() - Ready to build link list for sequence with ID of: " . $id);
+
+/*	    if ($id !== 0)
+	        $html = '<h3>' . the_title($id) . '</h3>';
+	    else
+		    $html = '<h3>Posts</h3>';
+
+*/
+        $html = pmpro_sequence_build_linkData( $id, $highlight, $pagesize);
+
+	    if ($html) {
+		    dbgOut( 'shortcode() - Built HTML, now listing the data.' );
+		    return $html;
+	    }
     }
 endif;
 
 if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 
-	add_action('pmpro_member_links_bottom', 'pmpro_sequence_member_links_bottom');
+	// add_action('pmpro_member_links_bottom', 'pmpro_sequence_member_links_bottom');
 
 	/**
 	 * Add series post links to the account page for the user.
@@ -1457,11 +1487,11 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
      * @param $seq_id (int) -- ID (page ID) of the sequence to process
 	 */
 
-	function pmpro_sequence_member_links_bottom( $seq_id = null ) {
+	function pmpro_sequence_member_links_bottom( $seq_id = 0 ) {
 
 		// TODO: Add admin configurable setting to allow/disallow showing of the link data
-
-        echo pmpro_sequence_build_linkData($seq_id, true);
+		dbgOut('Listing Sequence pages as Member Links');
+        echo pmpro_sequence_build_linkData(7888, true, 15);
 
 	}
 
@@ -1474,15 +1504,18 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
      * @param bool $highlight -- Whether to highlight the Post that is the closest to the users current membership day
      * @return string -- The HTML we generated.
      */
-	function pmpro_sequence_build_linkData( $seq_id = null, $highlight = false ) {
+	function pmpro_sequence_build_linkData( $seq_id = 0, $highlight = false, $pagesize = 0 ) {
 
-		global $wpdb, $current_user;
+		global $wpdb, $current_user, $id;
 		$html = '';
 
-        if (is_null($seq_id)) {
-	        dbgOut('no sequence ID provided. Listing all sequences');
+		if ($pagesize == 0)
+			$pagesize = 15;
+
+        if ( $seq_id == 0) {
+	        dbgOut('No sequence ID provided. Listing all sequences');
 	        //get all series
-	        $seqs = $wpdb->get_results(
+	        $sql = $wpdb->prepare(
 		        "
 	                SELECT *
 	                FROM {$wpdb->posts}
@@ -1490,74 +1523,83 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
             	"
 	        );
         } else {
+	        dbgOut('Loading data for the "' . get_the_title($seq_id) . '" sequence');
             $sql = $wpdb->prepare(
 	            "
 	                SELECT *
 	                FROM {$wpdb->posts}
-	                WHERE post_type = 'pmpro_sequence' AND ID = %s
+	                WHERE post_type = 'pmpro_sequence' AND ID = %d
 	            ",
                 $seq_id
             );
         }
+
+		// dbgOut('SQL to load sequences' . print_r($sql, true));
+		$seqs = $wpdb->get_results($sql);
+
 		// Process the list of sequences
 		foreach($seqs as $s)
 		{
 
 			$sequence = new PMProSequence($s->ID);
+
 			$sequence_posts = $sequence->getPosts();
 
-            $post_list = array();
+			if ( ! pmpro_sequence_hasAccess($current_user->user_id, $s->ID) ) {
+				dbgOut('No access to sequence ' . $s->ID . ' for user ' . $current_user->user_id);
+				continue;
+			}
+
+			$post_list = array();
 
 			// Generate a list of posts for the sequence (used in WP_Query object)
-			foreach($sequence_posts as $sequence_post)
+			foreach($sequence_posts as $sequence_post) {
 				$post_list[] = $sequence_post->id;
+			}
+
+			/* Get the ID of the post in the sequence who's delay is the closest
+			 *  to the members 'days since start of membership'
+             */
+
+			$closestPostId = $sequence->get_closestPost( $current_user->ID );
 
 			$query_args = array(
 				'post_type' => apply_filters('pmpro_sequencepost_types', array('post', 'page')), // Filter returns an array()
 				'post__in' => $post_list,
 				'ignore_sticky_posts' => 1,
 				'paged' => (get_query_var('paged')) ? absint(get_query_var('paged')) : 1,
-				'posts_per_page' => 10,
-
+				'posts_per_page' => $pagesize,
+				'orderby' => 'post__in'
 			);
 
 			$seqEntries = new WP_Query( $query_args );
 
 			ob_start();
+			?>
+            <!-- Preface the table of links with the title of the sequence -->
+			<table class="pmpro_seq_linklist">
 
-            // Preface the table of links with the title of the sequence.
-            echo '<h3>'  . get_the_title($sequence->sequence_id); '</h3>';
-
-            /* Get the ID of the post in the sequence who's delay is the closest
-               to the members 'days since start of membership' */
-
-            $closestPostId = $sequence->get_closestPost( $current_user->ID );
-
+			<?php
             // Loop through all of the posts in the sequence
 			while ($seqEntries->have_posts()) : $seqEntries->the_post();
-				if(pmpro_sequence_hasAccess($current_user->user_id, $sequence_post->id))
-					if ( ( the_ID() == $closestPostId  ) && $highlight):
-						?>
-                        <!-- The next entry is the post that is current or 'next' -->
-                        <li <?php post_class(); ?> ><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><strong><?php the_title(); ?></strong></a></li>
-                    <?php   else: ?>
-                        <li <?php post_class(); ?> ><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><?php the_title(); ?></a></li>
-            <?php   endif;
-
+				if ( ( $id == $closestPostId  ) && $highlight):
+					?>
+					<tr>
+                        <!-- The next entry is the post that is current or next -->
+						<td class="pmpro-seq-hl-img"><img src="<?php echo plugins_url('/images/most-recent.png', __FILE__); ?>"></td>
+                        <td class="pmpro-seq-hl-post" ><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><strong><?php the_title(); ?></strong></a></td>
+					</tr>
+                <?php   else: ?>
+					<tr>
+						<td></td>
+                        <td class="pmpro-seq-fadepost"><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><?php the_title(); ?></a></td>
+					</tr>
+                <?php
+				endif;
 			endwhile;
+			?></table><?php
 
-			$translated = __('Page', 'pmprosequence');
-			$big = 99999999999;
-
-			$link_args = array(
-				'base' => str_replace($big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
-				'format' => '?paged=%#%',
-				'current' => max( 1, get_query_var('paged') ),
-				'total' => $seqEntries->max_num_pages,
-				'before_page_number' => '<span class="screen-reader-text">' . $translated . '</span>',
-			);
-
-			echo paginate_links( $link_args );
+			pmpro_seq_paging_nav( $seqEntries->max_num_pages );
 
 			wp_reset_postdata();
 
@@ -1567,3 +1609,54 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 		return $html;
 	}
 endif;
+
+if (! function_exists( 'pmpro_seq_paging_nav()')):
+
+	function pmpro_seq_paging_nav( $total ) {
+
+		if ($total > 1) {
+
+			$big = 99999999999;
+
+			if (! $current_page = get_query_var( 'paged' ) )
+				$current_page = 1;
+
+			if ( get_option('permalink_structure') )
+				$format = 'page/%#%';
+			else
+				$format = '&paged=%#%';
+
+			$prev_arrow = is_rtl() ? '&rarr;' : '&larr;';
+			$next_arrow = is_rtl() ? '&larr;' : '&rarr;';
+
+			?>
+			<nav class="navigation paging-navigation" role="navigation">
+				<h4 class="screen-reader-text"><?php _e( 'Link Navigation', 'pmprosequence' ); ?></h4>
+				<?php echo paginate_links( array(
+					'base'          => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+					'format'        => $format,
+					'total'         => $total,
+					'current'       => max(1, get_query_var('paged')),
+					'mid_size'      => 3,
+					'prev_text'     => sprintf( __( '%s Previous', 'pmprosequence'), $prev_arrow),
+					'next_text'     => sprintf( __( 'Next %s', 'pmprosequence'), $next_arrow),
+					'prev_next'     => true,
+					'type'          => 'list',
+					'before_page_number' => '<span class="screen-reader-text">' . __('Page', 'pmprosequence') . '</span>',
+				)); ?>
+			</nav>
+		<?php
+
+		}
+
+		/*
+		$link_args = array(
+			'base' => str_replace($big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+			'format' => '?paged=%#%',
+			'current' => max( 1, get_query_var('paged') ),
+			'total' => $seqEntries->max_num_pages,
+			'before_page_number' => '<span class="screen-reader-text">' . $translated . '</span>',
+		);
+*/
+	}
+	endif;
