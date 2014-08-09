@@ -1,0 +1,621 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: PMPro Sequence\n"
+"POT-Creation-Date: 2014-08-09 14:22-0500\n"
+"PO-Revision-Date: 2014-08-09 14:27-0500\n"
+"Last-Translator: Thomas Sjolshagen <thomas@eighty20results.com>\n"
+"Language-Team: Eigthy / 20 Results <info@eighty20results.com>\n"
+"Language: en_US\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 1.6.7\n"
+"X-Poedit-Basepath: ..\n"
+"X-Poedit-SourceCharset: UTF-8\n"
+"X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
+"esc_attr_e;esc_attr_x:1,2c;esc_html__;esc_html_e;esc_html_x:1,2c;_n_noop:1,2;"
+"_nx_noop:3c,1,2;__ngettext_noop:1,2\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-SearchPath-0: .\n"
+
+#: classes/class.pmprosequence.php:151 classes/class.pmprosequence.php:836
+msgid "A summary of the post follows below:"
+msgstr "A summary of the post follows below:"
+
+#: classes/class.pmprosequence.php:154 pmpro-sequences.php:820
+msgid "New: "
+msgstr "New: "
+
+# Fully translatable 
+#: classes/class.pmprosequence.php:155 classes/class.pmprosequence.php:1543
+#: classes/class.pmprosequence.php:1549 pmpro-sequences.php:804
+msgid "m-d-Y"
+msgstr "m-d-Y"
+
+#: classes/class.pmprosequence.php:259
+#, php-format
+msgid "Could not schedule new content alert for %s"
+msgstr "Could not schedule new content alert for %s"
+
+#: classes/class.pmprosequence.php:448
+#, php-format
+msgid "Invalid delay value - %s"
+msgstr "Invalid delay value - %s"
+
+#: classes/class.pmprosequence.php:454
+msgid "Please enter a value for post and delay"
+msgstr "Please enter a value for post and delay"
+
+#: classes/class.pmprosequence.php:465
+msgid "A post with that id does not exist"
+msgstr "A post with that id does not exist"
+
+#: classes/class.pmprosequence.php:868
+msgid "Sequences"
+msgstr "Sequences"
+
+#: classes/class.pmprosequence.php:869
+msgid "Sequence"
+msgstr "Sequence"
+
+#: classes/class.pmprosequence.php:871 classes/class.pmprosequence.php:872
+msgid "New Sequence"
+msgstr "New Sequence"
+
+#: classes/class.pmprosequence.php:873 classes/class.pmprosequence.php:874
+msgid "Edit Sequence"
+msgstr "Edit Sequence"
+
+#: classes/class.pmprosequence.php:875
+msgid "Add New"
+msgstr "Add New"
+
+#: classes/class.pmprosequence.php:876
+msgid "View Sequence"
+msgstr "View Sequence"
+
+#: classes/class.pmprosequence.php:877
+msgid "View This Sequence"
+msgstr "View This Sequence"
+
+#: classes/class.pmprosequence.php:878
+msgid "Search Sequences"
+msgstr "Search Sequences"
+
+#: classes/class.pmprosequence.php:879
+msgid "No Sequence Found"
+msgstr "No Sequence Found"
+
+#: classes/class.pmprosequence.php:880
+msgid "No Sequence Found In Trash"
+msgstr "No Sequence Found In Trash"
+
+#: classes/class.pmprosequence.php:935
+msgid "Require Membership"
+msgstr "Require Membership"
+
+#: classes/class.pmprosequence.php:938
+msgid "Settings the Sequence"
+msgstr "Settings the Sequence"
+
+#: classes/class.pmprosequence.php:941
+msgid "Posts in this Sequence"
+msgstr "Posts in this Sequence"
+
+#: classes/class.pmprosequence.php:994
+msgid "Order"
+msgstr "Order"
+
+#: classes/class.pmprosequence.php:995
+msgid "Title"
+msgstr "Title"
+
+#: classes/class.pmprosequence.php:997 pmpro-sequences.php:108
+msgid "Delay"
+msgstr "Delay"
+
+#: classes/class.pmprosequence.php:999
+msgid "Avail. On"
+msgstr "Avail. On"
+
+#: classes/class.pmprosequence.php:1001 classes/class.pmprosequence.php:1054
+#: pmpro-sequences.php:105
+msgid "Not Defined"
+msgstr "Not Defined"
+
+#: classes/class.pmprosequence.php:1014
+msgid "No posts/pages found for this sequence"
+msgstr "No posts/pages found for this sequence"
+
+#: classes/class.pmprosequence.php:1027 classes/class.pmprosequence.php:1321
+#: classes/class.pmprosequence.php:1354 classes/class.pmprosequence.php:1378
+#: classes/class.pmprosequence.php:1393 classes/class.pmprosequence.php:1434
+#: classes/class.pmprosequence.php:1442 classes/class.pmprosequence.php:1465
+#: classes/class.pmprosequence.php:1489 classes/class.pmprosequence.php:1511
+#: classes/class.pmprosequence.php:1528 classes/class.pmprosequence.php:1545
+msgid "Edit"
+msgstr "Edit"
+
+#: classes/class.pmprosequence.php:1029
+msgid "Change"
+msgstr "Change"
+
+#: classes/class.pmprosequence.php:1032
+msgid "Remove"
+msgstr "Remove"
+
+#: classes/class.pmprosequence.php:1044
+msgid "Add/Edit Posts:"
+msgstr "Add/Edit Posts:"
+
+#: classes/class.pmprosequence.php:1048
+msgid "Post/Page"
+msgstr "Post/Page"
+
+#: classes/class.pmprosequence.php:1050 pmpro-sequences.php:109
+msgid "Days to delay"
+msgstr "Days to delay"
+
+# The YYYY-MM-DDD is not translatable (needs to remain) as the format is hard-coded into the sources when calcuating the delay to use for access to posts in the sequence
+#: classes/class.pmprosequence.php:1052
+msgid "Release on (YYYY-MM-DDD)"
+msgstr "Release on (YYYY-MM-DD)"
+
+#: classes/class.pmprosequence.php:1073
+msgid "No posts found in the database!"
+msgstr "No posts found in the database!"
+
+#: classes/class.pmprosequence.php:1091 pmpro-sequences.php:97
+msgid "Update Sequence"
+msgstr "Update Sequence"
+
+#: classes/class.pmprosequence.php:1153
+msgid "-DRAFT"
+msgstr "-DRAFT"
+
+#: classes/class.pmprosequence.php:1157
+msgid "-SCHED"
+msgstr "-SCHED"
+
+#: classes/class.pmprosequence.php:1161
+msgid "-REVIEW"
+msgstr "-REVIEW"
+
+#: classes/class.pmprosequence.php:1165
+msgid "-PRIVT"
+msgstr "-PRIVT"
+
+#: classes/class.pmprosequence.php:1242
+msgid ""
+"Please email me an alert when any new content in this sequence becomes "
+"available"
+msgstr ""
+"Please email me an alert when any new content in this sequence becomes "
+"available"
+
+#: classes/class.pmprosequence.php:1243
+msgid "Yes, please send me email notifications!"
+msgstr "Yes, please send me email notifications!"
+
+#: classes/class.pmprosequence.php:1302
+msgid "Hide unpublished / future posts for this sequence"
+msgstr "Hide unpublished / future posts for this sequence"
+
+#: classes/class.pmprosequence.php:1305
+msgid "Hide all future posts"
+msgstr "Hide all future posts"
+
+#: classes/class.pmprosequence.php:1309
+msgid ""
+"Let the user see a number of days worth of technically unavailable posts as "
+"a form of &quot;sneak-preview&quot;"
+msgstr ""
+"Let the user see a number of days worth of technically unavailable posts as "
+"a form of &quot;sneak-preview&quot;"
+
+#: classes/class.pmprosequence.php:1312
+msgid "Allow \"sneak preview\" of sequence"
+msgstr "Allow &quot;sneak preview&quot; of sequence"
+
+#: classes/class.pmprosequence.php:1318
+msgid "Days of prev:"
+msgstr "Days of prev:"
+
+#: classes/class.pmprosequence.php:1322
+msgid "Change the number of days to preview"
+msgstr "Change the number of days to preview"
+
+#: classes/class.pmprosequence.php:1333 classes/class.pmprosequence.php:1365
+#: classes/class.pmprosequence.php:1409 classes/class.pmprosequence.php:1454
+#: classes/class.pmprosequence.php:1475 classes/class.pmprosequence.php:1499
+#: classes/class.pmprosequence.php:1519 classes/class.pmprosequence.php:1536
+#: classes/class.pmprosequence.php:1555
+#, fuzzy
+msgid "OK"
+msgstr "OK"
+
+#: classes/class.pmprosequence.php:1334 classes/class.pmprosequence.php:1366
+#: classes/class.pmprosequence.php:1410 classes/class.pmprosequence.php:1455
+#: classes/class.pmprosequence.php:1476 classes/class.pmprosequence.php:1500
+#: classes/class.pmprosequence.php:1520 classes/class.pmprosequence.php:1537
+#: classes/class.pmprosequence.php:1556
+#, fuzzy
+msgid "Cancel"
+msgstr "Cancel"
+
+#: classes/class.pmprosequence.php:1342
+msgid ""
+"Whether to show the &quot;You are on day NNN of your membership&quot; text"
+msgstr ""
+"Whether to show the &quot;You are on day NNN of your membership&quot; text"
+
+#: classes/class.pmprosequence.php:1345
+msgid "Show user membership length"
+msgstr "Show user membership length"
+
+#: classes/class.pmprosequence.php:1351
+msgid "Sort order:"
+msgstr "Sort order:"
+
+#: classes/class.pmprosequence.php:1352 classes/class.pmprosequence.php:1361
+msgid "Ascending"
+msgstr "Ascending"
+
+#: classes/class.pmprosequence.php:1352 classes/class.pmprosequence.php:1362
+msgid "Descending"
+msgstr "Descending"
+
+#: classes/class.pmprosequence.php:1355
+msgid "Edit the list sort order"
+msgstr "Edit the list sort order"
+
+#: classes/class.pmprosequence.php:1375
+msgid "Delay type:"
+msgstr "Delay type:"
+
+#: classes/class.pmprosequence.php:1376 classes/class.pmprosequence.php:1386
+msgid "A date"
+msgstr "A date"
+
+#: classes/class.pmprosequence.php:1376 classes/class.pmprosequence.php:1385
+msgid "Days after sign-up"
+msgstr "Days after sign-up"
+
+#: classes/class.pmprosequence.php:1379
+msgid "Edit the delay type for this sequence"
+msgstr "Edit the delay type for this sequence"
+
+#: classes/class.pmprosequence.php:1390
+msgid "Show availability as:"
+msgstr "Show availability as:"
+
+#: classes/class.pmprosequence.php:1391 classes/class.pmprosequence.php:1404
+msgid "Calendar date"
+msgstr "Calendar date"
+
+#: classes/class.pmprosequence.php:1391 classes/class.pmprosequence.php:1403
+msgid "Day of membership"
+msgstr "Day of membership"
+
+#: classes/class.pmprosequence.php:1394
+msgid ""
+"How to indicate when the post will be available to the user. Select either "
+"\"Calendar date\" or \"day of membership\")"
+msgstr ""
+"How to indicate when the post will be available to the user. Select either "
+"&quot;Calendar date&quot; or &quot;day of membership&quot;)"
+
+#: classes/class.pmprosequence.php:1418
+msgid "New content alerts"
+msgstr "New content alerts"
+
+#: classes/class.pmprosequence.php:1425
+msgid ""
+"Whether to send an alert/notice to members when new content for this "
+"sequence is available to them"
+msgstr ""
+"Whether to send an alert/notice to members when new content for this "
+"sequence is available to them"
+
+#: classes/class.pmprosequence.php:1427
+msgid "Send new content alerts"
+msgstr "Send new content alerts"
+
+#: classes/class.pmprosequence.php:1429
+msgid "From:"
+msgstr "From:"
+
+#: classes/class.pmprosequence.php:1431
+msgid "Email:"
+msgstr "Email:"
+
+#: classes/class.pmprosequence.php:1435
+msgid "Enter the email address to use for the sender of the alert"
+msgstr "Enter the email address to use for the sender of the alert"
+
+#: classes/class.pmprosequence.php:1439
+msgid "Name:"
+msgstr "Name:"
+
+#: classes/class.pmprosequence.php:1443
+msgid "Enter the name to use for the sender of the alert"
+msgstr "Enter the name to use for the sender of the alert"
+
+#: classes/class.pmprosequence.php:1462
+msgid "Template:"
+msgstr "Template:"
+
+#: classes/class.pmprosequence.php:1466
+msgid "Select the template to use when posting new content in this sequence"
+msgstr "Select the template to use when posting new content in this sequence"
+
+#: classes/class.pmprosequence.php:1486
+msgid "When:"
+msgstr "When:"
+
+#: classes/class.pmprosequence.php:1490
+msgid ""
+"Select when (tomorrow) to send new content posted alerts for this sequence"
+msgstr "Select when to send new content posted alerts for this sequence"
+
+#: classes/class.pmprosequence.php:1504
+msgid "Timezone:"
+msgstr "Timezone:"
+
+#: classes/class.pmprosequence.php:1508
+msgid "Subject:"
+msgstr "Subject:"
+
+#: classes/class.pmprosequence.php:1509
+msgid "New Content"
+msgstr "New Content"
+
+#: classes/class.pmprosequence.php:1512
+msgid "Update/Edit the Prefix for the subject of the new conent alert"
+msgstr "Update/Edit the Prefix for the subject of the new conent alert"
+
+#: classes/class.pmprosequence.php:1515 classes/class.pmprosequence.php:1517
+msgid "New"
+msgstr "New"
+
+#: classes/class.pmprosequence.php:1525
+msgid "Intro:"
+msgstr "Intro:"
+
+#: classes/class.pmprosequence.php:1526 classes/class.pmprosequence.php:1532
+#: classes/class.pmprosequence.php:1534
+msgid "A summary for the new content follows:"
+msgstr "A summary for the new content follows:"
+
+#: classes/class.pmprosequence.php:1529
+msgid "Update/Edit the introductory paragraph for the new content excerpt"
+msgstr "Update/Edit the introductory paragraph for the new content excerpt"
+
+#: classes/class.pmprosequence.php:1542
+msgid "Date type:"
+msgstr "Date type:"
+
+#: classes/class.pmprosequence.php:1546
+msgid ""
+"Update/Edit the format of the !!today!! placeholder (a valid PHP date() "
+"format)"
+msgstr ""
+"Update/Edit the format of the !!today!! placeholder (a valid PHP date() "
+"format)"
+
+#: classes/class.pmprosequence.php:1569 pmpro-sequences.php:99
+msgid "Update Settings"
+msgstr "Update Settings"
+
+#: classes/class.pmprosequence.php:1577
+msgid "Days to preview"
+msgstr "Days to preview"
+
+#: classes/class.pmprosequence.php:1600
+msgid ""
+"Configure start parameters for sequence drip. The default is to start day 1 "
+"exactly 24 hours after membership started, using the servers timezone and "
+"recorded timestamp for the membership check-out."
+msgstr ""
+"Configure start parameters for sequence drip. The default is to start day 1 "
+"exactly 24 hours after membership started, using the servers timezone and "
+"recorded timestamp for the membership check-out."
+
+#: classes/class.pmprosequence.php:1602
+msgid "Sequence starts"
+msgstr "Sequence starts"
+
+#: classes/class.pmprosequence.php:1778
+msgid "Available Now"
+msgstr "Available Now"
+
+#: classes/class.pmprosequence.php:1786
+#, php-format
+msgid "available on %s"
+msgstr "available on %s"
+
+#: classes/class.pmprosequence.php:1786
+msgid "day"
+msgstr "day"
+
+#: pmpro-sequences.php:98
+msgid "Saving"
+msgstr "Saving"
+
+#: pmpro-sequences.php:100
+msgid ""
+"Changing the delay type will erase all existing posts or pages in the "
+"Sequence list. (Cancel if your are unsure)"
+msgstr ""
+"Changing the delay type will erase all existing posts or pages in the "
+"Sequence list. (Cancel if your are unsure)"
+
+#: pmpro-sequences.php:101
+msgid "Error saving sequence post [1]"
+msgstr "Error saving sequence post [1]"
+
+#: pmpro-sequences.php:102
+msgid "Error saving sequence post [2]"
+msgstr "Error saving sequence post [2]"
+
+#: pmpro-sequences.php:103
+msgid "Error deleting sequence post [1]"
+msgstr "Error deleting sequence post [1]"
+
+#: pmpro-sequences.php:104
+msgid "Error deleting sequence post [2]"
+msgstr "Error deleting sequence post [2]"
+
+#: pmpro-sequences.php:106
+msgid "Unknown error removing post from sequence"
+msgstr "Unknown error removing post from sequence"
+
+#: pmpro-sequences.php:107
+msgid "Unknown error adding post to sequence"
+msgstr "Unknown error adding post to sequence"
+
+#: pmpro-sequences.php:110
+msgid "Avail. on"
+msgstr "Avail. on"
+
+# The YYYY-MM-DD is not translatable (needs to remain) as the format is hard-coded into the sources when calcuating the delay to use for access to posts in the sequence
+#: pmpro-sequences.php:111
+msgid "Release on (YYYY-MM-DD)"
+msgstr "Release on (YYYY-MM-DD)"
+
+#: pmpro-sequences.php:160
+msgid "You must be logged in to edit PMPro Sequences"
+msgstr "You must be logged in to edit PMPro Sequences"
+
+#: pmpro-sequences.php:235
+msgid "No data found"
+msgstr "No data found"
+
+#: pmpro-sequences.php:276
+msgid "Not permitted to modify the sequence"
+msgstr "Not permitted to modify the sequence"
+
+# The YYYY-MM-DD is not translatable (needs to remain) as the format is hard-coded into the sources when calcuating the delay to use for access to posts in the sequence
+#: pmpro-sequences.php:283
+msgid "date: YYYY-MM-DD"
+msgstr "date: YYYY-MM-DD"
+
+#: pmpro-sequences.php:283
+msgid "number: Days since membership started"
+msgstr "number: Days since membership started"
+
+#: pmpro-sequences.php:286
+#, php-format
+msgid "Invalid delay specified (%1$s). Expected format is a %2$s"
+msgstr "Invalid delay specified (%1$s). Expected format is a %2$s"
+
+#: pmpro-sequences.php:299 pmpro-sequences.php:310
+msgid "Did not specify a post/page to add"
+msgstr "Did not specify a post/page to add"
+
+#: pmpro-sequences.php:302
+msgid "No delay has been specified"
+msgstr "No delay has been specified"
+
+#: pmpro-sequences.php:314
+msgid "This sequence was not found on the server!"
+msgstr "This sequence was not found on the server!"
+
+#: pmpro-sequences.php:366
+msgid "Incorrect privileges to remove posts from this sequence"
+msgstr "Incorrect privileges to remove posts from this sequence"
+
+#: pmpro-sequences.php:416
+msgid "Could not delete posts from this sequence"
+msgstr "Could not delete posts from this sequence"
+
+#: pmpro-sequences.php:427
+msgid "Unable to identify the Sequence"
+msgstr "Unable to identify the Sequence"
+
+#: pmpro-sequences.php:432
+msgid "Unknown request"
+msgstr "Unknown request"
+
+#: pmpro-sequences.php:479 pmpro-sequences.php:495 pmpro-sequences.php:549
+msgid "Unable to save your settings"
+msgstr "Unable to save your settings"
+
+#: pmpro-sequences.php:612
+msgid "Unable to wipe existing posts"
+msgstr "Unable to wipe existing posts"
+
+#: pmpro-sequences.php:624
+#, php-format
+msgid "Save status returned was: %s"
+msgstr "Save status returned was: %s"
+
+#: pmpro-sequences.php:630
+msgid "No sequence ID found/specified"
+msgstr "No sequence ID found/specified"
+
+#: pmpro-sequences.php:637
+#, php-format
+msgid "(exception) %s"
+msgstr "(exception) %s"
+
+#: pmpro-sequences.php:670
+msgid "No sequence provided"
+msgstr "No sequence provided"
+
+#: pmpro-sequences.php:683
+msgid "User is not allowed to change settings"
+msgstr "User is not allowed to change settings"
+
+#: pmpro-sequences.php:860
+#, php-format
+msgid "You are on day %s of your membership"
+msgstr "You are on day %s of your membership"
+
+#: pmpro-sequences.php:989
+msgid "Y-m-d"
+msgstr "Y-m-d"
+
+#: pmpro-sequences.php:1081
+#, php-format
+msgid "This content managed as part of the <a href='%s'>%s</a> sequence"
+msgstr "This content managed as part of the <a href='%s'>%s</a> sequence"
+
+#: pmpro-sequences.php:1085
+#, php-format
+msgid "You will get access to %1$s on day %2$s of your membership"
+msgstr "You will get access to %1$s on day %2$s of your membership"
+
+#: pmpro-sequences.php:1088
+#, php-format
+msgid "You will get access to %1$s on %2$s"
+msgstr "You will get access to %1$s on %2$s"
+
+#: pmpro-sequences.php:1100
+#, php-format
+msgid "This content is part of the <a href='%s'>%s</a> sequence"
+msgstr "This content is part of the <a href='%s'>%s</a> sequence"
+
+#: pmpro-sequences.php:1104
+msgid "This content is part of the following sequences: "
+msgstr "This content is part of the following sequences: "
+
+#: pmpro-sequences.php:1632
+msgid "Link Navigation"
+msgstr "Link Navigation"
+
+# The arrows (are RTL/LTR tested)
+#: pmpro-sequences.php:1639
+#, php-format
+msgid "%s Previous"
+msgstr "%s Previous"
+
+# The arrow is RTL/LTR tested
+#: pmpro-sequences.php:1640
+#, php-format
+msgid "Next %s"
+msgstr "Next %s"
+
+#: pmpro-sequences.php:1643
+msgid "Page"
+msgstr "Page"
