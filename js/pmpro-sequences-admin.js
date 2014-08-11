@@ -69,6 +69,7 @@ jQuery(document).ready(function(){
         if ( $sendAlertCtl.is(':checked') ) {
  //           console.log('Show all notice related variables');
             $('.pmpro-sequence-email').show();
+            $('.pmpro-sequence-sendnowbtn').show();
             $('.pmpro-sequence-template').show();
             $('.pmpro-sequence-dateformat').show();
             $('.pmpro-sequence-noticetime').show();
@@ -898,6 +899,27 @@ function pmpro_sequence_saveSettings( sequence_id ) {
 
             // Disable the spinner again
             jQuery('div .seq_spinner').hide();
+        }
+    });
+}
+
+function pmpro_sequence_sendAlertNotice( $sequence ) {
+
+    jQuery.ajax({
+        url: pmpro_sequence.ajaxurl,
+        type: 'POST',
+        timeout: 5000,
+        dataType: 'JSON',
+        data: {
+            action: 'pmpro_send_notices',
+            pmpro_sequence_sendalert_nonce: jQuery('#pmpro_sequence_sendalert_nonce').val(),
+            pmpro_sequence_id: $sequence
+        },
+        error: function (data) {
+            if (data.message != null) {
+                alert(data.message);
+                pmpro_seq_setErroMsg(data.message);
+            }
         }
     });
 }

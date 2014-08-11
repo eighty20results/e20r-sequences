@@ -1425,6 +1425,15 @@
 					            <input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', 'pmprosequence'); ?>" id="pmpro_sequence_sendnotice" name="pmpro_sequence_sendnotice" <?php checked($settings->sendNotice, 1); ?> />
 					            <input type="hidden" name="hidden_pmpro_seq_sendnotice" id="hidden_pmpro_seq_sendnotice" value="<?php echo esc_attr($settings->sendNotice); ?>" >
 					            <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Send new content alerts', 'pmprosequence'); ?></label>
+					            <?php /* Add 'send now' button if checkbox is set */ ?>
+					            <div class="pmpro-sequence-hidden pmpro-sequence-sendnowbtn">
+						            <label for="pmpro_seq_send"><?php _e('Manually process alerts', 'pmprosequence'); ?></label>
+						            <a href="#sendalerts" class="pmpro-seq-settings-send pmpro-seq-edit" id="pmpro_seq_send" onclick="pmpro_sequence_sendAlertNotice(<?php echo $sequence->sequence_id;?>); return false;">
+						                <span aria-hidden="true"><?php _e('Send', 'pmprosequence'); ?></span>
+						                <span class="screen-reader-text"><?php _e('Manually issue command to process alert notices for the current sequence'); ?></span>
+						            </a>
+						            <?php wp_nonce_field('pmpro-sequence-sendalert', 'pmpro_sequence_sendalert_nonce'); ?>
+					            </div>
 					            <div class="pmpro-sequence-hidden pmpro-sequence-email">
 						            <p class="pmpro-seq-email-hl"><?php _e("From:", 'pmprosequence'); ?></p>
 						            <div class="pmpro-sequence-replyto">

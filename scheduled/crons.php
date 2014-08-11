@@ -70,14 +70,16 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 			}
 
 			$schedHr = date('H', strtotime($sequence->options->noticeTime));
+/*
 
+Removed since jobs are now being scheduled correctly and (will be able to be) ran directly from the settings metabox.
 			// Check whether the Hour (time) is correct. Adjusted for 12 or 24 hour clock.
 			if ( $schedHr != date('H', current_time('timestamp')) ) {
 
 				dbgOut('cron() - Not the right time of day. Skipping for now! Calculated Hour: ' .  $schedHr . ' Current Hour: ' . date('H', current_time('timestamp')));
 				continue;
 			}
-
+*/
 			// Get user specific settings regarding sequence alerts.
 			$noticeSettings = get_user_meta( $s->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
 
@@ -108,7 +110,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 					        ', has access: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false' ) );
 
 					// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
-					if ( ( ! empty( $post->id ) ) && pmpro_sequence_hasAccess( $s->user_id, $post->id ) &&
+					if ( ( ! empty( $post->id ) ) && pmpro_sequence_hasAccess( $s->user_id, $post->id, true ) &&
 					     ! in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true )
 					) {
 						// Test whether the post needs to be sent (only if its delay makes it available _after_ the user opted in.

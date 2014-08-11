@@ -450,6 +450,30 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
 
 endif;
 
+if (! function_exists('pmpro_sequence_sendalert_callback')):
+
+	add_action('wp_ajax_pmpro_send_notices', 'pmpro_sequence_sendalert_callback');
+	add_action('wp_ajax_nopriv_pmpro_send_notices', 'pmpro_sequence_ajaxUnprivError');
+
+	function pmpro_sequence_sendalert_callback() {
+
+		dbgOut('sendalert() - Processing the request to send alerts manually');
+
+		check_ajax_referer('pmpro-sequence-sendalert', 'pmpro_sequence_sendalert_nonce');
+
+		dbgOut('Nonce is OK');
+
+		if ( isset( $_POST['pmpro_sequence_id'] ) ) {
+
+			$sequence_id = intval($_POST['pmpro_sequence_id']);
+			dbgOut('Will send alerts for sequence #' . $sequence_id);
+			do_action( 'pmpro_sequence_cron_hook', $sequence_id);
+			dbgOut('Completed action for sequence');
+		}
+	}
+
+endif;
+
 if (! function_exists('pmpro_sequence_optin_callback')):
 
     add_action('wp_ajax_pmpro_sequence_save_user_optin', 'pmpro_sequence_optin_callback');
@@ -915,7 +939,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
      * @param $post_id (int) -- The ID of the post we're checking access for
      * @return bool -- true | false -- Indicates user ID's access privileges to the post/sequence
      */
-    function pmpro_sequence_hasAccess($user_id, $post_id)
+    function pmpro_sequence_hasAccess($user_id, $post_id, $isAlert = false)
     {
         //is this post in a sequence
         $post_sequence = get_post_meta($post_id, "_post_sequences", true);
@@ -978,7 +1002,12 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
 			            //user has access to this sequence and has been at the level for longer than this post's delay
 			            // $durationOfMembership = pmpro_getMemberDays( $user_id, $level_id ); // Buggy (returns decimal number for day count)
-			            $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id );
+
+			            // Don't add 'preview' value if this is for an alert notice.
+			            if (! $isAlert)
+			                $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id ) + $sequence->options->previewOffset;
+			            else
+				            $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id );
 
 			            dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days', $user_id, $level_id, $durationOfMembership) );
 
@@ -988,7 +1017,13 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
 		            } elseif ( $sequence->options->delayType == 'byDate' ) {
 
-			            $today = date( __( 'Y-m-d', 'pmprosequence' ), current_time( 'timestamp' ) );
+			            // Don't add 'preview' value if this is for an alert notice.
+			            if (! $isAlert)
+			                $previewAdd = (86400 * $sequence->options->previewOffset);
+			            else
+				            $previewAdd = 0;
+
+			            $today = date( __( 'Y-m-d', 'pmprosequence' ), (current_time( 'timestamp' ) + $previewAdd) );
 
 			            if ( $today >= $sp->delay ) {
 				            return true;
