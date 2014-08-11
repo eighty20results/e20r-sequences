@@ -67,9 +67,11 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Admin may now select to let the delay time (when a post in the sequence will be accessible to the user) as a 'Calendar date' or as 'days since membership started'.
 ** Only applies when the Delay Type is configured as "Days after sign-up".
 * Added support for admin configurable format of !!today!! (date) placeholder in email templates
-* Added a message to the front-end sequence page for when there are no released (visible) posts avialable to the user in that sequence.
+* Added a message to the front-end sequence page for when there are no released (visible) posts available to the user in that sequence.
 * Bugfix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
 * Multiple bug fixes and updates.
 
 = .3 =
 * Translation for Norwegian and English (US)
+* Feature: Trigger sending of email alerts from the admin UI
+ * Support "preview" functionality for posts in sequence.
