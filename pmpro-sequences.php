@@ -1019,7 +1019,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
 			            // Don't add 'preview' value if this is for an alert notice.
 			            if (! $isAlert)
-			                $previewAdd = (86400 * $sequence->options->previewOffset);
+			                $previewAdd = ((60*60*24) * $sequence->options->previewOffset);
 			            else
 				            $previewAdd = 0;
 
