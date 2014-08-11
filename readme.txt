@@ -26,11 +26,13 @@ Added a few features that weren't included in pmpro_series, specifically the abi
 1. Add posts to sequence using the "Posts in this Sequences" meta box under the post content.
 
 == TODO ==
-1. Fixed(?): Add support for pre v5.3 releases (Currently uses DateTime->diff() - not available on pre 5.3 releases - to manage TZ specifics). This is "bad", I know...
-2. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
-3. Add support for setting a "preview unpublished posts" window (i.e. # of days/weeks in advance to let users see upcoming content)
-4. Add support for setting a "remove posts from list after" window (i.e. # of days/weeks after it went public that it gets removed from the list).
+1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
+2. Add support for setting a "remove posts from list after" window (i.e. # of days/weeks after it went public that it gets removed from the list).
     Should we then remove access to the post - for the member - after this windows has expired?
+
+== Done ==
+1. Add support for pre v5.3 releases (Currently uses DateTime->diff() - not available on pre 5.3 releases - to manage TZ specifics). This is "bad", I know... (DONE?)
+3. Added support for setting a "preview unpublished posts" window (i.e. # of days/weeks in advance to let users see upcoming content) (DONE)
 
 == Known Issues ==
 
