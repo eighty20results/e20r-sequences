@@ -977,8 +977,6 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
                 $sequence->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
             }
 
-	        // TODO Need to support the previewOffset for access - probably when listing the content (and not in hasAccess?)
-
             // Check if the post exists in the list of posts for the current sequence & return its details if true
             if ( ($sp = $sequence->get_postDetails($post_id)) !== null) {
 
@@ -1475,21 +1473,24 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
 endif;
 
 
-// register_activation_hook(__FILE__, 'pmpros_activation');
-// register_deactivation_hook(__FILE__, 'pmpros_deactivation');
-
 if ( ! function_exists('pmpro_sequence_links_shortcode')):
 
     function pmpro_sequence_links_shortcode( $attributes ) {
 
         $highlight = false;
+	    $button = false;
+	    $scrollbox = false;
 	    $pagesize = 10;
         $id = null;
+		$title = null;
 
         extract( shortcode_atts( array(
             'id' => 0,
 	        'pagesize' => 0,
+	        'title' => '',
+	        'button' => false,
             'highlight' => false,
+	        'scrollbox' => false,
         ), $attributes ) );
 
 	    if ($pagesize == 0)
@@ -1497,13 +1498,9 @@ if ( ! function_exists('pmpro_sequence_links_shortcode')):
 
 	    dbgOut("shortcode() - Ready to build link list for sequence with ID of: " . $id);
 
-/*	    if ($id !== 0)
-	        $html = '<h3>' . the_title($id) . '</h3>';
-	    else
-		    $html = '<h3>Posts</h3>';
+	    // TODO: Determine access rights to the sequence before we proceed.
 
-*/
-        $html = pmpro_sequence_build_linkData( $id, $highlight, $pagesize);
+        $html = pmpro_sequence_createSequenceList( $id, $highlight, $pagesize, $button, $title, $scrollbox);
 
 	    if ($html) {
 		    dbgOut( 'shortcode() - Built HTML, now listing the data.' );
@@ -1526,26 +1523,45 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 
 		// TODO: Add admin configurable setting to allow/disallow showing of the link data
 		dbgOut('Listing Sequence pages as Member Links');
-        echo pmpro_sequence_build_linkData(7888, true, 15);
+        echo pmpro_sequence_createSequenceList(7888, true, 22, true, null, false);
 
 	}
 
     /**
      * Create a list of posts/pages/cpts that are included in the specified sequence (or all sequences, if needed)
      *
-     * TODO: Format the output to look good on the page (table for header/links?)
-     *
-     * @param null $seq_id -- The ID for the sequence to process (can be empty. If so, process all sequences)
+     * @param int $seq_id -- The ID for the sequence to process (can be empty. If so, process all sequences)
      * @param bool $highlight -- Whether to highlight the Post that is the closest to the users current membership day
+     * @param int $pagesize -- The size of each page (number of posts per page)
+     * @param bool $button -- Whether to display a "Available Now" button or not.
+     * @param string $title -- The title of the sequence list. Default is the title of the sequence.
      * @return string -- The HTML we generated.
      */
-	function pmpro_sequence_build_linkData( $seq_id = 0, $highlight = false, $pagesize = 0 ) {
+	function pmpro_sequence_createSequenceList(
+		$seq_id = 0,
+		$highlight = false,
+		$pagesize = 0,
+		$button = false,
+		$title = null,
+		$scrollbox = false
+	) {
 
 		global $wpdb, $current_user, $id;
 		$html = '';
 
+		// Set a default page size.
 		if ($pagesize == 0)
 			$pagesize = 15;
+
+		// Process the title attribute (default values, can apply filter if needed/wanted)
+		if ( ( $title == '' ) && ( $seq_id != 0 ))
+			$title = '<h3>' . get_the_title($seq_id) . '</h3>';
+		elseif (($seq_id == 0) && ($title == ''))
+			$title = "<h3>Sequence List</h3>";
+		elseif ($title == '')
+			$title = '';
+		else
+			$title = "<h3>{$title}</h3>";
 
         if ( $seq_id == 0) {
 	        dbgOut('No sequence ID provided. Listing all sequences');
@@ -1579,6 +1595,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 			$sequence = new PMProSequence($s->ID);
 
 			$sequence_posts = $sequence->getPosts();
+			$memberDayCount = pmpro_sequence_getMemberDays();
 
 			if ( ! pmpro_sequence_hasAccess($current_user->user_id, $s->ID) ) {
 				dbgOut('No access to sequence ' . $s->ID . ' for user ' . $current_user->user_id);
@@ -1595,53 +1612,181 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 			/* Get the ID of the post in the sequence who's delay is the closest
 			 *  to the members 'days since start of membership'
              */
+			$closestPostId = apply_filters('pmpro_seq_find_closest_post', $sequence->get_closestPost( $current_user->ID ) );
 
-			$closestPostId = $sequence->get_closestPost( $current_user->ID );
+			// Image to bring attention to the closest post item
+			$closestPostImg = '<img src="' . plugins_url('/images/most-recent.png', __FILE__) . '" >';
+
+			dbgOut('build_linkData() - The most recently available post for user #' . $current_user->ID . ' is post #' . $closestPostId);
 
 			$query_args = array(
 				'post_type' => apply_filters('pmpro_sequencepost_types', array('post', 'page')), // Filter returns an array()
 				'post__in' => $post_list,
 				'ignore_sticky_posts' => 1,
-				'paged' => (get_query_var('paged')) ? absint(get_query_var('paged')) : 1,
+				'paged' => (get_query_var('page')) ? absint(get_query_var('page')) : 1,
 				'posts_per_page' => $pagesize,
 				'orderby' => 'post__in'
 			);
 
-			$seqEntries = new WP_Query( $query_args );
+			$seqEntries = new WP_Query( apply_filters('pmpro_sequence_list_query', $query_args ) );
+
+			$listed_postCnt = 0;
+			$noPostsDisplayed = true;
 
 			ob_start();
+
 			?>
-            <!-- Preface the table of links with the title of the sequence -->
-			<table class="pmpro_seq_linklist">
+
+			<!-- Preface the table of links with the title of the sequence -->
+			<div id="pmpro_sequence-<?php echo $sequence->sequence_id; ?>" class="pmpro_sequence_list">
+				<?php echo apply_filters('pmpro_seq_list_title', $title); ?>
+				<!-- List of sequence entries (paginated as needed) -->
+				<?php if ($scrollbox): ?>
+					<div id="pmpro-seq-post-list">
+					<table class="pmpro_sequence_postscroll pmpro_seq_linklist">
+				<?php else: ?>
+					<table class="pmpro_sequence_postscroll pmpro_seq_linklist">
+				<?php endif; ?>
 
 			<?php
-            // Loop through all of the posts in the sequence
-			while ($seqEntries->have_posts()) : $seqEntries->the_post();
-				if ( ( $id == $closestPostId  ) && $highlight):
-					?>
-					<tr>
-                        <!-- The next entry is the post that is current or next -->
-						<td class="pmpro-seq-hl-img"><img src="<?php echo plugins_url('/images/most-recent.png', __FILE__); ?>"></td>
-                        <td class="pmpro-seq-hl-post" ><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><strong><?php the_title(); ?></strong></a></td>
-					</tr>
-                <?php   else: ?>
-					<tr>
-						<td></td>
-                        <td class="pmpro-seq-fadepost"><a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><?php the_title(); ?></a></td>
-					</tr>
-                <?php
+				/**
+				 * Flow of post display:
+				 *      Iterate through all the posts that belong to the sequence
+
+			     *         if isPastDelay() == true then
+				 *              $noPostsDisplayed = false;
+				 *              if ( ( $id == $closestPostId ) && ( $highlight ) )
+				 *                  Show post link with 'Current' value & highlight CSS . ( $button ? 'Available Now' : '');
+				 *              else
+				 *                  Show post link as normal . ( $button ? 'Available Now' : '')
+				 *         elseif (! isPastDelay()) &&  (! hideUpcomingPosts() )
+				 *              $noPostsDisplayed = false;
+				 *              if ( ($id == $closestPostId) && ( $highlight ) )
+				 * 		            Show post with dashed underline (in highlight color);
+				 *              else
+				 *                  Show post link as normal;
+				 *         elseif ($noPostsDisplayed && (! isPastDelay()) // Not allowed to show any posts)
+				 *               Show 'no posts available' message
+				 *
+				 *
+				 */
+		            // Loop through all of the posts in the sequence
+					while ($seqEntries->have_posts()) : $seqEntries->the_post();
+
+						// Should the current post be highlighted?
+						if ( ($sequence->isPastDelay($memberDayCount,
+								$post_list[ $sequence->getPostKey($id) ]->delay) ) ) {
+
+							$noPostsDisplayed = false;
+							$listed_postCnt++;
+
+							if ( ( $id == $closestPostId ) && ( $highlight ) ) {
+								// Show the highlighted post info
+								?>
+								<tr id="pmpro-seq-selected-post">
+									<td class="pmpro-seq-post-img"><?php echo apply_filters( 'pmpro_seq_closestpost_img', $closestPostImg ); ?></td>
+									<td class="pmpro-seq-post-hl">
+										<a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><strong><?php the_title(); ?></strong>&nbsp;&nbsp;<em>(Current)</em></a>
+									</td>
+									<td <?php echo ( $button ? 'class="pmpro-seq-availnow-btn"' : '' ); ?>><?php
+
+									if ( $button ) { ?>
+										<a class="pmpro_btn pmpro_btn-primary" href="<?php echo get_permalink(); ?>"> <?php _e( "Available Now", 'pmprosequence' ); ?></a><?php
+									} ?>
+									</td>
+								</tr> <?php
+							} else {
+							?>
+								<tr id="pmpro-seq-post">
+									<td class="pmpro-seq-post-img">&nbsp;</td>
+									<td class="pmpro-seq-post-fade">
+										<a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><?php the_title(); ?></a>
+									</td>
+									<td<?php echo ( $button ? ' class="pmpro-seq-availnow-btn">' : '>' );
+										if ( $button ) { ?>
+										<a class="pmpro_btn pmpro_btn-primary" href="<?php echo get_permalink(); ?>"> <?php _e( "Available Now", 'pmprosequence' ); ?></a><?php
+										} ?>
+									</td>
+								</tr>
+						<?php
+							}
+						}
+						elseif ( ( ! $sequence->isPastDelay( $memberDayCount, $post_list[ $sequence->getPostKey($id) ]->delay) ) &&
+						         (! $sequence->hideUpcomingPosts() ) ) {
+
+							$noPostsDisplayed = false;
+							$listed_postCnt++;
+
+							// Do we need to highlight the (not yet available) post?
+							if ( ( $id == $closestPostId ) && ( $highlight ) ) { ?>
+
+								<tr id="pmpro-seq-post">
+									<td id="pmpro-seq-post-future-hl">
+										<?php dbgOut("Highlight post #: {$id} with future availability"); ?>
+										<span class="pmpro_sequence_item-title">
+											<?php echo get_the_title();?>
+										</span>
+										<span class="pmpro_sequence_item-unavailable">
+											<?php echo sprintf( __('available on %s'),
+												($sequence->options->delayType == 'byDays' &&
+												 $sequence->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ?
+													__('day', 'pmprosequence') : ''); ?>
+											<?php echo $sequence->displayDelay( $post_list[ $sequence->getPostKey($id) ]->delay );?>
+										</span>
+									</td>
+								</tr>
+		<?php               }
+							else { ?>
+								<tr id="pmpro-seq-post">
+								<td>
+									<?php dbgOut("Show upcoming post #: {$id}"); ?>
+									<span class="pmpro_sequence_item-title"><?php echo get_the_title();?></span>
+									<span class="pmpro_sequence_item-unavailable">
+										<?php echo sprintf( __('available on %s'),
+											($sequence->options->delayType == 'byDays' &&
+											 $sequence->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ?
+												__('day', 'pmprosequence') : ''); ?>
+												<?php echo $sequence->displayDelay( $post_list[ $sequence->getPostKey($id) ]->delay );?>
+									</span>
+								</td>
+								</tr> <?php
+							}
+						}
+						else {
+							if ( ( count( $post_list ) > 0 ) && ( $listed_postCnt > 0 ) ) { ?>
+								<tr id="pmpro-seq-post">
+									<td>
+										<span style="text-align: center;">There is <em>no content available</em> for you at this time. Please check back later.</span>
+									</td>
+								</tr><?php
+							}
+						}
+
+						// Show as 'pmpro_sequence_item-unavailable' if there's no access to the post (account for preview).
+/*						if (! pmpro_sequence_hasAccess( $current_user->ID, $id, false )) {
+							// Skip to the next post?
+							continue;
+						}
+*/
+					endwhile;
+				?>
+				</table>
+				<div class="clear"></div>
+			<?php
+				apply_filters('pmpro_seq_paginate_list', pmpro_seq_paging_nav( $seqEntries->max_num_pages ));
+				wp_reset_postdata();
+
+				if ($scrollbox): ?>
+					</div><?php
 				endif;
-			endwhile;
-			?></table><?php
+			?>
+			</div><?php
 
-			pmpro_seq_paging_nav( $seqEntries->max_num_pages );
-
-			wp_reset_postdata();
-
-			$html .= ob_get_clean();
+			$html .= ob_get_contents();
+			ob_end_clean();
 		}
 
-		return $html;
+		return apply_filters('pmpro_sequence_list_html', $html);
 	}
 endif;
 
@@ -1651,15 +1796,12 @@ if (! function_exists( 'pmpro_seq_paging_nav()')):
 
 		if ($total > 1) {
 
-			$big = 99999999999;
-
-			if (! $current_page = get_query_var( 'paged' ) )
+			if (! $current_page = get_query_var( 'page' ) )
 				$current_page = 1;
 
-			if ( get_option('permalink_structure') )
-				$format = 'page/%#%';
-			else
-				$format = '&paged=%#%';
+			$paged = ( get_query_var( 'page' ) ) ? absint( get_query_var( 'page' ) ) : 1;
+			$base = @add_query_arg('page','%#%');
+			$format = '?page=%#%';
 
 			$prev_arrow = is_rtl() ? '&rarr;' : '&larr;';
 			$next_arrow = is_rtl() ? '&larr;' : '&rarr;';
@@ -1668,11 +1810,11 @@ if (! function_exists( 'pmpro_seq_paging_nav()')):
 			<nav class="navigation paging-navigation" role="navigation">
 				<h4 class="screen-reader-text"><?php _e( 'Link Navigation', 'pmprosequence' ); ?></h4>
 				<?php echo paginate_links( array(
-					'base'          => str_replace( $big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
+					'base'          => $base,
 					'format'        => $format,
 					'total'         => $total,
-					'current'       => max(1, get_query_var('paged')),
-					'mid_size'      => 3,
+					'current'       => $paged,
+					'mid_size'      => 2,
 					'prev_text'     => sprintf( __( '%s Previous', 'pmprosequence'), $prev_arrow),
 					'next_text'     => sprintf( __( 'Next %s', 'pmprosequence'), $next_arrow),
 					'prev_next'     => true,
@@ -1683,15 +1825,5 @@ if (! function_exists( 'pmpro_seq_paging_nav()')):
 		<?php
 
 		}
-
-		/*
-		$link_args = array(
-			'base' => str_replace($big, '%#%', esc_url( get_pagenum_link( $big ) ) ),
-			'format' => '?paged=%#%',
-			'current' => max( 1, get_query_var('paged') ),
-			'total' => $seqEntries->max_num_pages,
-			'before_page_number' => '<span class="screen-reader-text">' . $translated . '</span>',
-		);
-*/
 	}
 	endif;
