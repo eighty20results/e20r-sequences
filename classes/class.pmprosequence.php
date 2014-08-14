@@ -1765,50 +1765,8 @@
 	            usort($this->posts, array("PMProSequence", "sortByDelay"));
 
 	            // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
-				// TODO: Urgent --- Add support for pagination for this page!
 
-				$posts_listed = false;
-				$empty_notification = false;
-
-				ob_start();
-				?>
-				<ul id="pmpro_sequence-<?php echo $this->id; ?>" class="pmpro_sequence_list">
-				<?php
-					dbgOut('Post count: ' . count($this->posts));
-					foreach($this->posts as $sp)
-					{
-	                    $memberFor = pmpro_sequence_getMemberDays();
-
-						if ($this->isPastDelay( $memberFor, $sp->delay )) {
-							$posts_listed = true;
-	                ?>
-	                    <li>
-							<span class="pmpro_sequence_item-title"><a href="<?php echo get_permalink($sp->id);?>"><?php echo get_the_title($sp->id);?></a></span>
-							<span class="pmpro_sequence_item-available"><a class="pmpro_btn pmpro_btn-primary" href="<?php echo get_permalink($sp->id);?>"> <?php _e("Available Now", 'pmprosequence'); ?></a></span>
-	                    </li>
-                <?php   }
-						 elseif ( (! $this->isPastDelay( $memberFor, $sp->delay )) && ( ! $this->hideUpcomingPosts() ) ) { ?>
-	                    <li>
-		                    <?php dbgOut('Show upcoming post #:' . $sp->id); ?>
-							<span class="pmpro_sequence_item-title"><?php echo get_the_title($sp->id);?></span>
-
-		                    <span class="pmpro_sequence_item-unavailable"><?php echo sprintf( __('available on %s'), ($this->options->delayType == 'byDays' && $this->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ? __('day', 'pmprosequence') : ''); ?> <?php echo $this->displayDelay($sp->delay);?></span>
-	                    </li>
-				<?php   }
-						elseif ( $this->isPastDelay( $memberFor, $sp->delay ) && ( $posts_listed == false ) && ($empty_notification == false) ) {
-
-							$empty_notification = true;
-							?>
-							<span style="text-align: center;">There is <em>no content available</em> for you at this time. Please check back later.</span>
-				<?php   }; ?>
-						<div class="clear"></div>
-					<?php
-					};
-				?>
-				</ul>
-				<?php
-				$temp_content = ob_get_contents();
-				ob_end_clean();
+				$temp_content = pmpro_sequence_createSequenceList( $this->sequence_id, true, 25, true, null, false	);
 
 				//filter
 				$temp_content = apply_filters("pmpro_sequence_get_post_list", $temp_content, $this);
