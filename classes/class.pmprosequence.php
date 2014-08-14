@@ -1946,42 +1946,42 @@
          */
         public function get_closestPost( $user_id = null ) {
 
-            $membershipDay = pmpro_getMemberDays( $user_id );
+	        // Get the current day of the membership (as a whole day, not a float)
+            $membershipDay = ceil( pmpro_getMemberDays( $user_id ) );
 
-            // Load all posts in the sequence
+            // Load all posts in this sequence
             $postList = $this->getPosts();
 
             // Find the post ID in the postList array that has the delay closest to the membershipday.
-            $closestPostId = $this->get_closestByDelay( $membershipDay, $postList, $user_id );
+            $closest = $this->get_closestByDelay( $membershipDay, $postList );
 
-            if ( !empty( $closestPostId ) )
-                return $closestPostId;
+	        dbgOut("get_closestPost() - For user {$user_id} on day {$membershipDay}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})");
+
+            if ( !empty($closest->id) )
+                return $closest->id;
 
 			return false;
 		}
 
         /**
          * Compares the object to the
-         * @param $delayVal -- Delay value to compare to
-         * @param $objArr -- The post object
-         * @param null $userId -- The User ID to use
-         * @return null|int -- The post ID of the post with the delay value closest to the $delayVal
+         * @param $delayComp -- Delay value to compare to
+         * @param $postArr -- The post object
+         * @return stdClass -- The post ID of the post with the delay value closest to the $delayVal
          *
          * @access private
          */
-        private function get_closestByDelay( $delayVal, $objArr, $userId = null ) {
+        private function get_closestByDelay( $delayComp, $postArr ) {
 
-            $closest = null;
+	        $distances = array ( ) ;
 
-            foreach($objArr as $item) {
+	        foreach ( $postArr as $key => $post )
+	        {
+		        $distances [ $key ] = abs ( $delayComp - $this->normalizeDelay($post->delay) ) ;
+	        }
 
-                if ( ($closest == null) || (
-                    ( abs($delayVal - $closest) > abs($this->normalizeDelay($item->delay) - $delayVal) )
-                     && pmpro_sequence_hasAccess( $userId, $item->id ) ) )
-                    $closest = $item->id;
-            }
+	        return $postArr [ array_search ( min ( $distances ) , $distances ) ] ;
 
-            return $closest;
         }
 
 	    /**
@@ -2079,9 +2079,9 @@
          * @param $post_id -- The ID of the post
          * @return bool|int|string -- The key for the post
          *
-         * @access private
+         * @access public
          */
-        private function getPostKey($post_id)
+        public function getPostKey($post_id)
 		{
 			$this->getPosts();
 
