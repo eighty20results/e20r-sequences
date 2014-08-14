@@ -1477,11 +1477,14 @@ if ( ! function_exists('pmpro_sequence_links_shortcode')):
 
     function pmpro_sequence_links_shortcode( $attributes ) {
 
+	    global $current_user;
+
+	    // To avoid errors in development tool
         $highlight = false;
 	    $button = false;
 	    $scrollbox = false;
 	    $pagesize = 10;
-        $id = null;
+        $id = 0;
 		$title = null;
 
         extract( shortcode_atts( array(
@@ -1496,16 +1499,21 @@ if ( ! function_exists('pmpro_sequence_links_shortcode')):
 	    if ($pagesize == 0)
 		    $pagesize = 15; // Default
 
+	    if ($id == 0) {
+		    global $wp_query;
+		    // Try using the current WP post ID
+		    if (! empty($wp_query->post->ID))
+			    $id = $wp_query->post->ID;
+		    else
+			    return ''; // No post given so returning no info.
+	    }
+
 	    dbgOut("shortcode() - Ready to build link list for sequence with ID of: " . $id);
 
-	    // TODO: Determine access rights to the sequence before we proceed.
-
-        $html = pmpro_sequence_createSequenceList( $id, $highlight, $pagesize, $button, $title, $scrollbox);
-
-	    if ($html) {
-		    dbgOut( 'shortcode() - Built HTML, now listing the data.' );
-		    return $html;
-	    }
+	    if ( pmpro_sequence_hasAccess( $current_user->ID, $id, false ) )
+            return pmpro_sequence_createSequenceList( $id, $highlight, $pagesize, $button, $title, $scrollbox);
+	    else
+		    return '';
     }
 endif;
 
@@ -1521,7 +1529,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 
 	function pmpro_sequence_member_links_bottom( $seq_id = 0 ) {
 
-		// TODO: Add admin configurable setting to allow/disallow showing of the link data
+		// TODO: Add admin configurable setting to allow/disallow showing of the link data on member page
 		dbgOut('Listing Sequence pages as Member Links');
         echo pmpro_sequence_createSequenceList(7888, true, 22, true, null, false);
 
@@ -1675,7 +1683,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 
 						// Should the current post be highlighted?
 						if ( ($sequence->isPastDelay($memberDayCount,
-								$post_list[ $sequence->getPostKey($id) ]->delay) ) ) {
+							$sequence_posts[ $sequence->getPostKey($id) ]->delay) ) ) {
 
 							$noPostsDisplayed = false;
 							$listed_postCnt++;
@@ -1711,7 +1719,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 						<?php
 							}
 						}
-						elseif ( ( ! $sequence->isPastDelay( $memberDayCount, $post_list[ $sequence->getPostKey($id) ]->delay) ) &&
+						elseif ( ( ! $sequence->isPastDelay( $memberDayCount, $sequence_posts[ $sequence->getPostKey($id) ]->delay) ) &&
 						         (! $sequence->hideUpcomingPosts() ) ) {
 
 							$noPostsDisplayed = false;
@@ -1721,6 +1729,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 							if ( ( $id == $closestPostId ) && ( $highlight ) ) { ?>
 
 								<tr id="pmpro-seq-post">
+									<td class="pmpro-seq-post-img">&nbsp;</td>
 									<td id="pmpro-seq-post-future-hl">
 										<?php dbgOut("Highlight post #: {$id} with future availability"); ?>
 										<span class="pmpro_sequence_item-title">
@@ -1731,24 +1740,27 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 												($sequence->options->delayType == 'byDays' &&
 												 $sequence->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ?
 													__('day', 'pmprosequence') : ''); ?>
-											<?php echo $sequence->displayDelay( $post_list[ $sequence->getPostKey($id) ]->delay );?>
+											<?php echo $sequence->displayDelay( $sequence_posts[ $sequence->getPostKey($id) ]->delay );?>
 										</span>
 									</td>
+									<td></td>
 								</tr>
 		<?php               }
 							else { ?>
 								<tr id="pmpro-seq-post">
-								<td>
-									<?php dbgOut("Show upcoming post #: {$id}"); ?>
-									<span class="pmpro_sequence_item-title"><?php echo get_the_title();?></span>
-									<span class="pmpro_sequence_item-unavailable">
-										<?php echo sprintf( __('available on %s'),
-											($sequence->options->delayType == 'byDays' &&
-											 $sequence->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ?
-												__('day', 'pmprosequence') : ''); ?>
-												<?php echo $sequence->displayDelay( $post_list[ $sequence->getPostKey($id) ]->delay );?>
-									</span>
-								</td>
+									<td class="pmpro-seq-post-img">&nbsp;</td>
+									<td>
+										<?php dbgOut("Show upcoming post #: {$id}"); ?>
+										<span class="pmpro_sequence_item-title"><?php echo get_the_title();?></span>
+										<span class="pmpro_sequence_item-unavailable">
+											<?php echo sprintf( __('available on %s'),
+												($sequence->options->delayType == 'byDays' &&
+												 $sequence->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ?
+													__('day', 'pmprosequence') : ''); ?>
+													<?php echo $sequence->displayDelay( $sequence_posts[ $sequence->getPostKey($id) ]->delay );?>
+										</span>
+									</td>
+									<td></td>
 								</tr> <?php
 							}
 						}
