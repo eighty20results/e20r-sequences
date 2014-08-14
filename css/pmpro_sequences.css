@@ -10,6 +10,7 @@
 .pmpro_sequence_item-unavailable {display: inline-block; float: right; width: auto; font-style: italic; font-size: .9em; text-align: center;  }
 
 .pmpro-seq-centered {
+    margin-top: 30px;
     text-align: center;
 }
 
@@ -303,7 +304,7 @@ a:hover.page-numbers {
 }
 
 #pmpro-seq-post-future-hl {
-    border-bottom: 1pt dashed rgba(0, 204, 0, 0.5);
+    border-bottom: 2pt dashed rgba(0, 204, 0, 0.5);
 }
 
 .pmpro-seq-availnow-btn {
