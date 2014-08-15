@@ -107,13 +107,13 @@ Removed since jobs are now being scheduled correctly and (will be able to be) ra
 					dbgOut( 'cron() - Post: "' . get_the_title($post->id) . '"' .
 					        ', user ID: ' . $s->user_id .
 					        ', already notified: ' . ( in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
-					        ', has access: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post->id ) == true ? 'true' : 'false' ) );
+					        ', has access: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post->id ) === true ? 'true' : 'false' ) );
 
-					// Check whether the userID has access to this sequence post and if the post isn't previously "notified"
+					// Does the userID have access to this sequence post. Make sure the post isn't previously "notified"
 					if ( ( ! empty( $post->id ) ) && pmpro_sequence_hasAccess( $s->user_id, $post->id, true ) &&
 					     ! in_array( $post->id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true )
 					) {
-						// Test whether the post needs to be sent (only if its delay makes it available _after_ the user opted in.
+						// Does the post alert need to be sent (only if its delay makes it available _after_ the user opted in.
 						if ( $sequence->isAfterOptIn($s->user_id, $noticeSettings->sequence[$sequence->sequence_id]->optinTS, $post ) ) {
 
 							dbgOut( 'cron() - Preparing the email message' );
@@ -128,10 +128,9 @@ Removed since jobs are now being scheduled correctly and (will be able to be) ra
 								// Increment send count.
 								$sendCount[ $s->user_id ] ++;
 
-								dbgOut( 'cron() - Sent email to user ' . $s->user_id . ' about post ' .
-								        $post->id . ' in sequence: ' . $sequence->sequence_id . '. SendCount = ' . $sendCount[ $s->user_id ] );
+								dbgOut("cron() - Sent email to user {$s->user_id} about post {$post->id} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}" );
 							} else {
-								dbgOut( 'cron() - Error sending email message!' );
+								dbgOut( "cron() - Error sending email message!" );
 							}
 						}
 						else {
