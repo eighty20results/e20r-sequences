@@ -11,19 +11,15 @@ class PMProSeqRecentPost extends WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'pmpro_sequence__currentpost_widget',
-			'Sequence: Users current Post/Page',
+			'Sequence: Currently available Post/Page',
 			array(
 				'description' =>
 					__('Display a summary of the most recently available sequence post (or page) for the currently logged-in user.')
 			)
 		);
-
-		dbgOut("PMProSeqRecentPost: Constructor called.");
 	}
 
 	public function widget( $args, $instance) {
-
-		dbgOut("Instance data: " . print_r($instance, true));
 
 		extract($args);
 
@@ -35,21 +31,17 @@ class PMProSeqRecentPost extends WP_Widget {
 		$wordcount = $instance['wordcount'];
 		$show_title = ($instance['show_title'] == 1 ) ? true : false;
 
-		dbgOut("Title: {$title}, Prefix: {$seqPrefix}, ID: {$sequence_id}, Wordcount: {$wordcount}");
-
 		echo $before_widget;
 
 		if ($title)
 			echo $before_title . $title . $after_title;
 
-		dbgOut('Widget: Loading post specific data');
 		$this->get_sequencePostData( $sequence_id, $seqPrefix, $wordcount, $show_title, $defaultTitle );
+
 		echo $after_widget;
 	}
 
 	public function form( $instance ) {
-
-		dbgOut("Widget form()");
 
 		// Set up the current (or default) settings
 		if ( $instance ) {
@@ -115,7 +107,6 @@ class PMProSeqRecentPost extends WP_Widget {
 		$instance['wordcount'] = strip_tags( $new_instance['wordcount']);
 		$instance['prefix'] = strip_tags( $new_instance['prefix']);
 
-		// dbgOut("Widget config: " . print_r($instance, true));
 		return $instance;
 	}
 
@@ -162,8 +153,8 @@ class PMProSeqRecentPost extends WP_Widget {
 		}
 
 		if ( $current_user != 0 ) {
+
 			$seqPostId = $sequence->get_closestPost( $current_user->ID );
-			dbgOut( "Most current post: {$seqPostId} for user {$current_user->ID}. Excerpt length: {$excerpt_length}" );
 
 			if ( pmpro_sequence_hasAccess( $current_user->ID, $seqPostId, false ) ) {
 
