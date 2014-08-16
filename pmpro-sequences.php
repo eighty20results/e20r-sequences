@@ -56,6 +56,10 @@ if (! class_exists( 'PMProSequence' )):
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR ."scheduled" .DIRECTORY_SEPARATOR. "crons.php");
 endif;
 
+if ( ! class_exists( 'PMProSeqRecentPost' )):
+	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.PMProSeqRecentPost.php");
+endif;
+
 /*
 	Load CSS, JS files
 */
@@ -120,6 +124,21 @@ if (! function_exists('pmpro_sequence_admin_scripts')):
 
     }
 endif;
+
+if (! function_exists( 'pmpro_sequence_register_widgets' )):
+
+	add_action( 'widgets_init', 'pmpro_sequence_register_widgets');
+
+	function pmpro_sequence_register_widgets() {
+
+		// Add widget to display a summary for the most recent post/page
+		// in the sequence for the logged in user.
+		register_widget( 'PMProSeqRecentPost' );
+
+	}
+
+endif;
+
 
 if (! function_exists('pmpro_sequence_register_shortcodes')):
 

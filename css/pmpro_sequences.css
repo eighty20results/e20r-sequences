@@ -313,3 +313,35 @@ a:hover.page-numbers {
     /* position: relative; */
     right: 5px;
 }
+
+#pmpro-seq-post-summary {
+    max-height: 150px;
+    /* border: 1px solid lightgray; */
+    overflow: hidden;
+    padding: 5px 5px 5px 5px;
+}
+
+#pmpro-seq-post-header h2 {
+    font-size: 1.6em;
+    text-align: left;
+    font-weight: bold;
+}
+
+#pmpro-seq-post-body {
+    font-size: 11pt;
+    text-align: left;
+    padding: 0px 10px 0px 10px;
+}
+
+#pmpro-seq-post-body p {
+    padding-top: 5px;
+}
+
+#pmpro-seq-post-body a {
+    color: blue;
+}
+#pmpro-seq-post-notfound {
+    color: red;
+    font-size: 11pt;
+    text-align: center;
+}
