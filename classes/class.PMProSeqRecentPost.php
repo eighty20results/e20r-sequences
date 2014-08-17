@@ -143,12 +143,21 @@ class PMProSeqRecentPost extends WP_Widget {
 
 		global $post, $current_user;
 
-		if ($sequence_id != 0)
+		if ($sequence_id != 0) {
 			$sequence = new PMProSequence( $sequence_id );
+		}
 		else {
-			echo '<div id="pmpro-seq-post-notfound">';
-			_e("No sequence specified for this widget!", 'pmprosequence');
-			echo '</div>';
+			?>
+
+			<li class="widget widget-text">
+				<h3 id="pmpro-seq-post-notfound">Error</h3>
+				<div class="text-widget">
+					<?php _e("No sequence specified for this widget!", 'pmprosequence'); ?>
+				</div>
+			</li>
+
+			<?php
+
 			return false;
 		}
 
@@ -169,46 +178,55 @@ class PMProSeqRecentPost extends WP_Widget {
 				) );
 
 				if ( $seq_post->found_posts > 0 ) {
-					?>
-					<div id="pmpro-seq-post-summary"><?php
 
-						while ( $seq_post->have_posts() ) : $seq_post->the_post();
-							$image = ( has_post_thumbnail( $post->ID ) ? get_the_post_thumbnail( $post->ID, 'pmpro_seq_widget_size' ) : '<div class="noThumb"></div>' );
+					while ( $seq_post->have_posts() ) : $seq_post->the_post();
 
-							?>
-							<div id="pmpro-seq-post-header">
-							<?php if ($show_title) { ?>
-								<H2><?php echo ( $seqPrefix != '' ? $seqPrefix . ' ' : ' ' ) . get_the_title(); ?></H2>
-							<?php }	else { ?>
-								<H2><?php echo $defaultTitle; ?></H2>
-							<?php } ?>
-							</div>
-							<div id="pmpro-seq-post-body"><?php
+						$image = ( has_post_thumbnail( $post->ID ) ? get_the_post_thumbnail( $post->ID, 'pmpro_seq_widget_size' ) : '<div class="noThumb"></div>' );
+						?>
+					<?php if ($show_title) { ?>
+						<h3 class="widget-title">
+							<span class="widget-inner"><?php echo ( $seqPrefix != '' ? $seqPrefix . ' ' : ' ' ) . get_the_title(); ?></span>
+						</h3>
+					<?php }	else { ?>
+						<h3 class="widget-title"><?php echo $defaultTitle; ?></h3>
+					<?php } ?>
+						<div id="pmpro-seq-post-body" class="text-widget">
+							<p class="pmpro-seq-when">Available on <?php $this->print_available_date($sequence, $seqPostId); ?></p>
+							<p id="pmpro-seq-post-body-text"><?php
 								echo $image;
-								echo "<p>" . $this->limit_excerpt_words( get_the_excerpt(), $excerpt_length ) . '</p><p><a href="'. get_permalink() . '" title="' . get_the_title() . '">' . __('[Click to access]', 'pmprosequence') .'</a></p>'; ?>
-							</div>
-						<?php
-						endwhile;?>
-					</div>
+								echo $this->limit_excerpt_words( get_the_excerpt(), $excerpt_length ); ?>
+							</p>
+							<p id="pmpro-seq-post-link">
+								<a href="<?php echo get_permalink() ?>" title="<?php the_title(); ?>"><?php _e('Click to access', 'pmprosequence'); ?></a>
+							</p>
+						</div>
+					<?php
+					endwhile;?>
 				<?php
 				} else {
 					?>
-					<div id="pmpro-seq-post-notfound">
-						<?php _e( "Sorry, your current membership level does not grant you access to this content.", 'pmprosequence' ); ?>
+					<span id="pmpro-seq-post-notfound">
+					<h3 class="widget-title">Configuration Error</h3>
+					<div id="pmpro-seq-post-body" class="text-widget">
+						<?php echo ( $sequence_id != 0 ? get_the_title($sequence_id) . __(': No post(s) found!', 'pmprosequence') : __('No sequence specified', 'pmprosequence') ); ?>
 					</div>
+				</span>
 				<?php
 				}
+
 			}
 			else {
 				?>
-				<div id="pmpro-seq-post-notfound">
-					<?php echo ( $sequence_id != 0 ? get_the_title($sequence_id) . __(': No post(s) found!', 'pmprosequence') : __('No sequence specified', 'pmprosequence') ); ?>
-				</div>
+				<span id="pmpro-seq-post-notfound">
+					<h3 class="widget-title">Membership Level Error</h3>
+					<div id="pmpro-seq-post-body" class="text-widget">
+						<?php _e( "Sorry, your current membership level does not grant you access to this content.", 'pmprosequence' ); ?>
+					</div>
+				</span>
 			<?php
 			}
-
 			wp_reset_postdata();
-		};
+		}
 	}
 
 	private function limit_excerpt_words( $string, $word_limit ) {
@@ -220,5 +238,17 @@ class PMProSeqRecentPost extends WP_Widget {
 		}
 
 		return implode( " ", $words);
+	}
+
+	private function print_available_date( PMProSequence $seq, $postId ) {
+
+		$seqPost = $seq->get_postDetails($postId);
+
+		if ( ( $seq->options->delayType == 'byDays' ) && ( $seq->options->showDelayAs == PMPRO_SEQ_AS_DAYNO ) ) {
+			echo 'day ' . $seq->displayDelay($seqPost->delay) . ' of membership';
+		}
+		else {
+			echo $seq->displayDelay($seqPost->delay);
+		}
 	}
 }

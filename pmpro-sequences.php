@@ -1440,6 +1440,8 @@ if ( ! function_exists('pmpro_sequence_activation')):
         PMProSequence::createCPT();
         flush_rewrite_rules();
 
+	    /* Search for existing pmpro_series posts & import */
+
 	    /* Register the default cron job to send out new content alerts */
 	    wp_schedule_event(current_time('timestamp'), 'daily', 'pmpro_sequence_cron_hook');
     }
@@ -1482,7 +1484,7 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
 			    $sequence->save_sequence_meta();
 
 			    wp_clear_scheduled_hook('pmpro_sequence_cron_hook', array( $s->ID ));
-			    dbgOut('Deactivated email alerts for sequence ' . $s->ID);
+			    dbgOut('Deactivated email alert(s) for sequence ' . $s->ID);
 		    }
 	    }
 
