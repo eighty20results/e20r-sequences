@@ -818,7 +818,9 @@
 			$email->email = $user->user_email;
 			$email->ptitle = $post->post_title;
 
-			$email->subject = sprintf('%s: %s', $settings->subject, $post->post_title);
+			$seqPost = $this->get_postDetails($post_id);
+
+			$email->subject = sprintf('%s: %s (%s)', $settings->subject, $post->post_title, $this->displayDelay($seqPost->delay));
 			// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
 
 			$email->template = $templ[0];
