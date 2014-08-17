@@ -2,13 +2,12 @@
 /*
 Plugin Name: PMPro Sequence
 Plugin URI: http://www.eighty20results.com/pmpro-sequence/
-Description: Offer serialized (drip feed) content to your PMPro members. Based on the PMPro Series plugin by Stranger Studios.
-Version: .3
+Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
+Version: 1.0
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
 License:
-
 
 	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
 	Copyright 2013 Stranger Studios (jason@strangerstudios.com)
@@ -30,16 +29,16 @@ License:
 
 
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '0.3');
+define('PMPRO_SEQUENCE_VERSION', '1.0');
 
 /* Enable / Disable DEBUG logging to separate file */
-define('PMPRO_SEQUENCE_DEBUG', true);
+define('PMPRO_SEQUENCE_DEBUG', false);
 
 /* Set the max number of email alerts to send in one go to one user */
 define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
-define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.3.0');
+define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.2.2');
 
 /* Set the path to the PMPRO Sequence plugin */
 define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -146,6 +145,7 @@ if (! function_exists('pmpro_sequence_register_shortcodes')):
 
 	function pmpro_sequence_register_shortcodes() {
 
+		// Generates paginated list of links to sequence members
 		add_shortcode( 'sequence_links', 'pmpro_sequence_links_shortcode');
 
 	}
@@ -162,7 +162,7 @@ if (! function_exists('pmpro_sequence_load_textdomain')):
 	function pmpro_sequence_load_textdomain() {
 
 		$locale = apply_filters("plugin_locale", get_locale(), "pmprosequence");
-		load_textdomain("pmprosequence", trailingslashit( WP_LANG_DIR ) . basename( __DIR__) . DIRECTORY_SEPARATOR . "languages" .DIRECTORY_SEPARATOR ."pmpro-sequence-" . $locale . ".mo");
+		load_textdomain("pmprosequence", trailingslashit( WP_LANG_DIR ) . basename( __DIR__) . DIRECTORY_SEPARATOR . "languages" .DIRECTORY_SEPARATOR . $locale . ".mo");
 		load_plugin_textdomain("pmprosequence", FALSE, dirname(__FILE__) . "languages" . DIRECTORY_SEPARATOR);
 	}
 

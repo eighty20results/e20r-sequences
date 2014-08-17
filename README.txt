@@ -2,21 +2,36 @@
 Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
-Requires PHP 5.3 or later.
-Tested up to: 3.9.1
-Stable tag: .1.2
+Requires PHP 5.2 or later.
+Tested up to: 3.9.2
+Stable tag: 1.0
 
-Create "Sequence" which are groups of posts/pages where content is revealed to members over time. This a clone of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
+Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
 == Description ==
-This plugin currently requires Paid Memberships Pro and is a complete rip-off of the pmpro_series plugin from strangerstudios.
+This plugin currently requires Paid Memberships Pro and started life as a complete rip-off of the pmpro_series
+ plugin from strangerstudios. I needed a drip-content plugin that supported different delay type options, paginated
+ lists of series posts, a way to let a user see an excerpt of
 
-Added a few features that weren't included in pmpro_series, specifically the ability to:
+Added a features that weren't included in pmpro_series, specifically the ability to:
 
 * Configure the sort order for the series/sequence
 * Show/hide upcoming series/sequence posts
 * Show/hide "You are on day XXX of your membership"
-* Configure "Days of delay since start of membership" or specific calendar date as when to make content available
+* Show "delay time" as "days since membership started" or calendar date to end user.
+* Admin defined schedule (using WP-Cron) for new content alert emails to users.
+* User opt-in for receiving email alerts
+* Templated email alerts for new content
+* Pagination of sequence lists in sequence page
+* [sequence_list] shortcode for paginated sequence list
+* Widget containing summary (excerpt) of most recent post in a sequence [***] for the logged in user.
+* Allows 'preview' of upcoming posts in the sequence (Not sure if this is really necessary to have...)
+
+See ./email/README.txt for information on templates for the email alerts.
+
+[***] => Add the following line to your theme's functions.php file to support excerpts for WP pages as well:
+
+     add_post_type_support( 'page', 'excerpt' );
 
 == Installation ==
 
@@ -25,10 +40,8 @@ Added a few features that weren't included in pmpro_series, specifically the abi
 1. Navigate to the Sequences menu in the WordPress dashboard to create a new sequence.
 1. Add posts to sequence using the "Posts in this Sequences" meta box under the post content.
 
-== TODO ==
+== TODO (?) ==
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
-2. Add support for setting a "remove posts from list after" window (i.e. # of days/weeks after it went public that it gets removed from the list).
-    Should we then remove access to the post - for the member - after this windows has expired?
 
 == Done ==
 1. Add support for pre v5.3 releases (Currently uses DateTime->diff() - not available on pre 5.3 releases - to manage TZ specifics). This is "bad", I know... (DONE?)
@@ -36,11 +49,13 @@ Added a few features that weren't included in pmpro_series, specifically the abi
 
 == Known Issues ==
 
-DEBUG is available
-   Currently disabled, to enable set PMPRO_SEQUENCE_DEBUG to 'true' in pmpro-sequences.php.
-   A fair bit of data will get dumped into ./sequence_debug_log.txt (located in either website root and/or wp-admin/).
+DEBUG
+ Currently disabled. To enable set PMPRO_SEQUENCE_DEBUG to 'true' in pmpro-sequences.php.
+ A fair bit (understatement) of data which will get dumped into ./sequence_debug_log-[date].txt
+ (located the ./debug/ directory).
 
 == Frequently Asked Questions ==
+TBD
 
 = I found a bug in the plugin. =
 
@@ -71,9 +86,13 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Added support for admin configurable format of !!today!! (date) placeholder in email templates
 * Added a message to the front-end sequence page for when there are no released (visible) posts available to the user in that sequence.
 * Bugfix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
-* Multiple bug fixes and updates.
+* More bug fixes and updates.
 
 = .3 =
 * Translation for Norwegian and English (US)
 * Feature: Trigger sending of email alerts from the admin UI
- * Support "preview" functionality for posts in sequence.
+* Support "preview" functionality for posts in sequence. (Is this really needed..?)
+
+= 1.0 =
+* Set version number
+* Feature: Widget containing excerpt from most recently available post in a sequence (by user ID)

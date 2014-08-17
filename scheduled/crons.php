@@ -1,4 +1,25 @@
 <?php
+
+/*
+  License:
+
+	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License, version 2, as
+	published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+*/
+
 /* Check for new content, email a notice to the user if new content exists. */
 if (! function_exists('pmpro_sequence_check_for_new_content')):
 
@@ -69,17 +90,6 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				continue;
 			}
 
-			$schedHr = date('H', strtotime($sequence->options->noticeTime));
-/*
-
-Removed since jobs are now being scheduled correctly and (will be able to be) ran directly from the settings metabox.
-			// Check whether the Hour (time) is correct. Adjusted for 12 or 24 hour clock.
-			if ( $schedHr != date('H', current_time('timestamp')) ) {
-
-				dbgOut('cron() - Not the right time of day. Skipping for now! Calculated Hour: ' .  $schedHr . ' Current Hour: ' . date('H', current_time('timestamp')));
-				continue;
-			}
-*/
 			// Get user specific settings regarding sequence alerts.
 			$noticeSettings = get_user_meta( $s->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
 

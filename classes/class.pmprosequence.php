@@ -1,6 +1,24 @@
 <?php
+/*
+  License:
 
-// if (! array_key_exists('pmpro-sequence', $GLOBALS) ):
+	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
+	Copyright 2013 Stranger Studios (jason@strangerstudios.com)
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License, version 2, as
+	published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+*/
 
 	class PMProSequence
 	{
@@ -2147,7 +2165,3 @@
 	        return ($aDelay > $bDelay) ? -1 : +1;
 	    }
 	}
-
-//	$GLOBALS['pmpro-sequence'] = new PMProSequence();
-
-//endif;
