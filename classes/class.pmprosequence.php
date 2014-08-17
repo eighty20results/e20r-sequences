@@ -1951,14 +1951,15 @@
          */
         private function get_closestByDelay( $delayComp, $postArr ) {
 
-	        $distances = array ( ) ;
+	        $distances = array();
 
 	        foreach ( $postArr as $key => $post )
 	        {
-		        $distances [ $key ] = abs ( $delayComp - $this->normalizeDelay($post->delay) ) ;
+		        $distances[ $key ] = abs( $delayComp - ( $this->normalizeDelay( $post->delay ) + 1 ) );
+		        // dbgOut("Distance Calc for {$post->id} is {$distances[$key]} ");
 	        }
 
-	        return $postArr [ array_search ( min ( $distances ) , $distances ) ] ;
+	        return $postArr[ array_search( min( $distances ) , $distances ) ];
 
         }
 

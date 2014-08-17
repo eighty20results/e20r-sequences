@@ -190,6 +190,8 @@ class PMProSeqRecentPost extends WP_Widget {
 					'ignore_sticky_posts' => true,
 				) );
 
+				dbgOut("Number of posts in {$sequence_id} is {$seq_post->found_posts}");
+
 				if ( $seq_post->found_posts > 0 ) {
 
 					while ( $seq_post->have_posts() ) : $seq_post->the_post();
@@ -204,7 +206,7 @@ class PMProSeqRecentPost extends WP_Widget {
 						<h3 class="widget-title"><?php echo $defaultTitle; ?></h3>
 					<?php } ?>
 						<div id="pmpro-seq-post-body" class="text-widget">
-							<p class="pmpro-seq-when">Available on <?php $this->print_available_date($sequence, $seqPostId); ?></p>
+							<!-- <p class="pmpro-seq-when">Available on <?php $this->print_available_date($sequence, $seqPostId); ?></p> -->
 							<p id="pmpro-seq-post-body-text"><?php
 								echo $image;
 								echo $this->limit_excerpt_words( get_the_excerpt(), $excerpt_length ); ?>

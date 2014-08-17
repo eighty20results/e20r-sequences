@@ -32,7 +32,7 @@ License:
 define('PMPRO_SEQUENCE_VERSION', '1.0');
 
 /* Enable / Disable DEBUG logging to separate file */
-define('PMPRO_SEQUENCE_DEBUG', false);
+define('PMPRO_SEQUENCE_DEBUG', true);
 
 /* Set the max number of email alerts to send in one go to one user */
 define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
