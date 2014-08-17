@@ -1873,7 +1873,7 @@
 
                 $delayDiff = ($delay - $memberDays);
 	            dbgOut('Delay: ' .$delay . ', memberDays: ' . $memberDays . ', delayDiff: ' . $delayDiff);
-                return date('Y-m-d', strtotime("+" . $delayDiff ." days"));
+                return strftime('%x', strtotime("+" . $delayDiff ." days"));
             }
 
             return $delay; // It's stored as a number, not a date
