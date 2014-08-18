@@ -819,8 +819,9 @@
 			$email->ptitle = $post->post_title;
 
 			$seqPost = $this->get_postDetails($post->ID);
+			dbgOut("sendEmail() Subject information: {$seqPost->delay} for {$post->ID}");
 
-			$email->subject = sprintf('%s: %s (%s)', $settings->subject, $post->post_title, $this->displayDelay($seqPost->delay));
+			$email->subject = sprintf('%s: %s (%s)', $settings->subject, $post->post_title, strftime("%x", current_time('timestamp', true) ));
 			// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
 
 			$email->template = $templ[0];
@@ -846,7 +847,7 @@
 				"today" => date($settings->dateformat, current_time('timestamp')),
 			);
 
-			dbgOut('sendEmail() - Array contains: ' . print_r($email->data, true));
+			// dbgOut('sendEmail() - Array contains: ' . print_r($email->data, true));
 
 			if(!empty($post->post_excerpt)) {
 
@@ -1887,12 +1888,15 @@
          */
         public function displayDelay( $delay ) {
 
+	        dbgOut("displayDelay() - {$this->options->showDelayAs} == " . PMPRO_SEQ_AS_DATE);
             if ( $this->options->showDelayAs == PMPRO_SEQ_AS_DATE) {
                 // Convert the delay to a date
+
                 $memberDays = round(pmpro_getMemberDays(), 0);
 
                 $delayDiff = ($delay - $memberDays);
-	            dbgOut('Delay: ' .$delay . ', memberDays: ' . $memberDays . ', delayDiff: ' . $delayDiff);
+	            dbgOut('displayDelay() - Delay: ' .$delay . ', memberDays: ' . $memberDays . ', delayDiff: ' . $delayDiff);
+
                 return strftime('%x', strtotime("+" . $delayDiff ." days"));
             }
 
