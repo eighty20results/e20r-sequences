@@ -751,15 +751,16 @@ function pmpro_sequence_addEntry() {
         },
         error: function($data){
             console.log("error() - Returned data: " + $data.success + " and " + $data.data);
-            console.log('Return value for error: ' + data.data);
+            console.dir($data);
 
-            if ( $data.data) {
+            if ( $data.data ) {
                 alert($data.data);
                 pmpro_seq_setErroMsg($data.data);
             }
         },
         success: function($data){
             console.log("success() - Returned data: " + $data.success);
+            console.dir($data);
 
             if ($data.data) {
                 console.log('Entry added to sequence & refreshing metabox content');
@@ -813,6 +814,8 @@ function pmpro_sequence_removeEntry(post_id)
         },
         error: function($data){
 
+            console.dir($data);
+
             if ($data.data != '') {
                 alert($data.data);
                 pmpro_seq_setErroMsg($data.data);
@@ -820,6 +823,8 @@ function pmpro_sequence_removeEntry(post_id)
 
         },
         success: function($data){
+
+            console.dir($data);
 
             if ($data.data) {
                 jQuery('#pmpro_sequence_posts').html( $data.data );
