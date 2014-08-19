@@ -251,8 +251,6 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
     {
 	    check_ajax_referer('pmpro-sequence-add-post', 'pmpro_sequence_addpost_nonce');
 
-	    $result = __('No data found', 'pmprosequence'); // Pre-declare
-
 	    // Fetch the ID of the sequence to add the post to
         $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null;
 
