@@ -632,24 +632,30 @@ function manageDelayLabels( $currentDelayType ) {
 
     console.log('In manageDelayLabels()');
 
+    var delayDlg = jQuery('#pmpro-seq-showdelayas');
+    var delayEdit = jQuery('#pmpro-seq-edit-showdelayas');
+
     if ($currentDelayType == 'byDays') {
-        jQuery('#pmpro-seq-showdelayas').show(); // Show
-        jQuery('#pmpro-seq-showdelayas').css('margin-top', '0px');
-        jQuery('#pmpro-seq-edit-showdelayas').show(); // Show
+        delayDlg.show(); // Show
+        delayDlg.css('margin-top', '0px');
+        delayEdit.show(); // Show
     }
     else {
-        jQuery('#pmpro-seq-showdelayas').hide(); // Hide
-        jQuery('#pmpro-seq-edit-showdelayas').hide(); // Hide
+        delayDlg.hide(); // Hide
+        delayEdit.hide(); // Hide
     }
 }
 
 function manageDelayEditCtrls( $currentDelayType ) {
     console.log('In manageDelayEditCtrls()');
 
+    var delayDlg = jQuery('#pmpro-seq-showdelayas');
+    var delayEdit = jQuery('#pmpro-seq-edit-showdelayas');
+
     if ($currentDelayType == 'byDays') {
-        jQuery('#pmpro-seq-edit-showdelayas').hide(); // Hide
-        jQuery('#pmpro-seq-showdelayas').show(); // Show
-        jQuery('#pmpro-seq-showdelayas').css('margin-top', '10px');
+        delayEdit.hide(); // Hide
+        delayDlg.show(); // Show
+        delayDlg.css('margin-top', '10px');
 
         setDelayEditBtns();
 
@@ -658,8 +664,8 @@ function manageDelayEditCtrls( $currentDelayType ) {
 
     if ($currentDelayType == 'byDate') {
         console.log('Showing select controls');
-        jQuery('#pmpro-seq-edit-showdelayas').show(); // Show
-        jQuery('#pmpro-seq-showdelayas').hide(); // Hide
+        delayEdit.show(); // Show
+        delayDlg.hide(); // Hide
 
         setDelayEditBtns();
 
@@ -743,21 +749,27 @@ function pmpro_sequence_addEntry() {
             pmpro_sequencedelay: jQuery('#pmpro_sequencedelay').val(),
             pmpro_sequence_addpost_nonce: jQuery('#pmpro_sequence_addpost_nonce').val()
         },
-        error: function(data){
+        error: function($data){
+            console.log("error() - Returned data: " + $data.success + " and " + $data.data);
+            console.log('Return value for error: ' + data.data);
 
-            console.log('Return value for error: ' + data.message);
-
-            if (data.message != null) {
-                alert(data.message);
-                pmpro_seq_setErroMsg(data.message);
+            if ( $data.data) {
+                alert($data.data);
+                pmpro_seq_setErroMsg($data.data);
             }
         },
-        success: function(data){
-            if (data.success)
-                jQuery('#pmpro_sequence_posts').html(data.html);
+        success: function($data){
+            console.log("success() - Returned data: " + $data.success);
+
+            if ($data.data) {
+                console.log('Entry added to sequence & refreshing metabox content');
+                jQuery('#pmpro_sequence_posts').html($data.data);
+            } else {
+                console.log('No HTML returned???');
+            }
 
         },
-        complete: function(){
+        complete: function($data) {
 
             // Re-enable save button
             saveBtn.html(pmpro_sequence.lang.save);
@@ -799,16 +811,20 @@ function pmpro_sequence_removeEntry(post_id)
             pmpro_seq_post: post_id,
             pmpro_sequence_rmpost_nonce: jQuery('#pmpro_sequence_rmpost_nonce').val()
         },
-        error: function(data){
-            if (data.message != null) {
-                alert(data.message);
-                pmpro_seq_setErroMsg(data.message);
+        error: function($data){
+
+            if ($data.data != '') {
+                alert($data.data);
+                pmpro_seq_setErroMsg($data.data);
             }
 
         },
-        success: function(data){
-            if (data.success)
-                jQuery('#pmpro_sequence_posts').html(data.html);
+        success: function($data){
+
+            if ($data.data) {
+                jQuery('#pmpro_sequence_posts').html( $data.data );
+            }
+
         },
         complete: function() {
             // Enable the Save button again.
@@ -823,11 +839,6 @@ function pmpro_sequence_delayTypeChange( sequence_id ) {
 
     var selected = dtCtl.val();
     var current = jQuery('input[name=pmpro_sequence_settings_hidden_delay]').val();
-
-//    console.log('Process changes to delayType option');
-//    console.log('Sequence # ' + sequence_id);
-//    console.log('delayType: ' + selected);
-//    console.log('Current: ' + current);
 
     if (dtCtl.val() != jQuery('#pmpro_sequence_settings_hidden_delay').val()) {
 
@@ -846,7 +857,6 @@ function pmpro_sequence_delayTypeChange( sequence_id ) {
             delayAsChoice( 'show' );
 
         console.log('Selected: ' + dtCtl.val());
-        // console.log('Current (hidden): ' + jQuery('input[name=pmpro_sequence_settings_hidden_delay]').val());
 
         jQuery.data('delayType', dtCtl.val() );
 
@@ -894,19 +904,19 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_subject: jQuery('#hidden_pmpro_seq_subject').val(),
             hidden_pmpro_seq_wipesequence: jQuery('#hidden_pmpro_seq_wipesequence').val()
         },
-        error: function(data){
-            if (data.message != null) {
-                alert(data.message);
-                pmpro_seq_setErroMsg(data.message);
+        error: function($data){
+            if ($data.data != '') {
+                alert($data.data);
+                pmpro_seq_setErroMsg($data.data);
             }
         },
-        success: function(data){
+        success: function($data){
 
             setLabels();
 
             // Refresh the sequence post list (include the new post.
-            if (data.html != '')
-                jQuery('#pmpro_sequence_posts').html(data.html);
+            if ($data.data != '')
+                jQuery('#pmpro_sequence_posts').html($data.data);
         },
         complete: function() {
 

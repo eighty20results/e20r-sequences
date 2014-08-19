@@ -1032,7 +1032,15 @@
 			if(empty($this->posts))
 			{
 	            dbgOut('No Posts found?');
-				$this->setError( __('No posts/pages found for this sequence', 'pmprosequence'));
+
+				$errTxt = __('No posts/pages found for this sequence', 'pmprosequence');
+
+				if ( $this->getError() !== null )
+					$errorMsg = $this->getError() . ' ' . __('and', 'pmprosequence') . ' ' . $errTxt;
+				else
+					$errorMsg = $errTxt;
+
+				$this->setError( $errorMsg );
 			?>
 			<?php
 			}
@@ -1042,9 +1050,9 @@
 				{
 				?>
 					<tr>
-						<td class="pmpro_sequence_tblNumber"><?php echo $count?>.</td>
-						<td class="pmpro_sequence_tblPostname"><?php echo get_the_title($post->id)?></td>
-						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay ?></td>
+						<td class="pmpro_sequence_tblNumber"><?php echo $count; ?>.</td>
+						<td class="pmpro_sequence_tblPostname"><?php echo get_the_title($post->id) . " (ID: {$post->id})"; ?></td>
+						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay; ?></td>
 						<td><a href="javascript:pmpro_sequence_editPost('<?php echo $post->id; ?>'); void(0); "><?php _e('Post','pmprosequence'); ?></a></td>
 						<td>
 							<a href="javascript:pmpro_sequence_editEntry('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);"><?php _e('Edit', 'pmprosequence'); ?></a>
@@ -1118,12 +1126,15 @@
 
 			$html = ob_get_clean();
 
+			( is_null( $this->getError() ) ?
+				dbgOut( "getPostListForMetaBox() - No error found, should return success" ) :
+				dbgOut( "getPostListForMetaBox() - Error: {$this->getError()}" ) );
+
 			return array(
-				'success' => ( is_null($this->getError()) ? true : false),
-				'message' => $this->getError(),
+				'success' => ( is_null($this->getError()) ? true : false ),
+				'message' => ( is_null($this->getError()) ? null : $this->getError() ),
 				'html' => $html,
 			);
-
 		}
 
 		/**
@@ -1955,12 +1966,17 @@
          */
         private function get_closestByDelay( $delayComp, $postArr ) {
 
+	        global $current_user;
+
 	        $distances = array();
 
 	        foreach ( $postArr as $key => $post )
 	        {
-		        $distances[ $key ] = abs( $delayComp - ( $this->normalizeDelay( $post->delay ) + 1 ) );
-		        // dbgOut("Distance Calc for {$post->id} is {$distances[$key]} ");
+		        // Only interested in posts we actually have access to.
+		        // TODO: Rather than look up one post at a time, should just compare against an array of posts we have access to.
+		        if ( pmpro_sequence_hasAccess( $current_user->ID, $post->id, true ) )
+		            $distances[ $key ] = abs( $delayComp - ( $this->normalizeDelay( $post->delay ) + 1 ) );
+
 	        }
 
 	        return $postArr[ array_search( min( $distances ) , $distances ) ];

@@ -175,9 +175,7 @@ if (! function_exists('pmpro_sequence_ajaxUnprivError')):
 	function pmpro_sequence_ajaxUnprivError() {
 
 		dbgOut('Unprivileged ajax call attempted');
-		wp_send_json( array(
-			'success' => false,
-			'html' => '',
+		wp_send_json_error( array(
 			'message' => __('You must be logged in to edit PMPro Sequences', 'pmprosequence')
 		));
 
@@ -281,13 +279,13 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 			    }
 			    else {
 
-				    dbgOut( 'add_post(): Delay specified as the number of days' );
+				    dbgOut( 'pmpro_sequence_add_post_callback(): Delay specified as the number of days' );
 				    $delay = intval( $_POST['pmpro_sequencedelay'] );
 			    }
 
 			    if ( current_user_can('edit_posts') && ! is_null($seq_post_id) ) {
 
-				    dbgOut('Adding post ' . $seq_post_id . ' to sequence ' . $sequence->sequence_id);
+				    dbgOut('pmpro_sequence_add_post_callback() - Adding post ' . $seq_post_id . ' to sequence ' . $sequence->sequence_id);
 				    $sequence->addPost($seq_post_id, $delay);
 				    $success = true;
 				    $sequence->setError( null );
@@ -337,15 +335,17 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 
 	    $result = $sequence->getPostListForMetaBox();
 
-	    if ( $result['success'] )
-		    wp_send_json( $result );
-	    else
-		    wp_send_json( array(
-				    'success' => $success,
-				    'message' => $sequence->getError(),
-				    'html' => null,
-			    )
-		    );
+	    // dbgOut("pmpro_sequence_add_post_callback() - Data added to sequence. Returning status to calling JS script: " . print_r($result, true));
+
+	    if ( $result['success'] && $success ) {
+		    dbgOut( 'pmpro_sequence_add_post_callback() - Returning success to javascript frontend' );
+
+		    wp_send_json_success( $result['html'] );
+	    }
+	    else {
+		    dbgOut( 'pmpro_sequence_add_post_callback() - Returning error to javascript frontend' );
+		    wp_send_json_error( $sequence->getError() );
+	    }
     }
 endif;
 
@@ -391,16 +391,11 @@ if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 		$result = $sequence->getPostListForMetaBox();
 
 		if ( is_null( $result['message'] ) && is_null( $sequence->getError() ) && ($success)) {
-			// dbgOut('In Ajax Routine: ' . print_r($result, true));
-			wp_send_json($result);
+			dbgOut('Returning success to calling javascript');
+			wp_send_json_success( $result['html'] );
 		}
 		else
-			wp_send_json( array(
-				'success' => $success,
-				'message' => ( ! is_null($sequence->getError() ) ? $sequence->getError() : $result['message']),
-				'html' => ( ! is_null($result['html']) ? $result['html'] : ''),
-			)
-		);
+			wp_send_json_error( ( ! is_null( $sequence->getError() ) ? $sequence->getError() : $result['message']) );
 
 	}
 
@@ -456,14 +451,9 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
 
 	    // Return the status to the calling web page
 	    if ( $result['success'] )
-	        wp_send_json( $result );
+	        wp_send_json_success( $result['html']  );
 	    else
-		    wp_send_json( array(
-				    'success' => $success,
-				    'message' => $sequence->getError(),
-				    'html' => null,
-			    )
-		    );
+		    wp_send_json_error( $sequence->getError() );
 
     }
 
@@ -509,8 +499,6 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
 	        check_ajax_referer('pmpro-sequence-user-optin', 'pmpro_sequence_optin_nonce');
 
-	        // dbgOut('optinsave(): ' . print_r( $_POST, true));
-
 	        if ( isset($_POST['hidden_pmpro_seq_uid'])) {
 
 		        $user_id = intval($_POST['hidden_pmpro_seq_uid']);
@@ -519,12 +507,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 	        else {
 		        dbgOut( 'No user ID specified. Ignoring settings!' );
 
-		        wp_send_json( array(
-				        'success' => false,
-				        'message' => __('Unable to save your settings', 'pmprosequence'),
-				        'result' => '',
-			        )
-		        );
+		        wp_send_json_error( __('Unable to save your settings', 'pmprosequence') );
 	        }
 
 	        if ( isset($_POST['hidden_pmpro_seq_id'])) {
@@ -535,12 +518,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
 		        dbgOut( 'No sequence number specified. Ignoring settings for user' );
 
-		        wp_send_json( array(
-			            'success' => false,
-				        'message' => __('Unable to save your settings', 'pmprosequence'),
-				        'result' => '',
-			        )
-		        );
+		        wp_send_json_error( __('Unable to save your settings', 'pmprosequence') );
 	        }
 
 	        $seq = new PMProSequence( $seqId );
@@ -601,12 +579,10 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 	        dbgOut('optin_save() - Exception error: ' . $e->getMessage());
         }
 
-	    wp_send_json( array(
-			    'success' => $status,
-			    'result' => $result,
-			    'message' => $seq->getError(),
-		    )
-	    );
+	    if ($status)
+		    wp_send_json_success();
+	    else
+	        wp_send_json_error( $seq->getError() );
 
     }
 endif;
@@ -684,13 +660,10 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
         }
 
 
-	    // header('Content-Type: application/json');
-	    wp_send_json( array(
-			    'success' => $status,
-			    'html' => $response['html'],
-			    'message' => $sequence->getError(),
-		    )
-	    );
+	    if ($status)
+		    wp_send_json_success( $response['html'] );
+	    else
+		    wp_send_json_error( $sequence->getError() );
 
     }
 

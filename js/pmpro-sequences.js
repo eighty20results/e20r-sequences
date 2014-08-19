@@ -30,13 +30,10 @@
  */
 function pmpro_sequence_optinSelect( sequence_id, user_id ) {
 
-    /* Show/Hide save button & store state of current user opt-in setting */
-    jQuery('#hidden_pmpro_seq_useroptin').val( jQuery('#pmpro_sequence_useroptin').is(':checked') ? 1 : 0 );
+    var hiddenOptin = jQuery('#hidden_pmpro_seq_useroptin');
 
-    /*
-    console.log('User modified their opt-in. Saving... Was: ' + userNotice + ' now: ' + ( jQuery('#pmpro_sequence_useroptin').is(':checked') ? 1 : 0)
-    + ' this: ' + jQuery('#pmpro_sequence_useroptin').is(':checked') );
-    */
+    /* Show/Hide save button & store state of current user opt-in setting */
+    hiddenOptin.val( jQuery('#pmpro_sequence_useroptin').is(':checked') ? 1 : 0 );
 
     // Enable the spinner during the save operation
     jQuery('div .seq_spinner').show();
@@ -50,23 +47,18 @@ function pmpro_sequence_optinSelect( sequence_id, user_id ) {
         data: {
             action: 'pmpro_sequence_save_user_optin',
             hidden_pmpro_seq_id: jQuery('#hidden_pmpro_seq_id').val(),
-            hidden_pmpro_seq_useroptin: jQuery('#hidden_pmpro_seq_useroptin').val(),
+            hidden_pmpro_seq_useroptin: hiddenOptin.val(),
             hidden_pmpro_seq_uid: jQuery('#hidden_pmpro_seq_uid').val(),
             pmpro_sequence_optin_nonce: jQuery('#pmpro_sequence_optin_nonce').val()
         },
         error: function(data)
         {
-            if ( ! data.success )
-                alert(data.error);
+            alert(data.data);
 
         },
-        success: function(data) {
-            if ( ! data.success )
-                alert(data.error);
-        },
-        complete: function(data) {
+        complete: function() {
 
-            var doCheck = (jQuery('#hidden_pmpro_seq_useroptin').val() == 1 ? true : false);
+            var doCheck = (hiddenOptin.val() == 1 ? true : false);
             jQuery('#pmpro_sequence_useroptin').prop('checked', doCheck);
 
             jQuery('div .seq_spinner').hide();
