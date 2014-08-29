@@ -934,14 +934,31 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
         //is this post in a sequence
         $post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
-        if (empty($post_sequence))
+        // If the post isn't published there's no need to give access to it.
+        $status = get_post_status($post_id);
+
+        if ( ( $status != 'publish' ) ||
+             ( $status != 'private' ) ) {
+
+            dbgOut("hasAccess() - Post hasn't been published yet!");
+            return false;
+        }
+
+
+        if (empty($post_sequence)) {
+
             return true; //not in a sequence
+        }
 
         // Does the current user have a membership level giving them access to everything?
         $all_access_levels = apply_filters("pmproap_all_access_levels", array(), $user_id, $post_id);
 
-        if (!empty($all_access_levels) && pmpro_hasMembershipLevel($all_access_levels, $user_id))
+        if (!empty($all_access_levels) && pmpro_hasMembershipLevel($all_access_levels, $user_id)) {
+
+            dbgOut("hasAccess() - This user has one of the all access membership levels");
             return true; //user has one of the all access levels
+        }
+
 
         // Iterate through all sequences that the $post_id is included in
         foreach ($post_sequence as $sequence_id) {
@@ -951,6 +968,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 	        $results = pmpro_has_membership_access($sequence_id, $user_id, true); //Using true to return all level IDs that have access to the sequence
 
 	        if ($results[0] === false) { // First item in results array == true if user has access
+
 		        dbgOut( 'hasAccess() - User ' . $user_id . ' does NOT have access to post ' . $post_id . ' in sequence ' . $sequence_id );
 		        continue;
             }
@@ -968,7 +986,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
             }
 
             // Check if the post exists in the list of posts for the current sequence & return its details if true
-            if ( ($sp = $sequence->get_postDetails($post_id)) !== null) {
+            if ( ( $sp = $sequence->get_postDetails( $post_id ) ) !== null ) {
 
 	            dbgOut( 'hasAccess() - Found post ' . $post_id . " in sequence " . $sequence->sequence_id );
 

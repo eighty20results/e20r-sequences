@@ -1827,7 +1827,7 @@
 		    // for compatibility
 		    if ( empty($this->options->previewOffset) ) {
 			    // TODO: Figure out why this always runs/get set...
-			    dbgOut("isPastDelay() - the previewOffset value doesn't exist yet. Fixing it now");
+			    dbgOut("isPastDelay() - the previewOffset value doesn't exist yet {$this->options->previewOffset}. Fixing now.");
 			    $this->options->previewOffset = 0;
 			    $this->save_sequence_meta(); // Save the settings (only the first when this variable is empty)
 
