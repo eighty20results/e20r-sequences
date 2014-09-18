@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sequence
 Plugin URI: http://www.eighty20results.com/pmpro-sequence/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 1.0.1
+Version: 1.1
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
@@ -29,7 +29,7 @@ License:
 
 
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '1.0.1');
+define('PMPRO_SEQUENCE_VERSION', '1.1');
 
 /* Enable / Disable DEBUG logging to separate file */
 define('PMPRO_SEQUENCE_DEBUG', false);
@@ -934,22 +934,22 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
         //is this post in a sequence
         $post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
-        // If the post isn't published there's no need to give access to it.
-        $status = get_post_status($post_id);
-
-        if ( ( $status != 'publish' ) ||
-             ( $status != 'private' ) ) {
-
-            dbgOut("hasAccess() - Post hasn't been published yet!");
-            return false;
-        }
-
 
         if (empty($post_sequence)) {
 
             return true; //not in a sequence
         }
 
+        // If the post isn't published there's no need to give access to it.
+        $status = get_post_status($post_id);
+/*
+        if ( ( $status != 'publish' ) ||
+             ( $status != 'private' ) ) {
+
+            dbgOut("hasAccess() - Post hasn't been published yet!");
+            return false;
+        }
+*/
         // Does the current user have a membership level giving them access to everything?
         $all_access_levels = apply_filters("pmproap_all_access_levels", array(), $user_id, $post_id);
 
@@ -1039,7 +1039,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
             } // EndIF
         } // End of foreach
 
-        dbgOut("hasAccess() - User does NOT have access to post " . $post_id);
+        dbgOut("hasAccess() - User does NOT have access to post {$post_id} in sequence {$sequence_id}" );
 
         // Haven't found anything yet, so must not have access.
         return false;
@@ -1067,14 +1067,19 @@ add_filter("pmpro_has_membership_access_filter", "pmpro_sequence_has_membership_
      */
     function pmpro_sequence_has_membership_access_filter($hasaccess, $mypost, $myuser, $post_membership_levels)
     {
+        dbgOut("Running membership_access_filter");
+
         //If the user doesn't have access already, we won't change that. So only check if they already have access.
         if($hasaccess)
         {
+
             //okay check if the user has access
-            if(pmpro_sequence_hasAccess($myuser->ID, $mypost->ID))
+            if(pmpro_sequence_hasAccess($myuser->ID, $mypost->ID)) {
                 $hasaccess = true;
-            else
+            }
+            else {
                 $hasaccess = false;
+            }
         }
 
         return $hasaccess;
@@ -1097,6 +1102,8 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
     {
         global $current_user, $post;
 
+        dbgOut("Running text_filter");
+
         if(!empty($current_user) && !empty($post))
         {
             if(!pmpro_sequence_hasAccess($current_user->ID, $post->ID))
@@ -1104,16 +1111,16 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
 	            $post_sequence = get_post_meta($post->ID, "_post_sequences", true);
 
                 //Update text. The user either will have to wait or sign up.
-
                 $insequence = false;
 
                 foreach($post_sequence as $ps)
                 {
                     if(pmpro_has_membership_access($ps))
                     {
+                        dbgOut("User may have access to: {$ps} ");
                         $insequence = $ps;
-	                    $delay = $ps->delay;
-	                    $sequence = new PMProSequence($ps->ID);
+	                    $sequence = new PMProSequence($ps);
+                        $delay = $sequence->getDelayForPost($post->ID);
 	                    break;
                     }
                 }
@@ -1121,14 +1128,29 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
                 if($insequence)
                 {
                     //user has one of the sequence levels, find out which one and tell him how many days left
-	                $text = sprintf("%s<br/>", sprintf( __("This content managed as part of the <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($post->ID), get_the_title($post->ID)) );
+	                $text = sprintf("%s<br/>", sprintf( __("This content managed as part of the <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($ps), get_the_title($ps)) );
 
 	                switch ($sequence->options->delayType) {
-		                case 'byDays':
-							$text .= printf( __('You will get access to %1$s on day %2$s of your membership', 'pmprosequence'), get_the_title($post->ID), $sequence->displayDelay( $delay ) );
-			                break;
+
+                        case 'byDays':
+
+                            switch ( $sequence->options->showDelayAs ) {
+
+                                case PMPRO_SEQ_AS_DAYNO:
+
+                                    $text .= sprintf( __( 'You will get access to this content ("%s") on day %s of your membership', 'pmprosequence' ), get_the_title( $post->ID ), $sequence->displayDelay( $delay ) );
+                                    break;
+
+                                case PMPRO_SEQ_AS_DATE:
+
+                                    $text .= sprintf( __( 'You will get access to this content ("%s") on %s', 'pmprosequence' ), get_the_title( $post->ID ), $sequence->displayDelay( $delay ) );
+                                    break;
+                            }
+
+                            break;
+
 		                case 'byDate':
-			                $text .= printf( __('You will get access to %1$s on %2$s', 'pmprosequence'), get_the_title($post->ID), $delay );
+			                $text .= sprintf( __('You will get access to this content ("%s") on %s', 'pmprosequence'), get_the_title($post->ID), $delay );
 			                break;
 		                default:
 
@@ -1663,7 +1685,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 					<div id="pmpro-seq-post-list">
 					<table class="pmpro_sequence_postscroll pmpro_seq_linklist">
 				<?php else: ?>
-					<table class="pmpro_sequence_postscroll pmpro_seq_linklist">
+					<table class="pmpro_seq_linklist">
 				<?php endif; ?>
 
 			<?php
