@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sequence
 Plugin URI: http://www.eighty20results.com/pmpro-sequence/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 1.1
+Version: 1.2
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
@@ -29,7 +29,7 @@ License:
 
 
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '1.1');
+define('PMPRO_SEQUENCE_VERSION', '1.2');
 
 /* Enable / Disable DEBUG logging to separate file */
 define('PMPRO_SEQUENCE_DEBUG', false);
