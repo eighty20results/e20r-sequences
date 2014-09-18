@@ -2055,7 +2055,7 @@
          *
          * @access private
          */
-        private function getDelayForPost($post_id)
+        public function getDelayForPost($post_id)
 		{
 			$key = $this->getPostKey($post_id);
 
