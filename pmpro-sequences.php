@@ -1637,8 +1637,10 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 			$sequence_posts = $sequence->getPosts();
 			$memberDayCount = pmpro_sequence_getMemberDays();
 
-			if ( ! pmpro_sequence_hasAccess($current_user->user_id, $s->ID) ) {
-				dbgOut('No access to sequence ' . $s->ID . ' for user ' . $current_user->user_id);
+            dbgOut("Number of posts in sequence: " . count($sequence_posts) . " number of days as member: " . $memberDayCount);
+
+			if ( ! pmpro_sequence_hasAccess($current_user->ID, $s->ID) ) {
+				dbgOut('No access to sequence ' . $s->ID . ' for user ' . $current_user->ID);
 				continue;
 			}
 
@@ -1646,7 +1648,10 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 
 			// Generate a list of posts for the sequence (used in WP_Query object)
 			foreach($sequence_posts as $sequence_post) {
-				$post_list[] = $sequence_post->id;
+
+                if ( pmpro_sequence_HasAccess( $current_user->ID, $sequence_post->id ) ) {
+                    $post_list[] = $sequence_post->id;
+                }
 			}
 
 			/* Get the ID of the post in the sequence who's delay is the closest
