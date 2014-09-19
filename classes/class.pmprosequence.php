@@ -1975,7 +1975,7 @@
 		        // Only interested in posts we actually have access to.
 		        // TODO: Rather than look up one post at a time, should just compare against an array of posts we have access to.
 		        if ( pmpro_sequence_hasAccess( $current_user->ID, $post->id, true ) )
-		            $distances[ $key ] = abs( $delayComp - ( $this->normalizeDelay( $post->delay ) + 1 ) );
+		            $distances[ $key ] = abs( $delayComp - ( $this->normalizeDelay( $post->delay ) /* + 1 */) );
 
 	        }
 
