@@ -616,7 +616,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 
                 if ( ($status = pmpro_sequence_settings_save($sequence_id, $sequence)) === true) {
 
-	                if ( isset($_POST['hidden_pmpro_seq_wipesequence'])) {
+                    if ( isset($_POST['hidden_pmpro_seq_wipesequence'])) {
 
 		                if (intval($_POST['hidden_pmpro_seq_wipesequence']) == 1) {
 
@@ -768,7 +768,13 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 		if ( isset($_POST['hidden_pmpro_seq_sendnotice']) )
 		{
 			$sequenceObj->options->sendNotice = intval($_POST['hidden_pmpro_seq_sendnotice']);
-			dbgOut('pmpro_sequence_settings_save(): POST value for settings->sendNotice: ' . intval($_POST['hidden_pmpro_seq_sendnotice']) );
+
+            if ( $sequenceObj->options->sendNotice == 0 ) {
+
+                $sequenceObj->stopSendingNotices();
+            }
+
+            dbgOut('pmpro_sequence_settings_save(): POST value for settings->sendNotice: ' . intval($_POST['hidden_pmpro_seq_sendnotice']) );
 		}
 		elseif (empty($sequenceObj->options->sendNotice)) {
 			$sequenceObj->options->sendNotice = 1;

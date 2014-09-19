@@ -2187,4 +2187,11 @@
 	        // Descending Sort Order
 	        return ($aDelay > $bDelay) ? -1 : +1;
 	    }
+
+        public function stopSendingNotices() {
+
+            dbgOut("Removing alert notice hook for sequence # " . $this->sequence_id );
+
+            wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook', array( $this->sequence_id ) );
+        }
 	}
