@@ -27,7 +27,7 @@ class PMProSeqRecentPost extends WP_Widget {
 			'Sequence: Currently available Post/Page',
 			array(
 				'description' =>
-					__('Display a summary of the most recently available sequence post (or page) for the currently logged-in user.')
+					__('Display a summary of the most recently available sequence post (or page) for the currently logged-in user.', 'pmprosequence')
 			)
 		);
 	}

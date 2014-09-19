@@ -1012,7 +1012,7 @@
 			<?php //} ?>
 			<table id="pmpro_sequencetable" class="pmpro_sequence_postscroll wp-list-table widefat fixed">
 			<thead>
-				<th><?php _e('Order'); ?></label></th>
+				<th><?php _e('Order', 'pmprosequence' ); ?></label></th>
 				<th width="50%"><?php _e('Title', 'pmprosequence'); ?></th>
 				<?php if ($this->options->delayType == 'byDays'): ?>
 	                <th id="pmpro_sequence_delaylabel"><?php _e('Delay', 'pmprosequence'); ?></th>
@@ -1462,7 +1462,7 @@
 						            <label for="pmpro_seq_send"><?php _e('Manually process alerts', 'pmprosequence'); ?></label>
 						            <a href="#sendalerts" class="pmpro-seq-settings-send pmpro-seq-edit" id="pmpro_seq_send" onclick="pmpro_sequence_sendAlertNotice(<?php echo $sequence->sequence_id;?>); return false;">
 						                <span aria-hidden="true"><?php _e('Send', 'pmprosequence'); ?></span>
-						                <span class="screen-reader-text"><?php _e('Manually issue command to process alert notices for the current sequence'); ?></span>
+						                <span class="screen-reader-text"><?php _e('Manually issue command to process alert notices for the current sequence', 'pmprosequence'); ?></span>
 						            </a>
 						            <?php wp_nonce_field('pmpro-sequence-sendalert', 'pmpro_sequence_sendalert_nonce'); ?>
 					            </div>
@@ -1485,12 +1485,12 @@
 							            </a>
 						            </div>
 						            <div id="pmpro-seq-email-input" class="pmpro-sequence-hidden">
-							            <input type="hidden" name="hidden_pmpro_seq_replyto" id="hidden_pmpro_seq_replyto" value="<?php _e(($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email"))); ?>" />
+							            <input type="hidden" name="hidden_pmpro_seq_replyto" id="hidden_pmpro_seq_replyto" value="<?php echo ($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email") ); ?>" />
 							            <label for="pmpro_sequence_replyto"></label>
-							            <input type="text" name="pmpro_sequence_replyto" id="pmpro_sequence_replyto" value="<?php _e(($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email")));; ?>"/>
-							            <input type="hidden" name="hidden_pmpro_seq_fromname" id="hidden_pmpro_seq_fromname" value="<?php _e(($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name"))); ?>" />
+							            <input type="text" name="pmpro_sequence_replyto" id="pmpro_sequence_replyto" value="<?php _echo ($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email")); ?>"/>
+							            <input type="hidden" name="hidden_pmpro_seq_fromname" id="hidden_pmpro_seq_fromname" value="<?php echo ($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name")); ?>" />
 							            <label for="pmpro_sequence_fromname"></label>
-							            <input type="text" name="pmpro_sequence_fromname" id="pmpro_sequence_fromname" value="<?php _e(($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name")));; ?>"/>
+							            <input type="text" name="pmpro_sequence_fromname" id="pmpro_sequence_fromname" value="<?php echo ($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name") ); ?>"/>
 							            <p class="pmpro-seq-btns">
 								            <a href="#pmproseq_email" id="ok-pmpro-seq-email" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
 								            <a href="#pmproseq_email" id="cancel-pmpro-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
@@ -1501,7 +1501,7 @@
 					            <div class="pmpro-sequence-hidden pmpro-sequence-template">
 						            <hr width="60%"/>
 						            <label class="pmpro-sequence-label" for="pmpro-seq-template"><?php _e('Template:', 'pmprosequence'); ?> </label>
-						            <span id="pmpro-seq-template-status" class="pmpro-sequence-status"><?php _e( esc_attr( $settings->noticeTemplate ) ); ?></span>
+						            <span id="pmpro-seq-template-status" class="pmpro-sequence-status"><?php echo esc_attr( $settings->noticeTemplate ); ?></span>
 						            <a href="#pmpro-seq-template" id="pmpro-seq-edit-template" class="pmpro-seq-edit">
 							            <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
 							            <span class="screen-reader-text"><?php _e('Select the template to use when posting new content in this sequence', 'pmprosequence'); ?></span>
@@ -1525,7 +1525,7 @@
 			            <td colspan="2">
 				            <div class="pmpro-sequence-hidden pmpro-sequence-noticetime">
 					            <label class="pmpro-sequence-label" for="pmpro-seq-noticetime"><?php _e('When:', 'pmprosequence'); ?> </label>
-					            <span id="pmpro-seq-noticetime-status" class="pmpro-sequence-status"><?php _e(esc_attr($settings->noticeTime)); ?></span>
+					            <span id="pmpro-seq-noticetime-status" class="pmpro-sequence-status"><?php echo esc_attr($settings->noticeTime); ?></span>
 					            <a href="#pmpro-seq-noticetime" id="pmpro-seq-edit-noticetime" class="pmpro-seq-edit">
 						            <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
 						            <span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence', 'pmprosequence'); ?></span>
@@ -1615,7 +1615,7 @@
 		            <!-- TODO: Enable and implement
 	                <tr id="pmpro_sequence_foreshadow" style="display: none;">
 	                    <td colspan="2">
-	                        <label class="screen-reader-text" for="pmpro_sequence_previewwindow"><? _e('Days to preview'); ?></label>
+	                        <label class="screen-reader-text" for="pmpro_sequence_previewwindow"><? _e('Days to preview', 'pmprosequence'); ?></label>
 	                    </td>
 	                </tr>
 	                <tr id="pmpro_sequence_foreshadow_2" style="display: none;" id="pmpro_sequence_previewWindowOpt">

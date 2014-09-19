@@ -161,9 +161,18 @@ if (! function_exists('pmpro_sequence_load_textdomain')):
 
 	function pmpro_sequence_load_textdomain() {
 
-		$locale = apply_filters("plugin_locale", get_locale(), "pmprosequence");
-		load_textdomain("pmprosequence", trailingslashit( WP_LANG_DIR ) . basename( __DIR__) . DIRECTORY_SEPARATOR . "languages" .DIRECTORY_SEPARATOR . $locale . ".mo");
-		load_plugin_textdomain("pmprosequence", FALSE, dirname(__FILE__) . "languages" . DIRECTORY_SEPARATOR);
+        $domain = "pmprosequence";
+
+		$locale = apply_filters( "plugin_locale", get_locale(), $domain );
+
+        $mofile = "{$domain}-{$locale}.mo";
+
+        $mofile_local = dirname( __FILE__ ) . "/languages/" . $mofile;
+        $mofile_global = WP_LANG_DIR . "/pmpro_sequence/" . $mofile;
+
+		load_textdomain( $domain, $mofile_global );
+
+		load_plugin_textdomain( $domain, FALSE, plugin_basename(__FILE__) . "/languages/" );
 	}
 
 endif;
@@ -300,7 +309,7 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 			    $expectedDelay = ( $sequence->options->delayType == 'byDate' ) ? __('date: YYYY-MM-DD', 'pmprosequence') : __('number: Days since membership started', 'pmprosequence');
 
 			    dbgOut( 'pmpro_sequence_add_post_callback(): Invalid delay value specified, not adding the post: ' . $_POST['pmpro_sequencedelay'] );
-			    $sequence->setError( sprintf( __( 'Invalid delay specified (%1$s). Expected format is a %2$s', 'pmprosequence'), esc_attr($_POST['pmpro_sequencedelay']), $expectedDelay ) );
+			    $sequence->setError( sprintf( __( 'Invalid delay specified (%s). Expected format is a %s', 'pmprosequence'), esc_attr($_POST['pmpro_sequencedelay']), $expectedDelay ) );
 
 			    $delay       = null;
 			    $seq_post_id = null;
@@ -567,12 +576,12 @@ if (! function_exists('pmpro_sequence_optin_callback')):
             else {
 
                 dbgOut('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID);
-	            $seq->setError( __('Unable to save your settings'));
+	            $seq->setError( __( 'Unable to save your settings', 'pmprosequence' ) );
 	            $status = false;
             }
         }
         catch (Exception $e) {
-	        $seq->setError( __( sprintf('Error: %s'), $e->getMessage()) );
+	        $seq->setError( sprintf( __('Error: %s', 'pmprosequence' ), $e->getMessage() ) );
 	        $status = false;
 	        dbgOut('optin_save() - Exception error: ' . $e->getMessage());
         }
@@ -1779,7 +1788,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 											<?php echo get_the_title();?>
 										</span>
 										<span class="pmpro_sequence_item-unavailable">
-											<?php echo sprintf( __('available on %s'),
+											<?php echo sprintf( __('available on %s', 'pmprosequence' ),
 												($sequence->options->delayType == 'byDays' &&
 												 $sequence->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ?
 													__('day', 'pmprosequence') : ''); ?>
@@ -1796,7 +1805,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 										<?php dbgOut("Show upcoming post #: {$id}"); ?>
 										<span class="pmpro_sequence_item-title"><?php echo get_the_title();?></span>
 										<span class="pmpro_sequence_item-unavailable">
-											<?php echo sprintf( __('available on %s'),
+											<?php echo sprintf( __( 'available on %s', 'pmprosequence' ),
 												($sequence->options->delayType == 'byDays' &&
 												 $sequence->options->showDelayAs == PMPRO_SEQ_AS_DAYNO) ?
 													__('day', 'pmprosequence') : ''); ?>
