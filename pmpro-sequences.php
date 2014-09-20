@@ -1559,8 +1559,10 @@ if ( ! function_exists('pmpro_sequence_links_shortcode')):
 
 	    if ( pmpro_sequence_hasAccess( $current_user->ID, $id, false ) )
             return pmpro_sequence_createSequenceList( $id, $highlight, $pagesize, $button, $title, $scrollbox);
-	    else
-		    return '';
+	    else {
+
+            return ''; // TODO: Add warning message that user isn't allowed to display content for this post.
+        }
     }
 endif;
 
@@ -1694,12 +1696,15 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 			$noPostsDisplayed = true;
 
 			ob_start();
-
 			?>
 
 			<!-- Preface the table of links with the title of the sequence -->
 			<div id="pmpro_sequence-<?php echo $sequence->sequence_id; ?>" class="pmpro_sequence_list">
-				<?php echo apply_filters('pmpro_seq_list_title', $title); ?>
+
+            <!-- Add opt-in to the top of the shortcode display. -->
+            <?php echo $sequence->pmpro_sequence_addUserNoticeOptIn(); ?>
+
+            <?php echo apply_filters('pmpro_seq_list_title', $title); ?>
 				<!-- List of sequence entries (paginated as needed) -->
 				<?php if ($scrollbox): ?>
 					<div id="pmpro-seq-post-list">
