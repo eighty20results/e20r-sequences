@@ -1478,7 +1478,7 @@
 						            </div>
 						            <div class="pmpro-sequence-fromname">
 							            <label for="pmpro-seq-fromname"><?php _e('Name:', 'pmprosequence'); ?> </label>
-							            <span id="pmpro-seq-fromname-status" class="pmpro-sequence-status"><?php _e( ($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name")) ); ?></span>
+							            <span id="pmpro-seq-fromname-status" class="pmpro-sequence-status"><?php echo ($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name") ); ?></span>
 							            <a href="#pmpro-seq-fromname" id="pmpro-seq-edit-fromname" class="pmpro-seq-edit">
 								            <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
 								            <span class="screen-reader-text"><?php _e('Enter the name to use for the sender of the alert', 'pmprosequence'); ?></span>
@@ -1487,7 +1487,7 @@
 						            <div id="pmpro-seq-email-input" class="pmpro-sequence-hidden">
 							            <input type="hidden" name="hidden_pmpro_seq_replyto" id="hidden_pmpro_seq_replyto" value="<?php echo ($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email") ); ?>" />
 							            <label for="pmpro_sequence_replyto"></label>
-							            <input type="text" name="pmpro_sequence_replyto" id="pmpro_sequence_replyto" value="<?php _echo ($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email")); ?>"/>
+							            <input type="text" name="pmpro_sequence_replyto" id="pmpro_sequence_replyto" value="<?php echo ($settings->replyto != '' ? esc_attr($settings->replyto) : pmpro_getOption("from_email")); ?>"/>
 							            <input type="hidden" name="hidden_pmpro_seq_fromname" id="hidden_pmpro_seq_fromname" value="<?php echo ($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name")); ?>" />
 							            <label for="pmpro_sequence_fromname"></label>
 							            <input type="text" name="pmpro_sequence_fromname" id="pmpro_sequence_fromname" value="<?php echo ($settings->fromname != '' ? esc_attr($settings->fromname) : pmpro_getOption("from_name") ); ?>"/>
