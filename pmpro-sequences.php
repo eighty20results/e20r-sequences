@@ -1561,7 +1561,7 @@ if ( ! function_exists('pmpro_sequence_links_shortcode')):
             return pmpro_sequence_createSequenceList( $id, $highlight, $pagesize, $button, $title, $scrollbox);
 	    else {
 
-            return ''; // TODO: Add warning message that there is no content to display for this sequence
+            return '';
         }
     }
 endif;
