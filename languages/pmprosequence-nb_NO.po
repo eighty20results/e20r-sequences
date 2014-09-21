@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PMPro Sequence\n"
-"POT-Creation-Date: 2014-09-19 13:19-0500\n"
-"PO-Revision-Date: 2014-09-19 13:20-0500\n"
+"POT-Creation-Date: 2014-09-21 07:37-0500\n"
+"PO-Revision-Date: 2014-09-21 07:38-0500\n"
 "Last-Translator: Thomas Sjolshagen <thomas@eighty20results.com>\n"
 "Language-Team: \n"
 "Language: nb_NO\n"
@@ -504,40 +504,40 @@ msgstr ""
 msgid "Sequence starts"
 msgstr "Sekvensen begynner"
 
-#: excluded/class.PMProSequenceShortcode.php:117 pmpro-sequences.php:1875
+#: excluded/class.PMProSequenceShortcode.php:117 pmpro-sequences.php:1894
 msgid "Link Navigation"
 msgstr "Navigasjon"
 
-#: excluded/class.PMProSequenceShortcode.php:124 pmpro-sequences.php:1882
+#: excluded/class.PMProSequenceShortcode.php:124 pmpro-sequences.php:1901
 #, php-format
 msgid "%s Previous"
 msgstr "%s Forrige Side"
 
-#: excluded/class.PMProSequenceShortcode.php:125 pmpro-sequences.php:1883
+#: excluded/class.PMProSequenceShortcode.php:125 pmpro-sequences.php:1902
 #, php-format
 msgid "Next %s"
 msgstr "Neste %s"
 
-#: excluded/class.PMProSequenceShortcode.php:128 pmpro-sequences.php:1886
+#: excluded/class.PMProSequenceShortcode.php:128 pmpro-sequences.php:1905
 msgid "Page"
 msgstr "Side"
 
 #: excluded/class.PMProSequenceShortcode.php:294
-#: excluded/class.PMProSequenceShortcode.php:307 pmpro-sequences.php:1754
-#: pmpro-sequences.php:1767
+#: excluded/class.PMProSequenceShortcode.php:307 pmpro-sequences.php:1769
+#: pmpro-sequences.php:1785
 msgid "Available Now"
 msgstr "Tilgjengelig"
 
 #: excluded/class.PMProSequenceShortcode.php:331
-#: excluded/class.PMProSequenceShortcode.php:348 pmpro-sequences.php:1791
-#: pmpro-sequences.php:1808
+#: excluded/class.PMProSequenceShortcode.php:348 pmpro-sequences.php:1810
+#: pmpro-sequences.php:1828
 #, php-format
 msgid "available on %s"
 msgstr "tilgjengelig den %s"
 
 #: excluded/class.PMProSequenceShortcode.php:334
-#: excluded/class.PMProSequenceShortcode.php:351 pmpro-sequences.php:1794
-#: pmpro-sequences.php:1811
+#: excluded/class.PMProSequenceShortcode.php:351 pmpro-sequences.php:1813
+#: pmpro-sequences.php:1831
 msgid "day"
 msgstr "dag"
 
@@ -711,6 +711,10 @@ msgstr "Denne artikkelen hører med til <a href='%s'>%s</a> sekvensen"
 #: pmpro-sequences.php:1184
 msgid "This content is part of the following sequences: "
 msgstr "Denne artikkelen hører med til følgende sekvenser"
+
+#: pmpro-sequences.php:1713
+msgid "There is no content available at this time"
+msgstr "Ingen tilgjengelige artikler"
 
 #~ msgid "No data found"
 #~ msgstr "Fant ikke informasjon"
