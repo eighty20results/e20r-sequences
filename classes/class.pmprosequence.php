@@ -85,7 +85,6 @@
 		}
 
 	    /**
-	     *
 	     * Fetch any options for this specific sequence from the database (stored as post metadata)
 	     * Use default options if the sequence ID isn't supplied*
 	     *
@@ -123,8 +122,6 @@
 
 	        return $options;
 	    }
-
-	    //populate sequence data by post id passed
 
 	    /**
          *
@@ -607,13 +604,21 @@
 	     */
 	    public function isValidDate( $data )
 	    {
-		    // TODO: This - isValidDate() needs to support all expected date formats...
-	        if ( preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $data) ) {
-		        dbgOut('Date value is correctly formatted');
-		        return true;
-	        }
+		    // Fixed: isValidDate() needs to support all expected date formats...
+            if ( false === strtotime( $data ) ) {
 
-	        return false;
+                dbgOut(" Incorrectly formatted date");
+                return false;
+            }
+
+            dbgOut('Date value is correctly formatted');
+            return true;
+
+            /*
+                        if ( preg_match("/^[0-9]{4}-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])$/", $data) ) {
+                            return true;
+                        }
+            */
 	    }
 
         /**
@@ -670,6 +675,11 @@
 			return false;
 		}
 
+        /**
+         * Test whether a post belongs to a sequence & return the Post ID if so
+         * @param $post_id
+         * @return null
+         */
         public function get_postDetails( $post_id ) {
 
             if ( $this->hasPost($post_id) !== false ) {
@@ -787,7 +797,6 @@
 		}
 
 		/**
-		 *
 		 * Send email to userID about access to new post.
 		 *
 		 * @param $post_id -- ID of post to send email about
@@ -941,9 +950,66 @@
 
 				add_action('admin_menu', array("PMProSequence", "defineMetaBoxes"));
 	            add_action('save_post', array('PMProSequence', 'pmpro_sequence_meta_save'), 10, 2);
+
+                /* Fire our meta box setup function on the post editor screen. */
+                add_action( 'load-post.php', array( &$this, 'pmpro_sequence_post_metabox_setup' ) );
+                add_action( 'load-post-new.php', array( &$this, 'pmpro_sequence_post_metabox_setup' ) );
 			}
 		}
 
+        /**
+         * Configure metabox for the normal Post/Page editor
+         */
+        public function pmpro_sequence_post_metabox_setup() {
+
+            /* Add meta boxes on the 'add_meta_boxes' hook. */
+            add_action( 'add_meta_boxes', array( &$this, 'pmpro_sequence_post_metabox' ) );
+
+            /* TODO: Add save action for the metabox data */
+            add_action( 'save_post', array( &$this, 'pmpro_sequence_post_save' ), 10, 2 );
+        }
+
+        public function pmpro_sequence_post_metabox( $object, $box ) {
+
+            $metabox = '';
+
+            global $post;
+
+            $sequence_post_id = $post->ID;
+
+            $query = array(
+                'post_type' => 'pmpro_sequence',
+                'post_status' => 'any',
+            );
+
+            /* Fetch all Sequence posts */
+            $sequence_list = get_posts( $query );
+
+            $belongs_to = get_post_meta( $post->ID, "_post_sequences", true );
+
+            dbgOut("Post belongs to: " . print_r( $belongs_to, true ) );
+
+            ob_start();
+            ?>
+            <div id="pmpro-seq-postmeta">
+
+                <select id="select-memberof-sequences" multiple>
+                <option value="0">Not in a sequence</option>";
+                <?php
+                // Loop through all of the sequences & create an option list
+                foreach ( $sequence_list as $sequence ) {
+
+                }
+
+                ?>
+                </select>
+            </div>
+            <?php
+
+            $metabox = ob_get_clean();
+
+            // echo $metabox;
+        }
 	    /**
 	     * Add the actual meta box definitions as add_meta_box() functions (3 meta boxes; One for the page meta,
 	     * one for the Settings & one for the sequence posts/page definitions.
@@ -1204,10 +1270,6 @@
 	        return $txtState;
 	    }
 
-		/*
-			Create the Custom Post Type for the Sequence/Sequences
-		*/
-
 	    /**
 	     * Adds notification opt-in to list of posts/pages in sequence.
 	     *
@@ -1284,6 +1346,7 @@
 	        return $optinForm;
 		}
 
+
 	    /**
 	     * Defines the metabox for the Sequence Settings (per sequence page/list) on the Admin page
 	     *
@@ -1307,7 +1370,7 @@
 	        if ( $sequence->sequence_id != 0)
 	        {
 		        dbgOut('Loading settings for Meta Box');
-		        $settings = $sequence->fetchOptions($sequence->sequence_id);
+		        // $settings = $sequence->fetchOptions($sequence->sequence_id);
 	            // $settings = $sequence->fetchOptions($sequence_id);
 	            // dbgOut('Returned settings: ' . print_r($sequence->options, true));
 	        }
@@ -1686,6 +1749,8 @@
 				<option value=""></option>
 			<?php
 
+            // TODO: Add support for having the email templates in a child-theme or theme location.
+
 			dbgOut('Directory containing templates: ' . dirname(__DIR__) . '/email/');
 			$templ_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'email';
 
@@ -1852,8 +1917,7 @@
 	    }
 
 	    /**
-	     *
-	     * Save the settings to the Wordpress DB.
+	     * Save the settings for the seuqence to the Wordpress DB.
 	     *
 	     * @param $settings (array) -- Settings for the Sequence
 	     * @param $sequence_id (int) -- The ID for the Sequence
@@ -1928,8 +1992,6 @@
 	        return $this->options->hidden == 1 ? true : false;
 	    }
 
-		//this function returns a UL with the current posts
-
         /**
          * Returns
          * @param null $user_id -- ID of the user
@@ -1957,7 +2019,7 @@
 		}
 
         /**
-         * Compares the object to the
+         * Compares the object to the array of posts in the sequence
          * @param $delayComp -- Delay value to compare to
          * @param $postArr -- The post object
          * @return stdClass -- The post ID of the post with the delay value closest to the $delayVal
@@ -1984,7 +2046,6 @@
         }
 
 	    /**
-	     *
 	     * Convert any date string to a number of days worth of delay (since membership started for the current user)
 	     *
 	     * @param $delay (int | string) -- The delay value (either a # of days or a date YYYY-MM-DD)
@@ -2004,7 +2065,6 @@
 	    }
 
 	    /**
-	     *
 	     * Returns a number of days since the users membership started based on the supplied date.
 	     * This allows us to mix sequences containing days since membership start and fixed dates for content drips
 	     *
@@ -2097,7 +2157,6 @@
 		}
 
 	    /**
-	     *
 	     * Sort the two post objects (order them) according to the defined sortOrder
 	     *
 	     * @param $a (post object)
@@ -2137,6 +2196,7 @@
 	    }
 
 	    /**
+         * Sort the two posts in Ascending order
 	     * @param $a -- Post to compare (including delay variable)
 	     * @param $b -- Post to compare against (including delay variable)
 	     * @return int -- Return +1 if the Delay for post $a is greater than the delay for post $b (i.e. delay for b is
@@ -2188,6 +2248,9 @@
 	        return ($aDelay > $bDelay) ? -1 : +1;
 	    }
 
+        /**
+         * Disable the WPcron job for the current sequence
+         */
         public function stopSendingNotices() {
 
             dbgOut("Removing alert notice hook for sequence # " . $this->sequence_id );
