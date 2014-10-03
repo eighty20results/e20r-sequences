@@ -1,6 +1,6 @@
 <?php
-/*
-  License:
+/**
+  * License:
 
 	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
 
