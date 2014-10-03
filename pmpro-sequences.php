@@ -27,9 +27,8 @@ License:
 
 */
 
-
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '1.2.1');
+define('PMPRO_SEQUENCE_VERSION', '1.4');
 
 /* Enable / Disable DEBUG logging to separate file */
 define('PMPRO_SEQUENCE_DEBUG', false);
@@ -47,9 +46,9 @@ define('PMPRO_SEQ_AS_DAYNO', 1);
 define('PMPRO_SEQ_AS_DATE', 2);
 
 
-/*
-	Include the class for PMProSequences
-*/
+/**
+  *	Include the class for PMProSequences
+  */
 if (! class_exists( 'PMProSequence' )):
     require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.pmprosequence.php");
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR ."scheduled" .DIRECTORY_SEPARATOR. "crons.php");
@@ -59,9 +58,9 @@ if ( ! class_exists( 'PMProSeqRecentPost' )):
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.PMProSeqRecentPost.php");
 endif;
 
-/*
-	Load CSS, JS files
-*/
+/**
+  *	Load CSS, JS files
+  */
 if (! function_exists('pmpro_sequence_scripts')):
 
     // add_action("init", "pmpro_sequence_scripts");
@@ -191,12 +190,12 @@ if (! function_exists('pmpro_sequence_ajaxUnprivError')):
 	}
 endif;
 
-/*
- *	PMPro Sequence CPT
+/**
+ *	PMPro Sequence CPT init
  */
 add_action("init", array("PMProSequence", "createCPT"));
 
-/*
+/**
  *	Add the PMPro meta box and the meta box to add posts/pages to sequence
  */
 add_action("init", array("PMProSequence", "checkForMetaBoxes"), 20);
@@ -355,7 +354,6 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
 	    }
     }
 endif;
-
 
 if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 
@@ -871,7 +869,6 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
     add_filter("the_content", "pmpro_sequence_content");
 
     /**
-     *
      * Show list of sequence pages at the bottom of the sequence page
      *
      * @param $content -- The content to process as part of the filter action
@@ -889,10 +886,10 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
             if ( intval($sequence->options->lengthVisible) == 1 )
                 $content .= sprintf("<p>%s</p>", sprintf( __("You are on day %s of your membership", "pmprosequence"), intval(pmpro_sequence_getMemberDays()) ));
-
+/*
 	        if ( intval($sequence->options->sendNotice) == 1)
 		        $content .= $sequence->pmpro_sequence_addUserNoticeOptIn( $sequence );
-
+*/
             // Add the list of posts in the sequence to the content.
             $content .= $sequence->getPostList();
         }
@@ -1311,9 +1308,10 @@ if ( ! function_exists( 'pmpro_seq_datediff') ):
 		return $days;
 	}
 endif;
-/*
-	Couple functions from PMPro in case we don't have them loaded yet.
-*/
+
+/**
+  *	Couple functions from PMPro in case we don't have them loaded yet.
+  */
 if( ! function_exists("pmpro_getMemberStartdate") ):
 
     /**
@@ -1518,7 +1516,6 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
         wp_clear_scheduled_hook('pmpro_sequence_cron_hook');
     }
 endif;
-
 
 if ( ! function_exists('pmpro_sequence_links_shortcode')):
 
@@ -1910,3 +1907,11 @@ if (! function_exists( 'pmpro_seq_paging_nav()')):
 		}
 	}
 	endif;
+
+if ( ! function_exists ('pmpro_seq_import_series') ):
+
+    function pmpro_seq_import_series() {
+
+
+    }
+endif;
