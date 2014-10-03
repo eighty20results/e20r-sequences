@@ -895,6 +895,7 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_future: isHidden(),
             hidden_pmpro_seq_lengthvisible: showLength(),
             hidden_pmpro_seq_startwhen: jQuery('#pmpro_sequence_startwhen').val(),
+            hidden_as_mail_only: jQuery('#hidden_as_mail_only').val(),
             hidden_pmpro_seq_sortorder: jQuery('#hidden_pmpro_seq_sortorder').val(),
             hidden_pmpro_seq_delaytype: jQuery('#hidden_pmpro_seq_delaytype').val(),
             hidden_pmpro_seq_showdelayas: jQuery('#hidden_pmpro_seq_showdelayas').val(),
