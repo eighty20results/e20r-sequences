@@ -980,10 +980,30 @@
 
             $metabox = '';
 
-            dbgOut("Page Metabox being loaded");
             global $post;
 
             $sequence_post_id = $post->ID;
+
+            dbgOut("Page Metabox being loaded");
+            ob_start();
+            ?>
+            <div class="submitbox" id="pmpro-seq-postmeta">
+                <div id="minor-publishing">
+                    <div id="pmpro_seq-configure-sequence">
+                        <?php echo $this->load_sequence_meta( $sequence_post_id ) ?>
+                    </div>
+                </div>
+            </div>
+            <?php
+
+            $metabox = ob_get_clean();
+
+            echo $metabox;
+        }
+
+        public function load_sequence_meta( $sequence_id ) {
+
+            global $post;
 
             $query = array(
                 'post_type' => 'pmpro_sequence',
@@ -995,52 +1015,46 @@
 
             dbgOut("Loading Sequences (count: " . count($sequence_list) . ")");
 
-            $belongs_to = get_post_meta( $post->ID, "_post_sequences", true );
+            $belongs_to = get_post_meta( $sequence_id, "_post_sequences", true );
 
             dbgOut("Post belongs to: " . print_r( $belongs_to, true ) );
 
             ob_start();
             ?>
-            <div class="submitbox" id="pmpro-seq-postmeta">
-                <div id="minor-publishing">
-                    <div id="pmpro_seq-configure-sequence">
-                        <table style="width: 100%;">
-                            <tbody>
-                            <tr>
-                                <td>
-                                    <label for="pmpor_seq-memberof-sequences"><?php _e("Select PMPro drip-feed sequence", "pmprosequence"); ?></label>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="sequence-list-dropdown">
-                                    <select id="pmpro_seq-memberof-sequences" name="pmpro_seq-sequences">
-                                    <option value="0" <?php echo ( empty( $belongs_to ) ? 'selected' : '' ); ?>><?php _e("Not in a Sequence", "pmprosequence"); ?></option>
-                                    <?php
-                                    // Loop through all of the sequences & create an option list
-                                    foreach ( $sequence_list as $sequence ) {
-                                        ?><option value="<?php echo $sequence->ID; ?>"<?php echo ( in_array( $sequence->ID, $belongs_to ) ? 'selected' : ''); ?>><?php echo $sequence->post_title; ?></option><?php
-                                    }
+            <table style="width: 100%;">
+                <tbody>
+                <tr>
+                    <td>
+                        <label for="pmpor_seq-memberof-sequences"><?php _e("Select PMPro drip-feed sequence", "pmprosequence"); ?></label>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="sequence-list-dropdown">
+                        <select id="pmpro_seq-memberof-sequences" name="pmpro_seq-sequences">
+                            <option value="0" <?php echo ( empty( $belongs_to ) ? 'selected' : '' ); ?>><?php _e("Not in a Sequence", "pmprosequence"); ?></option>
+                            <?php
+                            // Loop through all of the sequences & create an option list
+                            foreach ( $sequence_list as $sequence ) {
+                                ?><option value="<?php echo $sequence->ID; ?>"<?php echo ( in_array( $sequence->ID, $belongs_to ) ? 'selected' : ''); ?>><?php echo $sequence->post_title; ?></option><?php
+                            }
 
-                                    ?>
-                                    </select>
-                                </td>
-                            </tr>
-                            <tr>
-                                <td class="sequence-label">
-                                    <label for="pmpro_seq-delay"><?php sprintf( __("Delay - Format: %s", "pmprosequence"), $delayFormat); ?></label>
-                                </td>
-                                <td><input type="text" id="pmpro_seq-delay" value="2014-01-01"></td>
-                            </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+                            ?>
+                        </select>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="sequence-label">
+                        <label for="pmpro_seq-delay"><?php sprintf( __("Delay - Format: %s", "pmprosequence"), $delayFormat); ?></label>
+                    </td>
+                    <td><input type="text" id="pmpro_seq-delay" value="2014-01-01"></td>
+                </tr>
+                </tbody>
+            </table>
             <?php
 
-            $metabox = ob_get_clean();
+            $html = ob_get_clean();
 
-            echo $metabox;
+            return $html;
         }
 	    /**
 	     * Add the actual meta box definitions as add_meta_box() functions (3 meta boxes; One for the page meta,

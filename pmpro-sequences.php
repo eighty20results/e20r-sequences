@@ -387,6 +387,24 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
     }
 endif;
 
+if ( ! function_exists( 'update_delay_post_meta_callback' ) ):
+
+    // add_action("init", "pmpro_sequence_ajax");
+    add_action('wp_ajax_pmpro_sequence_update_meta', 'update_delay_post_meta');
+    add_action('wp_ajax_pmpro_sequence_update_meta', 'pmpro_sequence_ajaxUnprivError');
+
+    function update_delay_post_meta() {
+
+        dbgOut("Update the delay input for the post/page meta");
+
+        ob_start();
+        ?>
+
+        <?php
+    }
+
+endif;
+
 if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 
 	// add_action("init", "pmpro_sequence_ajax");
