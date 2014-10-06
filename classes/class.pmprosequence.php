@@ -33,25 +33,25 @@
          * Constructor for the PMProSequence class
          *
          * @param null $id -- The ID of the sequence to load/construct
-         * @return bool|null -- ID of the sequence loaded/constructed.
+         * @return object -- ID of the sequence loaded/constructed.
          *
          * @access public
          */
-        function PMProSequence($id = null)
+        function __construct($id = null)
 		{
-            if (is_null($id) && ($this->sequence_id == 0) ) {
+            if ( is_null( $id ) && ( $this->sequence_id == 0 ) ) {
                 // Have no sequence ID to play off of..
                 dbgOut('No sequence ID or options defined! Checking against global variables');
                 global $wp_query;
 
-                if ($wp_query->post->ID) {
+                if ( $wp_query->post->ID ) {
 
-                    dbgOut('Found Post ID and loading options if not already loaded ' . $wp_query->post->ID);
+                    dbgOut( 'Found Post ID and loading options if not already loaded ' . $wp_query->post->ID );
                     $this->sequence_id = $wp_query->post->ID;
                 } else
                     return false; // ERROR. No sequence ID provided.
             }
-            elseif ( ! is_null($id) )
+            elseif ( ! is_null( $id ) )
                 $this->sequence_id = $this->getSequenceByID($id);
 			else
                 $this->sequence_id = $id;
@@ -124,7 +124,6 @@
 	    }
 
 	    /**
-         *
 	     * Return the default options for a sequence
 	     *  stdClass content:
 	     *      hidden (boolean) - Whether to show or hide upcoming (future) posts in sequence from display.
@@ -810,7 +809,12 @@
 		 */
 		public function sendEmail($post_id, $user_id, $seq_id)
 		{
-			$email = new PMProEmail();
+			// Make sure the email class is loaded.
+            if ( ! class_exists( 'PMProEmail' ) ) {
+                return;
+            }
+
+            $email = new PMProEmail();
 	        // $sequence = new PMProSequence($seq_id);
 	        $settings = $this->options;
 
@@ -951,28 +955,32 @@
 				add_action('admin_menu', array("PMProSequence", "defineMetaBoxes"));
 	            add_action('save_post', array('PMProSequence', 'pmpro_sequence_meta_save'), 10, 2);
 
+                // dbgOut("Load post Meta");
                 /* Fire our meta box setup function on the post editor screen. */
-                add_action( 'load-post.php', array( &$this, 'pmpro_sequence_post_metabox_setup' ) );
-                add_action( 'load-post-new.php', array( &$this, 'pmpro_sequence_post_metabox_setup' ) );
+                // add_action( 'add_meta_boxes', array( &$this, 'pmpro_sequence_post_metabox_setup', 10, 2 ) );
+                // add_action( 'load-post-new.php', array( &$this, 'pmpro_sequence_post_metabox_setup' ) );
+                // add_action( 'add_meta_boxes', array( "PMProSequence", 'pmpro_sequence_post_metabox_setup', 10, 2 ) );
 			}
 		}
 
         /**
          * Configure metabox for the normal Post/Page editor
          */
-        public function pmpro_sequence_post_metabox_setup() {
+        public function pmpro_sequence_post_metabox_setup( $object, $box ) {
 
+            dbgOut("Post metaboxes being configured");
+
+            //TODO: Find all post types on the system & then loop through for all post types using a foreach() loop.
             /* Add meta boxes on the 'add_meta_boxes' hook. */
-            add_action( 'add_meta_boxes', array( &$this, 'pmpro_sequence_post_metabox' ) );
-
-            /* TODO: Add save action for the metabox data */
-            add_action( 'save_post', array( &$this, 'pmpro_sequence_post_save' ), 10, 2 );
+            add_meta_box( 'pmpro-seq-post-meta', __('Drip Feed Sequence', 'pmprosequence'), array( "PMProSequence", 'pmpro_sequence_page_meta'), 'page', 'side', 'high');
+            add_meta_box( 'pmpro-seq-post-meta', __('Drip Feed Sequence', 'pmprosequence'), array( "PMProSequence", 'pmpro_sequence_page_meta'), 'post', 'side', 'high');
         }
 
-        public function pmpro_sequence_post_metabox( $object, $box ) {
+        public function pmpro_sequence_page_meta() {
 
             $metabox = '';
 
+            dbgOut("Page Metabox being loaded");
             global $post;
 
             $sequence_post_id = $post->ID;
@@ -985,30 +993,54 @@
             /* Fetch all Sequence posts */
             $sequence_list = get_posts( $query );
 
+            dbgOut("Loading Sequences (count: " . count($sequence_list) . ")");
+
             $belongs_to = get_post_meta( $post->ID, "_post_sequences", true );
 
             dbgOut("Post belongs to: " . print_r( $belongs_to, true ) );
 
             ob_start();
             ?>
-            <div id="pmpro-seq-postmeta">
+            <div class="submitbox" id="pmpro-seq-postmeta">
+                <div id="minor-publishing">
+                    <div id="pmpro_seq-configure-sequence">
+                        <table style="width: 100%;">
+                            <tbody>
+                            <tr>
+                                <td>
+                                    <label for="pmpor_seq-memberof-sequences"><?php _e("Select PMPro drip-feed sequence", "pmprosequence"); ?></label>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="sequence-list-dropdown">
+                                    <select id="pmpro_seq-memberof-sequences" name="pmpro_seq-sequences">
+                                    <option value="0" <?php echo ( empty( $belongs_to ) ? 'selected' : '' ); ?>><?php _e("Not in a Sequence", "pmprosequence"); ?></option>
+                                    <?php
+                                    // Loop through all of the sequences & create an option list
+                                    foreach ( $sequence_list as $sequence ) {
+                                        ?><option value="<?php echo $sequence->ID; ?>"<?php echo ( in_array( $sequence->ID, $belongs_to ) ? 'selected' : ''); ?>><?php echo $sequence->post_title; ?></option><?php
+                                    }
 
-                <select id="select-memberof-sequences" multiple>
-                <option value="0">Not in a sequence</option>";
-                <?php
-                // Loop through all of the sequences & create an option list
-                foreach ( $sequence_list as $sequence ) {
-
-                }
-
-                ?>
-                </select>
+                                    ?>
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="sequence-label">
+                                    <label for="pmpro_seq-delay"><?php sprintf( __("Delay - Format: %s", "pmprosequence"), $delayFormat); ?></label>
+                                </td>
+                                <td><input type="text" id="pmpro_seq-delay" value="2014-01-01"></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
             <?php
 
             $metabox = ob_get_clean();
 
-            // echo $metabox;
+            echo $metabox;
         }
 	    /**
 	     * Add the actual meta box definitions as add_meta_box() functions (3 meta boxes; One for the page meta,
@@ -1021,11 +1053,14 @@
 			//PMPro box
 			add_meta_box('pmpro_page_meta', __('Require Membership', 'pmprosequence'), 'pmpro_page_meta', 'pmpro_sequence', 'side');
 
+            dbgOut("Loading post meta boxes");
+
 			// sequence settings box (for posts & pages)
 	        add_meta_box('pmpros-sequence-settings', __('Settings the Sequence', 'pmprosequence'), array("PMProSequence", 'pmpro_sequence_settings_meta_box'), 'pmpro_sequence', 'side', 'high');
 
 			//sequence meta box
 			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', 'pmprosequence'), array("PMProSequence", "sequenceMetaBox"), 'pmpro_sequence', 'normal', 'high');
+            // add_meta_box('pmpro-post-sequence-meta', __('Select Sequence', 'pmprosequence'), array( "PMProSequence", 'pmpro_sequence_page_meta'), 'pmpro_sequence', 'side');
 
 	    }
 
@@ -1370,7 +1405,7 @@
 	        if ( $sequence->sequence_id != 0)
 	        {
 		        dbgOut('Loading settings for Meta Box');
-		        // $settings = $sequence->fetchOptions($sequence->sequence_id);
+		        $settings = $sequence->fetchOptions($sequence->sequence_id);
 	            // $settings = $sequence->fetchOptions($sequence_id);
 	            // dbgOut('Returned settings: ' . print_r($sequence->options, true));
 	        }
@@ -1752,7 +1787,8 @@
             // TODO: Add support for having the email templates in a child-theme or theme location.
 
 			dbgOut('Directory containing templates: ' . dirname(__DIR__) . '/email/');
-			$templ_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'email';
+
+            $templ_dir = dirname(__DIR__) . DIRECTORY_SEPARATOR . 'email';
 
 			chdir($templ_dir);
 			foreach ( glob('*.html') as $file)

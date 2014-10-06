@@ -31,7 +31,7 @@ License:
 define('PMPRO_SEQUENCE_VERSION', '1.4');
 
 /* Enable / Disable DEBUG logging to separate file */
-define('PMPRO_SEQUENCE_DEBUG', false);
+define('PMPRO_SEQUENCE_DEBUG', true);
 
 /* Set the max number of email alerts to send in one go to one user */
 define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
@@ -56,6 +56,38 @@ endif;
 
 if ( ! class_exists( 'PMProSeqRecentPost' )):
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.PMProSeqRecentPost.php");
+endif;
+
+add_action( 'add_meta_boxes', array( "PMProSequence", 'pmpro_sequence_post_metabox_setup') );
+
+if ( ! function_exists( 'pmpro_sequence_post_save' ) ):
+
+    add_action( 'save_post', 'pmpro_sequence_post_save', 10, 2 );
+
+    function pmpro_sequence_post_save( $post_id ) {
+
+        global $post;
+
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            return $post_id;
+        }
+
+        $seq_array = isset( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
+        $delay = isset( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
+
+        if ( is_array( $seq_array ) && (! empty( $delay ) ) ) {
+
+            foreach( $seq_array as $seqId ) {
+
+                $sequence = new PMProSequence( $seqId );
+                $sequence->addPost( $post_id, $delay );
+
+            }
+
+        }
+        return $post_id;
+    }
+
 endif;
 
 /**

@@ -60,6 +60,15 @@ div#pmpro-seq-error {
     overflow: hidden;
 }
 
+.sequence-list-dropdown,
+#pmpro_seq-memberof-sequences {
+    max-width: 230px;
+    min-width: 200px;
+    max-height: 250px;
+    min-height: 100px;
+    overflow: scroll;
+}
+
 .pmpro-sequence-status {
     display: inline-block;
     vertical-align: bottom;
