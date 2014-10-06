@@ -97,7 +97,7 @@ jQuery(document).ready(function(){
         /** Edit button events **/
 
         /* Admin clicked the 'Edit' button for the SortOrder settings. Show the select field & hide the "edit" button */
-        $('#pmpro-seq-edit-sort').click(function(){
+        $('#pmpro-seq-edit-sort').on( 'click', function(){
  //           console.log('Edit button for sort order clicked');
             $('#pmpro-seq-edit-sort').slideToggle();
             $('#pmpro-seq-sort-select').slideToggle();
@@ -108,18 +108,19 @@ jQuery(document).ready(function(){
         *  Only show the edit controls for the 'list delay as' if the _current_ 'Delay type' value is or gets set to ('byDays') (i.e. 'delayType == byDays')
          *
         * */
-        $('#pmpro-seq-edit-delay').click(function(){
+        $('#pmpro-seq-edit-delay').on('click', function(){
 
             editDelaySettings();
         });
 
-        $('#pmpro-seq-edit-showdelayas').click(function(){
+        $('#pmpro-seq-edit-showdelayas').on( "click", function(){
 
             editDelaySettings();
         });
 
         /* Show/Hide the alert template information */
-        $sendAlertCtl.click(function(){
+        $sendAlertCtl.on( "click", function(){
+
  //           console.log('Checkbox to allow sending notice clicked');
             $('#hidden_pmpro_seq_sendnotice').val( this.checked ? 1 : 0 );
             $('.pmpro-sequence-template').slideToggle();
@@ -127,7 +128,7 @@ jQuery(document).ready(function(){
             $('.pmpro-sequence-email').slideToggle();
         });
 
-        $offsetChkCtl.click(function() {
+        $offsetChkCtl.on( "click", function() {
             console.log('Clicked on the checkbox for Preview option(s)');
             if (this.checked) {
                 // Show the 'Posts to show' status
@@ -139,66 +140,71 @@ jQuery(document).ready(function(){
             }
         });
 
-        $('#pmpro-seq-edit-offset').click(function(){
+        $('#pmpro-seq-edit-offset').on( "click", function(){
             //           console.log('Edit button for delay type clicked');
             $('#pmpro-seq-edit-offset').slideToggle();
             $('#pmpro-seq-offset-select').slideToggle();
         });
 
         /* Admin clicked the 'Edit' button for the delayType settings. Show the select field & hide the "edit" button */
-        $('#pmpro-seq-edit-dateformat').click(function(){
+        $('#pmpro-seq-edit-dateformat').on( "click", function(){
 //           console.log('Edit button for delay type clicked');
             $('#pmpro-seq-edit-dateformat').slideToggle();
             $('#pmpro-seq-dateformat-select').slideToggle();
         });
 
         /* Save the value for the setting for the 'hide future posts in sequence' checkbox*/
-        $('#pmpro_sequence_hidden').click(function(){
+        $('#pmpro_sequence_hidden').on( "click", function(){
 //          console.log('Checkbox to hide upcoming posts changed');
             $('#hidden_pmpro_seq_future').val( this.checked ? 1 : 0 );
         });
 
         /* Save new value for the lengthVisible variable */
-        $('#pmpro_sequence_lengthvisible').click(function(){
+        $('#pmpro_sequence_lengthvisible').on( "click", function(){
+
 //          console.log('Checkbox to show length of membership notice changed');
             $('#hidden_pmpro_seq_lengthvisible').val( this.checked ? 1 : 0 );
         });
 
         /* Admin clicked the 'Edit' button for the New Content Notice Template settings. Show the select field & hide the "edit" button */
-        $('#pmpro-seq-edit-template').click(function(){
+        $('#pmpro-seq-edit-template').on( "click", function(){
+
 //          console.log('Edit button for email template selection clicked');
             $('#pmpro-seq-edit-template').slideToggle();
             $('#pmpro-seq-template-select').slideToggle();
         });
 
         /* Admin clicked the 'Edit' button for the New Content Notice Template settings. Show the select field & hide the "edit" button */
-        $('#pmpro-seq-edit-noticetime').click(function(){
+        $('#pmpro-seq-edit-noticetime').on( "click", function(){
+
 //           console.log('Edit button for email template selection clicked');
             $('#pmpro-seq-edit-noticetime').slideToggle();
             $('#pmpro-seq-noticetime-select').slideToggle();
         });
 
-        $('#pmpro-seq-edit-excerpt').click(function(){
+        $('#pmpro-seq-edit-excerpt').on( "click", function(){
+
 //           console.log('Edit button for excerpt intro edit field clicked');
             $('#pmpro-seq-edit-excerpt').slideToggle();
             $('#pmpro-seq-excerpt-input').slideToggle();
         });
 
-        $('#pmpro-seq-edit-subject').click(function(){
+        $('#pmpro-seq-edit-subject').on( "click", function(){
+
 //           console.log('Edit button for Subject prefix edit field clicked');
             $('#pmpro-seq-edit-subject').slideToggle();
             $('#pmpro-seq-subject-input').slideToggle();
         });
 
         /** The Email and Name for the "From" line **/
-        $('#pmpro-seq-edit-fromname').click(function(){
+        $('#pmpro-seq-edit-fromname').on( "click", function(){
 //           console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-fromname').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
         });
 
-        $('#pmpro-seq-edit-replyto').click(function(){
+        $('#pmpro-seq-edit-replyto').on( "click", function(){
 //           console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
@@ -217,7 +223,7 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-offset').click(function(){
+        $('#cancel-pmpro-seq-offset').on( "click", function(){
 //            console.log('Cancel button for Sort order was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-offset-select').slideToggle();
@@ -228,7 +234,7 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-sort').click(function(){
+        $('#cancel-pmpro-seq-sort').on( "click", function(){
 //            console.log('Cancel button for Sort order was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-sort-select').slideToggle();
@@ -239,7 +245,7 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the DelayType edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-delay').click(function(){
+        $('#cancel-pmpro-seq-delay').on( "click", function(){
 //            console.log('Cancel button for Delay type was clicked');
             // $delayCtl.getAttribute('hidden_pmpro_seq_delaytype');
 
@@ -259,7 +265,7 @@ jQuery(document).ready(function(){
          * Admin clicked the 'Cancel' button for the New content alert Template edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-template').click(function(){
+        $('#cancel-pmpro-seq-template').on( "click", function(){
 //            console.log('Cancel button to set template was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-template-select').slideToggle();
@@ -271,7 +277,7 @@ jQuery(document).ready(function(){
          * Admin clicked the 'Cancel' button for the date format edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-dateformat').click(function(){
+        $('#cancel-pmpro-seq-dateformat').on( "click", function(){
 //            console.log('Cancel button to set date format was clicked');
             // $('#pmpro_sequence_dateformat').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-dateformat-select').slideToggle();
@@ -283,7 +289,7 @@ jQuery(document).ready(function(){
          * Admin clicked the 'Cancel' button for the New content alert Template edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-noticetime').click(function(){
+        $('#cancel-pmpro-seq-noticetime').on( "click", function(){
 //            console.log('Cancel button to set alert time was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-noticetime-select').slideToggle();
@@ -294,7 +300,7 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-excerpt').click(function(){
+        $('#cancel-pmpro-seq-excerpt').on( "click", function(){
 //            console.log('Cancel button for Excerpt Intro was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-excerpt-input').slideToggle();
@@ -302,7 +308,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#cancel-pmpro-seq-subject').click(function(){
+        $('#cancel-pmpro-seq-subject').on( "click", function(){
 //            console.log('Cancel button for Subject Intro was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-subject-input').slideToggle();
@@ -310,7 +316,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#cancel-pmpro-seq-email').click(function(){
+        $('#cancel-pmpro-seq-email').on( "click", function(){
 //            console.log('Cancel button for email settings was clicked');
 
             $('#pmpro-seq-email-input').slideToggle();
@@ -321,7 +327,7 @@ jQuery(document).ready(function(){
 
         /** OK button events **/
 
-        $('#ok-pmpro-seq-offset').click(function(){
+        $('#ok-pmpro-seq-offset').on( "click", function(){
 
             // console.log('OK button for Preview Offset value was clicked');
             var $hCtl = $('#hidden_pmpro_seq_offset');
@@ -336,7 +342,7 @@ jQuery(document).ready(function(){
             );
         });
 
-        $('#ok-pmpro-seq-sort').click(function(){
+        $('#ok-pmpro-seq-sort').on( "click", function(){
 
  //           console.log('OK button for Sort order was clicked');
             var $hCtl = $('#hidden_pmpro_seq_sortorder');
@@ -351,7 +357,7 @@ jQuery(document).ready(function(){
             );
         });
 
-        $('#ok-pmpro-seq-delay').click(function(){
+        $('#ok-pmpro-seq-delay').on( "click", function(){
 
             var $hCtl1 = $('#hidden_pmpro_seq_delaytype');
             var $hCtl2 = $('#hidden_pmpro_seq_showdelayas');
@@ -379,7 +385,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-template').click(function(){
+        $('#ok-pmpro-seq-template').on( "click", function(){
 
             var $hCtl = $('#hidden_pmpro_seq_noticetemplate');
 
@@ -394,7 +400,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-dateformat').click(function(){
+        $('#ok-pmpro-seq-dateformat').on( "click", function(){
 
             var $hCtl = $('#hidden_pmpro_seq_dateformat');
 
@@ -409,7 +415,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-noticetime').click(function(){
+        $('#ok-pmpro-seq-noticetime').on( "click", function(){
 
             var $hCtl = $('#hidden_pmpro_seq_noticetime');
 
@@ -424,7 +430,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-excerpt').click(function(){
+        $('#ok-pmpro-seq-excerpt').on( "click", function(){
 
             var $hCtl = $('#hidden_pmpro_seq_excerpt');
 
@@ -439,7 +445,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-subject').click(function(){
+        $('#ok-pmpro-seq-subject').on( "click", function(){
 
             var $hCtl = $('#hidden_pmpro_seq_subject');
 
@@ -454,7 +460,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-email').click(function(){
+        $('#ok-pmpro-seq-email').on( "click", function(){
 
             // Declare variables we need/want
             var $newfrom;
@@ -477,6 +483,47 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-edit-replyto').slideToggle();
             $('#pmpro-seq-edit-fromname').slideToggle();
 
+        });
+
+        $( "#pmpro_seq-memberof-sequences" ).on( 'change', function () {
+
+            console.log("Changed the Sequence this post is a member of");
+
+            $.ajax({
+                url: pmpro_sequence.ajaxurl,
+                type:'POST',
+                timeout:5000,
+                dataType: 'JSON',
+                data: {
+                    action: 'pmpro_sequence_update_post_meta',
+                    pmpro_sequence_id: jQuery('#pmpro_seq-memberof-sequences').val(),
+                    pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val(),
+                    pmpro_sequence_post_id: jQuery('#post_ID').val()
+                },
+                error: function($data){
+                    console.log("error() - Returned data: " + $data.success + " and " + $data.data);
+                    console.dir($data);
+
+                    if ( $data.data ) {
+                        alert($data.data);
+                    }
+                },
+                success: function($data){
+                    console.log("success() - Returned data: " + $data.success);
+                    console.dir($data);
+
+                    if ($data.data) {
+                        console.log('Entry added to sequence & refreshing metabox content');
+                        jQuery('#pmpro_seq-configure-sequence').html($data.data);
+                    } else {
+                        console.log('No HTML returned???');
+                    }
+
+                },
+                complete: function($data) {
+
+                }
+            });
         });
 
     })(jQuery);
@@ -674,6 +721,7 @@ function manageDelayEditCtrls( $currentDelayType ) {
 }
 
 function setDelayEditBtns() {
+
     console.log('In setDelayEditBtns()');
 
     if ( jQuery('#pmpro-seq-edit-delay').is(':visible') ||

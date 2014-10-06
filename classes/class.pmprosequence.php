@@ -976,13 +976,10 @@
             add_meta_box( 'pmpro-seq-post-meta', __('Drip Feed Sequence', 'pmprosequence'), array( "PMProSequence", 'pmpro_sequence_page_meta'), 'post', 'side', 'high');
         }
 
+
         public function pmpro_sequence_page_meta() {
 
             $metabox = '';
-
-            global $post;
-
-            $sequence_post_id = $post->ID;
 
             dbgOut("Page Metabox being loaded");
             ob_start();
@@ -990,7 +987,7 @@
             <div class="submitbox" id="pmpro-seq-postmeta">
                 <div id="minor-publishing">
                     <div id="pmpro_seq-configure-sequence">
-                        <?php echo $this->load_sequence_meta( $sequence_post_id ) ?>
+                        <?php echo self::load_sequence_meta() ?>
                     </div>
                 </div>
             </div>
@@ -1001,9 +998,7 @@
             echo $metabox;
         }
 
-        public function load_sequence_meta( $sequence_id ) {
-
-            global $post;
+        public function load_sequence_meta( $post_id = null) {
 
             $query = array(
                 'post_type' => 'pmpro_sequence',
@@ -1015,9 +1010,17 @@
 
             dbgOut("Loading Sequences (count: " . count($sequence_list) . ")");
 
-            $belongs_to = get_post_meta( $sequence_id, "_post_sequences", true );
+            // Post ID specified so we need to look for any sequence related metadata for this post
 
-            dbgOut("Post belongs to: " . print_r( $belongs_to, true ) );
+            if ( empty( $post_id ) ) {
+
+                global $post;
+                $post_id = $post->ID;
+            }
+
+            $belongs_to = get_post_meta( $post_id, "_post_sequences", true );
+
+            dbgOut("Post belongs in sequence(s): " . print_r( $belongs_to, true ) );
 
             ob_start();
             ?>
@@ -1025,6 +1028,7 @@
                 <tbody>
                 <tr>
                     <td>
+                        <?php wp_nonce_field('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');?>
                         <label for="pmpor_seq-memberof-sequences"><?php _e("Select PMPro drip-feed sequence", "pmprosequence"); ?></label>
                     </td>
                 </tr>
@@ -1035,18 +1039,56 @@
                             <?php
                             // Loop through all of the sequences & create an option list
                             foreach ( $sequence_list as $sequence ) {
-                                ?><option value="<?php echo $sequence->ID; ?>"<?php echo ( in_array( $sequence->ID, $belongs_to ) ? 'selected' : ''); ?>><?php echo $sequence->post_title; ?></option><?php
-                            }
 
+                                if ( in_array( $sequence->ID, $belongs_to ) ) {
+
+                                    $set_selected = 'selected';
+                                    $selected_id = $sequence->ID;
+                                }
+
+                                ?><option value="<?php echo $sequence->ID; ?>" <?php echo $set_selected; ?>><?php echo $sequence->post_title; ?></option><?php
+                            }
                             ?>
                         </select>
                     </td>
                 </tr>
                 <tr>
                     <td class="sequence-label">
-                        <label for="pmpro_seq-delay"><?php sprintf( __("Delay - Format: %s", "pmprosequence"), $delayFormat); ?></label>
+                        <?php
+                        // Figure out the correct delay type and load the value for this post if it exists.
+                        if ( ! empty( $selected_id ) ) {
+                            dbgOut("Sequence ID for the selected sequence: {$selected_id}" );
+                            $seq = new PMProSequence($selected_id);
+                        }
+                        else {
+                            dbgOut("No sequence was selected");
+                            $seq = new PMProSequence();
+                        }
+
+                        $opt = $seq->fetchOptions();
+                        $delayVal = $seq->getDelayForPost($post_id);
+
+                        switch ( $opt->delayType ) {
+
+                            case 'byDays':
+
+                                $delayFormat = __('Day Count', "pmprosequence");
+                                $input = "<input type='text' id='pmpro_seq-delay' width='6' value='{$delayVal}'>";
+                                break;
+
+                            case 'byDate':
+
+                                $delayFormat = __( 'YYYY-MM-DD', "pmprosequence" );
+                                $starts = date_i18n( "Y-m-d", current_time('timestamp') );
+                                $input = "<input type='date' min='{$starts}' id='pmpro_seq-delay' value='{$delayVal}' >";
+                                break;
+                        }
+                        ?>
+                        <label for="pmpro_seq-delay"><?php $label = sprintf( __("Delay (Format: %s)", "pmprosequence"), $delayFormat); ?></label>
                     </td>
-                    <td><input type="text" id="pmpro_seq-delay" value="2014-01-01"></td>
+                    <td>
+                        <?php echo $input; ?>
+                    </td>
                 </tr>
                 </tbody>
             </table>

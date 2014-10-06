@@ -390,12 +390,21 @@ endif;
 if ( ! function_exists( 'update_delay_post_meta_callback' ) ):
 
     // add_action("init", "pmpro_sequence_ajax");
-    add_action('wp_ajax_pmpro_sequence_update_meta', 'update_delay_post_meta');
-    add_action('wp_ajax_pmpro_sequence_update_meta', 'pmpro_sequence_ajaxUnprivError');
+    add_action('wp_ajax_pmpro_sequence_update_post_meta', 'update_delay_post_meta');
+    add_action('wp_ajax_nopriv_pmpro_sequence_update_post_meta', 'pmpro_sequence_ajaxUnprivError');
 
     function update_delay_post_meta() {
 
         dbgOut("Update the delay input for the post/page meta");
+
+        check_ajax_referrer('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');
+
+        dbgOut("Nonce Passed for postmeta AJAX call");
+
+        $seq_id = isset( $_POST['pmpro_sequence_id'] ) ? intval( $_POST['pmpro_sequence_id'] ) : null;
+        $post_id = isset( $_POST['pmpro_sequence_post_id']) ? intval( $_POST['pmpro_sequence_post_id'] ) : null;
+
+        $seq = new PMProSequence( $seq_id );
 
         ob_start();
         ?>
