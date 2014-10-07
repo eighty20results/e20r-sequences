@@ -69,6 +69,14 @@ div#pmpro-seq-error {
     overflow: scroll;
 }
 
+.pmpro-seq-days {
+    width: 50px;
+}
+
+.pmpro-seq-date {
+    width: 150px;
+}
+
 .pmpro-sequence-status {
     display: inline-block;
     vertical-align: bottom;
