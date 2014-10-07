@@ -97,7 +97,7 @@ jQuery(document).ready(function(){
         /** Edit button events **/
 
         /* Admin clicked the 'Edit' button for the SortOrder settings. Show the select field & hide the "edit" button */
-        $('#pmpro-seq-edit-sort').on( 'click', function(){
+        $(document).on( 'click', '#pmpro-seq-edit-sort', function(){
  //           console.log('Edit button for sort order clicked');
             $('#pmpro-seq-edit-sort').slideToggle();
             $('#pmpro-seq-sort-select').slideToggle();
@@ -108,18 +108,18 @@ jQuery(document).ready(function(){
         *  Only show the edit controls for the 'list delay as' if the _current_ 'Delay type' value is or gets set to ('byDays') (i.e. 'delayType == byDays')
          *
         * */
-        $('#pmpro-seq-edit-delay').on('click', function(){
+        $(document).on('click', '#pmpro-seq-edit-delay', function(){
 
             editDelaySettings();
         });
 
-        $('#pmpro-seq-edit-showdelayas').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-showdelayas', function(){
 
             editDelaySettings();
         });
 
         /* Show/Hide the alert template information */
-        $sendAlertCtl.on( "click", function(){
+        $(document).on( "click", '#pmpro_sequence_sendnotice', function(){
 
  //           console.log('Checkbox to allow sending notice clicked');
             $('#hidden_pmpro_seq_sendnotice').val( this.checked ? 1 : 0 );
@@ -128,7 +128,7 @@ jQuery(document).ready(function(){
             $('.pmpro-sequence-email').slideToggle();
         });
 
-        $offsetChkCtl.on( "click", function() {
+        $(document).on( "click", '#pmpro_sequence_offsetchk', function() {
             console.log('Clicked on the checkbox for Preview option(s)');
             if (this.checked) {
                 // Show the 'Posts to show' status
@@ -140,34 +140,34 @@ jQuery(document).ready(function(){
             }
         });
 
-        $('#pmpro-seq-edit-offset').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-offset', function(){
             //           console.log('Edit button for delay type clicked');
             $('#pmpro-seq-edit-offset').slideToggle();
             $('#pmpro-seq-offset-select').slideToggle();
         });
 
         /* Admin clicked the 'Edit' button for the delayType settings. Show the select field & hide the "edit" button */
-        $('#pmpro-seq-edit-dateformat').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-dateformat', function(){
 //           console.log('Edit button for delay type clicked');
             $('#pmpro-seq-edit-dateformat').slideToggle();
             $('#pmpro-seq-dateformat-select').slideToggle();
         });
 
         /* Save the value for the setting for the 'hide future posts in sequence' checkbox*/
-        $('#pmpro_sequence_hidden').on( "click", function(){
+        $(document).on( "click", '#pmpro_sequence_hidden', function(){
 //          console.log('Checkbox to hide upcoming posts changed');
             $('#hidden_pmpro_seq_future').val( this.checked ? 1 : 0 );
         });
 
         /* Save new value for the lengthVisible variable */
-        $('#pmpro_sequence_lengthvisible').on( "click", function(){
+        $(document).on( "click", '#pmpro_sequence_lengthvisible', function(){
 
 //          console.log('Checkbox to show length of membership notice changed');
             $('#hidden_pmpro_seq_lengthvisible').val( this.checked ? 1 : 0 );
         });
 
         /* Admin clicked the 'Edit' button for the New Content Notice Template settings. Show the select field & hide the "edit" button */
-        $('#pmpro-seq-edit-template').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-template', function(){
 
 //          console.log('Edit button for email template selection clicked');
             $('#pmpro-seq-edit-template').slideToggle();
@@ -175,7 +175,7 @@ jQuery(document).ready(function(){
         });
 
         /* Admin clicked the 'Edit' button for the New Content Notice Template settings. Show the select field & hide the "edit" button */
-        $('#pmpro-seq-edit-noticetime').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-noticetime', function(){
 
 //           console.log('Edit button for email template selection clicked');
             $('#pmpro-seq-edit-noticetime').slideToggle();
@@ -189,7 +189,7 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-excerpt-input').slideToggle();
         });
 
-        $('#pmpro-seq-edit-subject').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-subject', function(){
 
 //           console.log('Edit button for Subject prefix edit field clicked');
             $('#pmpro-seq-edit-subject').slideToggle();
@@ -197,14 +197,14 @@ jQuery(document).ready(function(){
         });
 
         /** The Email and Name for the "From" line **/
-        $('#pmpro-seq-edit-fromname').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-fromname', function(){
 //           console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-fromname').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
         });
 
-        $('#pmpro-seq-edit-replyto').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-replyto', function(){
 //           console.log('Edit button for email edit field clicked');
             $('#pmpro-seq-email-input').slideToggle();
             $('#pmpro-seq-edit-replyto').slideToggle();
@@ -223,7 +223,7 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-offset').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-offset', function(){
 //            console.log('Cancel button for Sort order was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-offset-select').slideToggle();
@@ -234,7 +234,7 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-sort').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-sort', function(){
 //            console.log('Cancel button for Sort order was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-sort-select').slideToggle();
@@ -245,7 +245,7 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the DelayType edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-delay').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-delay', function(){
 //            console.log('Cancel button for Delay type was clicked');
             // $delayCtl.getAttribute('hidden_pmpro_seq_delaytype');
 
@@ -265,7 +265,7 @@ jQuery(document).ready(function(){
          * Admin clicked the 'Cancel' button for the New content alert Template edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-template').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-template', function(){
 //            console.log('Cancel button to set template was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-template-select').slideToggle();
@@ -277,7 +277,7 @@ jQuery(document).ready(function(){
          * Admin clicked the 'Cancel' button for the date format edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-dateformat').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-dateformat', function(){
 //            console.log('Cancel button to set date format was clicked');
             // $('#pmpro_sequence_dateformat').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-dateformat-select').slideToggle();
@@ -289,7 +289,7 @@ jQuery(document).ready(function(){
          * Admin clicked the 'Cancel' button for the New content alert Template edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-noticetime').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-noticetime', function(){
 //            console.log('Cancel button to set alert time was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-noticetime-select').slideToggle();
@@ -300,7 +300,7 @@ jQuery(document).ready(function(){
         /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
          * the value of the label & select, then hide everything again.
          */
-        $('#cancel-pmpro-seq-excerpt').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-excerpt', function(){
 //            console.log('Cancel button for Excerpt Intro was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-excerpt-input').slideToggle();
@@ -308,7 +308,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#cancel-pmpro-seq-subject').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-subject', function(){
 //            console.log('Cancel button for Subject Intro was clicked');
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-subject-input').slideToggle();
@@ -316,7 +316,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#cancel-pmpro-seq-email').on( "click", function(){
+        $(document).on( "click", '#cancel-pmpro-seq-email', function(){
 //            console.log('Cancel button for email settings was clicked');
 
             $('#pmpro-seq-email-input').slideToggle();
@@ -327,7 +327,7 @@ jQuery(document).ready(function(){
 
         /** OK button events **/
 
-        $('#ok-pmpro-seq-offset').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-offset', function(){
 
             // console.log('OK button for Preview Offset value was clicked');
             var $hCtl = $('#hidden_pmpro_seq_offset');
@@ -342,7 +342,7 @@ jQuery(document).ready(function(){
             );
         });
 
-        $('#ok-pmpro-seq-sort').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-sort', function(){
 
  //           console.log('OK button for Sort order was clicked');
             var $hCtl = $('#hidden_pmpro_seq_sortorder');
@@ -357,7 +357,7 @@ jQuery(document).ready(function(){
             );
         });
 
-        $('#ok-pmpro-seq-delay').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-delay', function(){
 
             var $hCtl1 = $('#hidden_pmpro_seq_delaytype');
             var $hCtl2 = $('#hidden_pmpro_seq_showdelayas');
@@ -385,7 +385,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-template').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-template', function(){
 
             var $hCtl = $('#hidden_pmpro_seq_noticetemplate');
 
@@ -400,7 +400,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-dateformat').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-dateformat', function(){
 
             var $hCtl = $('#hidden_pmpro_seq_dateformat');
 
@@ -415,7 +415,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-noticetime').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-noticetime', function(){
 
             var $hCtl = $('#hidden_pmpro_seq_noticetime');
 
@@ -430,7 +430,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-excerpt').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-excerpt', function(){
 
             var $hCtl = $('#hidden_pmpro_seq_excerpt');
 
@@ -445,7 +445,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-subject').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-subject', function(){
 
             var $hCtl = $('#hidden_pmpro_seq_subject');
 
@@ -460,7 +460,7 @@ jQuery(document).ready(function(){
 
         });
 
-        $('#ok-pmpro-seq-email').on( "click", function(){
+        $(document).on( "click", '#ok-pmpro-seq-email', function(){
 
             // Declare variables we need/want
             var $newfrom;
@@ -485,9 +485,13 @@ jQuery(document).ready(function(){
 
         });
 
-        $( "#pmpro_seq-memberof-sequences" ).on( 'change', function () {
+        $(document).on( 'change', '#pmpro_seq-memberof-sequences', function () {
 
             console.log("Changed the Sequence this post is a member of");
+            $('div .seq_spinner').show();
+
+            $("#delay-row-label").hide();
+            $("#delay-row-input").hide();
 
             $.ajax({
                 url: pmpro_sequence.ajaxurl,
@@ -496,9 +500,9 @@ jQuery(document).ready(function(){
                 dataType: 'JSON',
                 data: {
                     action: 'pmpro_sequence_update_post_meta',
-                    pmpro_sequence_id: jQuery('#pmpro_seq-memberof-sequences').val(),
-                    pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val(),
-                    pmpro_sequence_post_id: jQuery('#post_ID').val()
+                    pmpro_sequence_id: $('#pmpro_seq-memberof-sequences').val(),
+                    pmpro_sequence_postmeta_nonce: $('#pmpro_sequence_postmeta_nonce').val(),
+                    pmpro_sequence_post_id: $('#post_ID').val()
                 },
                 error: function($data){
                     console.log("error() - Returned data: " + $data.success + " and " + $data.data);
@@ -514,14 +518,57 @@ jQuery(document).ready(function(){
 
                     if ($data.data) {
                         console.log('Entry added to sequence & refreshing metabox content');
-                        jQuery('#pmpro_seq-configure-sequence').html($data.data);
+                        $('#pmpro_seq-configure-sequence').html($data.data);
+
                     } else {
                         console.log('No HTML returned???');
                     }
 
                 },
                 complete: function($data) {
+                    $("#delay-row-label").show();
+                    $("#delay-row-input").show();
+                    $('div .seq_spinner').hide();
+                }
+            });
+        });
 
+        $(document).on( "click", '#delay-row-input input:checkbox', function() {
+            console.log("Remove checkbox was clicked...");
+
+            jQuery.ajax({
+                url: pmpro_sequence.ajaxurl,
+                type:'POST',
+                timeout:5000,
+                dataType: 'JSON',
+                data: {
+                    // FIXME: action: 'pmpro_sequence_rm_post',
+                    // FIXME: pmpro_sequence_id: $('#pmpro_sequence_id').val(),
+                    // FIXME: pmpro_seq_post: post_id,
+                    // FIXME: pmpro_sequence_rmpost_nonce: $('#pmpro_sequence_postmeta_nonce').val()
+                },
+                error: function($data){
+
+                    console.dir($data);
+
+                    if ($data.data != '') {
+                        alert($data.data);
+                        pmpro_seq_setErroMsg($data.data);
+                    }
+
+                },
+                success: function($data){
+
+                    console.dir($data);
+
+                    if ($data.data) {
+                        jQuery('#pmpro_sequence_posts').html( $data.data );
+                    }
+
+                },
+                complete: function() {
+                    // Enable the Save button again.
+                    jQuery('#pmpro_sequencesave').removeAttr('disabled');
                 }
             });
         });
