@@ -66,25 +66,50 @@ if ( ! function_exists( 'pmpro_sequence_post_save' ) ):
 
     function pmpro_sequence_post_save( $post_id ) {
 
-        global $post;
+        dbgOut("Sequence info for post/page save");
 
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            dbgOut("Exit during autosave");
             return $post_id;
         }
 
-        $seq_array = isset( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
-        $delay = isset( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
+        // check capabilities
+        if ( 'post' == $_POST['post_type'] ) {
 
-        if ( is_array( $seq_array ) && (! empty( $delay ) ) ) {
+            if (!current_user_can('edit_post', $post_id)) {
 
-            foreach( $seq_array as $seqId ) {
-
-                $sequence = new PMProSequence( $seqId );
-                $sequence->addPost( $post_id, $delay );
-
+                return $post_id;
             }
-
         }
+        elseif (!current_user_can('edit_page', $post_id)) {
+
+            return $post_id;
+        }
+
+        dbgOut("POST: " . print_r($_POST, true ) );
+
+        $already_in = get_post_meta( $post_id, "_post_sequences", true );
+
+        dbgOut("Sequences & Delays have been configured");
+
+        $seq_ids = is_array( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
+        $delays = is_array( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
+
+        dbgOut( "Saved passed variables...");
+        dbgOut("IDs: " . print_r( $seq_ids, true ));
+        dbgOut("Delays: " . print_r( $delays, true ));
+
+        foreach ($seq_ids as $key => $seq_id ) {
+
+            if ( ! in_array( $seq_id, $already_in ) ) {
+
+                dbgOut( "Processing post {$post_id} for sequence {$seq_id} with delay {$delays[$key]}" );
+                $sequence = new PMProSequence( $seq_id );
+                $sequence->getPosts();
+                $sequence->addPost( $post_id, $delays[ $key ] );
+            }
+        }
+
         return $post_id;
     }
 
@@ -397,19 +422,20 @@ if ( ! function_exists( 'update_delay_post_meta_callback' ) ):
 
         dbgOut("Update the delay input for the post/page meta");
 
-        check_ajax_referrer('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');
+        check_ajax_referer('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');
 
         dbgOut("Nonce Passed for postmeta AJAX call");
 
         $seq_id = isset( $_POST['pmpro_sequence_id'] ) ? intval( $_POST['pmpro_sequence_id'] ) : null;
         $post_id = isset( $_POST['pmpro_sequence_post_id']) ? intval( $_POST['pmpro_sequence_post_id'] ) : null;
 
+        dbgOut("Sequence: {$seq_id}, Post: {$post_id}" );
         $seq = new PMProSequence( $seq_id );
 
-        ob_start();
-        ?>
+        $html = $seq->load_sequence_meta( $post_id, $seq_id );
 
-        <?php
+        wp_send_json_success( $html );
+
     }
 
 endif;
