@@ -490,8 +490,8 @@ jQuery(document).ready(function(){
             console.log("Changed the Sequence this post is a member of");
             $('div .seq_spinner').show();
 
-            $("#delay-row-label").hide();
-            $("#delay-row-input").hide();
+            $(".delay-row-label .pmpro-sequence-hidden").hide();
+            $(".delay-row-input .pmpro-sequence-hidden").hide();
 
             $.ajax({
                 url: pmpro_sequence.ajaxurl,
@@ -526,15 +526,20 @@ jQuery(document).ready(function(){
 
                 },
                 complete: function($data) {
-                    $("#delay-row-label").show();
-                    $("#delay-row-input").show();
+                    $(".delay-row-label").show();
+                    $(".delay-row-input").show();
                     $('div .seq_spinner').hide();
                 }
             });
         });
 
-        $(document).on( "click", '#delay-row-input input:checkbox', function() {
-            console.log("Remove checkbox was clicked...");
+        $(document).on( "click", '.delay-row-input input:checkbox', function() {
+
+            console.log("The 'remove' checkbox was clicked...");
+
+            $('div .seq_spinner').show();
+            $(".delay-row-label").hide();
+            $(".delay-row-input").hide();
 
             jQuery.ajax({
                 url: pmpro_sequence.ajaxurl,
@@ -542,10 +547,10 @@ jQuery(document).ready(function(){
                 timeout:5000,
                 dataType: 'JSON',
                 data: {
-                    // FIXME: action: 'pmpro_sequence_rm_post',
-                    // FIXME: pmpro_sequence_id: $('#pmpro_sequence_id').val(),
-                    // FIXME: pmpro_seq_post: post_id,
-                    // FIXME: pmpro_sequence_rmpost_nonce: $('#pmpro_sequence_postmeta_nonce').val()
+                    action: 'pmpro_sequence_rm',
+                    pmpro_sequence_id: $(this).val(),
+                    pmpro_seq_post_id: $('#post_ID').val(),
+                    pmpro_sequence_postmeta_nonce: $('#pmpro_sequence_postmeta_nonce').val()
                 },
                 error: function($data){
 
@@ -553,7 +558,6 @@ jQuery(document).ready(function(){
 
                     if ($data.data != '') {
                         alert($data.data);
-                        pmpro_seq_setErroMsg($data.data);
                     }
 
                 },
@@ -562,15 +566,29 @@ jQuery(document).ready(function(){
                     console.dir($data);
 
                     if ($data.data) {
-                        jQuery('#pmpro_sequence_posts').html( $data.data );
+                        jQuery('#pmpro_seq-configure-sequence').html( $data.data );
                     }
 
                 },
                 complete: function() {
                     // Enable the Save button again.
-                    jQuery('#pmpro_sequencesave').removeAttr('disabled');
+                    $(".delay-row-label").show();
+                    $(".delay-row-input").show();
+                    $('div .seq_spinner').hide();
+
+
                 }
             });
+        });
+
+        $(document).on( "click", "#pmpro-seq-new-meta", function() {
+
+            console.log("Add new table row for metabox");
+            $('div .seq_spinner').show();
+            $("tr.delay-row-label.pmpro-sequence-hidden").slideToggle();
+            $("tr.delay-row-input.pmpro-sequence-hidden").slideToggle();
+            $('div .seq_spinner').hide();
+            $(this).hide();
         });
 
     })(jQuery);

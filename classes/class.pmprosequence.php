@@ -1003,6 +1003,8 @@
 
         public function load_sequence_meta( $post_id = null, $seq_id = null) {
 
+            $belongs_to = array();
+
             $query = array(
                 'post_type' => 'pmpro_sequence',
                 'post_status' => 'any',
@@ -1029,27 +1031,28 @@
                 $belongs_to = get_post_meta( $post_id, "_post_sequences", true );
             }
 
-            $set_selected = null;
-
             dbgOut("Post belongs in sequence(s): " . print_r( $belongs_to, true ) );
 
-            // TODO: Add a "Delete" button for each of the sequences. Then delete the post from the sequence using AJAX.
+            // Make sure there's at least one row in the Metabox.
+            dbgOut(" Ensure there's at least one entry in the table ");
+            array_push( $belongs_to, 0 );
+
             ob_start();
             ?>
             <?php wp_nonce_field('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');?>
-            <table style="width: 100%;">
+            <div class="seq_spinner vt-alignright"></div>
+            <table style="width: 100%;" id="pmpro-seq-metatable">
                 <tbody>
                 <?php foreach( $belongs_to as $active_id ) { ?>
-                    <tr>
+                    <tr class="delay-row-label<?php echo ( $active_id == 0 ? ' pmpro-sequence-hidden' : '' ); ?>">
                         <td>
                             <label for="pmpor_seq-memberof-sequences"><?php _e("Select drip-feed sequence", "pmprosequence"); ?></label>
-                            <div class="seq_spinner"></div>
                         </td>
                     </tr>
-                    <tr>
+                    <tr class="delay-row-input<?php echo ( $active_id == 0 ? ' pmpro-sequence-hidden' : '' ); ?>">
                         <td class="sequence-list-dropdown">
                             <select id="pmpro_seq-memberof-sequences" name="pmpro_seq-sequences[]">
-                                <option value="0" <?php echo ( empty( $belongs_to ) ? 'selected' : '' ); ?>><?php _e("Not in a Sequence", "pmprosequence"); ?></option>
+                                <option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected' : '' ); ?>><?php _e("Not in a Sequence", "pmprosequence"); ?></option>
                                 <?php
                                 // Loop through all of the sequences & create an option list
                                 foreach ( $sequence_list as $sequence ) {
@@ -1060,69 +1063,77 @@
                             </select>
                         </td>
                     </tr>
-                    <tr id="delay-row-label">
-                        <td class="sequence-label">
-                            <?php
-                            // Figure out the correct delay type and load the value for this post if it exists.
-                            if ( $active_id ) {
-                                dbgOut("Loading options for {$active_id}");
-                                $this->fetchOptions( $active_id );
-                            }
+                    <?php
+                    // Figure out the correct delay type and load the value for this post if it exists.
+                    if ( $active_id != 0) {
+                        dbgOut("Loading options for {$active_id}");
+                        $this->fetchOptions( $active_id );
+                    }
+                    else {
+                        $this->sequence_id = 0;
+                        $this->options = $this->defaultOptions();
+                    }
 
-                            dbgOut("Loading all posts for {$active_id}");
+                    $delay = null; // Set/Reset
+                    dbgOut("Loading all posts for {$active_id}");
 
-                            $this->getPosts();
+                    $this->getPosts(true);
 
-                            $delay = $this->getDelayForPost( $post_id );
+                    $delay = $this->getDelayForPost( $post_id );
 
-                            if ( $delay === false ) {
-                                $delayVal = '';
+                    if ( $delay === false ) {
+                        $delayVal = "value=''";
+                    }
+                    else {
+                        $delayVal = " value='{$delay}' ";
+                    }
+
+                    switch ( $this->options->delayType ) {
+
+                        case 'byDate':
+
+                            dbgOut("Configured to track delays by Date");
+                            $delayFormat = __( 'Date', "pmprosequence" );
+                            $starts = date_i18n( "Y-m-d", current_time('timestamp') );
+
+                            if ( empty( $delayVal ) ) {
+                                $inputHTML = "<input class='pmpro-seq-date' type='date' min='{$starts}' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'>";
                             }
                             else {
-                                $delayVal = " value='{$delay}' ";
+                                $inputHTML = "<input class='pmpro-seq-date' type='date' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'{$delayVal}>";
                             }
 
-                            switch ( $this->options->delayType ) {
+                            break;
 
-                                case 'byDays':
-                                    dbgOut("Configured to track delays by Day count");
-                                    $delayFormat = __('Day Count', "pmprosequence");
-                                    $inputHTML = "<input class='pmpro-seq-days' type='text' id='pmpro_seq-delay' name='pmpro_seq-delay[]'{$delayVal}>";
-                                    break;
+                        default:
 
-                                case 'byDate':
+                            dbgOut("Configured to track delays by Day count");
+                            $delayFormat = __('Day Count', "pmprosequence");
+                            $inputHTML = "<input class='pmpro-seq-days' type='text' id='pmpro_seq-delay_{$active_id}' name='pmpro_seq-delay[]'{$delayVal}>";
 
-                                    dbgOut("Configured to track delays by Date");
-                                    $delayFormat = __( 'Date', "pmprosequence" );
-                                    $starts = date_i18n( "Y-m-d", current_time('timestamp') );
+                    }
 
-                                    if ( empty( $delayVal ) ) {
-                                        $inputHTML = "<input class='pmpro-seq-date' type='date' min='{$starts}' name='pmpro_seq-delay[]' id='pmpro_seq-delay'>";
-                                    }
-                                    else {
-                                        $inputHTML = "<input class='pmpro-seq-date' type='date' name='pmpro_seq-delay[]' id='pmpro_seq-delay'{$delayVal}>";
-                                    }
-
-                                    break;
-                            }
-
-                            dbgOut("Input HTML: " . $inputHTML);
-
-                            $label = printf( __("Delay (Format: %s)", "pmprosequence"), $delayFormat );
-                            // dbgOut(" Label: " . print_r( $label, true ) );
-                            ?>
-                            <label for="pmpro_seq-delay" value="<?php echo $label; ?>"></label>
+                    $label = sprintf( __("Delay (Format: %s)", "pmprosequence"), $delayFormat );
+                    // dbgOut(" Label: " . print_r( $label, true ) );
+                    ?>
+                    <tr class="delay-row-label<?php echo ( $active_id == 0 ? ' pmpro-sequence-hidden' : '' ); ?>">
+                        <td>
+                            <label for="pmpro_seq-delay_<?php echo $active_id; ?>"> <?php echo $label; ?> </label>
                         </td>
                     </tr>
-                    <tr id="delay-row-input">
+                    <tr class="delay-row-input<?php echo ( $active_id == 0 ? ' pmpro-sequence-hidden' : '' ); ?>">
                         <td>
                             <?php echo $inputHTML; ?>
-                            <?php _e("Remove: ", "pmprosequence"); ?> <input type="checkbox" class="pmpro_seq-remove-seq" value="<?php echo $active_id; ?>">
+                            <label for="remove-sequence_<?php echo $active_id; ?>" ><?php _e('Remove: ', 'pmprosequence'); ?></label><input type="checkbox" name="remove-sequence" class="pmpro_seq-remove-seq" value="<?php echo $active_id; ?>">
                         </td>
                     </tr>
-                <?php } // Foreach?>
+                <?php } // Foreach ?>
                 </tbody>
             </table>
+            <div id="pmpro-seq-new">
+                <hr class="pmpro-seq-hr" />
+                <a href="#" id="pmpro-seq-new-meta" class="button-primary">Add New</a>
+            </div>
             <?php
 
             $html = ob_get_clean();

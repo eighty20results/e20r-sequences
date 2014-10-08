@@ -157,6 +157,10 @@ input#pmpro_sequence_excerpt {
     /* vertical-align: baseline; */
 }
 
+#pmpro-seq-hr {
+    width: 90%;
+}
+
 .seq_spinner {
     background: url('/wp-admin/images/wpspin_light.gif') no-repeat;
     background-size: 16px 16px;
