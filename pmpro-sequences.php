@@ -431,6 +431,7 @@ if ( ! function_exists( 'update_delay_post_meta_callback' ) ):
         dbgOut("Sequence: {$seq_id}, Post: {$post_id}" );
 
         if ( $seq_id != 0 ) {
+
             $seq = new PMProSequence( $seq_id );
 
             $html = $seq->load_sequence_meta( $post_id, $seq_id );
@@ -438,7 +439,7 @@ if ( ! function_exists( 'update_delay_post_meta_callback' ) ):
             wp_send_json_success( $html );
         }
         else {
-            wp_send_json_error( 'Error loading sequence information.' );
+            wp_send_json_error( 'Error loading sequence data.' );
         }
     }
 
@@ -448,9 +449,7 @@ endif;
  * Removes the sequence from managing this $post_id.
  * Returns the table of sequences the post_id belongs to back to the post/page editor using JSON.
  */
-if ( ! function_exists( 'pmpro_sequence_rm_callback' ) ):
-
-    // TODO: What happens when this function processes the sequence with ID 0 (no sequence yet)?
+if ( ! function_exists( 'pmpro_rm_sequence_from_post_callback' ) ):
 
     add_action('wp_ajax_pmpro_rm_sequence_from_post', 'pmpro_rm_sequence_from_post_callback' );
     add_action('wp_ajax_nopriv_pmpro_rm_sequence_from_post', 'pmpro_sequence_ajaxUnprivError');
