@@ -537,6 +537,8 @@ jQuery(document).ready(function(){
 
             console.log("The 'remove' checkbox was clicked...");
 
+            console.dir(this);
+
             $('div .seq_spinner').show();
             $(".delay-row-label").hide();
             $(".delay-row-input").hide();
@@ -547,7 +549,7 @@ jQuery(document).ready(function(){
                 timeout:5000,
                 dataType: 'JSON',
                 data: {
-                    action: 'pmpro_sequence_rm',
+                    action: 'pmpro_rm_sequence_from_post',
                     pmpro_sequence_id: $(this).val(),
                     pmpro_seq_post_id: $('#post_ID').val(),
                     pmpro_sequence_postmeta_nonce: $('#pmpro_sequence_postmeta_nonce').val()

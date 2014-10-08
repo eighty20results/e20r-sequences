@@ -445,20 +445,21 @@ if ( ! function_exists( 'update_delay_post_meta_callback' ) ):
 endif;
 
 /**
- * Remove a post (id) from a sequence and return the table of sequences the post_id belongs to back to the post/page editor
+ * Removes the sequence from managing this $post_id.
+ * Returns the table of sequences the post_id belongs to back to the post/page editor using JSON.
  */
 if ( ! function_exists( 'pmpro_sequence_rm_callback' ) ):
 
     // TODO: What happens when this function processes the sequence with ID 0 (no sequence yet)?
 
-    add_action('wp_ajax_pmpro_sequence_rm', 'pmpro_sequence_rm_callback' );
-    add_action('wp_ajax_nopriv_pmpro_sequence_rm', 'pmpro_sequence_ajaxUnprivError');
+    add_action('wp_ajax_pmpro_rm_sequence_from_post', 'pmpro_rm_sequence_from_post_callback' );
+    add_action('wp_ajax_nopriv_pmpro_rm_sequence_from_post', 'pmpro_sequence_ajaxUnprivError');
 
-    function pmpro_sequence_rm_callback() {
+    function pmpro_rm_sequence_from_post() {
 
         $success = false;
 
-        dbgOut("In sequence_rm_callback - removes a post from a sequence and returns the metabox content w/JSON.");
+        dbgOut("In pmpro_rm_sequence_from_post()");
         check_ajax_referer('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');
 
         dbgOut("NONCE is OK for pmpro_sequence_rm");
@@ -470,7 +471,7 @@ if ( ! function_exists( 'pmpro_sequence_rm_callback' ) ):
         $sequence->setError( null ); // Clear any pending error messages (don't care at this point).
 
         // Remove the post (if the user is allowed to)
-        if ( current_user_can( 'edit_posts' ) && ( ! is_null( $post_id ) ) ) {
+        if ( current_user_can( 'edit_posts' ) && ( ! is_null( $post_id ) ) && ( ! is_null( $sequence_id ) ) ) {
 
             $sequence->removePost( $post_id );
             //$result = __('The post has been removed', 'pmprosequence');
@@ -489,11 +490,14 @@ if ( ! function_exists( 'pmpro_sequence_rm_callback' ) ):
             wp_send_json_success( $result );
         } else {
 
-            wp_send_json_error( ( ! is_null( $sequence->getError() ) ? $sequence->getError() : 'Error deleting this post from the sequence' ) );
+            wp_send_json_error( ( ! is_null( $sequence->getError() ) ? $sequence->getError() : 'Error clearing the sequence from this post' ) );
         }
     }
 endif;
 
+/**
+ * Used by the Sequence CPT edit page to remove a post from the sequence being processed
+ */
 if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 
 	// add_action("init", "pmpro_sequence_ajax");
