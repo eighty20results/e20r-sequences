@@ -493,15 +493,19 @@
 			$temp->id = $post_id;
 			$temp->delay = $delay;
 
+
 			// TODO: Add _sequence_post_{post_id} = {$delay} meta option for this post.
 			// Or we could go with loading the posts (correctly) when needed (to allow for pagination)
 			/* Only add the post if it's not already present. */
-			if (! in_array($temp->id, $this->posts))
-				$this->posts[] = $temp;
+			if (! in_array( $temp->id, $this->posts ) ) {
+
+                dbgOut("addPost(): Not previously saved in the list of posts for this ({$this->sequence_id}) sequence");
+                $this->posts[] = $temp;
+            }
 
 			//sort
 	        dbgOut('addPost(): Sorting the Sequence by delay');
-			usort($this->posts, array("PMProSequence", "sortByDelay"));
+			usort($this->posts, array(&$this, "sortByDelay"));
 
 			//save
 			update_post_meta($this->sequence_id, "_sequence_posts", $this->posts);
@@ -512,7 +516,7 @@
 	        // Is there any previously saved sequence ID found for the post/page?
 			if(empty($post_sequence))
 	        {
-	            dbgOut('addPost(): Not previously defined sequence(s) found for this post (ID: ' . $post_id . ')');
+	            dbgOut('addPost(): No previously defined sequence(s) found for this post (ID: ' . $post_id . ')');
 	            $post_sequence = array($this->id);
 	        }
 	        else
@@ -733,12 +737,13 @@
 			// Remove the sequence id from the post's metadata
 			$post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
-			if(is_array($post_sequence) && ($key = array_search($this->id, $post_sequence)) !== false)
+			if( is_array($post_sequence) && ($key = array_search($this->id, $post_sequence)) !== false)
 			{
 				unset($post_sequence[$key]);
 				update_post_meta($post_id, "_post_sequences", $post_sequence);
 
 	            dbgOut('removePost(): Post/Page list updated and saved');
+                dbgOut("Post/Page list is now: " . print_r( $post_sequence, true ) );
 
 	        }
 
@@ -778,6 +783,8 @@
 
 				dbgOut('removeNotifiedFlagForPost() - Searching for Post ID ' . $post_id .' in notification settings for user with ID: ' . $user->user_id);
 				$userSettings = get_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
+
+                count($userSettings) > 0 ? dbgOut("Notification settings exist for {$this->sequence_id}") : dbgOut('No notification settings found');
 
 				$notifiedPosts = $userSettings->sequence[ $this->sequence_id ]->notifiedPosts;
 
@@ -1001,14 +1008,17 @@
             echo $metabox;
         }
 
-        public function load_sequence_meta( $post_id = null, $seq_id = null) {
+        public function load_sequence_meta( $post_id = null, $seq_id = 0) {
 
+            dbgOut("Called: {$post_id} and {$seq_id}.");
             $belongs_to = array();
 
             $query = array(
                 'post_type' => 'pmpro_sequence',
                 'post_status' => 'any',
             );
+
+            wp_reset_query();
 
             /* Fetch all Sequence posts */
             $sequence_list = get_posts( $query );
@@ -1023,12 +1033,25 @@
                 $post_id = $post->ID;
             }
 
-            if ( ! empty( $seq_id ) ) {
-                $belongs_to = array(  $seq_id );
+            // if ( ! empty( $seq_id ) && ( $seq_id != 0 ) ) {
+            //    $belongs_to = array(  $seq_id );
+            // }
+            // else {
+            dbgOut("Loading sequence ID from DB");
+            $belongs_to = get_post_meta( $post_id, "_post_sequences", true );
+
+            if ( $belongs_to = get_post_meta( $post_id, "_post_sequences", true ) ) {
+
+                if ( is_array( $belongs_to ) && ( $seq_id != 0 ) && ( ! in_array( $seq_id, $belongs_to ) ) ) {
+
+                    dbgOut("Adding the new sequence ID to the existing array of sequences");
+                    array_push( $belongs_to, $seq_id );
+                }
             }
-            else {
-                dbgOut("Loading sequence ID from DB");
-                $belongs_to = get_post_meta( $post_id, "_post_sequences", true );
+            elseif ( $seq_id != 0 ) {
+
+                dbgOut("This post has never belonged to a sequence. Adding it to one now");
+                $belongs_to = array( $seq_id );
             }
 
             dbgOut("Post belongs in sequence(s): " . print_r( $belongs_to, true ) );
@@ -1037,6 +1060,8 @@
             dbgOut(" Ensure there's at least one entry in the table ");
             array_push( $belongs_to, 0 );
 
+            dbgOut("Added the '0th' sequence: " . print_r( $belongs_to, true ) );
+
             ob_start();
             ?>
             <?php wp_nonce_field('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');?>
@@ -1044,14 +1069,15 @@
             <table style="width: 100%;" id="pmpro-seq-metatable">
                 <tbody>
                 <?php foreach( $belongs_to as $active_id ) { ?>
-                    <tr class="delay-row-label<?php echo ( $active_id == 0 ? ' pmpro-sequence-hidden' : '' ); ?>">
+                    <?php dbgOut("Adding rows for {$active_id}");?>
+                    <tr class="select-row-label<?php echo ( $active_id == 0 ? ' new-sequence-select-label' : ' sequence-select-label' ); ?>">
                         <td>
                             <label for="pmpor_seq-memberof-sequences"><?php _e("Select drip-feed sequence", "pmprosequence"); ?></label>
                         </td>
                     </tr>
-                    <tr class="delay-row-input<?php echo ( $active_id == 0 ? ' pmpro-sequence-hidden' : '' ); ?>">
+                    <tr class="select-row-input<?php echo ( $active_id == 0 ? ' new-sequence-select' : ' sequence-select' ); ?>">
                         <td class="sequence-list-dropdown">
-                            <select id="pmpro_seq-memberof-sequences" name="pmpro_seq-sequences[]">
+                            <select class="<?php echo ( $active_id == 0 ? 'new-sequence-select' : 'pmpro_seq-memberof-sequences'); ?>" name="pmpro_seq-sequences[]">
                                 <option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected' : '' ); ?>><?php _e("Not in a Sequence", "pmprosequence"); ?></option>
                                 <?php
                                 // Loop through all of the sequences & create an option list
@@ -1079,7 +1105,8 @@
 
                     $this->getPosts(true);
 
-                    $delay = $this->getDelayForPost( $post_id );
+                    $delay = $this->getDelayForPost( $post_id, false );
+                    dbgOut("Delay Value: {$delay}");
 
                     if ( $delay === false ) {
                         $delayVal = "value=''";
@@ -1097,10 +1124,10 @@
                             $starts = date_i18n( "Y-m-d", current_time('timestamp') );
 
                             if ( empty( $delayVal ) ) {
-                                $inputHTML = "<input class='pmpro-seq-date' type='date' min='{$starts}' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'>";
+                                $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' min='{$starts}' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'>";
                             }
                             else {
-                                $inputHTML = "<input class='pmpro-seq-date' type='date' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'{$delayVal}>";
+                                $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'{$delayVal}>";
                             }
 
                             break;
@@ -1109,19 +1136,19 @@
 
                             dbgOut("Configured to track delays by Day count");
                             $delayFormat = __('Day Count', "pmprosequence");
-                            $inputHTML = "<input class='pmpro-seq-days' type='text' id='pmpro_seq-delay_{$active_id}' name='pmpro_seq-delay[]'{$delayVal}>";
+                            $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-days' type='text' id='pmpro_seq-delay_{$active_id}' name='pmpro_seq-delay[]'{$delayVal}>";
 
                     }
 
                     $label = sprintf( __("Delay (Format: %s)", "pmprosequence"), $delayFormat );
                     // dbgOut(" Label: " . print_r( $label, true ) );
                     ?>
-                    <tr class="delay-row-label<?php echo ( $active_id == 0 ? ' pmpro-sequence-hidden' : '' ); ?>">
+                    <tr class="delay-row-label<?php echo ( $active_id == 0 ? ' new-sequence-delay-label' : 'sequence-delay-label' ); ?>">
                         <td>
                             <label for="pmpro_seq-delay_<?php echo $active_id; ?>"> <?php echo $label; ?> </label>
                         </td>
                     </tr>
-                    <tr class="delay-row-input<?php echo ( $active_id == 0 ? ' pmpro-sequence-hidden' : '' ); ?>">
+                    <tr class="delay-row-input<?php echo ( $active_id == 0 ? ' new-sequence-delay' : ' sequence-delay' ); ?>">
                         <td>
                             <?php echo $inputHTML; ?>
                             <label for="remove-sequence_<?php echo $active_id; ?>" ><?php _e('Remove: ', 'pmprosequence'); ?></label><input type="checkbox" name="remove-sequence" class="pmpro_seq-remove-seq" value="<?php echo $active_id; ?>">
@@ -1132,7 +1159,8 @@
             </table>
             <div id="pmpro-seq-new">
                 <hr class="pmpro-seq-hr" />
-                <a href="#" id="pmpro-seq-new-meta" class="button-primary">Add New</a>
+                <a href="#" id="pmpro-seq-new-meta" class="button-primary">New</a>
+                <a href="#" id="pmpro-seq-new-meta-reset" class="button">Cancel</a>
             </div>
             <?php
 
@@ -2249,7 +2277,7 @@
          *
          * @access private
          */
-        public function getDelayForPost($post_id)
+        public function getDelayForPost($post_id, $normalize = true )
 		{
 			$key = $this->getPostKey($post_id);
 
@@ -2259,8 +2287,16 @@
 				return false;
 	        }
 	        else {
+                // BUG: Would return "days since membership start" as the delay value, regardless of setting.
+                // Fix: Choose whether to normalize (but leave default as "yes" to ensure no unintentional breakage).
+                if ( $normalize ) {
 
-	            $delay = $this->normalizeDelay( $this->posts[$key]->delay );
+                    $delay = $this->normalizeDelay( $this->posts[ $key ]->delay );
+                }
+                else {
+
+                    $delay = $this->posts[ $key ]->delay;
+                }
 	            dbgOut('getDelayForPost(): Delay for post with id = ' . $post_id . ' is ' .$delay);
 	            return $delay;
 	        }

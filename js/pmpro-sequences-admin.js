@@ -70,11 +70,20 @@ jQuery(document).ready(function(){
         var $fromname = $fromCtl.val();
         var $replyto = $replyCtl.val();
 
+        var $count = 0;
+
         // console.log('Sort Order is: ' + jQuery('#pmpro_sequence_sortorder option:selected').text());
 
         if ( $delayCtl.find('option:selected').val() == 'byDate') {
             delayAsChoice( 'hide' );
         }
+
+        // var $addNew = jQuery(".select-row-input").length;
+
+        $count = $( 'tr.select-row-input.sequence-select' ).length;
+
+        console.log('Number of select inputs: ' + $count);
+        hideAddNew();
 
         manageDelayLabels( $delayCtl.val() );
 
@@ -485,68 +494,27 @@ jQuery(document).ready(function(){
 
         });
 
-        $(document).on( 'change', '#pmpro_seq-memberof-sequences', function () {
+        $(document).on( 'change', '.new-sequence-select', function () {
 
-            console.log("Changed the Sequence this post is a member of");
-            $('div .seq_spinner').show();
+            postMetaSelectChanged( this );
+        });
 
-            $(".delay-row-label .pmpro-sequence-hidden").hide();
-            $(".delay-row-input .pmpro-sequence-hidden").hide();
+        $(document).on( 'change', '.pmpro_seq-memberof-sequences', function () {
 
-            $.ajax({
-                url: pmpro_sequence.ajaxurl,
-                type:'POST',
-                timeout:5000,
-                dataType: 'JSON',
-                data: {
-                    action: 'pmpro_sequence_update_post_meta',
-                    pmpro_sequence_id: $('#pmpro_seq-memberof-sequences').val(),
-                    pmpro_sequence_postmeta_nonce: $('#pmpro_sequence_postmeta_nonce').val(),
-                    pmpro_sequence_post_id: $('#post_ID').val()
-                },
-                error: function($data){
-                    console.log("error() - Returned data: " + $data.success + " and " + $data.data);
-                    console.dir($data);
+            postMetaSelectChanged( this );
 
-                    if ( $data.data ) {
-                        alert($data.data);
-                    }
-                },
-                success: function($data){
-                    console.log("success() - Returned data: " + $data.success);
-                    console.dir($data);
-
-                    if ($data.data) {
-                        console.log('Entry added to sequence & refreshing metabox content');
-                        $('#pmpro_seq-configure-sequence').html($data.data);
-
-                    } else {
-                        console.log('No HTML returned???');
-                    }
-
-                },
-                complete: function($data) {
-                    $(".delay-row-label").show();
-                    $(".delay-row-input").show();
-                    $('div .seq_spinner').hide();
-                }
-            });
         });
 
         $(document).on( "click", '.delay-row-input input:checkbox', function() {
 
             console.log("The 'remove' checkbox was clicked...");
 
-            console.dir(this);
-
             $('div .seq_spinner').show();
-            $(".delay-row-label").hide();
-            $(".delay-row-input").hide();
 
             jQuery.ajax({
                 url: pmpro_sequence.ajaxurl,
                 type:'POST',
-                timeout:5000,
+                timeout:10000,
                 dataType: 'JSON',
                 data: {
                     action: 'pmpro_rm_sequence_from_post',
@@ -569,13 +537,14 @@ jQuery(document).ready(function(){
 
                     if ($data.data) {
                         jQuery('#pmpro_seq-configure-sequence').html( $data.data );
+                        hideAddNew();
                     }
 
                 },
                 complete: function() {
                     // Enable the Save button again.
-                    $(".delay-row-label").show();
-                    $(".delay-row-input").show();
+                    // $(".delay-row-label").show();
+                    // $(".delay-row-input").show();
                     $('div .seq_spinner').hide();
 
 
@@ -583,19 +552,117 @@ jQuery(document).ready(function(){
             });
         });
 
+        // TODO: This button is confusing. Just remove it (and the cancel button). Only display the select with "Not in a sequence" set if there
+        // are no additional sequences configured. If there are. Then add the 'new" button, but hide it & show "Cancel" once a new sequence is selected.
+
         $(document).on( "click", "#pmpro-seq-new-meta", function() {
 
             console.log("Add new table row for metabox");
             $('div .seq_spinner').show();
-            $("tr.delay-row-label.pmpro-sequence-hidden").slideToggle();
-            $("tr.delay-row-input.pmpro-sequence-hidden").slideToggle();
+            showAddNew();
             $('div .seq_spinner').hide();
-            $(this).hide();
+            // $(this).hide();
         });
 
     })(jQuery);
 });
 
+function postMetaSelectChanged( $self ) {
+
+    console.log("Changed the Sequence this post is a member of");
+    jQuery('div .seq_spinner').show();
+
+    var $sequence_id = jQuery( $self ).val();
+
+    if ( ! $sequence_id ) {
+        console.log("Empty Id");
+        return;
+        console.log("Should have exited...")
+    }
+    console.log("Sequence ID: " + $sequence_id );
+    // Disable delay and sequence input.
+
+    jQuery.ajax({
+        url: pmpro_sequence.ajaxurl,
+        type:'POST',
+        timeout:10000,
+        dataType: 'JSON',
+        data: {
+            action: 'pmpro_sequence_update_post_meta',
+            pmpro_sequence_id: $sequence_id,
+            pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val(),
+            pmpro_sequence_post_id: jQuery('#post_ID').val()
+        },
+        error: function($data){
+            console.log("error() - Returned data: " + $data.success + " and " + $data.data);
+            console.dir($data);
+
+            if ( $data.data ) {
+                alert($data.data);
+                return;
+            }
+        },
+        success: function($data){
+            console.log("success() - Returned data: " + $data.success);
+            console.dir($data);
+
+            if ($data.data) {
+
+                console.log('Entry added to sequence & refreshing metabox content');
+                jQuery('#pmpro_seq-configure-sequence').html($data.data);
+                console.log("Loaded sequence meta info.");
+                return;
+            } else {
+                console.log('No HTML returned???');
+            }
+
+        },
+        complete: function($data) {
+            hideAddNew();
+            //$(".delay-row-label").show();
+            //$(".delay-row-input").show();
+            jQuery('div .seq_spinner').hide();
+            console.log("Ajax function complete...");
+            event.stopPropagation();
+            return;
+        }
+    });
+
+    return;
+}
+
+function showAddNew() {
+
+    jQuery('.new-sequence-select-label').show();
+    jQuery('.new-sequence-select').show();
+    jQuery('.new-sequence-delay').show();
+    jQuery('.new-sequence-delay-label').show();
+
+    jQuery('#pmpro-seq-new').hide();
+
+}
+
+function hideAddNew() {
+
+    jQuery('.new-sequence-select-label').hide();
+    jQuery('.new-sequence-select').hide();
+    jQuery('.new-sequence-delay').hide();
+    jQuery('.new-sequence-delay-label').hide();
+
+    // var $selectInp = jQuery('#pmpro-seq-metatable tbody>tr:last').prev('tr').prev('tr');
+    // var $selectLabel = jQuery($selectInp).prev('tr');
+
+    // $selectInp.slideToggle();
+    // $selectLabel.slideToggle();
+    var $addNew = jQuery(".select-row-input").length;
+
+    console.log('defined sequences (number): ' + $addNew );
+
+    if ( $addNew > 1 ) {
+        jQuery('#pmpro-seq-new').show();
+        jQuery('#pmpro-seq-new-meta-reset').hide();
+    }
+}
 function setLabels()
 {
     var delayType = jQuery('#pmpro_sequence_delaytype').val();

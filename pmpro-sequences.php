@@ -103,7 +103,6 @@ if ( ! function_exists( 'pmpro_sequence_post_save' ) ):
 
                 dbgOut( "Processing post {$post_id} for sequence {$seq_id} with delay {$delays[$key]}" );
                 $sequence = new PMProSequence( $seq_id );
-                $sequence->getPosts();
                 $sequence->addPost( $post_id, $delays[ $key ] );
             }
         }
@@ -430,17 +429,17 @@ if ( ! function_exists( 'update_delay_post_meta_callback' ) ):
 
         dbgOut("Sequence: {$seq_id}, Post: {$post_id}" );
 
-        if ( $seq_id != 0 ) {
+//         if ( $seq_id != 0 ) {
 
             $seq = new PMProSequence( $seq_id );
 
             $html = $seq->load_sequence_meta( $post_id, $seq_id );
 
             wp_send_json_success( $html );
-        }
-        else {
-            wp_send_json_error( 'Error loading sequence data.' );
-        }
+//        }
+//        else {
+//            wp_send_json_error( 'Error loading sequence data.' );
+//        }
     }
 
 endif;
@@ -454,7 +453,7 @@ if ( ! function_exists( 'pmpro_rm_sequence_from_post_callback' ) ):
     add_action('wp_ajax_pmpro_rm_sequence_from_post', 'pmpro_rm_sequence_from_post_callback' );
     add_action('wp_ajax_nopriv_pmpro_rm_sequence_from_post', 'pmpro_sequence_ajaxUnprivError');
 
-    function pmpro_rm_sequence_from_post() {
+    function pmpro_rm_sequence_from_post_callback() {
 
         $success = false;
 
@@ -472,6 +471,7 @@ if ( ! function_exists( 'pmpro_rm_sequence_from_post_callback' ) ):
         // Remove the post (if the user is allowed to)
         if ( current_user_can( 'edit_posts' ) && ( ! is_null( $post_id ) ) && ( ! is_null( $sequence_id ) ) ) {
 
+            dbgOut("Removing post # {$post_id} from sequence {$sequence_id}");
             $sequence->removePost( $post_id );
             //$result = __('The post has been removed', 'pmprosequence');
             $success = true;
@@ -481,7 +481,7 @@ if ( ! function_exists( 'pmpro_rm_sequence_from_post_callback' ) ):
             $sequence->setError( __( 'Incorrect privileges to remove posts from this sequence', 'pmprosequence' ) );
         }
 
-        $result = $sequence->load_sequence_meta( $post_id, $sequence_id );
+        $result = $sequence->load_sequence_meta( $post_id );
 
         if ( ! empty( $result ) && is_null( $sequence->getError() ) && ( $success ) ) {
 
