@@ -33,7 +33,7 @@
          * Constructor for the PMProSequence class
          *
          * @param null $id -- The ID of the sequence to load/construct
-         * @return object -- ID of the sequence loaded/constructed.
+         * @return int -- ID of the sequence loaded/constructed.
          *
          * @access public
          */
@@ -400,7 +400,7 @@
          *
          * @access public
 	     */
-	    public function calculateTimestamp( $timeString )
+mall cleanups	    public function calculateTimestamp( $timeString )
 	    {
 		    // Use local time (not UTC) for 'current time' at server location
 		    // This is what Wordpress apparently uses (at least in v3.9) for wp-cron.
