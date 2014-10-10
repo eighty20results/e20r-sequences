@@ -400,7 +400,7 @@
          *
          * @access public
 	     */
-mall cleanups	    public function calculateTimestamp( $timeString )
+	    public function calculateTimestamp( $timeString )
 	    {
 		    // Use local time (not UTC) for 'current time' at server location
 		    // This is what Wordpress apparently uses (at least in v3.9) for wp-cron.
