@@ -649,7 +649,7 @@ function lockMetaRows() {
 
     jQuery( '.pmpro_seq-memberof-sequences' ).each( function() {
 
-        $jQuery( this ).attr( 'disabled', true );
+        jQuery( this ).attr( 'disabled', true );
     });
 
     jQuery( '.pmpro-seq-delay-info').each( function() {
@@ -665,7 +665,7 @@ function unlockMetaRows() {
 
     jQuery( '.pmpro_seq-memberof-sequences' ).each( function() {
 
-        $jQuery( this ).attr( 'disabled', false );
+        jQuery( this ).attr( 'disabled', false );
     });
 
     jQuery( '.pmpro-seq-delay-info').each( function() {

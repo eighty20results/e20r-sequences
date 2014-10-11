@@ -61,12 +61,11 @@ div#pmpro-seq-error {
 }
 
 .sequence-list-dropdown,
-#pmpro_seq-memberof-sequences {
+.pmpro_seq-memberof-sequences {
     max-width: 230px;
     min-width: 200px;
     max-height: 250px;
     min-height: 100px;
-    overflow: scroll;
 }
 
 .pmpro-seq-days {
@@ -122,6 +121,7 @@ div#pmpro-seq-error {
     right: 2px;
     display: inline-block;
 }
+
 
 
 .cancel-pmproseq {

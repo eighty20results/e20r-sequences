@@ -484,9 +484,12 @@
 
 			$this->getPosts();
 
-			//remove any old post with this id
-			if($this->hasPost($post_id))
-				$this->removePost($post_id);
+			//remove any old post with this id, but don't clear the notified flag for any users.
+			if($this->hasPost($post_id)) {
+
+                dbgOut("Cleaning old post with this ID from the sequence, don't remove notification notices");
+                $this->removePost($post_id, false);
+            }
 
 			// Add post
 			$temp = new stdClass();
@@ -494,8 +497,7 @@
 			$temp->delay = $delay;
 
 
-			// TODO: Add _sequence_post_{post_id} = {$delay} meta option for this post.
-			// Or we could go with loading the posts (correctly) when needed (to allow for pagination)
+			// TODO: Load the posts (correctly according to Wordpress) when needed (to allow for pagination)
 			/* Only add the post if it's not already present. */
 			if (! in_array( $temp->id, $this->posts ) ) {
 
@@ -701,12 +703,13 @@
         /**
          * Removes a post from the list of posts belonging to this sequence
          *
-         * @param $post_id -- The ID of the post to remove from the sequence
+         * @param int $post_id -- The ID of the post to remove from the sequence
+         * @param bool $remove_notice - Whether to also remove any 'notified' settings for users
          * @return bool - returns TRUE if the post was removed and the metadata for the sequence was updated successfully
          *
          * @access public
          */
-        public function removePost($post_id)
+        public function removePost($post_id, $remove_notice = true)
 		{
 			if(empty($post_id))
 				return false;
@@ -732,7 +735,10 @@
 
 			// Remove post from user settings...
 			// Remove the post ($post_id) from all cases where a User has been notified.
-			$this->removeNotifiedFlagForPost($post_id);
+            if ( $remove_notice ) {
+
+                $this->removeNotifiedFlagForPost($post_id);
+            }
 
 			// Remove the sequence id from the post's metadata
 			$post_sequence = get_post_meta($post_id, "_post_sequences", true);

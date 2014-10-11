@@ -96,6 +96,9 @@ if ( ! function_exists( 'pmpro_sequence_post_save' ) ):
         dbgOut( "Saved passed variables...");
         dbgOut("IDs: " . print_r( $seq_ids, true ));
         dbgOut("Delays: " . print_r( $delays, true ));
+        dbgOut("Already in sequence: " . print_r( $already_in, true ) );
+
+        // TODO: If the post is already in the sequence, but the delay value is empty AND the $delays[$key] is not blank/empty/0, we need to add a delay value for this post/sequence combination.
 
         foreach ($seq_ids as $key => $seq_id ) {
 
@@ -472,7 +475,7 @@ if ( ! function_exists( 'pmpro_rm_sequence_from_post_callback' ) ):
         if ( current_user_can( 'edit_posts' ) && ( ! is_null( $post_id ) ) && ( ! is_null( $sequence_id ) ) ) {
 
             dbgOut("Removing post # {$post_id} from sequence {$sequence_id}");
-            $sequence->removePost( $post_id );
+            $sequence->removePost( $post_id, true );
             //$result = __('The post has been removed', 'pmprosequence');
             $success = true;
         } else {
@@ -1221,7 +1224,7 @@ add_filter("pmpro_has_membership_access_filter", "pmpro_sequence_has_membership_
      */
     function pmpro_sequence_has_membership_access_filter($hasaccess, $mypost, $myuser, $post_membership_levels)
     {
-        dbgOut("Running membership_access_filter");
+        // dbgOut("Running membership_access_filter");
 
         //If the user doesn't have access already, we won't change that. So only check if they already have access.
         if($hasaccess)
