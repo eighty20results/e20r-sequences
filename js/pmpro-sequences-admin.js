@@ -506,6 +506,8 @@ jQuery(document).ready(function(){
             console.log("The 'remove' checkbox was clicked...");
             // TODO: Lock everything until the remove returns.
 
+            lockMetaRows();
+
             $('div .seq_spinner').show();
 
             jQuery.ajax({
@@ -534,14 +536,14 @@ jQuery(document).ready(function(){
 
                     if ($data.data) {
                         jQuery('#pmpro_seq-configure-sequence').html( $data.data );
-                        hideAddNew();
+                        showMetaControls();
                     }
 
                 },
                 complete: function() {
 
                     showMetaControls();
-
+                    unlockMetaRows();
                     $('div .seq_spinner').hide();
 
 
@@ -569,7 +571,6 @@ jQuery(document).ready(function(){
 
         $(document).on( "click", "#pmpro-seq-new-meta-reset", function() {
 
-            // TODO: Lock all other rows of data except the 'new' labels, select & delay input box(es).
             lockMetaRows();
             $('div .seq_spinner').show();
             showMetaControls();
@@ -646,18 +647,35 @@ function rowVisibility ($element, $show ) {
 }
 function lockMetaRows() {
 
-    jQuery( '.pmpro_seq-memberof-sequences').attr('disabled', true);
-    jQuery( '.pmpro-seq-delay-info').attr('disabled', true);
-    jQuery( '#pmpro-seq-new-meta').attr('disabled', true);
-    jQuery( '#pmpro-seq-new-meta-reset').attr('disabled', true);
+    jQuery( '.pmpro_seq-memberof-sequences' ).each( function() {
+
+        $jQuery( this ).attr( 'disabled', true );
+    });
+
+    jQuery( '.pmpro-seq-delay-info').each( function() {
+
+        jQuery( this ).attr( 'disabled', true );
+    });
+
+    jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', true );
+    jQuery( '#pmpro-seq-new-meta-reset' ).attr( 'disabled', true );
 };
 
 function unlockMetaRows() {
 
-    jQuery( '.pmpro_seq-memberof-sequences').attr('disabled', false);
-    jQuery( '.pmpro-seq-delay-info').attr('disabled', false);
-    jQuery( '#pmpro-seq-new-meta').attr('disabled', false);
-    jQuery( '#pmpro-seq-new-meta-reset').attr('disabled', false);
+    jQuery( '.pmpro_seq-memberof-sequences' ).each( function() {
+
+        $jQuery( this ).attr( 'disabled', false );
+    });
+
+    jQuery( '.pmpro-seq-delay-info').each( function() {
+
+        jQuery( this ).attr( 'disabled', false );
+    });
+
+    jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', false );
+    jQuery( '#pmpro-seq-new-meta-reset' ).attr( 'disabled', false );
+
 };
 
 
