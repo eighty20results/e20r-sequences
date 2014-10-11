@@ -1143,7 +1143,7 @@
                     $label = sprintf( __("Delay (Format: %s)", "pmprosequence"), $delayFormat );
                     // dbgOut(" Label: " . print_r( $label, true ) );
                     ?>
-                    <tr class="delay-row-label<?php echo ( $active_id == 0 ? ' new-sequence-delay-label' : 'sequence-delay-label' ); ?>">
+                    <tr class="delay-row-label<?php echo ( $active_id == 0 ? ' new-sequence-delay-label' : ' sequence-delay-label' ); ?>">
                         <td>
                             <label for="pmpro_seq-delay_<?php echo $active_id; ?>"> <?php echo $label; ?> </label>
                         </td>
