@@ -70,7 +70,7 @@ jQuery(document).ready(function(){
         var $fromname = $fromCtl.val();
         var $replyto = $replyCtl.val();
 
-        var $count = 0;
+        // var $count = 0;
 
         // console.log('Sort Order is: ' + jQuery('#pmpro_sequence_sortorder option:selected').text());
 
@@ -79,11 +79,7 @@ jQuery(document).ready(function(){
         }
 
         // var $addNew = jQuery(".select-row-input").length;
-
-        $count = $( 'tr.select-row-input.sequence-select' ).length;
-
-        console.log('Number of select inputs: ' + $count);
-        hideAddNew();
+        showMetaControls();
 
         manageDelayLabels( $delayCtl.val() );
 
@@ -508,6 +504,7 @@ jQuery(document).ready(function(){
         $(document).on( "click", '.delay-row-input input:checkbox', function() {
 
             console.log("The 'remove' checkbox was clicked...");
+            // TODO: Lock everything until the remove returns.
 
             $('div .seq_spinner').show();
 
@@ -542,9 +539,9 @@ jQuery(document).ready(function(){
 
                 },
                 complete: function() {
-                    // Enable the Save button again.
-                    // $(".delay-row-label").show();
-                    // $(".delay-row-input").show();
+
+                    showMetaControls();
+
                     $('div .seq_spinner').hide();
 
 
@@ -557,17 +554,117 @@ jQuery(document).ready(function(){
 
         $(document).on( "click", "#pmpro-seq-new-meta", function() {
 
+            // TODO: Lock all other rows of data except the 'new' labels, select & delay input box(es).
+            lockMetaRows();
             console.log("Add new table row for metabox");
             $('div .seq_spinner').show();
-            showAddNew();
+
+            showMetaControls();
+
             $('div .seq_spinner').hide();
             // $(this).hide();
+            // $('#pmpro-seq-new-meta-reset').show();
+            unlockMetaRows();
         });
+
+        $(document).on( "click", "#pmpro-seq-new-meta-reset", function() {
+
+            // TODO: Lock all other rows of data except the 'new' labels, select & delay input box(es).
+            lockMetaRows();
+            $('div .seq_spinner').show();
+            showMetaControls();
+            $('div .seq_spinner').hide();
+            unlockMetaRows();
+        });
+
 
     })(jQuery);
 });
 
+function showMetaControls() {
+
+    var $count = 0;
+
+    jQuery( 'select.pmpro_seq-memberof-sequences').each( function() {
+
+        rowVisibility( this, 'all' );
+        $count++;
+    });
+
+    console.log('Number of selects with defined sequences: ' + $count);
+
+    // Check if there's more than one select box in metabox. If so, the post already belongs to sequences
+    if ( $count >= 1 ) {
+
+        // Hide the 'new sequence' select and show the 'new' button.
+        rowVisibility( jQuery( 'select.new-sequence-select') , 'none' );
+
+        jQuery('#pmpro-seq-new').show();
+        jQuery('#pmpro-seq-new-meta').show();
+        jQuery('#pmpro-seq-new-meta-reset').hide();
+    }
+    else {
+
+        // Show the row for the 'Not defined' in the New sequence drop-down
+        rowVisibility( jQuery( 'select.new-sequence-select' ), 'select' );
+
+        // Hide all buttons
+        jQuery('#pmpro-seq-new').hide();
+    }
+
+}
+
+function rowVisibility ($element, $show ) {
+
+    var $selectLabelRow = jQuery($element).parent().parent().prev();
+    var $selectRow = jQuery($element).parent().parent();
+
+    var $delayLabelRow = jQuery($element).parent().parent().next();
+    var $delayRow = jQuery($delayLabelRow).next();
+
+    if ( $show == 'all') {
+
+        jQuery($selectLabelRow).show();
+        jQuery($selectRow).show();
+        jQuery($delayLabelRow).show();
+        jQuery($delayRow).show();
+    }
+    else if (  $show == 'none') {
+
+        jQuery($selectLabelRow).hide();
+        jQuery($selectRow).hide();
+        jQuery($delayLabelRow).hide();
+        jQuery($delayRow).hide();
+    }
+    else if ( $show == 'select' ) {
+
+        jQuery($selectLabelRow).show();
+        jQuery($selectRow).show();
+        jQuery($delayLabelRow).hide();
+        jQuery($delayRow).hide();
+    }
+}
+function lockMetaRows() {
+
+    jQuery( '.pmpro_seq-memberof-sequences').attr('disabled', true);
+    jQuery( '.pmpro-seq-delay-info').attr('disabled', true);
+    jQuery( '#pmpro-seq-new-meta').attr('disabled', true);
+    jQuery( '#pmpro-seq-new-meta-reset').attr('disabled', true);
+};
+
+function unlockMetaRows() {
+
+    jQuery( '.pmpro_seq-memberof-sequences').attr('disabled', false);
+    jQuery( '.pmpro-seq-delay-info').attr('disabled', false);
+    jQuery( '#pmpro-seq-new-meta').attr('disabled', false);
+    jQuery( '#pmpro-seq-new-meta-reset').attr('disabled', false);
+};
+
+
 function postMetaSelectChanged( $self ) {
+
+    // TODO: Lock everything until the new delay box is displayed
+    lockMetaRows();
 
     console.log("Changed the Sequence this post is a member of");
     jQuery('div .seq_spinner').show();
@@ -611,20 +708,15 @@ function postMetaSelectChanged( $self ) {
                 console.log('Entry added to sequence & refreshing metabox content');
                 jQuery('#pmpro_seq-configure-sequence').html($data.data);
                 console.log("Loaded sequence meta info.");
-                return;
             } else {
                 console.log('No HTML returned???');
             }
 
         },
         complete: function($data) {
-            hideAddNew();
-            //$(".delay-row-label").show();
-            //$(".delay-row-input").show();
             jQuery('div .seq_spinner').hide();
             console.log("Ajax function complete...");
-            event.stopPropagation();
-            return;
+            showMetaControls();
         }
     });
 
