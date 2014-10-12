@@ -536,7 +536,7 @@ jQuery(document).ready(function(){
 
                     if ($data.data) {
                         jQuery('#pmpro_seq-configure-sequence').html( $data.data );
-                        showMetaControls();
+                        //showMetaControls();
                     }
 
                 },
@@ -551,9 +551,6 @@ jQuery(document).ready(function(){
             });
         });
 
-        // TODO: This button is confusing. Just remove it (and the cancel button). Only display the select with "Not in a sequence" set if there
-        // are no additional sequences configured. If there are. Then add the 'new" button, but hide it & show "Cancel" once a new sequence is selected.
-
         $(document).on( "click", "#pmpro-seq-new-meta", function() {
 
             // TODO: Lock all other rows of data except the 'new' labels, select & delay input box(es).
@@ -561,7 +558,7 @@ jQuery(document).ready(function(){
             console.log("Add new table row for metabox");
             $('div .seq_spinner').show();
 
-            showMetaControls();
+            rowVisibility( jQuery( '.new-sequence-select' ), 'select' );
 
             $('div .seq_spinner').hide();
             // $(this).hide();
@@ -615,6 +612,23 @@ function showMetaControls() {
 
 }
 
+function saveSequence( $delayElem ) {
+
+    jQuery('div .seq_spinner').show();
+    lockMetaRows();
+
+    var $delayRow = jQuery($delayElem).parent().parent();
+    var $selectRow = jQuery( $delayRow ).prev().prev();
+    var $selectTd = jQuery( $selectRow ).children().eq(0);
+    var $selected = jQuery( $selectTd ).children().eq(0);
+
+    var $delay = jQuery($delayElem).val();
+    var $sequence_id = jQuery( $selected ).val();
+
+    console.log( "Delay: " + $delay );
+    console.log("Sequence: " + $sequence_id );
+}
+
 function rowVisibility ($element, $show ) {
 
     var $selectLabelRow = jQuery($element).parent().parent().prev();
@@ -639,12 +653,15 @@ function rowVisibility ($element, $show ) {
     }
     else if ( $show == 'select' ) {
 
+        console.log("Show the drop-down only");
+
         jQuery($selectLabelRow).show();
         jQuery($selectRow).show();
         jQuery($delayLabelRow).hide();
         jQuery($delayRow).hide();
     }
 }
+
 function lockMetaRows() {
 
     jQuery( '.pmpro_seq-memberof-sequences' ).each( function() {
@@ -652,9 +669,18 @@ function lockMetaRows() {
         jQuery( this ).attr( 'disabled', true );
     });
 
+    jQuery( '.new-sequence-select' ).each( function() {
+        jQuery( this).attr( 'disabled', true);
+    });
+
     jQuery( '.pmpro-seq-delay-info').each( function() {
 
         jQuery( this ).attr( 'disabled', true );
+    });
+
+    jQuery( '.pmpro_seq-remove-seq').each( function() {
+
+        jQuery( this).attr( 'disabled', true );
     });
 
     jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', true );
@@ -668,9 +694,18 @@ function unlockMetaRows() {
         jQuery( this ).attr( 'disabled', false );
     });
 
+    jQuery( '.new-sequence-select' ).each( function() {
+        jQuery( this).attr( 'disabled', false );
+    });
+
     jQuery( '.pmpro-seq-delay-info').each( function() {
 
         jQuery( this ).attr( 'disabled', false );
+    });
+
+    jQuery( '.pmpro_seq-remove-seq').each( function() {
+
+        jQuery( this).attr( 'disabled', true );
     });
 
     jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', false );
@@ -681,7 +716,6 @@ function unlockMetaRows() {
 
 function postMetaSelectChanged( $self ) {
 
-    // TODO: Lock everything until the new delay box is displayed
     lockMetaRows();
 
     console.log("Changed the Sequence this post is a member of");
@@ -719,7 +753,6 @@ function postMetaSelectChanged( $self ) {
         },
         success: function($data){
             console.log("success() - Returned data: " + $data.success);
-            console.dir($data);
 
             if ($data.data) {
 
@@ -735,10 +768,10 @@ function postMetaSelectChanged( $self ) {
             jQuery('div .seq_spinner').hide();
             console.log("Ajax function complete...");
             showMetaControls();
+            unlockMetaRows();
+            jQuery( '#pmpro-seq-new').hide();
         }
     });
-
-    return;
 }
 
 function showAddNew() {
@@ -773,6 +806,7 @@ function hideAddNew() {
         jQuery('#pmpro-seq-new-meta-reset').hide();
     }
 }
+
 function setLabels()
 {
     var delayType = jQuery('#pmpro_sequence_delaytype').val();
