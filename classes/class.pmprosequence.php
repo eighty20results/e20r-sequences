@@ -27,7 +27,7 @@
 		private $id;
 		private $posts; // List of posts
 		private $post; // Individual post
-		private $error = null;
+		public $error = null;
 
         /**
          * Constructor for the PMProSequence class
@@ -460,7 +460,7 @@
 	        if (! $this->isValidDelay($delay) )
 	        {
 	            dbgOut('addPost(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
-	            $this->error = printf(__('Invalid delay value - %s', 'pmprosequence'), $delay);
+	            $this->error = sprintf(__('Invalid delay value - %s', 'pmprosequence'), ( empty($delay) ? 'blank' : $delay ) );
 	            return false;
 	        }
 
@@ -807,6 +807,10 @@
 			}
 		}
 
+        public function pmpro_seq_display_error() {
+            dbgOut("Display error messages, if there are any");
+            settings_errors( 'pmpro_seq_errors' );
+        }
 		/**
 		 * Send email to userID about access to new post.
 		 *
@@ -984,11 +988,21 @@
 
             //TODO: Find all post types on the system & then loop through for all post types using a foreach() loop.
             /* Add meta boxes on the 'add_meta_boxes' hook. */
-            add_meta_box( 'pmpro-seq-post-meta', __('Drip Feed Sequence', 'pmprosequence'), array( "PMProSequence", 'pmpro_sequence_page_meta'), 'page', 'side', 'high');
-            add_meta_box( 'pmpro-seq-post-meta', __('Drip Feed Sequence', 'pmprosequence'), array( "PMProSequence", 'pmpro_sequence_page_meta'), 'post', 'side', 'high');
+
+            $post_types = apply_filters("pmpro_sequencepost_types", array("post", "page") );
+
+            foreach( $post_types as $type ) {
+
+                add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', 'pmprosequence' ), array(
+                        "PMProSequence",
+                        'pmpro_sequence_page_meta'
+                    ), $type, 'side', 'high' );
+            }
         }
 
-
+        /**
+         * Initial load of the metabox for the editor sidebar
+         */
         public function pmpro_sequence_page_meta() {
 
             $metabox = '';
@@ -1001,6 +1015,7 @@
             ob_start();
             ?>
             <div class="submitbox" id="pmpro-seq-postmeta">
+                <div id="pmpro-seq-error"></div>
                 <div id="minor-publishing">
                     <div id="pmpro_seq-configure-sequence">
                         <?php echo $seq->load_sequence_meta( $post->ID ) ?>
@@ -1014,6 +1029,14 @@
             echo $metabox;
         }
 
+        /**
+         * Loads metabox content for the editor metabox (sidebar)
+         *
+         * @param int|null $post_id -- ID of Post being edited
+         * @param int $seq_id -- ID of the sequence being added/edited.
+         *
+         * @return string - HTML of metabox content
+         */
         public function load_sequence_meta( $post_id = null, $seq_id = 0) {
 
             dbgOut("Called: {$post_id} and {$seq_id}.");
@@ -1076,15 +1099,16 @@
                 <tbody>
                 <?php foreach( $belongs_to as $active_id ) { ?>
                     <?php dbgOut("Adding rows for {$active_id}");?>
+                    <tr><td><fieldset></td></tr>
                     <tr class="select-row-label<?php echo ( $active_id == 0 ? ' new-sequence-select-label' : ' sequence-select-label' ); ?>">
                         <td>
-                            <label for="pmpor_seq-memberof-sequences"><?php _e("Select drip-feed sequence", "pmprosequence"); ?></label>
+                            <label for="pmpro_seq-memberof-sequences"><?php _e("Managed by (drip content feed)", "pmprosequence"); ?></label>
                         </td>
                     </tr>
                     <tr class="select-row-input<?php echo ( $active_id == 0 ? ' new-sequence-select' : ' sequence-select' ); ?>">
                         <td class="sequence-list-dropdown">
                             <select class="<?php echo ( $active_id == 0 ? 'new-sequence-select' : 'pmpro_seq-memberof-sequences'); ?>" name="pmpro_seq-sequences[]">
-                                <option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected' : '' ); ?>><?php _e("Not in a Sequence", "pmprosequence"); ?></option>
+                                <option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected' : '' ); ?>><?php _e("Not managed", "pmprosequence"); ?></option>
                                 <?php
                                 // Loop through all of the sequences & create an option list
                                 foreach ( $sequence_list as $sequence ) {
@@ -1141,7 +1165,7 @@
                         default:
 
                             dbgOut("Configured to track delays by Day count");
-                            $delayFormat = __('Day Count', "pmprosequence");
+                            $delayFormat = __('Day count', "pmprosequence");
                             $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-days' type='text' id='pmpro_seq-delay_{$active_id}' name='pmpro_seq-delay[]'{$delayVal}>";
 
                     }
@@ -1160,6 +1184,7 @@
                             <label for="remove-sequence_<?php echo $active_id; ?>" ><?php _e('Remove: ', 'pmprosequence'); ?></label><input type="checkbox" name="remove-sequence" class="pmpro_seq-remove-seq" value="<?php echo $active_id; ?>">
                         </td>
                     </tr>
+                    <tr><td></fieldset></td></tr>
                 <?php } // Foreach ?>
                 </tbody>
             </table>
@@ -1174,6 +1199,51 @@
 
             return $html;
         }
+
+
+        public function validatePOSTDelay( $delay ) {
+
+            $delay = ( is_numeric( $delay ) ? intval( $delay ) : esc_attr( $delay ) );
+
+            if ( ! empty( $delay ) ) {
+
+                // Check that the provided delay format matches the configured value.
+                if ( $this->isValidDelay( $delay ) ) {
+
+                    dbgOut( 'validatePOSTDelay(): Delay value is recognizable' );
+
+                    if ( $this->isValidDate( $delay ) ) {
+
+                        dbgOut( 'validatePOSTDelay(): Delay specified as a valid date format' );
+
+                    } else {
+
+                        dbgOut( 'validatePOSTDelay(): Delay specified as the number of days' );
+                    }
+                }
+                else {
+                    // Ignore this post & return error message to display for the user/admin
+                    // NOTE: Format of date is not translatable
+                    $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __( 'date: YYYY-MM-DD', 'pmprosequence' ) : __( 'number: Days since membership started', 'pmprosequence' );
+
+                    dbgOut( 'validatePOSTDelay(): Invalid delay value specified, not adding the post. Delay is: ' . $delay );
+                    $this->error = sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', 'pmprosequence' ), $delay, $expectedDelay );
+
+                    $delay       = false;
+                }
+            } else {
+
+                dbgOut( 'validatePOSTDelay(): Delay value was not specified. Not adding the post. Delay is: ' . esc_attr( $delay ) );
+
+                if ( empty( $delay ) ) {
+
+                    $this->error = __( 'No delay has been specified', 'pmprosequence' );
+                }
+            }
+
+            return $delay;
+        }
+
 	    /**
 	     * Add the actual meta box definitions as add_meta_box() functions (3 meta boxes; One for the page meta,
 	     * one for the Settings & one for the sequence posts/page definitions.
@@ -1382,7 +1452,7 @@
 			global $wpdb;
 
 			$post_types = apply_filters("pmpro_sequencepost_types", array("post", "page") );
-			$status = array('publish', 'draft', 'future', 'pending', 'private');
+			$status = apply_filters( "pmpro_sequencepost_status", array('publish', 'draft', 'future', 'pending', 'private') );
 
 			$sql = $wpdb->prepare(
 				"
