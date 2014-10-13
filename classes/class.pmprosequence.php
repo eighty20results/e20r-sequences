@@ -896,6 +896,13 @@
 			return true;
 		}
 
+        public function pmpro_sequence_init_admin() {
+
+            if ( current_user_can( 'manage_options' ) && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
+                register_setting(__CLASS__.'_options', 'pmpro_seq_errors', array($this, 'getError'));
+            }
+        }
+
         /**
          * Creates the Sequence Custom Post Type
          *
