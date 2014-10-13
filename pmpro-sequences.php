@@ -59,6 +59,8 @@ if ( ! class_exists( 'PMProSeqRecentPost' )):
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.PMProSeqRecentPost.php");
 endif;
 
+add_action( 'admin_init', array( 'PMProSequence', 'pmpro_sequence_init_admin') );
+
 add_action( 'add_meta_boxes', array( "PMProSequence", 'pmpro_sequence_post_metabox_setup') );
 add_action( 'admin_notices', array( "PMProSequence", 'pmpro_seq_display_error' ) );
 
