@@ -51,89 +51,88 @@ define('PMPRO_SEQ_AS_DATE', 2);
   *	Include the class for PMProSequences
   */
 if (! class_exists( 'PMProSequence' )):
+
     require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.pmprosequence.php");
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR ."scheduled" .DIRECTORY_SEPARATOR. "crons.php");
+
 endif;
 
 if ( ! class_exists( 'PMProSeqRecentPost' )):
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.PMProSeqRecentPost.php");
 endif;
 
-add_action( 'admin_init', array( 'PMProSequence', 'pmpro_sequence_init_admin') );
 
-add_action( 'add_meta_boxes', array( "PMProSequence", 'pmpro_sequence_post_metabox_setup') );
-add_action( 'admin_notices', array( "PMProSequence", 'pmpro_seq_display_error' ) );
+
+add_action( 'add_meta_boxes', array( &$sequence, 'pmpro_sequence_post_metabox_setup') );
+
+add_action( 'admin_notices', array( &$sequence, 'pmpro_seq_display_error' ) );
+add_action( 'admin_init', array( &$sequence, 'pmpro_sequence_init_admin') );
 
 if ( ! function_exists( 'pmpro_sequence_post_save' ) ):
 
-    add_action( 'save_post', 'pmpro_sequence_post_save', 10, 2 );
+    add_action( 'save_post', 'pmpro_sequence_post_save' );
 
     function pmpro_sequence_post_save( $post_id ) {
 
+        global $current_user;
+
         dbgOut("Sequence info for post/page save");
-
-        $errMsg = null;
-
-        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-            dbgOut("Exit during autosave");
-            return $post_id;
-        }
-
-        // check capabilities
-        if ( 'post' == $_POST['post_type'] ) {
-
-            if (!current_user_can('edit_post', $post_id)) {
-                add_settings_error( 'pmpro_seq_errors', '', 'Incorrect privileges to edit sequence information', 'error' );
-                return $post_id;
-            }
-        }
-        elseif (!current_user_can('edit_page', $post_id)) {
-            add_settings_error( 'pmpro_seq_errors', '', 'Incorrect privileges for this operation', 'error' );
-            return $post_id;
-        }
-
-        $already_in = get_post_meta( $post_id, "_post_sequences", true );
 
         dbgOut("Sequences & Delays have been configured");
 
         $seq_ids = is_array( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
         $delays = is_array( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
 
-        dbgOut( "Saved passed variables...");
-        dbgOut("IDs: " . print_r( $seq_ids, true ));
-        dbgOut("Delays: " . print_r( $delays, true ));
-        dbgOut("Already in sequence: " . print_r( $already_in, true ) );
+        $errMsg = null;
 
-        foreach ($seq_ids as $key => $seq_id ) {
-
-            $sequence = new PMProSequence( $seq_id );
-
-            if ( ( ! in_array( $seq_id, $already_in ) ) && ( $seq_id != 0) ) {
-
-                dbgOut( "Processing post {$post_id} for sequence {$seq_id} with delay {$delays[$key]}" );
-
-                if ( ! $sequence->addPost( $post_id, $delays[ $key ] ) ) {
-                    $errMsg = $sequence->error;
-                    dbgOut("Error Msg: " . $errMsg );
-                    add_settings_error( 'pmpro_seq_errors', '', $errMsg, 'error' );
-                    dbgOut("Error while attempting to add post {$post_id} with delay {$delays[$key]}");
-                }
-            }
-            elseif ( $seq_id == 0 ) {
-
-                dbgOut("No specified sequence or it's set to 'nothing'");
-                add_settings_error( 'pmpro_seq_errors', '', 'No valid sequence selected for this post', 'error' );
-
-            }
-            elseif ( in_array( $seq_id, $already_in ) && ( empty( $delays[$key] ) ) ) {
-
-                dbgOut("Not a valid delay value...: " . $delays[$key]);
-                add_settings_error( 'pmpro_seq_errors', '', 'You must specify a delay value for the "' . get_the_title( $seq_id ) . '" sequence', 'error' );
-            }
-
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            dbgOut("Exit during autosave");
+            return;
         }
 
-        return $post_id;
+        if ( wp_is_post_revision( $post_id ) !== false ) {
+            dbgOut("Not saving revisions ({$post_id}) in sequence");
+            return;
+        }
+
+        $already_in = get_post_meta( $post_id, "_post_sequences", true );
+
+        dbgOut( "Saved received variable values...");
+
+        foreach ($seq_ids as $key => $id ) {
+
+            dbgOut("Processing for sequence {$id}");
+
+            if ( $id == 0 ) {
+                continue;
+            }
+
+            $sequence = new PMProSequence( $id );
+            $user_can = apply_filters( 'pmpro-sequence-has-edit-privileges', $sequence->userCan( $current_user->ID ) );
+
+            if (! $user_can ) {
+
+                $sequence->setError( __( 'Incorrect privileges for this operation', 'pmprosequence' ) );
+                dbgOut("User lacks privileges to edit");
+                return;
+            }
+
+            if ( $id == 0 ) {
+
+                dbgOut("No specified sequence or it's set to 'nothing'");
+
+            }
+            elseif ( empty( $delays[$key] ) ) {
+
+                dbgOut("Not a valid delay value...: " . $delays[$key]);
+                $sequence->setError( sprintf( __( "You must specify a delay value for the '%s' sequence", 'pmprosequence'), get_the_title( $id ) ) );
+            }
+            else {
+
+                dbgOut( "Processing post {$post_id} for sequence {$id} with delay {$delays[$key]}" );
+                $sequence->addPost( $post_id, $delays[ $key ] );
+            }
+        }
     }
 
 endif;
@@ -411,6 +410,8 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
     {
 	    check_ajax_referer('pmpro-sequence-add-post', 'pmpro_sequence_addpost_nonce');
 
+        global $current_user;
+
 	    // Fetch the ID of the sequence to add the post to
         $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null;
         $seq_post_id = isset( $_POST['pmpro_sequencepost'] ) && '' != $_POST['pmpro_sequencepost'] ? intval( $_REQUEST['pmpro_sequencepost'] ) : null;
@@ -427,12 +428,15 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
             // Get the Delay to use for the post (depends on type of delay configured)
             if ( $delay !== false ) {
 
-                if ( current_user_can( 'edit_posts' ) && ! is_null( $seq_post_id ) ) {
+                $user_can = apply_filters( 'pmpro-sequence-has-edit-privileges', $sequence->userCan( $current_user->ID ) );
+
+                if ( $user_can && ! is_null( $seq_post_id ) ) {
 
                     dbgOut( 'pmpro_sequence_add_post_callback() - Adding post ' . $seq_post_id . ' to sequence ' . $sequence->sequence_id );
                     $sequence->addPost( $seq_post_id, $delay );
                     $success = true;
                     $sequence->setError( null );
+
                 } else {
                     $success = false;
                     $sequence->setError( __( 'Not permitted to modify the sequence', 'pmprosequence' ) );
@@ -2133,3 +2137,5 @@ if ( ! function_exists ('pmpro_seq_import_series') ):
 
     }
 endif;
+
+$sequence = new PMProSequence();
