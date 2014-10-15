@@ -27,29 +27,32 @@
 		private $id;
 		private $posts; // List of posts
 		private $post; // Individual post
+        private $refreshed;
 		public $error = null;
 
         /**
          * Constructor for the PMProSequence class
          *
-         * @param null $id -- The ID of the sequence to load/construct
-         * @return int -- ID of the sequence loaded/constructed.
+         * @param null $id -- ID of the sequence to load
          *
          * @access public
+         *
          */
         function __construct($id = null)
 		{
             if ( is_null( $id ) && ( $this->sequence_id == 0 ) ) {
-                // Have no sequence ID to play off of..
-                dbgOut('No sequence ID or options defined! Checking against global variables');
+
                 global $wp_query;
 
-                if ( $wp_query->post->ID ) {
+                if ( ! empty($wp_query->post->ID ) ) {
 
                     dbgOut( 'Found Post ID and loading options if not already loaded ' . $wp_query->post->ID );
                     $this->sequence_id = $wp_query->post->ID;
-                } else
-                    return false; // ERROR. No sequence ID provided.
+                } else {
+                    $this->options = $this->defaultOptions();
+                    $this->sequence_id = null;
+                    return $this->sequence_id; // ERROR. No sequence ID provided.
+                }
             }
             elseif ( ! is_null( $id ) )
                 $this->sequence_id = $this->getSequenceByID($id);
@@ -60,6 +63,7 @@
 
             // Set options for the sequence
             $this->options = $this->fetchOptions($this->sequence_id);
+            $this->getPosts(true);
 
 			return $this->sequence_id;
 		}
@@ -309,7 +313,21 @@
          * @access public
          */
         public function getError() {
-			return $this->error;
+
+            if ( empty( $this->error ) ) {
+
+                dbgOut("Attempt to load error info");
+
+                // Check if the settings_error string is set:
+                $this->error = get_settings_errors( 'pmpro_seq_errors' );
+            }
+
+            if ( ! empty( $this->error ) ) {
+                return $this->error;
+            }
+            else {
+                return null;
+            }
 		}
 
         /**
@@ -320,7 +338,14 @@
          * @access public
          */
         public function setError( $msg ) {
+
 			$this->error = $msg;
+
+            if ( $msg !== null ) {
+
+                dbgOut("setError(): {$msg}");
+                add_settings_error( 'pmpro_seq_errors', '', $msg, 'error' );
+            }
 		}
 
 		/**
@@ -454,42 +479,36 @@
          *
          * @access public
          */
-        public function addPost($post_id, $delay)
+        public function addPost( $post_id, $delay )
 		{
 
 	        if (! $this->isValidDelay($delay) )
 	        {
 	            dbgOut('addPost(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
-	            $this->error = sprintf(__('Invalid delay value - %s', 'pmprosequence'), ( empty($delay) ? 'blank' : $delay ) );
+	            $this->setError( sprintf(__('Invalid delay value - %s', 'pmprosequence'), ( empty($delay) ? 'blank' : $delay ) ) );
 	            return false;
 	        }
 
 			if(empty($post_id) || !isset($delay))
 			{
-				$this->error = __("Please enter a value for post and delay", 'pmprosequence');
+				$this->setError( __("Please enter a value for post and delay", 'pmprosequence') );
 	            dbgOut('addPost(): No Post ID or delay specified');
 				return false;
 			}
 
 	        dbgOut('addPost(): Post ID: ' . $post_id . ' and delay: ' . $delay);
 
-			$post = get_post($post_id);
+			if ( $post = get_post($post_id) === null ) {
 
-			if(empty($post->ID))
-			{
-				$this->error = __("A post with that id does not exist", 'pmprosequence');
-	            dbgOut('addPost(): No Post with ' . $post_id . ' found');
-				return false;
-			}
+                $this->setError( __("A post with that id does not exist", 'pmprosequence') );
+                dbgOut('addPost(): No Post with ' . $post_id . ' found');
 
-			$this->getPosts();
-
-			//remove any old post with this id, but don't clear the notified flag for any users.
-			if($this->hasPost($post_id)) {
-
-                dbgOut("Cleaning old post with this ID from the sequence, don't remove notification notices");
-                $this->removePost($post_id, false);
+                return false;
             }
+
+            // Refresh the post list for the sequence, ignore cache
+            dbgOut("addPost(): Force refresh of post list for sequence");
+            $this->getPosts( true );
 
 			// Add post
 			$temp = new stdClass();
@@ -498,76 +517,102 @@
 
 
 			// TODO: Load the posts (correctly according to Wordpress) when needed (to allow for pagination)
-			/* Only add the post if it's not already present. */
-			if (! in_array( $temp->id, $this->posts ) ) {
+            $key = $this->hasPost( $post_id );
 
-                dbgOut("addPost(): Not previously saved in the list of posts for this ({$this->sequence_id}) sequence");
+			/* Only add the post if it's not already present. */
+			if ( $key === false ) {
+
+                dbgOut( "addPost(): Not previously saved in the list of posts for this ({$this->sequence_id}) sequence" );
                 $this->posts[] = $temp;
             }
+            else {
+                dbgOut( "addPost() - Post already in sequence. Check if we need to update it. Post: {$this->posts[$key]->id} with delay {$this->posts[$key]->delay} versus {$delay}");
 
-			//sort
-	        dbgOut('addPost(): Sorting the Sequence by delay');
-			usort($this->posts, array(&$this, "sortByDelay"));
+                if ( intval($this->posts[$key]->delay) != intval($delay) ) {
 
-			//save
-			update_post_meta($this->sequence_id, "_sequence_posts", $this->posts);
+                    dbgOut("Delay is different. Need to update everything and clear the notices");
+                    $this->removePost( $post_id, true );
+                    $this->posts[] = $temp;
+                    $key = false;
+                }
+            }
 
-			//Get any previously existing sequences this post/page is linked to
-			$post_sequence = get_post_meta($post_id, "_post_sequences", true);
+            if ( $key === false ) {
+                //sort
+                dbgOut('addPost(): Sorting the Sequence by delay');
+                usort($this->posts, array(&$this, "sortByDelay"));
 
-	        // Is there any previously saved sequence ID found for the post/page?
-			if(empty($post_sequence))
-	        {
-	            dbgOut('addPost(): No previously defined sequence(s) found for this post (ID: ' . $post_id . ')');
-	            $post_sequence = array($this->id);
+                //save
+                update_post_meta($this->sequence_id, "_sequence_posts", $this->posts);
+
+                //Get any previously existing sequences this post/page is linked to
+                $post_sequence = get_post_meta($post_id, "_post_sequences", true);
+
+                // Is there any previously saved sequence ID found for the post/page?
+                if ( empty( $post_sequence ) ) {
+
+                    dbgOut('addPost(): No previously defined sequence(s) found for this post (ID: ' . $post_id . ')');
+                    $post_sequence = array( $this->sequence_id );
+                }
+                else {
+
+                    dbgOut( 'addPost(): Post/Page w/id ' . $post_id . ' belongs to one or more sequences already: ' . count( $post_sequence ) );
+
+                    if ( ! is_array( $post_sequence ) ) {
+
+                        dbgOut( 'addPost(): Not (yet) an array of posts. Adding the single new post to a new array' );
+                        $post_sequence = array( $this->sequence_id );
+                    } else {
+
+                        // Bug Fix: Never checked if the Post/Page ID was already listed in the sequence.
+                        $tmp = array_count_values( $post_sequence );
+                        $cnt = $tmp[ $this->sequence_id ];
+
+                        if ( $cnt == 0 ) {
+
+                            // This is the first sequence this post is added to
+                            $post_sequence[] = $this->sequence_id;
+                            dbgOut( 'addPost(): Appended post (ID: ' . $temp->id . ') to sequence ' . $this->id );
+                        } else {
+
+                            // Check whether there are repeat entries for the current sequence
+                            if ( $cnt > 1 ) {
+
+                                // There are so get rid of the extras (this is a backward compatibility feature due to a previous bug.)
+                                dbgOut( 'addPost() - More than one entry in the array. Clean it up!' );
+
+                                $clean = array_unique( $post_sequence );
+
+                                dbgOut( 'addPost() - Cleaned array: ' . print_r( $clean, true ) );
+                                $post_sequence = $clean;
+                            }
+                        }
+                    }
+                }
+
+                //save
+                update_post_meta( $post_id, "_post_sequences", $post_sequence );
+                dbgOut('addPost(): Post/Page list updated and saved');
 	        }
-	        else
-	        {
-	            dbgOut('addPost(): Post/Page w/id ' . $post_id . ' belongs to more than one sequence already: ' . print_r($post_sequence, true));
-
-	            if ( !is_array($post_sequence) ) {
-
-	                // dbgOut('AddPost(): Previously defined sequence(s) found for this post (ID: ' . $post_id . '). Sequence data: ' . print_r($post_sequence, true));
-	                dbgOut('addPost(): Not (yet) an array of posts. Adding the single new post to a new array');
-	                $post_sequence = array($this->id);
-	            }
-	            else {
-
-	                // Bug Fix: Never checked if the Post/Page ID was already listed in the sequence.
-		            $tmp = array_count_values($post_sequence);
-		            $cnt = $tmp[$this->id];
-
-	                if ( $cnt == 0 ) {
-
-	                    // This is the first sequence this post is added to
-	                    $post_sequence[] = $this->id;
-	                    dbgOut('addPost(): Appended post (ID: ' . $temp->id . ') to sequence ' . $this->id);
-
-	                }
-	                else {
-
-		                // Check whether there are repeat entries for the current sequence
-		                if ($cnt > 1) {
-
-			                // There are so get rid of the extras (this is a backward compatibility feature due to a previous bug.)
-			                dbgOut('addPost() - More than one entry in the array. Clean it up!');
-
-			                $clean = array_unique( $post_sequence );
-
-			                dbgOut('addPost() - Cleaned array: ' . print_r($clean, true));
-			                $post_sequence = $clean;
-		                }
-	                }
-	            }
-
-	        }
-
-			//save
-			update_post_meta($post_id, "_post_sequences", $post_sequence);
-	        dbgOut('addPost(): Post/Page list updated and saved');
+            else {
+                dbgOut("addPost() - Nothing new to save");
+            }
 
 			return true;
 	    }
+
+        public function userCan( $user_id ) {
+
+            if ( ( user_can( $user_id, 'publish_pages' ) ) ||
+                 ( user_can( $user_id, 'publish_posts' ) ) ) {
+
+                dbgOut("User with ID {$user_id} has permission to update/edit this sequence");
+                return true;
+            }
+            else {
+                return false;
+            }
+        }
 
 	    /**
 	     * Validates that the value received follows a valid "delay" format for the post/page sequence
@@ -633,19 +678,17 @@
          *
          * @access public
          */
-        public function getPosts($force = false)
+        public function getPosts( $force = false )
 		{
-			if(!isset($this->posts) || $force) {
-				// The list of posts (post IDs & delays from the post meta )
-				$this->posts = get_post_meta( $this->sequence_id, "_sequence_posts", true );
-				//TODO: Convert the postmeta for _sequence_posts into something that can be read directly by $wpdb
-				/*
-				 * Idea: create sequence_post_{id} = {delay}
-				 */
-				// TODO: Convert post meta key '_sequence_post_delay_{$post_id}' = {$delay} into an array() of stdObjects
+            if ( ( $force ) || empty( $this->posts ) ||
+                 ( ( $this->refreshed + 60)  <= ( current_time('timestamp') ) ) ) {
 
-			}
+                $this->posts = null;
 
+                dbgOut("Reading post list for sequence {$this->sequence_id} from the Database");
+                $this->refreshed = current_time('timestamp');
+                $this->posts = get_post_meta( $this->sequence_id, "_sequence_posts", true );
+            }
 
 			return $this->posts;
 		}
@@ -655,24 +698,24 @@
          *
 		 * @param $post_id (int) -- Page/post ID to check for inclusion in this sequence.
 		 *
-		 * @return bool -- True if the post is already included in the sequence. False otherwise
+		 * @return bool -- Key of post in $this->posts array if the post is already included in the sequence. False otherwise
          *
          * @access private
 		 */
-		private function hasPost($post_id)
+		private function hasPost( $post_id )
 		{
-			$this->getPosts();
-
 			// TODO: Add search for {sequence_id}_sequence_post_{post_id} = {$delay} meta option
 
-			if(empty($this->posts))
-				return false;
+			if( empty( $this->posts ) ) {
 
-			foreach($this->posts as $key => $post)
-			{
-				if($post->id == $post_id) {
-					dbgOut('Post # ' . $post_id . ' is found in this sequence.');
-					return true;
+                return false;
+            }
+
+			foreach( $this->posts as $key => $post ) {
+
+                if( $post->id == $post_id ) {
+					dbgOut("Post # {$this->posts[$key]->id} is found in this sequence ({$this->sequence_id}). Key: {$key}.");
+					return $key;
 				}
 			}
 
@@ -681,20 +724,17 @@
 
         /**
          * Test whether a post belongs to a sequence & return the Post ID if so
-         * @param $post_id
+         * @param stdClass $post - Post details
          * @return null
          */
         public function get_postDetails( $post_id ) {
 
-            if ( $this->hasPost($post_id) !== false ) {
+            if ( ( $key = $this->hasPost( $post_id ) ) !== false ) {
 
-                foreach($this->posts as $key => $post)
-                {
-                    if($post->id == $post_id) {
-	                    dbgOut("get_postDetails() - Found the post we're looking for");
-                        return $post;
-                    }
-                }
+                dbgOut("get_postDetails() - Found the post we're looking for: " . print_r($this->posts[$key], true ) );
+
+                return $this->posts[$key];
+
             }
             else
                 return null;
@@ -807,10 +847,19 @@
 			}
 		}
 
-        public function pmpro_seq_display_error() {
+        public function display_error() {
+
             dbgOut("Display error messages, if there are any");
-            settings_errors( 'pmpro_seq_errors' );
+            global $current_screen;
+
+            $msg = $this->getError();
+
+            if ( ! empty( $msg ) ){
+                dbgOut("Display error for Drip Feed operation(s)");
+                ?><div id="pmpro-seq-error" class="error"><?php settings_errors('pmpro_seq_errors'); ?></div><?php
+            }
         }
+
 		/**
 		 * Send email to userID about access to new post.
 		 *
@@ -853,7 +902,26 @@
 			$email->subject = sprintf('%s: %s (%s)', $settings->subject, $post->post_title, strftime("%x", current_time('timestamp', true) ));
 			// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
 
-			$email->template = $templ[0];
+            /**
+             *
+             * TODO: Add support for having email templates in either child theme, the Plugin directory or somewhere else.
+             *
+            if ( file_exists( get_stylesheet_directory() . "/templates/{$apt_type}/{$msg_type}.php")) {
+
+                $template_path = get_stylesheet_directory() . "/templates/{$apt_type}/{$msg_type}.php";
+
+            }
+            elseif ( file_exists( get_template_directory() . "/templates/{$apt_type}/{$msg_type}.php" ) ) {
+
+                $template_path = get_template_directory() . "/templates/{$apt_type}/{$msg_type}.php";
+            }
+            else {
+
+                $template_path = null;
+            }
+            */
+
+            $email->template = $templ[0];
 
 			$template_file_path = PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . 'email' . DIRECTORY_SEPARATOR . $settings->noticeTemplate;
 
@@ -896,13 +964,16 @@
 			return true;
 		}
 
-        public function pmpro_sequence_init_admin() {
+/*        public function pmpro_sequence_init_admin() {
 
-            if ( current_user_can( 'manage_options' ) && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
-                register_setting(__CLASS__.'_options', 'pmpro_seq_errors', array($this, 'getError'));
-            }
+//            if ( current_user_can( 'manage_options' ) && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
+
+                dbgOut(" Register dummy setting for the plugin error reporting");
+
+                register_setting('pmpro-sequence-options', 'pmpro_seq_errors', array($this, 'pmpro_seq_display_error'));
+ //           }
         }
-
+*/
         /**
          * Creates the Sequence Custom Post Type
          *
@@ -919,39 +990,40 @@
 			if(!empty($pmpro_sequencedeactivating))
 				return false;
 
+            $labels =  array(
+                        'name' => __( 'Sequences', 'pmprosequence'  ),
+                        'singular_name' => __( 'Sequence', 'pmprosequence' ),
+                        'slug' => 'pmpro_sequence',
+                        'add_new' => __( 'New Sequence', 'pmprosequence' ),
+                        'add_new_item' => __( 'New Sequence', 'pmprosequence' ),
+                        'edit' => __( 'Edit Sequence', 'pmprosequence' ),
+                        'edit_item' => __( 'Edit Sequence', 'pmprosequence'),
+                        'new_item' => __( 'Add New', 'pmprosequence' ),
+                        'view' => __( 'View Sequence', 'pmprosequence' ),
+                        'view_item' => __( 'View This Sequence', 'pmprosequence' ),
+                        'search_items' => __( 'Search Sequences', 'pmprosequence' ),
+                        'not_found' => __( 'No Sequence Found', 'pmprosequence' ),
+                        'not_found_in_trash' => __( 'No Sequence Found In Trash', 'pmprosequence' )
+            );
+
 			$error = register_post_type('pmpro_sequence',
-					array(
-							'labels' => array(
-	                                'name' => __( 'Sequences', 'pmprosequence'  ),
-									'singular_name' => __( 'Sequence', 'pmprosequence' ),
-	                                'slug' => 'pmpro_sequence',
-	                                'add_new' => __( 'New Sequence', 'pmprosequence' ),
-	                                'add_new_item' => __( 'New Sequence', 'pmprosequence' ),
-	                                'edit' => __( 'Edit Sequence', 'pmprosequence' ),
-	                                'edit_item' => __( 'Edit Sequence', 'pmprosequence'),
-	                                'new_item' => __( 'Add New', 'pmprosequence' ),
-	                                'view' => __( 'View Sequence', 'pmprosequence' ),
-	                                'view_item' => __( 'View This Sequence', 'pmprosequence' ),
-	                                'search_items' => __( 'Search Sequences', 'pmprosequence' ),
-	                                'not_found' => __( 'No Sequence Found', 'pmprosequence' ),
-	                                'not_found_in_trash' => __( 'No Sequence Found In Trash', 'pmprosequence' ),
-	                        ),
-					'public' => true,
-					/*'menu_icon' => plugins_url('images/icon-sequence16-sprite.png', dirname(__FILE__)),*/
-					'show_ui' => true,
-					'show_in_menu' => true,
-					'publicly_queryable' => true,
-					'hierarchical' => true,
-					'supports' => array('title','editor','thumbnail','custom-fields','author'),
-					'can_export' => true,
-					'show_in_nav_menus' => true,
-					'rewrite' => array(
-							'slug' => 'sequence',
-							'with_front' => false
-							),
-					'has_archive' => 'sequences'
-				)
-			);
+                        array( 'labels' => apply_filters( 'pmpro_seqence_cpt_labels', $labels ),
+                                'public' => true,
+                                /*'menu_icon' => plugins_url('images/icon-sequence16-sprite.png', dirname(__FILE__)),*/
+                                'show_ui' => true,
+                                'show_in_menu' => true,
+                                'publicly_queryable' => true,
+                                'hierarchical' => true,
+                                'supports' => array('title','editor','thumbnail','custom-fields','author'),
+                                'can_export' => true,
+                                'show_in_nav_menus' => true,
+                                'rewrite' => array(
+                                        'slug' => 'sequence',
+                                        'with_front' => false
+                                        ),
+                                'has_archive' => 'sequences'
+                            )
+			            );
 
 			if (! is_wp_error($error) )
 				return true;
@@ -993,9 +1065,6 @@
 
             dbgOut("Post metaboxes being configured");
 
-            //TODO: Find all post types on the system & then loop through for all post types using a foreach() loop.
-            /* Add meta boxes on the 'add_meta_boxes' hook. */
-
             $post_types = apply_filters("pmpro_sequencepost_types", array("post", "page") );
 
             foreach( $post_types as $type ) {
@@ -1022,7 +1091,6 @@
             ob_start();
             ?>
             <div class="submitbox" id="pmpro-seq-postmeta">
-                <div id="pmpro-seq-error"></div>
                 <div id="minor-publishing">
                     <div id="pmpro_seq-configure-sequence">
                         <?php echo $seq->load_sequence_meta( $post->ID ) ?>
@@ -1046,7 +1114,7 @@
          */
         public function load_sequence_meta( $post_id = null, $seq_id = 0) {
 
-            dbgOut("Called: {$post_id} and {$seq_id}.");
+            dbgOut("Parameters for load_sequence_meta() {$post_id} and {$seq_id}.");
             $belongs_to = array();
 
             $query = array(
@@ -1090,13 +1158,11 @@
                 $belongs_to = array( $seq_id );
             }
 
-            dbgOut("Post belongs in sequence(s): " . print_r( $belongs_to, true ) );
+            dbgOut("Post belongs to # of sequence(s): " . count( $belongs_to ) );
 
             // Make sure there's at least one row in the Metabox.
             dbgOut(" Ensure there's at least one entry in the table ");
             array_push( $belongs_to, 0 );
-
-            dbgOut("Added the '0th' sequence: " . print_r( $belongs_to, true ) );
 
             ob_start();
             ?>
@@ -1137,13 +1203,15 @@
                         $this->options = $this->defaultOptions();
                     }
 
-                    $delay = null; // Set/Reset
+                    $delay = false; // Set/Reset
                     dbgOut("Loading all posts for {$active_id}");
 
-                    $this->getPosts(true);
+                    if ( $this->sequence_id != 0 ) {
+                        $this->getPosts( true );
 
-                    $delay = $this->getDelayForPost( $post_id, false );
-                    dbgOut("Delay Value: {$delay}");
+                        $delay = $this->getDelayForPost( $post_id, false );
+                        dbgOut( "Delay Value: {$delay}" );
+                    }
 
                     if ( $delay === false ) {
                         $delayVal = "value=''";
@@ -1234,7 +1302,7 @@
                     $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __( 'date: YYYY-MM-DD', 'pmprosequence' ) : __( 'number: Days since membership started', 'pmprosequence' );
 
                     dbgOut( 'validatePOSTDelay(): Invalid delay value specified, not adding the post. Delay is: ' . $delay );
-                    $this->error = sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', 'pmprosequence' ), $delay, $expectedDelay );
+                    $this->setError( sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', 'pmprosequence' ), $delay, $expectedDelay ) );
 
                     $delay       = false;
                 }
@@ -1244,7 +1312,7 @@
 
                 if ( empty( $delay ) ) {
 
-                    $this->error = __( 'No delay has been specified', 'pmprosequence' );
+                    $this->setError( __( 'No delay has been specified', 'pmprosequence' ) );
                 }
             }
 
@@ -1317,8 +1385,8 @@
 			ob_start();
 			?>
 
-			<?php // if(!empty($this->error)) { ?>
-				<div id="pmpro-seq-error" class="message error"><?php echo $this->error;?></div>
+			<?php // if(!empty($this->getError() )) { ?>
+				<?php // $this->display_error(); ?>
 			<?php //} ?>
 			<table id="pmpro_sequencetable" class="pmpro_sequence_postscroll wp-list-table widefat fixed">
 			<thead>
@@ -1343,14 +1411,7 @@
 			{
 	            dbgOut('No Posts found?');
 
-				$errTxt = __('No posts/pages found for this sequence', 'pmprosequence');
-
-				if ( $this->getError() !== null )
-					$errorMsg = $this->getError() . ' ' . __('and', 'pmprosequence') . ' ' . $errTxt;
-				else
-					$errorMsg = $errTxt;
-
-				$this->setError( $errorMsg );
+				$this->setError( __('No posts/pages found for this sequence', 'pmprosequence') );
 			?>
 			<?php
 			}
@@ -1436,13 +1497,13 @@
 
 			$html = ob_get_clean();
 
-			( is_null( $this->getError() ) ?
+			is_null( $this->getError() ) ?
 				dbgOut( "getPostListForMetaBox() - No error found, should return success" ) :
-				dbgOut( "getPostListForMetaBox() - Error: {$this->getError()}" ) );
+				dbgOut( "getPostListForMetaBox() - Errors:" . $this->display_error() );
 
 			return array(
-				'success' => ( is_null($this->getError()) ? true : false ),
-				'message' => ( is_null($this->getError()) ? null : $this->getError() ),
+				'success' => ( is_null( $this->getError() ) ? true : false ),
+				'message' => ( is_null( $this->getError() ) ? null : join( ', ', $this->getError() ) ),
 				'html' => $html,
 			);
 		}
@@ -1621,6 +1682,7 @@
 	        else
 	        {
 	            dbgOut('Not a valid Sequence ID, cannot load options');
+                $this->setError( __('Invalid drip-feed sequence specified', 'pmprosequence') );
 	            return;
 	        }
 
@@ -2250,10 +2312,10 @@
             $membershipDay = ceil( pmpro_getMemberDays( $user_id ) );
 
             // Load all posts in this sequence
-            $postList = $this->getPosts();
+            $this->getPosts();
 
             // Find the post ID in the postList array that has the delay closest to the membershipday.
-            $closest = $this->get_closestByDelay( $membershipDay, $postList );
+            $closest = $this->get_closestByDelay( $membershipDay, $this->posts );
 
 	        dbgOut("get_closestPost() - For user {$user_id} on day {$membershipDay}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})");
 
@@ -2395,10 +2457,13 @@
          */
         public function getPostKey($post_id)
 		{
+            // TODO: Fix use getPost( $postID ) to locate the key for the post (rather than loop)
 			$this->getPosts();
 
-			if(empty($this->posts))
-				return false;
+			if( empty( $this->posts ) ) {
+
+                return false;
+            }
 
 			foreach($this->posts as $key => $post)
 			{
