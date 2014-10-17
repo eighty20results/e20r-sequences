@@ -1977,15 +1977,13 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
                         <tr id="pmpro-seq-selected-post">
                             <td class="pmpro-seq-post-img"><?php echo apply_filters( 'pmpro_seq_closestpost_img', $closestPostImg ); ?></td>
                             <td class="pmpro-seq-post-hl">
-                                <a href="<?php the_permalink(); ?>"
-                                   title="<?php the_title(); ?>"><strong><?php the_title(); ?></strong>&nbsp;&nbsp;<em>(Current)</em></a>
+                                <a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><strong><?php the_title(); ?></strong>&nbsp;&nbsp;<em>(Current)</em></a>
                             </td>
                             <td <?php echo( $button ? 'class="pmpro-seq-availnow-btn"' : '' ); ?>><?php
 
                                 if ( $button ) {
                                     ?>
-                                <a class="pmpro_btn pmpro_btn-primary"
-                                   href="<?php echo get_permalink(); ?>"> <?php _e( "Available Now", 'pmprosequence' ); ?></a><?php
+                                <a class="pmpro_btn pmpro_btn-primary" href="<?php echo get_permalink(); ?>"> <?php _e( "Available Now", 'pmprosequence' ); ?></a><?php
                                 } ?>
                             </td>
                         </tr> <?php
@@ -1994,14 +1992,12 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
                         <tr id="pmpro-seq-post">
                             <td class="pmpro-seq-post-img">&nbsp;</td>
                             <td class="pmpro-seq-post-fade">
-                                <a href="<?php the_permalink(); ?>"
-                                   title="<?php the_title(); ?>"><?php the_title(); ?></a>
+                                <a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><?php the_title(); ?></a>
                             </td>
                             <td<?php echo( $button ? ' class="pmpro-seq-availnow-btn">' : '>' );
                             if ( $button ) {
                                 ?>
-                            <a class="pmpro_btn pmpro_btn-primary"
-                               href="<?php echo get_permalink(); ?>"> <?php _e( "Available Now", 'pmprosequence' ); ?></a><?php
+                            <a class="pmpro_btn pmpro_btn-primary" href="<?php echo get_permalink(); ?>"> <?php _e( "Available Now", 'pmprosequence' ); ?></a><?php
                             } ?>
                             </td>
                         </tr>
