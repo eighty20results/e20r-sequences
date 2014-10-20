@@ -1108,7 +1108,7 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
 
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
             if ( intval($sequence->options->lengthVisible) == 1 )
-                $content .= sprintf("<p>%s</p>", sprintf( __("You are on day %s of your membership", "pmprosequence"), intval(pmpro_sequence_getMemberDays()) ));
+                $content .= sprintf("<p>%s</p>", sprintf( __("You are on day %s of your membership", "pmprosequence"), pmpro_sequence_getMemberDays()) );
 /*
 	        if ( intval($sequence->options->sendNotice) == 1)
 		        $content .= $sequence->pmpro_sequence_addUserNoticeOptIn( $sequence );
@@ -1132,17 +1132,20 @@ if (! function_exists('pmpro_sequence_getMemberDays')):
 		}
 
 		global $pmpro_member_days;
-		if(empty($pmpro_member_days[$user_id][$level_id]))
-		{
-			$startdate = pmpro_getMemberStartdate($user_id, $level_id);
+
+		if ( empty( $pmpro_member_days[$user_id][$level_id] ) ) {
+
+			$startdate = pmpro_getMemberStartdate( $user_id, $level_id );
 
 			//check that there was a startdate at all
-			if(empty($startdate))
-				$pmpro_member_days[$user_id][$level_id] = 0;
-			else
-			{
+			if( empty( $startdate ) ) {
+
+                $pmpro_member_days[$user_id][$level_id] = 0;
+            }
+			else {
+
 				$now = current_time("timestamp");
-				$days = round(abs($now - $startdate) / (60*60*24));
+				$days = ceil( ($now - $startdate) / ( 60*60*24 ) );
 
 				$pmpro_member_days[$user_id][$level_id] = $days;
 			}
@@ -1209,10 +1212,8 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
 	        $sequence = new PMProSequence($sequence_id);
 
-	        dbgOut('hasAccess() - previewOffset is set to: ' . $sequence->options->previewOffset);
-
             // Get the preview offset (if it's defined). If not, set it to 0 ( for compatibility )
-            if (empty($sequence->options->previewOffset)) {
+            if ( empty( $sequence->options->previewOffset ) ) {
 
                 $sequence->options->previewOffset = 0;
                 dbgOut('Saving settings due to initial config of previewOffset for post # ' . $post_id);
@@ -1222,21 +1223,8 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
             // Check if the post exists in the list of posts for the current sequence & return its details if true
             if ( ( $sp = $sequence->get_postDetails( $post_id ) ) !== null ) {
 
-	            dbgOut( 'hasAccess() - Found post ' . $post_id . " in sequence " . $sequence->sequence_id );
-
-	            /* TODO/BUG? We never check if the user also had access to the page.
-	            // Make sure the user also has access to the page itself
-	             $pg_results = pmpro_has_membership_access($sp->id, $user_id, true);
-
-	            // dbgOut('Access: ' . print_r($pg_results, true));
-
-	            if ( $pg_results[0] === true ) {
-	            */
-
 	            // Verify for all levels given access to this post
 	            foreach ( $results[1] as $level_id ) {
-
-		            dbgOut( 'hasAccess() - Looping through results for level ' . $level_id );
 
 		            if ( $sequence->options->delayType == 'byDays' ) {
 

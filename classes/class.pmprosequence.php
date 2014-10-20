@@ -714,7 +714,6 @@
 			foreach( $this->posts as $key => $post ) {
 
                 if( $post->id == $post_id ) {
-					dbgOut("Post # {$this->posts[$key]->id} is found in this sequence ({$this->sequence_id}). Key: {$key}.");
 					return $key;
 				}
 			}
@@ -730,8 +729,6 @@
         public function get_postDetails( $post_id ) {
 
             if ( ( $key = $this->hasPost( $post_id ) ) !== false ) {
-
-                dbgOut("get_postDetails() - Found the post we're looking for: " . print_r($this->posts[$key], true ) );
 
                 return $this->posts[$key];
 
@@ -2309,7 +2306,7 @@
         public function get_closestPost( $user_id = null ) {
 
 	        // Get the current day of the membership (as a whole day, not a float)
-            $membershipDay = ceil( pmpro_getMemberDays( $user_id ) );
+            $membershipDay =  pmpro_sequence_getMemberDays( $user_id );
 
             // Load all posts in this sequence
             $this->getPosts();
