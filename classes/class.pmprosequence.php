@@ -1066,10 +1066,12 @@
 
             foreach( $post_types as $type ) {
 
-                add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', 'pmprosequence' ), array(
-                        "PMProSequence",
-                        'pmpro_sequence_page_meta'
-                    ), $type, 'side', 'high' );
+                if ( $type !== 'pmpro_sequence' ) {
+                    add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', 'pmprosequence' ), array(
+                            "PMProSequence",
+                            'pmpro_sequence_page_meta'
+                        ), $type, 'side', 'high' );
+                }
             }
         }
 
