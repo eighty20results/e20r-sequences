@@ -196,8 +196,6 @@
 		        return false;
 	        }
 
-		    dbgOut('Attempting to save post meta');
-
 		    if ( wp_is_post_revision( $post_id ) )
 			    return $post_id;
 
