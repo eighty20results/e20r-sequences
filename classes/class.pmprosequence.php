@@ -2267,7 +2267,6 @@
          */
         public function displayDelay( $delay ) {
 
-	        dbgOut("displayDelay() - {$this->options->showDelayAs} == " . PMPRO_SEQ_AS_DATE);
             if ( $this->options->showDelayAs == PMPRO_SEQ_AS_DATE) {
                 // Convert the delay to a date
 
