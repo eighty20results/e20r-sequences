@@ -1893,7 +1893,7 @@
 						            <input type="hidden" name="hidden_pmpro_seq_noticetime" id="hidden_pmpro_seq_noticetime" value="<?php echo esc_attr($settings->noticeTime); ?>" >
 						            <label for="pmpro_sequence_noticetime"></label>
 						            <select name="pmpro_sequence_noticetime" id="pmpro_sequence_noticetime">
-						                <?php echo $sequence->pmpro_sequence_createTimeOpts( $settings ); ?>
+						                <?php echo $sequence->createTimeOpts( $settings ); ?>
 						            </select>
 						            <p class="pmpro-seq-btns">
 							            <a href="#pmproseq_noticetime" id="ok-pmpro-seq-noticetime" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
@@ -2070,7 +2070,7 @@
          *
          * @access private
 		 */
-		private function pmpro_sequence_createTimeOpts( $settings )
+		private function createTimeOpts( $settings )
 		{
 
 			$prepend    = array('00','01','02','03','04','05','06','07','08','09');
