@@ -245,12 +245,11 @@ if (! function_exists('pmpro_sequence_load_textdomain')):
 
         $mofile = "{$domain}-{$locale}.mo";
 
-        $mofile_local = dirname( __FILE__ ) . "/languages/" . $mofile;
-        $mofile_global = WP_LANG_DIR . "/pmpro_sequence/" . $mofile;
+        $mofile_local = plugin_basename(__FILE__) . "/languages/";
+        $mofile_global = WP_LANG_DIR . "/pmpro-sequence/" . $mofile;
 
 		load_textdomain( $domain, $mofile_global );
-
-		load_plugin_textdomain( $domain, FALSE, plugin_basename(__FILE__) . "/languages/" );
+		load_plugin_textdomain( $domain, FALSE, $mofile_local );
 	}
 
 endif;
@@ -536,6 +535,7 @@ if ( ! function_exists( 'pmpro_rm_sequence_from_post_callback' ) ):
 
     function pmpro_rm_sequence_from_post_callback() {
 
+        /** @noinspection PhpUnusedLocalVariableInspection */
         $success = false;
 
         dbgOut("In pmpro_rm_sequence_from_post()");
@@ -593,7 +593,10 @@ if ( !function_exists( 'pmpro_sequence_rm_post_callback')):
 
 		check_ajax_referer('pmpro-sequence-rm-post', 'pmpro_sequence_rmpost_nonce');
 
+        /** @noinspection PhpUnusedLocalVariableInspection */
 		$result = '';
+
+        /** @noinspection PhpUnusedLocalVariableInspection */
 		$success = false;
 
 		$sequence_id = ( isset( $_POST['pmpro_sequence_id']) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null );
@@ -643,6 +646,8 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
 	    check_ajax_referer('pmpro-sequence-save-settings', 'pmpro_sequence_settings_nonce');
 
 	    $sequence = new PMProSequence();
+
+        /** @noinspection PhpUnusedLocalVariableInspection */
 	    $result = '';
 
 	    // Clear the sequence metadata if the sequence type (by date or by day count) changed.
@@ -659,7 +664,6 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
 	            {
 		            dbgOut('Unable to delete the posts in sequence # ' . $sequence_id);
 		            $sequence->setError( __('Could not delete posts from this sequence', 'pmprosequence'));
-		            $success = false;
 
 	            }
 	            else {
@@ -669,13 +673,11 @@ if ( ! function_exists( 'pmpro_sequence_clear_callback')):
             }
             else
             {
-                $sequence->setError( __('Unable to identify the Sequence', 'pmprosequence'));
-	            $success = false;
+                $sequence->setError( __('Unable to identify the Sequence', 'pmprosequence') );
             }
         }
         else {
-	        $sequence->setError( __('Unknown request', 'pmprosequence'));
-	        $success = false;
+	        $sequence->setError( __('Unknown request', 'pmprosequence') );
         }
 
 	    // Return the status to the calling web page
@@ -721,6 +723,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
     {
         global $current_user, $wpdb;
 
+        /** @noinspection PhpUnusedLocalVariableInspection */
 	    $result = '';
 
         try {
@@ -732,7 +735,11 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
 		        $user_id = intval($_POST['hidden_pmpro_seq_uid']);
 		        dbgOut('Updating user settings for user #: ' . $user_id);
-	        }
+
+                // Grab the metadata from the database
+                $usrSettings = get_user_meta($user_id, $wpdb->prefix . 'pmpro_sequence_notices', true);
+
+            }
 	        else {
 		        dbgOut( 'No user ID specified. Ignoring settings!' );
 
@@ -752,9 +759,6 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 
 	        $seq = new PMProSequence( $seqId );
 	        dbgOut('Updating user settings for sequence #: ' . $seq->sequence_id);
-
-	        // Grab the metadata from the database
-	        $usrSettings = get_user_meta($user_id, $wpdb->prefix . 'pmpro_sequence_notices', true);
 
 	        if ( empty($usrSettings->sequence) || empty( $usrSettings->sequence[$seqId] ) ) {
 
@@ -831,7 +835,10 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 	    // Validate that the ajax referrer is secure
 	    check_ajax_referer('pmpro-sequence-save-settings', 'pmpro_sequence_settings_nonce');
 
+        /** @noinspection PhpUnusedLocalVariableInspection */
 	    $status = false;
+
+        /** @noinspection PhpUnusedLocalVariableInspection */
 	    $response = '';
 
 	    $sequence = new PMProSequence(); // For error management purposes
@@ -1167,6 +1174,8 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
      *
      * @param $user_id (int) -- The users ID to check access for
      * @param $post_id (int) -- The ID of the post we're checking access for
+     * @param $isAlert (bool) - If true, ignore any preview value settings when calculating access
+     *
      * @return bool -- true | false -- Indicates user ID's access privileges to the post/sequence
      */
     function pmpro_sequence_hasAccess($user_id, $post_id, $isAlert = false)
@@ -1181,7 +1190,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
         }
 
         // If the post isn't published there's no need to give access to it.
-        $status = get_post_status($post_id);
+//        $status = get_post_status($post_id);
 /*
         if ( ( $status != 'publish' ) ||
              ( $status != 'private' ) ) {
@@ -1267,9 +1276,9 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 		            } // EndIf for delayType
 	            } // End of foreach -> $level_id
             } // EndIF
-        } // End of foreach
 
-        dbgOut("hasAccess() - User does NOT have access to post {$post_id} in sequence {$sequence_id}" );
+            dbgOut("hasAccess() - User {$user_id} does NOT have access to post {$post_id} in sequence {$sequence_id}" );
+        } // End of foreach
 
         // Haven't found anything yet, so must not have access.
         return false;
@@ -1328,25 +1337,23 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
      * @param $text (string) -- The text to filter
      * @return string -- the filtered text
      */
-    function pmpro_seuquence_text_filter($text)
-    {
+    function pmpro_seuquence_text_filter($text) {
+
         global $current_user, $post;
 
-        dbgOut("Running text_filter");
+        if ( ! empty( $current_user ) && ( ! empty( $post ) ) ) {
 
-        if(!empty($current_user) && !empty($post))
-        {
-            if(!pmpro_sequence_hasAccess($current_user->ID, $post->ID))
-            {
+            if ( ! pmpro_sequence_hasAccess( $current_user->ID, $post->ID ) ) {
+
 	            $post_sequence = get_post_meta($post->ID, "_post_sequences", true);
 
                 //Update text. The user either will have to wait or sign up.
                 $insequence = false;
 
-                foreach($post_sequence as $ps)
-                {
-                    if(pmpro_has_membership_access($ps))
-                    {
+                foreach ( $post_sequence as $ps ) {
+
+                    if ( pmpro_has_membership_access( $ps ) ) {
+
                         dbgOut("User may have access to: {$ps} ");
                         $insequence = $ps;
 	                    $sequence = new PMProSequence($ps);
@@ -1355,12 +1362,12 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
                     }
                 }
 
-                if($insequence)
-                {
-                    //user has one of the sequence levels, find out which one and tell him how many days left
-	                $text = sprintf("%s<br/>", sprintf( __("This content managed as part of the <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($ps), get_the_title($ps)) );
+                if ( $insequence ) {
 
-	                switch ($sequence->options->delayType) {
+                    //user has one of the sequence levels, find out which one and tell him how many days left
+	                $text = sprintf("%s<br/>", sprintf( __("This content managed as part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($ps), get_the_title($ps)) );
+
+	                switch ( $sequence->options->delayType ) {
 
                         case 'byDays':
 
@@ -1382,6 +1389,7 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
 		                case 'byDate':
 			                $text .= sprintf( __('You will get access to this content ("%s") on %s', 'pmprosequence'), get_the_title($post->ID), $delay );
 			                break;
+
 		                default:
 
 	                }
@@ -1390,20 +1398,21 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
                 else
                 {
                     // User has to sign up for one of the sequence(s)
-                    if(count($post_sequence) == 1)
-                    {
-	                    $text = sprintf("%s<br/>", sprintf( __("This content is part of the <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($post_sequence[0]), get_the_title($post_sequence[0])) );
+                    if ( count( $post_sequence ) == 1 ) {
+
+	                    $text = sprintf("%s<br/>", sprintf( __( "This content is part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence' ), get_permalink( $post_sequence[0] ), get_the_title( $post_sequence[0] ) ) );
                     }
-                    else
-                    {
-                        $text = sprintf("<p>%s</p>", __('This content is part of the following sequences: ', 'pmprosequence'));
+                    else {
+
+                        $text = sprintf( "<p>%s</p>", __( 'This content is part of the following members only sequences: ', 'pmprosequence' ) );
                         $seq_links = array();
 
-                        foreach($post_sequence as $sequence_id) {
-                            $seq_links[] = "<p><a href='" . get_permalink($sequence_id) . "'>" . get_the_title($sequence_id) . "</a></p>";
+                        foreach ( $post_sequence as $sequence_id ) {
+
+                            $seq_links[] = "<p><a href='" . get_permalink( $sequence_id ) . "'>" . get_the_title( $sequence_id ) . "</a></p>";
                         }
 
-                        $text .= implode( $seq_links);
+                        $text .= implode( $seq_links );
                     }
                 }
             }
@@ -1413,7 +1422,7 @@ if ( ! function_exists( 'pmpro_seuquence_text_filter' )):
     }
 endif;
 
-if ( !  function_exists('pmpro_seqeuence_included_cpts')):
+if ( !  function_exists( 'pmpro_seqeuence_included_cpts' ) ):
 
 	add_filter('pmpro_sequencepost_types', 'pmpro_seqeuence_included_cpts');
 
@@ -1435,7 +1444,7 @@ if ( !  function_exists('pmpro_seqeuence_included_cpts')):
 		$output = 'names';
 		$operator = 'and';
 
-		$post_types = get_post_types($cpt_args, $output, 'and');
+		$post_types = get_post_types($cpt_args, $output, $operator );
 		$postTypeList = array();
 
 		foreach ($post_types as $post_type) {
@@ -1449,7 +1458,7 @@ endif;
 /**
  * Filter to replace the !!excerpt_intro!! variable content in a "new content alert" message.
  */
-if ( ! function_exists('pmpro_sequence_email_body')):
+if ( ! function_exists( 'pmpro_sequence_email_body' ) ):
 
 	add_filter("pmpro_after_phpmailer_init", "pmpro_sequence_email_body");
 
@@ -1629,7 +1638,7 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 
 endif;
 
-if ( ! function_exists( 'sequence_post_type_icon' )):
+if ( ! function_exists( 'sequence_post_type_icon' ) ):
 
     add_action( 'admin_head', 'sequence_post_type_icon' );
 
@@ -1676,7 +1685,7 @@ if ( ! function_exists( 'sequence_post_type_icon' )):
     <?php }
 endif;
 
-if ( ! function_exists('pmpro_sequence_activation')):
+if ( ! function_exists('pmpro_sequence_activation') ):
 
     register_activation_hook( __FILE__, 'pmpro_sequence_activation' );
 
@@ -1691,17 +1700,19 @@ if ( ! function_exists('pmpro_sequence_activation')):
 	    /* Search for existing pmpro_series posts & import */
 
 	    /* Register the default cron job to send out new content alerts */
-	    wp_schedule_event(current_time('timestamp'), 'daily', 'pmpro_sequence_cron_hook');
+	    wp_schedule_event( current_time( 'timestamp' ), 'daily', 'pmpro_sequence_cron_hook' );
+
+        pmpro_seq_import_series();
     }
 
 endif;
 
-if ( ! function_exists( 'pmpro_sequence_deactivation' )):
+if ( ! function_exists( 'pmpro_sequence_deactivation' ) ):
 
     register_deactivation_hook( __FILE__, 'pmpro_sequence_deactivation' );
 
-    function pmpro_sequence_deactivation()
-    {
+    function pmpro_sequence_deactivation() {
+
         global $pmpros_deactivating, $wpdb;
         $pmpros_deactivating = true;
         flush_rewrite_rules();
@@ -1716,14 +1727,14 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
 	    	"
 	    );
 
-	    $seqs = $wpdb->get_results($sql);
+	    $seqs = $wpdb->get_results( $sql );
 
 	    // Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
 	    foreach($seqs as $s) {
 
-		    $sequence = new PMProSequence($s->ID);
+		    $sequence = new PMProSequence( $s->ID );
 
-		    if ($sequence->options->sendNotice == 1) {
+		    if ( $sequence->options->sendNotice == 1 ) {
 
 			    // Set the alert flag to 'off'
 			    $sequence->options->sendNotice = 0;
@@ -1731,17 +1742,17 @@ if ( ! function_exists( 'pmpro_sequence_deactivation' )):
 			    // save meta for the sequence.
 			    $sequence->save_sequence_meta();
 
-			    wp_clear_scheduled_hook('pmpro_sequence_cron_hook', array( $s->ID ));
+			    wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook', array( $s->ID ) );
 			    dbgOut('Deactivated email alert(s) for sequence ' . $s->ID);
 		    }
 	    }
 
 	    /* Unregister the default Cron job for new content alert(s) */
-        wp_clear_scheduled_hook('pmpro_sequence_cron_hook');
+        wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook' );
     }
 endif;
 
-if ( ! function_exists('pmpro_sequence_links_shortcode')):
+if ( ! function_exists( 'pmpro_sequence_links_shortcode' ) ):
 
     function pmpro_sequence_links_shortcode( $attributes ) {
 
@@ -1764,30 +1775,39 @@ if ( ! function_exists('pmpro_sequence_links_shortcode')):
 	        'scrollbox' => false,
         ), $attributes ) );
 
-	    if ($pagesize == 0)
-		    $pagesize = 15; // Default
+	    if ( $pagesize == 0 ) {
+
+            $pagesize = 15; // Default
+        }
 
 	    if ($id == 0) {
+
 		    global $wp_query;
 		    // Try using the current WP post ID
-		    if (! empty($wp_query->post->ID))
-			    $id = $wp_query->post->ID;
-		    else
-			    return ''; // No post given so returning no info.
+		    if (! empty( $wp_query->post->ID ) ) {
+
+                $id = $wp_query->post->ID;
+            }
+            else {
+
+                return ''; // No post given so returning no info.
+            }
 	    }
 
 	    dbgOut("shortcode() - Ready to build link list for sequence with ID of: " . $id);
 
-	    if ( pmpro_sequence_hasAccess( $current_user->ID, $id, false ) )
-            return pmpro_sequence_createSequenceList( $id, $highlight, $pagesize, $button, $title, $scrollbox);
-	    else {
+	    if ( pmpro_sequence_hasAccess( $current_user->ID, $id, false ) ) {
+
+            return pmpro_sequence_createSequenceList( $id, $highlight, $pagesize, $button, $title, $scrollbox );
+        }
+        else {
 
             return '';
         }
     }
 endif;
 
-if ( ! function_exists('pmpro_sequence_member_links_bottom')):
+if ( ! function_exists( 'pmpro_sequence_member_links_bottom' ) ):
 
 	// add_action('pmpro_member_links_bottom', 'pmpro_sequence_member_links_bottom');
 
@@ -1832,18 +1852,28 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 			$pagesize = 15;
 
 		// Process the title attribute (default values, can apply filter if needed/wanted)
-		if ( ( $title == '' ) && ( $seq_id != 0 ))
-			$title = '<h3>' . get_the_title($seq_id) . '</h3>';
-		elseif (($seq_id == 0) && ($title == ''))
-			$title = "<h3>Sequence List</h3>";
-		elseif ($title == '')
-			$title = '';
-		else
-			$title = "<h3>{$title}</h3>";
+		if ( ( $title == '' ) && ( $seq_id != 0 ) ) {
 
-        if ( $seq_id == 0) {
+            $title = '<h3>' . get_the_title( $seq_id ) . '</h3>';
+        }
+        elseif ( ( $seq_id == 0 ) && ( $title == '' ) ) {
+
+            $title = "<h3>Sequence List</h3>";
+        }
+        elseif ( $title == '' ) {
+
+            $title = '';
+        }
+        else {
+
+            $title = "<h3>{$title}</h3>";
+        }
+
+        if ( $seq_id == 0 ) {
+
 	        dbgOut('No sequence ID provided. Listing all sequences');
-	        //get all series
+
+	        //Get all of the defined Sequences on this site
 	        $sql = $wpdb->prepare(
 		        "
 	                SELECT *
@@ -1851,8 +1881,10 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
 	                WHERE post_type = 'pmpro_sequence'
             	"
 	        );
-        } else {
-	        dbgOut('Loading data for the "' . get_the_title($seq_id) . '" sequence');
+        }
+        else {
+
+	        dbgOut('Loading data for the "' . get_the_title( $seq_id ) . '" sequence');
             $sql = $wpdb->prepare(
 	            "
 	                SELECT *
@@ -1864,10 +1896,10 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
         }
 
 		// dbgOut('SQL to load sequences' . print_r($sql, true));
-		$seqs = $wpdb->get_results($sql);
+		$seqs = $wpdb->get_results( $sql );
 
 		// Process the list of sequences
-		foreach($seqs as $s) {
+		foreach ( $seqs as $s ) {
 
             $sequence = new PMProSequence( $s->ID );
 
@@ -1914,7 +1946,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
             $seqEntries = new WP_Query( apply_filters( 'pmpro_sequence_list_query', $query_args ) );
 
             $listed_postCnt   = 0;
-            $noPostsDisplayed = true;
+            // $noPostsDisplayed = true;
 
             ob_start();
             ?>
@@ -1970,8 +2002,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
                     $sequence_posts[ $sequence->getPostKey( $id ) ]->delay ) )
                 ) {
 
-                    $noPostsDisplayed = false;
-                    $listed_postCnt ++;
+                    $listed_postCnt++;
 
                     if ( ( $id == $closestPostId ) && ( $highlight ) ) {
                         // Show the highlighted post info
@@ -2009,8 +2040,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
                            ( ! $sequence->hideUpcomingPosts() )
                 ) {
 
-                    $noPostsDisplayed = false;
-                    $listed_postCnt ++;
+                    $listed_postCnt++;
 
                     // Do we need to highlight the (not yet available) post?
                     if ( ( $id == $closestPostId ) && ( $highlight ) ) {
@@ -2132,7 +2162,24 @@ if ( ! function_exists ('pmpro_seq_import_series') ):
 
     function pmpro_seq_import_series() {
 
+        global $wpdb;
 
+        //Get all of the defined series on this site
+        $sql = $wpdb->prepare(
+            "
+	                SELECT *
+	                FROM {$wpdb->posts}
+	                WHERE post_type = 'pmpro_series'
+            	"
+        );
+
+        $series = $wpdb->get_results( $sql );
+
+        // Process the list of sequences
+        foreach ( $series as $s ) {
+            dbgOut("Series # {$s->ID}: " . get_the_title( $s->ID ) );
+
+        }
     }
 endif;
 
