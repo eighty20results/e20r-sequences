@@ -1146,7 +1146,9 @@ if (! function_exists('pmpro_sequence_getMemberDays')):
 			else {
 
 				$now = current_time("timestamp");
-				$days = ceil( ($now - $startdate) / ( 60*60*24 ) );
+
+				// $days = round( abs( $now - $startdate ) / ( 60*60*24 ) ) + 1;
+                $days = pmpro_seq_datediff( $startdate, $now );
 
 				$pmpro_member_days[$user_id][$level_id] = $days;
 			}
@@ -1481,15 +1483,21 @@ if ( ! function_exists( 'pmpro_seq_datediff') ):
 	 * @param $enddate (timestamp) - timestamp value for end date
 	 * @return int
 	 */
-	function pmpro_seq_datediff( $startdate, $enddate = null ) {
+	function pmpro_seq_datediff( $startdate, $enddate = null, $tz = 'UTC' ) {
 
 		// use current day as $enddate if nothing is specified
-		if (! $enddate)
-			$enddate = current_time('timestamp');
+		if ( ( ! $enddate ) && ( $tz == 'UTC') ) {
+
+            $enddate = current_time( 'timestamp', true );
+        }
+        else {
+
+            $enddate = current_time( 'timestamp' );
+        }
 
 		// Create two DateTime objects
-		$dStart = new DateTime( date( 'Y-m-d', $startdate ) );
-		$dEnd   = new DateTime( date( 'Y-m-d', $enddate ) );
+		$dStart = new DateTime( date( 'Y-m-d', $startdate ), new DateTimeZone( $tz ) );
+		$dEnd   = new DateTime( date( 'Y-m-d', $enddate ), new DateTimeZone( $tz ) );
 
 		if ( version_compare( PHP_VERSION, PMPRO_SEQ_REQUIRED_PHP_VERSION, '>=' ) ) {
 
@@ -1521,7 +1529,7 @@ if ( ! function_exists( 'pmpro_seq_datediff') ):
 				$days = 0 - $days;
 		}
 
-		return $days;
+		return $days + 1;
 	}
 endif;
 
