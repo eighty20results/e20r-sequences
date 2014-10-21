@@ -4,10 +4,11 @@ Plugin Name: PMPro Sequence
 Plugin URI: http://www.eighty20results.com/pmpro-sequence/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
 Version: 1.4
-Text Domain: pmprosequence
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
+Text Domain: pmprosequence
+Domain Path: /languages
 License:
 
 	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
@@ -1232,10 +1233,15 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 			            // $durationOfMembership = pmpro_getMemberDays( $user_id, $level_id ); // Buggy (returns decimal number for day count)
 
 			            // Don't add 'preview' value if this is for an alert notice.
-			            if (! $isAlert)
-			                $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id ) + $sequence->options->previewOffset;
-			            else
-				            $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id );
+			            if (! $isAlert) {
+
+                            dbgOut("hasAccess() - Adding previewOffset of {$sequence->options->previewOffset} days to the number of days active..");
+                            $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id ) + $sequence->options->previewOffset;
+                        }
+                        else {
+
+                            $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id );
+                        }
 
 			            dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days', $user_id, $level_id, $durationOfMembership) );
 
