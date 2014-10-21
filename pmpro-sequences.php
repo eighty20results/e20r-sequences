@@ -1112,7 +1112,7 @@ if ( ! function_exists( 'pmpro_sequence_content' )):
                 $content .= sprintf("<p>%s</p>", sprintf( __("You are on day %s of your membership", "pmprosequence"), pmpro_sequence_getMemberDays()) );
 /*
 	        if ( intval($sequence->options->sendNotice) == 1)
-		        $content .= $sequence->pmpro_sequence_addUserNoticeOptIn( $sequence );
+		        $content .= $sequence->addUserNoticeOptIn( $sequence );
 */
             // Add the list of posts in the sequence to the content.
             $content .= $sequence->getPostList();
@@ -1925,7 +1925,7 @@ if ( ! function_exists('pmpro_sequence_member_links_bottom')):
             <?php echo apply_filters( 'pmpro_seq_list_title', $title ); ?>
 
             <!-- Add opt-in to the top of the shortcode display. -->
-            <?php echo $sequence->pmpro_sequence_addUserNoticeOptIn(); ?>
+            <?php echo $sequence->addUserNoticeOptIn(); ?>
 
             <!-- List of sequence entries (paginated as needed) -->
             <?php

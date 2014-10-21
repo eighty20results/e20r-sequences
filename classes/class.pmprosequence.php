@@ -1579,7 +1579,7 @@
          *
          * @access public
 	     */
-	    public function pmpro_sequence_addUserNoticeOptIn( )
+	    public function addUserNoticeOptIn( )
 		{
 			$optinForm = '';
 	        global $current_user, $wpdb;
@@ -1589,10 +1589,6 @@
 			dbgOut('addUserNoticeOptIn() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
 
 	        if ($this->options->sendNotice == 1) {
-
-		        dbgOut('addUserNoticeOptIn() - meta key: ' . $meta_key);
-		        dbgOut('addUserNoticeOptIn() - sequence ID: ' . $this->sequence_id);
-		        dbgOut('addUserNoticeOptIn() - User ID: ' . $current_user->ID);
 
 	            $optIn = get_user_meta( $current_user->ID, $meta_key, true );
 
@@ -1620,9 +1616,6 @@
 			        $optIn->sequence[$this->sequence_id]->notifiedPosts = array();
 
 		        update_user_meta($current_user->ID, $meta_key, $optIn);
-
-		        dbgOut('addUserNoticeOptIn() - Saved user meta for notice opt-in');
-		        // dbgOut('OptIn options: ' . print_r($optIn, true));
 
 	            /* Add form information */
 		        ob_start();
