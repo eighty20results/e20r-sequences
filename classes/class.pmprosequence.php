@@ -1949,7 +1949,7 @@
 							            <input type="hidden" name="hidden_pmpro_seq_dateformat" id="hidden_pmpro_seq_dateformat" value="<?php echo ( trim($settings->dateformat) == false ? __('m-d-Y', 'pmprosequence') : esc_attr($settings->dateformat) ); ?>" />
 							            <label for="pmpro_pmpro_sequence_dateformat"></label>
 							            <select name="pmpro_sequence_dateformat" id="pmpro_sequence_dateformat">
-								            <?php echo $sequence->pmpro_sequence_listDateformats( $settings ); ?>
+								            <?php echo $sequence->listDateFormats( $settings ); ?>
 							            </select>
 							            <p class="pmpro-seq-btns">
 								            <a href="#pmproseq_dateformat" id="ok-pmpro-seq-dateformat" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
@@ -2108,7 +2108,7 @@
          *
          * @access private
          */
-        private function pmpro_sequence_listDateformats( $settings ) {
+        private function listDateFormats( $settings ) {
 
             ob_start();
 
