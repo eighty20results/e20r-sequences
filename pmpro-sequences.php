@@ -64,10 +64,10 @@ endif;
 
 
 
-add_action( 'add_meta_boxes', array( &$sequence, 'pmpro_sequence_post_metabox_setup') );
+add_action( 'add_meta_boxes', array( &$sequence, 'loadPostMetabox') );
 
 add_action( 'admin_notices', array( &$sequence, 'pmpro_seq_display_error' ) );
-add_action( 'admin_init', array( &$sequence, 'pmpro_sequence_init_admin') );
+// add_action( 'admin_init', array( &$sequence, 'init_admin') );
 
 if ( ! function_exists( 'pmpro_sequence_post_save' ) ):
 

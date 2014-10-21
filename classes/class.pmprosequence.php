@@ -959,7 +959,7 @@
 			return true;
 		}
 
-/*        public function pmpro_sequence_init_admin() {
+/*        public function init_admin() {
 
 //            if ( current_user_can( 'manage_options' ) && ( ! defined( 'DOING_AJAX' ) || ! DOING_AJAX ) ) {
 
@@ -1047,16 +1047,16 @@
 
                 // dbgOut("Load post Meta");
                 /* Fire our meta box setup function on the post editor screen. */
-                // add_action( 'add_meta_boxes', array( &$this, 'pmpro_sequence_post_metabox_setup', 10, 2 ) );
-                // add_action( 'load-post-new.php', array( &$this, 'pmpro_sequence_post_metabox_setup' ) );
-                // add_action( 'add_meta_boxes', array( "PMProSequence", 'pmpro_sequence_post_metabox_setup', 10, 2 ) );
+                // add_action( 'add_meta_boxes', array( &$this, 'loadPostMetabox', 10, 2 ) );
+                // add_action( 'load-post-new.php', array( &$this, 'loadPostMetabox' ) );
+                // add_action( 'add_meta_boxes', array( "PMProSequence", 'loadPostMetabox', 10, 2 ) );
 			}
 		}
 
         /**
          * Configure metabox for the normal Post/Page editor
          */
-        public function pmpro_sequence_post_metabox_setup( $object, $box ) {
+        public function loadPostMetabox( $object, $box ) {
 
             dbgOut("Post metaboxes being configured");
 
@@ -1067,7 +1067,7 @@
                 if ( $type !== 'pmpro_sequence' ) {
                     add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', 'pmprosequence' ), array(
                             "PMProSequence",
-                            'pmpro_sequence_page_meta'
+                            'renderEditorMetabox'
                         ), $type, 'side', 'high' );
                 }
             }
@@ -1076,7 +1076,7 @@
         /**
          * Initial load of the metabox for the editor sidebar
          */
-        public function pmpro_sequence_page_meta() {
+        public function renderEditorMetabox() {
 
             $metabox = '';
 
@@ -1334,7 +1334,7 @@
 
 			//sequence meta box
 			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', 'pmprosequence'), array("PMProSequence", "sequenceMetaBox"), 'pmpro_sequence', 'normal', 'high');
-            // add_meta_box('pmpro-post-sequence-meta', __('Select Sequence', 'pmprosequence'), array( "PMProSequence", 'pmpro_sequence_page_meta'), 'pmpro_sequence', 'side');
+            // add_meta_box('pmpro-post-sequence-meta', __('Select Sequence', 'pmprosequence'), array( "PMProSequence", 'renderEditorMetabox'), 'pmpro_sequence', 'side');
 
 	    }
 
