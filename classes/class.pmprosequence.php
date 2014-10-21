@@ -1330,7 +1330,7 @@
             dbgOut("Loading post meta boxes");
 
 			// sequence settings box (for posts & pages)
-	        add_meta_box('pmpros-sequence-settings', __('Settings the Sequence', 'pmprosequence'), array("PMProSequence", 'pmpro_sequence_settings_meta_box'), 'pmpro_sequence', 'side', 'high');
+	        add_meta_box('pmpros-sequence-settings', __('Settings the Sequence', 'pmprosequence'), array("PMProSequence", 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
 
 			//sequence meta box
 			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', 'pmprosequence'), array("PMProSequence", "sequenceMetaBox"), 'pmpro_sequence', 'normal', 'high');
@@ -1651,7 +1651,7 @@
          * @access public
 	     *
 	     */
-	    public function pmpro_sequence_settings_meta_box( $object, $box )
+	    public function settings_meta_box( $object, $box )
 	    {
 	        global $post;
 
@@ -1676,7 +1676,7 @@
 	            return;
 	        }
 
-	        // dbgOut('pmpro_sequence_settings_meta_box() - Loaded settings: ' . print_r($settings, true));
+	        // dbgOut('settings_meta_box() - Loaded settings: ' . print_r($settings, true));
 
 		    // Buffer the HTML so we can pick it up in a variable.
 		    ob_start();
@@ -2023,7 +2023,7 @@
 		<?php
 		    $metabox = ob_get_clean();
 
-		    dbgOut('pmpro_sequence_settings_meta_box() - Display the settings meta.');
+		    dbgOut('settings_meta_box() - Display the settings meta.');
 		    // Display the metabox (print it)
 		    echo $metabox;
 	    }
