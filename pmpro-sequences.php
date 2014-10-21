@@ -1075,7 +1075,7 @@ if (! function_exists( 'pmpro_sequence_settings_callback')):
 		// $sequence->options = $settings;
 		if ( $sequenceObj->options->sendNotice == 1 ) {
 
-			dbgOut( 'pmpro_sequence_meta_save(): Updating the cron job for sequence ' . $sequenceObj->sequence_id );
+			dbgOut( 'pmpro_sequence_settings_save(): Updating the cron job for sequence ' . $sequenceObj->sequence_id );
 
 			if (! $sequenceObj->updateNoticeCron() )
 				dbgOut('pmpro_sequence_settings_save() - Error configuring cron() system for sequence ' . $sequenceObj->sequence_id);

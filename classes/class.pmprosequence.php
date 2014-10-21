@@ -186,13 +186,13 @@
          *
          * @access public
 	     */
-	    public function pmpro_sequence_meta_save( $post_id )
+	    public function savePostMeta( $post_id )
 	    {
 		    global $post;
 
 	        // Check that the function was called correctly. If not, just return
 	        if(empty($post_id)) {
-		        dbgOut('pmpro_sequence_meta_save(): No post ID supplied...');
+		        dbgOut('savePostMeta(): No post ID supplied...');
 		        return false;
 	        }
 
@@ -208,7 +208,7 @@
 
 		    $sequence = new PMProSequence($post_id);
 
-	        dbgOut('pmpro_sequence_meta_save(): Saving settings for sequence ' . $post_id);
+	        dbgOut('savePostMeta(): Saving settings for sequence ' . $post_id);
 	        // dbgOut('From Web: ' . print_r($_REQUEST, true));
 
 	        // OK, we're authenticated: we need to find and save the data
@@ -222,7 +222,7 @@
 
 		        if ( ($retval = pmpro_sequence_settings_save( $post_id, $sequence )) === true ) {
 
-			        dbgOut( 'pmpro_sequence_meta_save(): Saved metadata for sequence #' . $post_id );
+			        dbgOut( 'savePostMeta(): Saved metadata for sequence #' . $post_id );
 
 			        return true;
 		        }
@@ -1042,8 +1042,8 @@
 				wp_enqueue_style('pmpros-select2', plugins_url('css/select2.css', dirname(__FILE__)), '', '3.1', 'screen');
 				wp_enqueue_script('pmpros-select2', plugins_url('js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
 
-				add_action('admin_menu', array("PMProSequence", "defineMetaBoxes"));
-	            add_action('save_post', array('PMProSequence', 'pmpro_sequence_meta_save'), 10, 2);
+				add_action('admin_menu', array(&$this, "defineMetaBoxes"));
+	            add_action('save_post', array(&$this, 'savePostMeta'), 10, 2);
 
                 // dbgOut("Load post Meta");
                 /* Fire our meta box setup function on the post editor screen. */
