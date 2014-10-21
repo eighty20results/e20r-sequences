@@ -53,13 +53,13 @@ define('PMPRO_SEQ_AS_DATE', 2);
   */
 if (! class_exists( 'PMProSequence' )):
 
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.pmprosequence.php");
-	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR ."scheduled" .DIRECTORY_SEPARATOR. "crons.php");
+    require_once( PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.pmprosequence.php");
+	require_once( PMPRO_SEQUENCE_PLUGIN_DIR ."/scheduled/crons.php");
 
 endif;
 
 if ( ! class_exists( 'PMProSeqRecentPost' )):
-	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . DIRECTORY_SEPARATOR . "classes" . DIRECTORY_SEPARATOR . "class.PMProSeqRecentPost.php");
+	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.PMProSeqRecentPost.php");
 endif;
 
 
