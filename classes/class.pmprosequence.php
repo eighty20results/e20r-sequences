@@ -1869,7 +1869,7 @@
 							            <input type="hidden" name="hidden_pmpro_seq_noticetemplate" id="hidden_pmpro_seq_noticetemplate" value="<?php echo esc_attr($settings->noticeTemplate); ?>" >
 							            <label for="pmpro_sequence_template"></label>
 							            <select name="pmpro_sequence_template" id="pmpro_sequence_template">
-								            <?php echo $sequence->pmpro_sequence_listEmailTemplates( $settings ); ?>
+								            <?php echo $sequence->listEmailTemplates( $settings ); ?>
 							            </select>
 							            <p class="pmpro-seq-btns">
 								            <a href="#pmproseq_template" id="ok-pmpro-seq-template" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
@@ -2036,7 +2036,7 @@
          *
          * @access private
 		 */
-		private function pmpro_sequence_listEmailTemplates( $settings )
+		private function listEmailTemplates( $settings )
 		{
             ob_start();
 
