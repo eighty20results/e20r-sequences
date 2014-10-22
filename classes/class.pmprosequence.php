@@ -1042,7 +1042,7 @@
 				wp_enqueue_style('pmpros-select2', plugins_url('css/select2.css', dirname(__FILE__)), '', '3.1', 'screen');
 				wp_enqueue_script('pmpros-select2', plugins_url('js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
 
-				add_action('admin_menu', array(&$this, "defineMetaBoxes"));
+				add_action('admin_menu', array("PMProSequence", "defineMetaBoxes"));
 	            add_action('save_post', array(&$this, 'savePostMeta'), 10, 2);
 
                 // dbgOut("Load post Meta");
