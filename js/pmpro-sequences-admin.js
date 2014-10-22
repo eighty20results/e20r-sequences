@@ -187,7 +187,7 @@ jQuery(document).ready(function(){
             $('#pmpro-seq-noticetime-select').slideToggle();
         });
 
-        $('#pmpro-seq-edit-excerpt').on( "click", function(){
+        $(document).on( "click", '#pmpro-seq-edit-excerpt', function(){
 
 //           console.log('Edit button for excerpt intro edit field clicked');
             $('#pmpro-seq-edit-excerpt').slideToggle();
@@ -652,8 +652,6 @@ function rowVisibility ($element, $show ) {
         jQuery($delayRow).hide();
     }
     else if ( $show == 'select' ) {
-
-        console.log("Show the drop-down only");
 
         jQuery($selectLabelRow).show();
         jQuery($selectRow).show();
