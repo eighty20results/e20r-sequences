@@ -1154,12 +1154,16 @@
                 dbgOut("This post has never belonged to a sequence. Adding it to one now");
                 $belongs_to = array( $seq_id );
             }
-
-            dbgOut("Post belongs to # of sequence(s): " . count( $belongs_to ) );
+            else {
+                // Empty array
+                $belongs_to = array();
+            }
 
             // Make sure there's at least one row in the Metabox.
-            dbgOut(" Ensure there's at least one entry in the table ");
+            dbgOut(" Ensure there's at least one entry in the table. Sequence ID: {$seq_id}");
             array_push( $belongs_to, 0 );
+
+            dbgOut("Post belongs to # of sequence(s): " . count( $belongs_to ) . ", content: " . print_r( $belongs_to, true ) );
 
             ob_start();
             ?>
