@@ -1627,13 +1627,15 @@
 	            <div class="pmpro-seq-centered">
 			        <div class="pmpro-sequence-hidden pmpro_sequence_useroptin">
 		                <div class="seq_spinner"></div>
-		                <form action="<?php echo admin_url('admin-ajax.php'); ?>" method="post">
+		                <form class="pmpro-sequence" action="<?php echo admin_url('admin-ajax.php'); ?>" method="post">
 		                    <input type="hidden" name="hidden_pmpro_seq_useroptin" id="hidden_pmpro_seq_useroptin" value="<?php echo $optIn->sequence[$this->sequence_id]->sendNotice; ?>" >
 		                    <input type="hidden" name="hidden_pmpro_seq_id" id="hidden_pmpro_seq_id" value="<?php echo $this->sequence_id; ?>" >
 		                    <input type="hidden" name="hidden_pmpro_seq_uid" id="hidden_pmpro_seq_uid" value="<?php echo $current_user->ID; ?>" >
 		                    <?php wp_nonce_field('pmpro-sequence-user-optin', 'pmpro_sequence_optin_nonce'); ?>
-		                    <p><input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($optIn->sequence[$this->sequence_id]->sendNotice == 1 ? ' checked="checked"' : ''); ?> " />
-		                    <label for="pmpro-seq-useroptin"><?php _e('Yes, please send me email notifications!', 'pmprosequence'); ?></label></p>
+		                    <span>
+                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($optIn->sequence[$this->sequence_id]->sendNotice == 1 ? ' checked="checked"' : ''); ?> " />
+                                <label for="pmpro-seq-useroptin"><?php _e('Yes, please send me email alerts!', 'pmprosequence'); ?></label>
+                            </span>
 		                </form>
 			        </div>
 	            </div>
