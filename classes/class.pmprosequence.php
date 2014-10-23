@@ -395,7 +395,7 @@
          */
         public function postDelayAsTS($delay, $user_id = null, $level_id = null) {
 
-			$delayTS = current_time('timestamp', true); // Default is 'now'
+			$delayTS = current_time('timestamp'); // Default is 'now'
 
 			$startTS = pmpro_getMemberStartdate($user_id, $level_id);
 
@@ -894,7 +894,7 @@
 			$seqPost = $this->get_postDetails($post->ID);
 			dbgOut("sendEmail() Subject information: {$seqPost->delay} for {$post->ID}");
 
-			$email->subject = sprintf('%s: %s (%s)', $settings->subject, $post->post_title, strftime("%x", current_time('timestamp', true) ));
+			$email->subject = sprintf('%s: %s (%s)', $settings->subject, $post->post_title, strftime("%x", current_time('timestamp') ));
 			// $email->subject = sprintf(__("New information/post(s) available at %s", "pmpro"), get_option("blogname"));
 
             /**
