@@ -1184,7 +1184,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
         $post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
 
-        if (empty($post_sequence)) {
+        if ( empty($post_sequence) ) {
 
             return true; //not in a sequence
         }
@@ -1208,7 +1208,6 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
             return true; //user has one of the all access levels
         }
 
-
         // Iterate through all sequences that the $post_id is included in
         foreach ($post_sequence as $sequence_id) {
 
@@ -1222,7 +1221,9 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 		        continue;
             }
 
-	        $sequence = new PMProSequence($sequence_id);
+            $usersLevels = pmpro_getMembershipLevelsForUser( $user_id );
+
+            $sequence = new PMProSequence($sequence_id);
 
             // Get the preview offset (if it's defined). If not, set it to 0 ( for compatibility )
             if ( empty( $sequence->options->previewOffset ) ) {
@@ -1237,6 +1238,12 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
 
 	            // Verify for all levels given access to this post
 	            foreach ( $results[1] as $level_id ) {
+
+
+                    if ( ! in_object_r( 'id', $level_id, $usersLevels ) ) {
+                        // $level_id (i.e. membership_id) isn't in the array of levels this $user_id also belongs to...
+                        continue;
+                    }
 
 		            if ( $sequence->options->delayType == 'byDays' ) {
 
@@ -1254,7 +1261,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
                             $durationOfMembership = pmpro_sequence_getMemberDays( $user_id, $level_id );
                         }
 
-			            dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days', $user_id, $level_id, $durationOfMembership) );
+			            // dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days', $user_id, $level_id, $durationOfMembership) );
 
 			            if ( $durationOfMembership >= $sp->delay ) {
 				            return true;
@@ -1824,6 +1831,9 @@ if ( ! function_exists( 'pmpro_sequence_member_links_bottom' ) ):
         echo pmpro_sequence_createSequenceList(7888, true, 22, true, null, false);
 
 	}
+endif;
+
+if ( ! function_exists( 'pmpro_sequence_createSequenceList' ) ):
 
     /**
      * Create a list of posts/pages/cpts that are included in the specified sequence (or all sequences, if needed)
@@ -1835,14 +1845,7 @@ if ( ! function_exists( 'pmpro_sequence_member_links_bottom' ) ):
      * @param string $title -- The title of the sequence list. Default is the title of the sequence.
      * @return string -- The HTML we generated.
      */
-	function pmpro_sequence_createSequenceList(
-		$seq_id = 0,
-		$highlight = false,
-		$pagesize = 0,
-		$button = false,
-		$title = null,
-		$scrollbox = false
-	) {
+	function pmpro_sequence_createSequenceList( $seq_id = 0, $highlight = false, $pagesize = 0, $button = false, $title = null, $scrollbox = false ) {
 
 		global $wpdb, $current_user, $id;
 		$html = '';
@@ -1952,7 +1955,7 @@ if ( ! function_exists( 'pmpro_sequence_member_links_bottom' ) ):
             ?>
 
             <!-- Preface the table of links with the title of the sequence -->
-        <div id="pmpro_sequence-<?php echo $sequence->sequence_id; ?>" class="pmpro_sequence_list">
+            <div id="pmpro_sequence-<?php echo $sequence->sequence_id; ?>" class="pmpro_sequence_list">
 
             <?php echo apply_filters( 'pmpro_seq_list_title', $title ); ?>
 
@@ -2092,22 +2095,14 @@ if ( ! function_exists( 'pmpro_sequence_member_links_bottom' ) ):
                         </tr><?php
                     }
                 }
-
-                // Show as 'pmpro_sequence_item-unavailable' if there's no access to the post (account for preview).
-                /*						if (! pmpro_sequence_hasAccess( $current_user->ID, $id, false )) {
-                                            // Skip to the next post?
-                                            continue;
-                                        }
-                */
             endwhile;
 
                ?></table>
             </div>
             <div class="clear"></div>
             <?php
-                apply_filters( 'pmpro_seq_paginate_list', pmpro_seq_paging_nav( $seqEntries->max_num_pages ) );
+                echo apply_filters( 'pmpro_seq_paginate_list', pmpro_seq_paging_nav( $seqEntries->max_num_pages ) );
                 wp_reset_postdata();
-
             }
             ?>
             </div><?php
@@ -2118,11 +2113,14 @@ if ( ! function_exists( 'pmpro_sequence_member_links_bottom' ) ):
             return apply_filters( 'pmpro_sequence_list_html', $html );
         }
 	}
+
 endif;
 
 if (! function_exists( 'pmpro_seq_paging_nav()')):
 
 	function pmpro_seq_paging_nav( $total ) {
+
+        $html = '';
 
 		if ($total > 1) {
 
@@ -2135,6 +2133,8 @@ if (! function_exists( 'pmpro_seq_paging_nav()')):
 
 			$prev_arrow = is_rtl() ? '&rarr;' : '&larr;';
 			$next_arrow = is_rtl() ? '&larr;' : '&rarr;';
+
+            ob_start();
 
 			?>
 			<nav class="navigation paging-navigation" role="navigation">
@@ -2153,10 +2153,12 @@ if (! function_exists( 'pmpro_seq_paging_nav()')):
 				)); ?>
 			</nav>
 		<?php
-
+            $html =  ob_get_clean();
 		}
+
+        return $html;
 	}
-	endif;
+endif;
 
 if ( ! function_exists ('pmpro_seq_import_series') ):
 
@@ -2182,5 +2184,64 @@ if ( ! function_exists ('pmpro_seq_import_series') ):
         }
     }
 endif;
+
+/**
+ * Recursively iterate through an array (of, possibly, arrays) to find the needle in the haystack
+ *
+ * Thanks to @elusive via http://stackoverflow.com/questions/4128323/in-array-and-multidimensional-array
+ *
+ * @param $needle -- Comparison value (like the standard PHP function in_array()
+ * @param $haystack -- Array (or array of arrays) to check
+ * @param bool $strict -- Whether to do strict type-checking
+ *
+ * @return bool
+ */
+function in_array_r( $needle, $haystack, $strict = false ) {
+
+    foreach ( $haystack as $item ) {
+
+        if ( ( $strict ? $item === $needle : $item == $needle ) ||
+             ( is_array( $item) && in_array_r( $needle, $item, $strict ) ) ) {
+
+            return true;
+        }
+    }
+
+    return false;
+}
+
+function in_object_r( $key = null, $value = null, $object, $strict = false ) {
+
+    if ( $key == null ) {
+
+        trigger_error("in_object_r expects a key as the first parameter", E_USER_WARNING);
+        return false;
+    }
+
+    if ( $value == null ) {
+
+        trigger_error("in_object_r expects a value as the second parameter", E_USER_WARNING);
+        return false;
+    }
+
+    if ( ! is_object( $object ) ) {
+        $object = (object) $object;
+    }
+
+    foreach ( $object as $k => $v ) {
+
+        if ( ( ! is_object( $v ) ) && ( ! is_array( $v ) ) ) {
+
+            if ( ( $k == $key ) && ( $strict ? $v === $value : $v == $value ) ) {
+                return true;
+            }
+        }
+        else {
+            return in_object_r( $key, $value, $v, $strict );
+        }
+    }
+
+    return false;
+}
 
 $sequence = new PMProSequence();
