@@ -107,7 +107,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
 				// Set the opt-in timestamp if this is the first time we're processing alert settings for this user ID.
 				if ( empty( $noticeSettings->sequence[ $sequence->sequence_id ]->optinTS ) )
-					$noticeSettings->sequence[ $sequence->sequence_id ]->optinTS = current_time('timestamp', true);
+					$noticeSettings->sequence[ $sequence->sequence_id ]->optinTS = current_time('timestamp');
 
 				dbgOut('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
 
