@@ -279,13 +279,13 @@ add_action("init", array("PMProSequence", "createCPT"));
 add_action("init", array("PMProSequence", "checkForMetaBoxes"), 20);
 
 /** A debug function */
-if ( ! function_exists('dbgOut') ):
+if ( ! function_exists( 'dbgOut' ) ):
 	/**
 	 * Debug function (if executes if DEBUG is defined)
 	 *
 	 * @param $msg -- Debug message to print to debug log.
 	 */
-	function dbgOut($msg)
+	function dbgOut( $msg )
 	{
 		$dbgPath = plugin_dir_path( __FILE__ ) . DIRECTORY_SEPARATOR . 'debug';
 
@@ -302,12 +302,12 @@ if ( ! function_exists('dbgOut') ):
 				}
 			}
 
-			$dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d') . '.txt';
+			$dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d', current_time("timestamp") ) . '.txt';
 
 			if ( ($fh = fopen($dbgFile, 'a')) !== false ) {
 
 				// Format the debug log message
-				$dbgMsg = '(' . date('d-m-y H:i:s') . ') -- '. $msg;
+				$dbgMsg = '(' . date('d-m-y H:i:s', current_time( "timestamp" ) ) . ') -- '. $msg;
 
 				// Write it to the debug log file
 				fwrite( $fh, $dbgMsg . "\r\n" );
@@ -782,7 +782,7 @@ if (! function_exists('pmpro_sequence_optin_callback')):
 	        // If they opted out, set the opt-in timestamp to -1
 	        if ($usrSettings->sequence[$seqId]->sendNotice == 1)
 		        // Set the timestamp when the user opted in.
-		        $usrSettings->sequence[$seqId]->optinTS = current_time('timestamp', true);
+		        $usrSettings->sequence[$seqId]->optinTS = current_time('timestamp');
 	        else
 		        $usrSettings->sequence[$seqId]->optinTS = -1; // Opted out.
 
