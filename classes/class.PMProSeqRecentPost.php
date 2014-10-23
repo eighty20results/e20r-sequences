@@ -39,12 +39,17 @@ class PMProSeqRecentPost extends WP_Widget {
 		$title = apply_filters( 'widget_title', $instance['title'] );
 		$seqPrefix = apply_filters( 'pmpro_sequence_widget_prefix', $instance['prefix']) ;
 		$sequence_id = apply_filters( 'pmpro_sequence_widget_seqid', $instance['sequence_id'] );
-		$defaultTitle = apply_filters('pmpro_sequence_widget_default_post_title', $instance['default_post_title']);
+
+        $defaultTitle = apply_filters('pmpro_sequence_widget_default_post_title', $instance['default_post_title']);
+        $before_title = apply_filters('pmpro_sequence_widget_before_widget_title', $instance['before_title'] );
+        $after_title = apply_filters('pmpro_sequence_widget_before_widget_title', $instance['after_title'] );
 
 		$wordcount = $instance['wordcount'];
 		$show_title = ($instance['show_title'] == 1 ) ? true : false;
+        $before_widget = apply_filters( 'pmpro_sequence_before_widget', $instance['before_widget'] );
+        $after_widget = apply_filters( 'pmpro_sequence_after_widget', $instance['after_widget'] );
 
-		echo $before_widget;
+        echo $before_widget;
 
 		if ($title)
 			echo $before_title . $title . $after_title;
@@ -56,7 +61,7 @@ class PMProSeqRecentPost extends WP_Widget {
 
 	public function form( $instance ) {
 
-		// Set up the current (or default) settings
+		// Set up the c_time (or default) settings
 		if ( $instance ) {
 
 			$show_title = ( empty( $instance['show_title'] ) ? 0 : esc_attr( $instance['show_title'] ) );
