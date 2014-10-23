@@ -120,6 +120,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
                 $post = $sequence->get_postDetails( $post_id );
 
                 dbgOut( 'cron() - Post: "' . get_the_title($post_id) . '"' .
+                        ', post ID: ' . $post_id .
                         ', membership day: ' . $membership_day .
                         ', post delay: ' . $post->delay .
                         ', user ID: ' . $s->user_id .
