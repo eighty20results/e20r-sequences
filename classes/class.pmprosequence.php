@@ -1163,8 +1163,7 @@
             dbgOut(" Ensure there's at least one entry in the table. Sequence ID: {$seq_id}");
             array_push( $belongs_to, 0 );
 
-            dbgOut("Post belongs to # of sequence(s): " . count( $belongs_to ) . ", content: " . print_r( $belongs_to, true ) );
-
+            // dbgOut("Post belongs to # of sequence(s): " . count( $belongs_to ) . ", content: " . print_r( $belongs_to, true ) );
             ob_start();
             ?>
             <?php wp_nonce_field('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');?>
@@ -2310,7 +2309,7 @@
             $this->getPosts();
 
             // Find the post ID in the postList array that has the delay closest to the membershipday.
-            $closest = $this->get_closestByDelay( $membershipDay, $this->posts );
+            $closest = $this->get_closestByDelay( $membershipDay, $this->posts, $user_id );
 
 	        dbgOut("get_closestPost() - For user {$user_id} on day {$membershipDay}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})");
 
@@ -2328,9 +2327,13 @@
          *
          * @access private
          */
-        private function get_closestByDelay( $delayComp, $postArr ) {
+        private function get_closestByDelay( $delayComp, $postArr, $user_id = null ) {
 
-	        global $current_user;
+
+            if ( empty($user_id) ) {
+                global $current_user;
+                $user_id = $current_user->ID;
+            }
 
 	        $distances = array();
 
