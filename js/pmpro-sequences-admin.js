@@ -703,7 +703,7 @@ function unlockMetaRows() {
 
     jQuery( '.pmpro_seq-remove-seq').each( function() {
 
-        jQuery( this).attr( 'disabled', true );
+        jQuery( this).attr( 'disabled', false );
     });
 
     jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', false );
