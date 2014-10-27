@@ -1181,6 +1181,7 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
     function pmpro_sequence_hasAccess($user_id, $post_id, $isAlert = false)
     {
         //is this post in a sequence
+        // TODO: This will loop through any and all sequences this post belongs too. FixMe by moving function to PMProSequence() class - then only run per sequence, right?
         $post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
         if ( empty($post_sequence) ) {
@@ -1312,19 +1313,11 @@ add_filter("pmpro_has_membership_access_filter", "pmpro_sequence_has_membership_
      */
     function pmpro_sequence_has_membership_access_filter($hasaccess, $mypost, $myuser, $post_membership_levels)
     {
-        // dbgOut("Running membership_access_filter");
+        // If the user has been granted access already, we'll verify that they have access to the specific post
+        if ( $hasaccess ) {
 
-        //If the user doesn't have access already, we won't change that. So only check if they already have access.
-        if($hasaccess)
-        {
-
-            //okay check if the user has access
-            if(pmpro_sequence_hasAccess($myuser->ID, $mypost->ID)) {
-                $hasaccess = true;
-            }
-            else {
-                $hasaccess = false;
-            }
+            //See if the user has access to the specific post
+            return pmpro_sequence_hasAccess( $myuser->ID, $mypost->ID);
         }
 
         return $hasaccess;
