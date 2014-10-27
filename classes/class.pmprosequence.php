@@ -526,13 +526,31 @@
             else {
                 dbgOut( "addPost() - Post already in sequence. Check if we need to update it. Post: {$this->posts[$key]->id} with delay {$this->posts[$key]->delay} versus {$delay}");
 
-                if ( intval($this->posts[$key]->delay) != intval($delay) ) {
+                switch ($this->options->delayType) {
 
-                    dbgOut("Delay is different. Need to update everything and clear the notices");
-                    $this->removePost( $post_id, true );
-                    $this->posts[] = $temp;
-                    $key = false;
+                    case 'byDays':
+
+                        if ( intval($this->posts[$key]->delay) != intval($delay) ) {
+
+                            dbgOut("Delay is different. Need to update everything and clear the notices");
+                            $this->removePost( $post_id, true );
+                            $this->posts[] = $temp;
+                            $key = false;
+                        }
+                        break;
+
+                    case 'byDate':
+
+                        if ( $this->posts[$key]->delay != $delay ) {
+
+                            dbgOut("Delay is different. Need to update everything and clear the notices");
+                            $this->removePost( $post_id, true );
+                            $this->posts[] = $temp;
+                            $key = false;
+                        }
+                        break;
                 }
+
             }
 
             if ( $key === false ) {
