@@ -1183,7 +1183,6 @@ if ( ! function_exists( 'pmpro_sequence_hasAccess')):
         //is this post in a sequence
         $post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
-
         if ( empty($post_sequence) ) {
 
             return true; //not in a sequence

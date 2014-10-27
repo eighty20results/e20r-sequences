@@ -124,14 +124,14 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
                         ', membership day: ' . $membership_day .
                         ', post delay: ' . $post->delay .
                         ', user ID: ' . $s->user_id .
-                        ', already notified: ' . ( in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
-                        ', has access: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post_id, true ) === true ? 'true' : 'false' ) );
+                        ', already notified: ' . ( in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) /*.
+                         ', has access: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post_id, true ) === true ? 'true' : 'false' )*/ );
 
                 // dbgOut("cron() - # of posts in sequence (" . count($sequence_posts) . ") vs number of posts we've already notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
                 dbgOut( "Evaluating whether to notify {$s->user_id} of availability of post # {$post_id}" );
 
                 if  ( ( $post_id !== false ) &&
-                      ( pmpro_sequence_hasAccess( $s->user_id, $post_id, true ) ) &&
+                      /* ( pmpro_sequence_hasAccess( $s->user_id, $post_id, true ) ) && */
                       ( $membership_day == $post->delay ) &&
                       ( ! in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) ) ) {
 
