@@ -126,7 +126,37 @@ div#pmpro-seq-error {
     display: inline-block;
 }
 
+.widget-title {
+    font-size: 24px;
+    padding-bottom: 10px;
+    color: #9C0000;
+    font-variant: small-caps;
+    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+}
 
+#pmpro-seq-post-body-text {
+    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+    font-size: 10pt;
+    color: #004CFF;
+    line-height: 110%;
+}
+
+#pmpro-seq-post-link {
+    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+    font-size: 10pt;
+    color: #9C0000;
+    font-weight: bold;
+    margin-top: 15px;
+    margin-bottom: 15px;
+    margin-left: 10px;
+    font-variant: small-caps;
+    line-height: 130%;
+    text-decoration: underline;
+}
+
+#pmpro-seq-post-link a {
+    color: #9C0000 !important;
+}
 
 .cancel-pmproseq {
     position: relative;
