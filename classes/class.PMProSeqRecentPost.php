@@ -212,13 +212,13 @@ class PMProSeqRecentPost extends WP_Widget {
 					<?php } ?>
 						<div id="pmpro-seq-post-body" class="text-widget">
 							<!-- <p class="pmpro-seq-when">Available on <?php $this->print_available_date($sequence, $seqPostId); ?></p> -->
-							<p id="pmpro-seq-post-body-text"><?php
+							<div id="pmpro-seq-post-body-text"><?php
 								echo $image;
 								echo $this->limit_excerpt_words( get_the_excerpt(), $excerpt_length ); ?>
-							</p>
-							<p id="pmpro-seq-post-link">
-								<a href="<?php echo get_permalink() ?>" title="<?php the_title(); ?>"><?php _e('Click to access', 'pmprosequence'); ?></a>
-							</p>
+							</div>
+							<div id="pmpro-seq-post-link">
+								<a href="<?php echo get_permalink() ?>" title="<?php the_title(); ?>"><?php _e('Click to read', 'pmprosequence'); ?></a>
+							</div>
 						</div>
 					<?php
 					endwhile;?>

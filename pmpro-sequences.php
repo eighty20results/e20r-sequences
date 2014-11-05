@@ -67,6 +67,17 @@ endif;
 add_action( 'add_meta_boxes', array( &$sequence, 'loadPostMetabox') );
 
 add_action( 'admin_notices', array( &$sequence, 'pmpro_seq_display_error' ) );
+
+/**
+ *	PMPro Sequence CPT init
+ */
+add_action("init", array("PMProSequence", "createCPT"));
+
+/**
+ *	Add the PMPro meta box and the meta box to add posts/pages to sequence
+ */
+add_action("init", array("PMProSequence", "checkForMetaBoxes"), 20);
+
 // add_action( 'admin_init', array( &$sequence, 'init_admin') );
 
 if ( ! function_exists( 'pmpro_sequence_post_save' ) ):
@@ -77,19 +88,17 @@ if ( ! function_exists( 'pmpro_sequence_post_save' ) ):
 
         global $current_user;
 
-        dbgOut("Sequence info for post/page save");
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            dbgOut("Exit during autosave");
+            return;
+        }
 
-        dbgOut("Sequences & Delays have been configured");
+        dbgOut("Sequences & Delays have been configured for page save");
 
         $seq_ids = is_array( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
         $delays = is_array( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
 
         $errMsg = null;
-
-        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-            dbgOut("Exit during autosave");
-            return;
-        }
 
         if ( wp_is_post_revision( $post_id ) !== false ) {
             dbgOut("Not saving revisions ({$post_id}) in sequence");
@@ -268,16 +277,6 @@ if (! function_exists('pmpro_sequence_ajaxUnprivError')):
 	}
 endif;
 
-/**
- *	PMPro Sequence CPT init
- */
-add_action("init", array("PMProSequence", "createCPT"));
-
-/**
- *	Add the PMPro meta box and the meta box to add posts/pages to sequence
- */
-add_action("init", array("PMProSequence", "checkForMetaBoxes"), 20);
-
 /** A debug function */
 if ( ! function_exists( 'dbgOut' ) ):
 	/**
@@ -447,8 +446,11 @@ if ( !function_exists( 'pmpro_sequence_add_post_callback')):
                 dbgOut( 'pmpro_sequence_add_post_callback(): Delay value was not specified. Not adding the post: ' . esc_attr( $_POST['pmpro_sequencedelay'] ) );
 
                 if ( empty( $seq_post_id ) && ( $sequence->getError() == null ) ) {
+
                     $sequence->setError( sprintf( __( 'Did not specify a post/page to add', 'pmprosequence' ) ) );
-                } elseif ( empty( $delay ) ) {
+                }
+                elseif ( empty( $delay ) ) {
+
                     $sequence->setError( __( 'No delay has been specified', 'pmprosequence' ) );
                 }
 
@@ -509,17 +511,11 @@ if ( ! function_exists( 'update_delay_post_meta_callback' ) ):
 
         dbgOut("Sequence: {$seq_id}, Post: {$post_id}" );
 
-//         if ( $seq_id != 0 ) {
+        $seq = new PMProSequence( $seq_id );
 
-            $seq = new PMProSequence( $seq_id );
+        $html = $seq->load_sequence_meta( $post_id, $seq_id );
 
-            $html = $seq->load_sequence_meta( $post_id, $seq_id );
-
-            wp_send_json_success( $html );
-//        }
-//        else {
-//            wp_send_json_error( 'Error loading sequence data.' );
-//        }
+        wp_send_json_success( $html );
     }
 
 endif;
