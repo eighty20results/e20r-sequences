@@ -3,7 +3,7 @@ Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.2 or later.
-Tested up to: 3.9.2
+Tested up to: 4.0
 Stable tag: 1.3
 
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
@@ -96,3 +96,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 = 1.0 =
 * Set version number
 * Feature: Widget containing excerpt from most recently available post in a sequence (by user ID)
+
+= 2.0 =
+* Major refactor of plugin. Moved anything sequence specific into the PMProSequence class.
+* Feature:
