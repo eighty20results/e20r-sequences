@@ -58,7 +58,6 @@
             add_action( "init", array( &$this, "createCPT" ), 10 );
             add_action( "init", array( &$this, "register_shortcodes" ), 11 );
 
-
             // Add CSS & Javascript
             add_action( "admin_enqueue_scripts", array( &$this, 'enqueue_admin_scripts' ) );
             add_action( "wp_enqueue_scripts", array( &$this, 'enqueue_user_scripts' ) );
@@ -109,12 +108,7 @@
 
         public function init( $id = null ) {
 
-            if (( $this->sequence_id != 0 ) && ( $this->sequence_id != $id ) ) {
-
-                throw new Exception("Invalid attempt at changing the sequence.");
-            }
-
-            if ( ( $this->sequence_id == 0 ) && ( $id != null )) {
+            if ( $id != null ) {
 
                 $this->sequence_id = $id;
 
@@ -1266,7 +1260,7 @@
 			$error = register_post_type('pmpro_sequence',
                         array( 'labels' => apply_filters( 'pmpro_seqence_cpt_labels', $labels ),
                                 'public' => true,
-                                /*'menu_icon' => plugins_url('images/icon-sequence16-sprite.png', dirname(__FILE__)),*/
+                                /*'menu_icon' => plugins_url('../images/icon-sequence16-sprite.png', dirname(__FILE__)),*/
                                 'show_ui' => true,
                                 'show_in_menu' => true,
                                 'publicly_queryable' => true,
@@ -2877,8 +2871,6 @@
             if ($pagesize == 0) {
                 $pagesize = 15;
             }
-
-
 /*
             if ( $this->sequence_id == 0 ) {
 
@@ -2916,7 +2908,7 @@
             $sequence_posts = $this->getPosts();
             $memberDayCount = $this->getMemberDays();
 
-            dbgOut( "Number of posts in sequence: " . count( $sequence_posts ) . " number of days as member: " . $memberDayCount );
+            dbgOut( "Number of posts in sequence: " . count( $sequence_posts ) . ". Number of days as member: " . $memberDayCount );
 
             if ( ! $this->hasAccess( $current_user->ID, $this->sequence_id ) ) {
                 dbgOut( 'No access to sequence ' . $this->sequence_id . ' for user ' . $current_user->ID );
@@ -2939,7 +2931,7 @@
             $closestPostId = apply_filters( 'pmpro_seq_find_closest_post', $this->get_closestPost( $current_user->ID ) );
 
             // Image to bring attention to the closest post item
-            $closestPostImg = '<img src="' . plugins_url( '/images/most-recent.png', __FILE__ ) . '" >';
+            $closestPostImg = '<img src="' . plugins_url( '/../images/most-recent.png', __FILE__ ) . '" >';
 
             dbgOut( 'createSequenceList() - The most recently available post for user #' . $current_user->ID . ' is post #' . $closestPostId );
 
@@ -3635,6 +3627,8 @@
 
                 $results = pmpro_has_membership_access($sequence_id, $user_id, true); //Using true to return all level IDs that have access to the sequence
 
+                // dbgOut(" hasAccess() - PMPRO function returns: " . print_r( $results, true ) );
+
                 if ($results[0] === false) { // First item in results array == true if user has access
 
                     dbgOut( 'hasAccess() - User ' . $user_id . ' does NOT have access to post ' . $post_id . ' in sequence ' . $sequence_id );
@@ -3681,7 +3675,7 @@
                                 $durationOfMembership = $this->getMemberDays( $user_id, $level_id );
                             }
 
-                            // dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days', $user_id, $level_id, $durationOfMembership) );
+                            // dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days. The post has a delay of: %d', $user_id, $level_id, $durationOfMembership, $sp->delay) );
 
                             if ( $durationOfMembership >= $sp->delay ) {
                                 return true;

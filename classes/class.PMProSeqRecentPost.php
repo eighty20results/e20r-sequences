@@ -163,6 +163,7 @@ class PMProSeqRecentPost extends WP_Widget {
 
 		if ($sequence_id != 0) {
 			$sequence = new PMProSequence( $sequence_id );
+            $sequence->init($sequence_id);
 		}
 		else {
 			?>
@@ -183,7 +184,7 @@ class PMProSeqRecentPost extends WP_Widget {
 
 			$seqPostId = $sequence->get_closestPost( $current_user->ID );
 
-			if ( pmpro_sequence_hasAccess( $current_user->ID, $seqPostId, false ) ) {
+			if ( $sequence->hasAccess( $current_user->ID, $seqPostId, false ) ) {
 
 				add_image_size( 'pmpro_seq_widget_size', 85, 45, false );
 
