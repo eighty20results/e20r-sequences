@@ -99,4 +99,6 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 = 2.0 =
 * Major refactor of plugin. Moved anything sequence specific into the PMProSequence class.
-* Feature:
+* Feature: Sequence metabox in post (allows assignment of sequence & delay within post/page editor)
+* Fix: Only send alert for the current post in the sequence.
+* Fix:

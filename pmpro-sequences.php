@@ -30,7 +30,7 @@ License:
 */
 
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '1.4');
+define('PMPRO_SEQUENCE_VERSION', '2.0');
 
 /* Enable / Disable DEBUG logging to separate file */
 define('PMPRO_SEQUENCE_DEBUG', true);

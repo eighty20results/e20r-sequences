@@ -56,9 +56,12 @@
             // Add Custom Post Type
             add_action( "init", array( &$this, "load_textdomain" ), 9 );
             add_action( "init", array( &$this, "createCPT" ), 10 );
-
             add_action( "init", array( &$this, "register_shortcodes" ), 11 );
 
+
+            // Add CSS & Javascript
+            add_action( "admin_enqueue_scripts", array( &$this, 'enqueue_admin_scripts' ) );
+            add_action( "wp_enqueue_scripts", array( &$this, 'enqueue_user_scripts' ) );
             add_action( 'admin_head', array( &$this, 'post_type_icon' ) );
 
             // Load metabox displays.
@@ -66,12 +69,11 @@
             add_action( 'add_meta_boxes', array( &$this, 'loadPostMetabox') );
 
             // Load add/save actions
-            add_action( 'admin_notices', array( &$this, 'pmpro_seq_display_error' ) );
+            add_action( 'admin_notices', array( &$this, 'display_error' ) );
             add_action( 'save_post', array( &$this, 'post_save_action' ) );
 
-            // Add CSS & Javascript
-            add_action( "admin_enqueue_scripts", array( &$this, 'enqueue_admin_scripts' ) );
-            add_action( "wp_enqueue_scripts", array( &$this, 'enqueue_user_scripts' ) );
+            add_action( 'admin_menu', array( &$this, "defineMetaBoxes" ) );
+            add_action( 'save_post', array( &$this, 'savePostMeta' ), 10, 2 );
 
             add_action( 'widgets_init', array( &$this, 'register_widgets' ) );
 
@@ -107,16 +109,12 @@
 
         public function init( $id = null ) {
 
-            if (( $id == null ) && ( $this->sequence_id == 0 ) ) {
-                throw new Exception('No sequence ID specified.');
-            }
-
             if (( $this->sequence_id != 0 ) && ( $this->sequence_id != $id ) ) {
 
                 throw new Exception("Invalid attempt at changing the sequence.");
             }
 
-            if ( ( $this->sequence_id == 0 ) && ( $id !== null )) {
+            if ( ( $this->sequence_id == 0 ) && ( $id != null )) {
 
                 $this->sequence_id = $id;
 
@@ -129,6 +127,10 @@
                 dbgOut( 'init() -- Done.' );
 
                 return $this->sequence_id;
+            }
+
+            if (( $id == null ) && ( $this->sequence_id == 0 ) ) {
+                throw new Exception('No sequence ID specified.');
             }
 
             return false;
@@ -145,12 +147,12 @@
 
 			if(!empty($this->post->ID))
 	        {
-				$this->id = $id;
+				$this->sequence_id = $id;
 	        }
 	        else
-				$this->id = false;
+				$this->sequence_id = false;
 
-			return $this->id;
+			return $this->sequence_id;
 		}
 
 	    /**
@@ -843,7 +845,7 @@
 
                             // This is the first sequence this post is added to
                             $post_sequence[] = $this->sequence_id;
-                            dbgOut( 'addPost(): Appended post (ID: ' . $temp->id . ') to sequence ' . $this->id );
+                            dbgOut( 'addPost(): Appended post (ID: ' . $temp->id . ') to sequence ' . $this->sequence_id );
                         } else {
 
                             // Check whether there are repeat entries for the current sequence
@@ -1030,7 +1032,7 @@
 				{
 					unset($this->posts[$i]);
 					$this->posts = array_values($this->posts);
-					update_post_meta($this->id, "_sequence_posts", $this->posts);
+					update_post_meta($this->sequence_id, "_sequence_posts", $this->posts);
 					break;	//assume there is only one
 				}
 			}
@@ -1047,7 +1049,7 @@
 			// Remove the sequence id from the post's metadata
 			$post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
-			if( is_array($post_sequence) && ($key = array_search($this->id, $post_sequence)) !== false)
+			if( is_array($post_sequence) && ($key = array_search($this->sequence_id, $post_sequence)) !== false)
 			{
 				unset($post_sequence[$key]);
 				update_post_meta($post_id, "_post_sequences", $post_sequence);
@@ -1296,14 +1298,13 @@
          */
 		public function loadAdminMetaboxes()
 		{
+            dbgOut( "Sequence specific metaboxes");
+
 			//add meta boxes
 			if (is_admin())
 			{
-				wp_enqueue_style('pmpros-select2', plugins_url('css/select2.css', dirname(__FILE__)), '', '3.1', 'screen');
-				wp_enqueue_script('pmpros-select2', plugins_url('js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
-
-				add_action('admin_menu', array(&$this, "defineMetaBoxes"));
-	            add_action('save_post', array(&$this, 'savePostMeta'), 10, 2);
+				wp_enqueue_style('pmpros-select2', plugins_url('../css/select2.css', dirname(__FILE__)), '', '3.1', 'screen');
+				wp_enqueue_script('pmpros-select2', plugins_url('../js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
 
 			}
 		}
@@ -1320,13 +1321,11 @@
             foreach( $post_types as $type ) {
 
                 if ( $type !== 'pmpro_sequence' ) {
-                    add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', 'pmprosequence' ), array(
-                            &$this,
-                            'renderEditorMetabox'
-                        ), $type, 'side', 'high' );
+                    add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', 'pmprosequence' ), array( &$this, 'renderEditorMetabox' ), $type, 'side', 'high' );
                 }
             }
         }
+
 
         /**
          * Initial load of the metabox for the editor sidebar
@@ -1588,11 +1587,11 @@
             dbgOut("Loading post meta boxes");
 
 			// sequence settings box (for posts & pages)
-	        add_meta_box('pmpros-sequence-settings', __('Settings the Sequence', 'pmprosequence'), array(&$this, 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
+	        add_meta_box('pmpros-sequence-settings', __('Settings the Sequence', 'pmprosequence'), array( &$this, 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
 
 			//sequence meta box
 			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', 'pmprosequence'), array(&$this, "sequenceMetaBox"), 'pmpro_sequence', 'normal', 'high');
-            // add_meta_box('pmpro-post-sequence-meta', __('Select Sequence', 'pmprosequence'), array( "PMProSequence", 'renderEditorMetabox'), 'pmpro_sequence', 'side');
+
 
 	    }
 
@@ -1739,7 +1738,7 @@
 							</td>
 							<td>
 								<input id="pmpro_sequencedelay" name="pmpro_sequencedelay" type="text" value="" size="7" />
-								<input id="pmpro_sequence_id" name="pmpro_sequence_id" type="hidden" value="<?php echo $this->id; ?>" size="7" />
+								<input id="pmpro_sequence_id" name="pmpro_sequence_id" type="hidden" value="<?php echo $this->sequence_id; ?>" size="7" />
 								<?php wp_nonce_field('pmpro-sequence-add-post', 'pmpro_sequence_addpost_nonce'); ?>
 								<?php wp_nonce_field('pmpro-sequence-rm-post', 'pmpro_sequence_rmpost_nonce'); ?>
 							</td>
@@ -2078,7 +2077,7 @@
 					            <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Send new content alerts', 'pmprosequence'); ?></label>
 					            <?php /* Add 'send now' button if checkbox is set */ ?>
 					            <div class="pmpro-sequence-hidden pmpro-sequence-sendnowbtn">
-						            <label for="pmpro_seq_send"><?php _e('Manually process alerts', 'pmprosequence'); ?></label>
+						            <label for="pmpro_seq_send"><?php _e('Send alerts now', 'pmprosequence'); ?></label>
 						            <a href="#sendalerts" class="pmpro-seq-settings-send pmpro-seq-edit" id="pmpro_seq_send" onclick="pmpro_sequence_sendAlertNotice(<?php echo $sequence->sequence_id;?>); return false;">
 						                <span aria-hidden="true"><?php _e('Send', 'pmprosequence'); ?></span>
 						                <span class="screen-reader-text"><?php _e('Manually issue command to process alert notices for the current sequence', 'pmprosequence'); ?></span>
@@ -3196,7 +3195,7 @@
          */
         public function enqueue_user_scripts() {
 
-            wp_register_script('pmpro_sequence_script', plugins_url('/js/pmpro-sequences.js', __FILE__), array('jquery'), null, true);
+            wp_register_script('pmpro_sequence_script', plugins_url('/../js/pmpro-sequences.js', __FILE__), array('jquery'), null, true);
 
             wp_localize_script('pmpro_sequence_script', 'pmpro_sequence',
                 array(
@@ -3204,7 +3203,7 @@
                 )
             );
 
-            wp_enqueue_style("pmpro_sequence_css", plugins_url('/css/pmpro_sequences.css', __FILE__ ));
+            wp_enqueue_style("pmpro_sequence_css", plugins_url('/../css/pmpro_sequences.css', __FILE__ ));
             wp_enqueue_script('pmpro_sequence_script');
         }
 
@@ -3214,7 +3213,7 @@
         function enqueue_admin_scripts()
         {
 
-            wp_register_script('pmpro_sequence_admin_script', plugins_url('/js/pmpro-sequences-admin.js', __FILE__), array('jquery'), null, true);
+            wp_register_script('pmpro_sequence_admin_script', plugins_url('/../js/pmpro-sequences-admin.js', __FILE__), array('jquery'), null, true);
 
             /* Localize ajax script */
             wp_localize_script('pmpro_sequence_admin_script', 'pmpro_sequence',
@@ -3240,8 +3239,8 @@
                 )
             );
 
-            wp_enqueue_style("pmpro_sequence_css", plugins_url('/css/pmpro_sequences.css', __FILE__ ));
-            wp_enqueue_script('pmpro_sequence_admin_script');
+            wp_enqueue_style( "pmpro_sequence_css", plugins_url( '/../css/pmpro_sequences.css', __FILE__ ));
+            wp_enqueue_script( 'pmpro_sequence_admin_script' );
         }
 
         /**
@@ -3336,7 +3335,7 @@
 
             $mofile = "{$domain}-{$locale}.mo";
 
-            $mofile_local = plugin_basename(__FILE__) . "/languages/";
+            $mofile_local = plugin_basename(__FILE__) . "/../languages/";
             $mofile_global = WP_LANG_DIR . "/pmpro-sequence/" . $mofile;
 
             load_textdomain( $domain, $mofile_global );
@@ -3517,7 +3516,7 @@
             {
                 dbgOut( "PMPRO Sequence display {$post->ID} - " . get_the_title( $post->ID ) );
 
-                $$this->init( $post->ID );
+                $this->init( $post->ID );
 
                 // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
                 if ( intval($this->options->lengthVisible) == 1 )
@@ -3529,8 +3528,6 @@
                 // Add the list of posts in the sequence to the content.
                 $content .= $this->getPostList();
             }
-
-            dbgOut( "PMPRO Sequence display {$post->ID} - " . get_the_title( $post->ID ) );
 
             return $content;
         }
@@ -3544,14 +3541,14 @@
             <style>
                 /* Admin Menu - 16px */
                 #menu-posts-pmpro_sequence .wp-menu-image {
-                    background: url(<?php echo plugins_url('images/icon-sequence16-sprite.png', __FILE__); ?>) no-repeat 6px 6px !important;
+                    background: url(<?php echo plugins_url('../images/icon-sequence16-sprite.png', __FILE__); ?>) no-repeat 6px 6px !important;
                 }
                 #menu-posts-pmpro_sequence:hover .wp-menu-image, #menu-posts-pmpro_sequence.wp-has-current-submenu .wp-menu-image {
                     background-position: 6px -26px !important;
                 }
                 /* Post Screen - 32px */
                 .icon32-posts-pmpro_sequence {
-                    background: url(<?php echo plugins_url('images/icon-sequence32.png', __FILE__); ?>) no-repeat left top !important;
+                    background: url(<?php echo plugins_url('../images/icon-sequence32.png', __FILE__); ?>) no-repeat left top !important;
                 }
                 @media
                 only screen and (-webkit-min-device-pixel-ratio: 1.5),
@@ -3562,14 +3559,14 @@
 
                     /* Admin Menu - 16px @2x */
                     #menu-posts-pmpro_sequence .wp-menu-image {
-                        background-image: url(<?php echo plugins_url('images/icon-sequence16-sprite_2x.png', __FILE__); ?>) !important;
+                        background-image: url(<?php echo plugins_url('../images/icon-sequence16-sprite_2x.png', __FILE__); ?>) !important;
                         -webkit-background-size: 16px 48px;
                         -moz-background-size: 16px 48px;
                         background-size: 16px 48px;
                     }
                     /* Post Screen - 32px @2x */
                     .icon32-posts-pmpro_sequence {
-                        background-image:url(<?php echo plugins_url('images/icon-sequence32_2x.png', __FILE__); ?>) !important;
+                        background-image:url(<?php echo plugins_url('../images/icon-sequence32_2x.png', __FILE__); ?>) !important;
                         -webkit-background-size: 32px 32px;
                         -moz-background-size: 32px 32px;
                         background-size: 32px 32px;

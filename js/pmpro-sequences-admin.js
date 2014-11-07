@@ -131,6 +131,7 @@ jQuery(document).ready(function(){
             $('.pmpro-sequence-template').slideToggle();
             $('.pmpro-sequence-noticetime').slideToggle();
             $('.pmpro-sequence-email').slideToggle();
+            $('.pmpro-sequence-sendnowbtn').slideToggle();
         });
 
         $(document).on( "click", '#pmpro_sequence_offsetchk', function() {
