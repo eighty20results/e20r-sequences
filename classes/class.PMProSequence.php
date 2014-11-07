@@ -74,7 +74,7 @@
             add_action( 'admin_head', array( &$this, 'post_type_icon' ) );
 
             // Load metabox displays.
-            add_action( "add_meta_boxes", array( &$this, "loadAdminMetaboxes" ) );
+            // add_action( "admin_init", array( &$this, "loadAdminMetaboxes" ) );
             add_action( 'add_meta_boxes', array( &$this, 'loadPostMetabox') );
 
             // Load add/save actions
@@ -893,7 +893,7 @@
 	     */
 	    public function isValidDelay( $delay )
 	    {
-	        dbgOut('isValidDelay(): Delay value is: ' . $delay);
+	        dbgOut( "isValidDelay(): Delay value is: {$delay} for setting: {$this->options->delayType}" );
 
 	        switch ($this->options->delayType)
 	        {
@@ -909,6 +909,7 @@
 
 	            default:
 	                dbgOut('isValidDelay(): Not a valid delay value, based on config');
+                    dbgOut("isValidDelay() - options Array: " . print_r( $this->options, true ) );
 	                return false;
 	        }
 	    }
@@ -1295,14 +1296,7 @@
 		public function loadAdminMetaboxes()
 		{
             dbgOut( "Sequence specific metaboxes");
-
-			//add meta boxes
-			if (is_admin())
-			{
-				wp_enqueue_style('pmpros-select2', plugins_url('../css/select2.css', dirname(__FILE__)), '', '3.1', 'screen');
-				wp_enqueue_script('pmpros-select2', plugins_url('../js/select2.js', dirname(__FILE__)), array( 'jquery' ), '3.1' );
-
-			}
+            // $this->enqueue_admin_scripts();
 		}
 
         /**
@@ -3106,10 +3100,17 @@
             $seq_ids = is_array( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
             $delays = is_array( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
 
+            if ( empty( $delays ) ) {
+
+                $this->setError( __( "Error: No delay value(s) received", "pmprosequence") );
+                dbgOut( "post_save_action() - Error: delay not specified! " );
+                return;
+            }
+
             $errMsg = null;
 
             if ( wp_is_post_revision( $post_id ) !== false ) {
-                dbgOut("Not saving revisions ({$post_id}) in sequence");
+                dbgOut("Not saving revisions ({$post_id}) to sequence");
                 return;
             }
 
@@ -3205,6 +3206,9 @@
 
             wp_enqueue_style( "pmpro_sequence_css", plugins_url( '/../css/pmpro_sequences.css', __FILE__ ));
             wp_enqueue_script( 'pmpro_sequence_admin_script' );
+
+            wp_enqueue_style( 'pmpros-select2', plugins_url('/../css/select2.css', __FILE__), '', '3.1', 'screen');
+            wp_enqueue_script( 'pmpros-select2', plugins_url('/../js/select2.js', __FILE__), array( 'jquery' ), '3.1' );
         }
 
         /**
