@@ -31,12 +31,10 @@
 		public $error = null;
 
         /**
-         * Constructor for the PMProSequence class
+         * Constructor for the Sequence
          *
-         * @param null $id -- ID of the sequence to load
-         *
-         * @access public
-         *
+         * @param null $id -- The ID of the sequence to initialize
+         * @throws Exception - If the sequence doesn't exist.
          */
         function PMProSequence($id = null)
 		{
@@ -51,7 +49,19 @@
             }
 		}
 
+        /**
+         * Loads actions & filters for the plugin.
+         */
         public function load_actions() {
+
+            // Load filters
+            add_filter( "pmpro_after_phpmailer_init", array( &$this, "email_body" ) );
+            add_filter( 'pmpro_sequencepost_types', array( &$this, 'included_cpts' ) );
+
+            add_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ) );
+            add_filter( "pmpro_non_member_text_filter", array( &$this, "text_filter" ) );
+            add_filter( "pmpro_not_logged_in_text_filter", array( &$this, "text_filter" ) );
+            add_filter( "the_content", array( &$this, "sequence_content" ) );
 
             // Add Custom Post Type
             add_action( "init", array( &$this, "load_textdomain" ), 9 );
@@ -64,7 +74,7 @@
             add_action( 'admin_head', array( &$this, 'post_type_icon' ) );
 
             // Load metabox displays.
-            add_action( "admin_init", array( &$this, "loadAdminMetaboxes" ) );
+            add_action( "add_meta_boxes", array( &$this, "loadAdminMetaboxes" ) );
             add_action( 'add_meta_boxes', array( &$this, 'loadPostMetabox') );
 
             // Load add/save actions
@@ -95,14 +105,6 @@
             add_action( 'wp_ajax_nopriv_pmpro_send_notices', array( &$this, 'ajaxUnprivError' ) );
             add_action( 'wp_ajax_nopriv_pmpro_sequence_save_user_optin', array( &$this, 'ajaxUnprivError' ) );
             add_action( 'wp_ajax_nopriv_pmpro_save_settings', array( &$this,  'ajaxUnprivError' ) );
-
-            // Load filters
-            add_filter( "the_content", array( &$this, "sequence_content" ) );
-            add_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter", 10, 4 ) );
-            add_filter( "pmpro_non_member_text_filter", array( &$this, "text_filter" ) );
-            add_filter( "pmpro_not_logged_in_text_filter", array( &$this, "text_filter" ) );
-            add_filter( "pmpro_after_phpmailer_init", array( &$this, "email_body" ) );
-            add_filter( 'pmpro_sequencepost_types', array( &$this, 'included_cpts' ) );
 
         }
 
@@ -2403,12 +2405,12 @@
         public function getPostList($echo = false)
 		{
 
-            dbgOut("getPostList() - Post List for sequencet #: {$this->sequence_id}");
+            dbgOut("getPostList() - Post List for sequence #: {$this->sequence_id}");
 
 			//global $current_user;
 			$this->getPosts();
 
-			if(!empty($this->posts))
+			if(! empty( $this->posts ) )
 			{
 	            // Order the posts in accordance with the 'sortOrder' option
 	            dbgOut('getPostLists(): Sorting posts for display');
@@ -2416,15 +2418,15 @@
 
 	            // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
 
-				$temp_content = $this->createSequenceList( true, 25, true, null, false	);
+				$content = $this->createSequenceList( true, 25, true, null, false	);
 
 				//filter
-				$temp_content = apply_filters("pmpro_sequence_get_post_list", $temp_content, $this);
+				$content = apply_filters("pmpro_sequence_get_post_list", $content, $this);
 
 				if($echo)
-					echo $temp_content;
+					echo $content;
 
-				return $temp_content;
+				return $content;
 			}
 
 			return false;
@@ -2862,8 +2864,6 @@
          */
         function createSequenceList( $highlight = false, $pagesize = 0, $button = false, $title = null, $scrollbox = false ) {
 
-// TODO: Convert to $this (with local sequence info, etc)
-
             global $wpdb, $current_user, $id;
             $html = '';
 
@@ -2871,44 +2871,16 @@
             if ($pagesize == 0) {
                 $pagesize = 15;
             }
-/*
-            if ( $this->sequence_id == 0 ) {
 
-                dbgOut('No sequence ID provided. Listing all sequences');
-
-                //Get all of the defined Sequences on this site
-                $sql = $wpdb->prepare(
-                    "
-	                SELECT ID
-	                FROM {$wpdb->posts}
-	                WHERE post_type = 'pmpro_sequence'
-            	"
-                );
-
-            }
-            else {
-
-                dbgOut('createSequenceList() -> Loading data for the "' . get_the_title( $this->sequence_id ) . '" sequence');
-
-                $sql = $wpdb->prepare(
-                    "
-	                SELECT *
-	                FROM {$wpdb->posts}
-	                WHERE post_type = 'pmpro_sequence' AND ID = %d
-	            ",
-                    $this->sequence_id
-                );
+            if ( empty( $this->posts ) ) {
+                dbgOut( "createSequenceList() - Loading posts - it's empty in here!" );
+                $this->getPosts();
             }
 
-            // dbgOut('SQL to load sequences' . print_r($sql, true));
-
-            $seqs = $wpdb->get_results( $sql );
-*/
-            // Process the list of posts in the sequence
-            $sequence_posts = $this->getPosts();
+            $sequence_posts = $this->posts;
             $memberDayCount = $this->getMemberDays();
 
-            dbgOut( "Number of posts in sequence: " . count( $sequence_posts ) . ". Number of days as member: " . $memberDayCount );
+            dbgOut( "Sequence {$this->sequence_id} has " . count( $sequence_posts ) . " posts. Current user has been a member for {$memberDayCount} days" );
 
             if ( ! $this->hasAccess( $current_user->ID, $this->sequence_id ) ) {
                 dbgOut( 'No access to sequence ' . $this->sequence_id . ' for user ' . $current_user->ID );
@@ -2918,10 +2890,10 @@
             $post_list = array();
 
             // Generate a list of posts for the sequence (used in WP_Query object)
-            foreach ( $sequence_posts as $sequence_post ) {
+            foreach ( $this->posts as $post ) {
 
-                if ( $this->hasAccess( $current_user->ID, $sequence_post->id ) ) {
-                    $post_list[] = $sequence_post->id;
+                if ( $this->hasAccess( $current_user->ID, $post->id ) ) {
+                    $post_list[] = $post->id;
                 }
             }
 
@@ -2938,7 +2910,7 @@
             $query_args = array(
                 'post_type'           => apply_filters( 'pmpro_sequencepost_types', array( 'post', 'page' ) ),
                 // Filter returns an array()
-                'post__in'            => $post_list,
+                'post__in'            => ( empty( $post_list ) ? array( 0 ) : $post_list ),
                 'ignore_sticky_posts' => 1,
                 'paged'               => ( get_query_var( 'page' ) ) ? absint( get_query_var( 'page' ) ) : 1,
                 'posts_per_page'      => $pagesize,
@@ -2963,9 +2935,9 @@
 
             <!-- List of sequence entries (paginated as needed) -->
             <?php
-            if ( empty( $seqEntries ) ) {
+            if ( $seqEntries->post_count == 0 ) {
 
-                echo "<p>" . __( "There is no content available at this time", "pmprosequence" ) . "</p>";
+                echo '<span style="text-align: center;">' . __( "There is <em>no content available</em> for you at this time. Please check back later.", "pmprosequence" ) . "</span>";
 
             } else {
             if ( $scrollbox ) { ?>
@@ -3001,7 +2973,7 @@
 
                             // Should the current post be highlighted?
                             if ( ( $this->isPastDelay( $memberDayCount,
-                                $sequence_posts[ $this->getPostKey( $id ) ]->delay ) )
+                                $this->posts[ $this->getPostKey( $id ) ]->delay ) )
                             ) {
 
                                 $listed_postCnt++;
@@ -3038,7 +3010,7 @@
                                     </tr>
                                 <?php
                                 }
-                            } elseif ( ( ! $this->isPastDelay( $memberDayCount, $sequence_posts[ $this->getPostKey( $id ) ]->delay ) ) &&
+                            } elseif ( ( ! $this->isPastDelay( $memberDayCount, $this->posts[ $this->getPostKey( $id ) ]->delay ) ) &&
                                        ( ! $this->hideUpcomingPosts() )
                             ) {
 
@@ -3060,7 +3032,7 @@
                                                 ( $this->options->delayType == 'byDays' &&
                                                   $this->options->showDelayAs == PMPRO_SEQ_AS_DAYNO ) ?
                                                     __( 'day', 'pmprosequence' ) : '' ); ?>
-                                            <?php echo $this->displayDelay( $sequence_posts[ $this->getPostKey( $id ) ]->delay ); ?>
+                                            <?php echo $this->displayDelay( $this->posts[ $this->getPostKey( $id ) ]->delay ); ?>
                                         </span>
                                         </td>
                                         <td></td>
@@ -3078,7 +3050,7 @@
                                                 ( $this->options->delayType == 'byDays' &&
                                                   $this->options->showDelayAs == PMPRO_SEQ_AS_DAYNO ) ?
                                                     __( 'day', 'pmprosequence' ) : '' ); ?>
-                                            <?php echo $this->displayDelay( $sequence_posts[ $this->getPostKey( $id ) ]->delay ); ?>
+                                            <?php echo $this->displayDelay( $this->posts[ $this->getPostKey( $id ) ]->delay ); ?>
                                         </span>
                                         </td>
                                         <td></td>
@@ -3301,6 +3273,7 @@
                     return ''; // No post given so returning no info.
                 }
             }
+            dbgOut("We're given the ID of: {$id} ");
 
             $this->init( $id );
 
@@ -3495,7 +3468,7 @@
 
 
         /**
-         * Show list of sequence pages at the bottom of the sequence page
+         * Show list of sequence posts at the bottom of the specific sequenc post.
          *
          * @param $content -- The content to process as part of the filter action
          * @return string -- The filtered content
@@ -3604,10 +3577,9 @@
         {
             //is this post in a sequence
             // TODO: This will loop through any and all sequences this post belongs too. FixMe by moving function to PMProSequence() class - then only run per sequence, right?
-            $post_sequence = get_post_meta($post_id, "_post_sequences", true);
+            $post_sequence = get_post_meta( $post_id, "_post_sequences", true );
 
-            if ( empty($post_sequence) ) {
-
+            if ( empty( $post_sequence ) ) {
                 return true; //not in a sequence
             }
 
@@ -3620,10 +3592,13 @@
                 return true; //user has one of the all access levels
             }
 
+/*            if ( ! in_array( $post_id, $post_sequence ) ) {
+                dbgOut("hasAccess() - Post # {$post_id} is not accessible to user with ID {$user_id} at this time");
+                return false;
+            }
+*/
             // Iterate through all sequences that the $post_id is included in
             foreach ($post_sequence as $sequence_id) {
-
-                dbgOut('hasAccess() - Processing for sequence: ' . $sequence_id);
 
                 $results = pmpro_has_membership_access($sequence_id, $user_id, true); //Using true to return all level IDs that have access to the sequence
 
@@ -3631,19 +3606,21 @@
 
                 if ($results[0] === false) { // First item in results array == true if user has access
 
-                    dbgOut( 'hasAccess() - User ' . $user_id . ' does NOT have access to post ' . $post_id . ' in sequence ' . $sequence_id );
+                    dbgOut( 'hasAccess() - User ' . $user_id . ' does NOT have access to sequence ' . $sequence_id );
                     continue;
                 }
 
                 $usersLevels = pmpro_getMembershipLevelsForUser( $user_id );
 
-                $this->init( $sequence_id );
+                if ( $sequence_id != $this->sequence_id ) {
+                    $this->init($sequence_id);
+                }
 
                 // Get the preview offset (if it's defined). If not, set it to 0 ( for compatibility )
                 if ( empty( $this->options->previewOffset ) ) {
 
                     $this->options->previewOffset = 0;
-                    dbgOut('Saving settings due to initial config of previewOffset for post # ' . $post_id);
+                    dbgOut('Saving settings due to initial config of previewOffset for sequence # ' . $sequence_id);
                     $this->save_sequence_meta(); // Save the settings (only the first time we check this variable, if it's empty)
                 }
 
