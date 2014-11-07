@@ -287,7 +287,7 @@ function in_object_r( $key = null, $value = null, $object, $strict = false ) {
 
 
 try {
-    dbgOut("Startup - Loading actions, widgets & shortcodes");
+
     $sequence = new PMProSequence();
     $sequence->load_actions();
 }
