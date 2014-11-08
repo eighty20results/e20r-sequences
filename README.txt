@@ -98,7 +98,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Feature: Widget containing excerpt from most recently available post in a sequence (by user ID)
 
 = 2.0 =
-* Major refactor of plugin. Moved anything sequence specific into the PMProSequence class.
+* Major refactor of plugin. Moved anything sequence related into the PMProSequence class.
 * Feature: Sequence metabox in post (allows assignment of sequence & delay within post/page editor)
 * Fix: Only send alert for the current post in the sequence.
-* Fix:
+* Fix: Show list of posts for the actual sequence being displayed (
