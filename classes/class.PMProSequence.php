@@ -73,8 +73,7 @@
             add_action( "wp_enqueue_scripts", array( &$this, 'enqueue_user_scripts' ) );
             add_action( 'admin_head', array( &$this, 'post_type_icon' ) );
 
-            // Load metabox displays.
-            // add_action( "admin_init", array( &$this, "loadAdminMetaboxes" ) );
+            // Load metaboxes for editor(s)
             add_action( 'add_meta_boxes', array( &$this, 'loadPostMetabox') );
 
             // Load add/save actions
@@ -1286,17 +1285,6 @@
 				wp_die($error->get_error_message());
 				return false;
 			}
-		}
-
-        /**
-         * Loads the metaboxes in the back-end admin page for the managing the sequence
-         *
-         * @public
-         */
-		public function loadAdminMetaboxes()
-		{
-            dbgOut( "Sequence specific metaboxes");
-            // $this->enqueue_admin_scripts();
 		}
 
         /**
