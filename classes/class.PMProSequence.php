@@ -2833,6 +2833,7 @@
                 $title = "<h3>{$title}</h3>";
             }
 
+            return $title;
         }
 
         /**
@@ -2903,14 +2904,14 @@
 
             $listed_postCnt   = 0;
             // $noPostsDisplayed = true;
-
+            dbgOut( "createSequenceList() - Loading posts for the sequence_list shortcode...");
             ob_start();
             ?>
 
             <!-- Preface the table of links with the title of the sequence -->
             <div id="pmpro_sequence-<?php echo $this->sequence_id; ?>" class="pmpro_sequence_list">
 
-            <?php echo apply_filters( 'pmpro_seq_list_title', $this->setShortcodeTitle( $title ) ); ?>
+            <?php echo apply_filters( 'pmpro_seq_list_title',  $this->setShortcodeTitle( $title ) ); ?>
 
             <!-- Add opt-in to the top of the shortcode display. -->
             <?php echo $this->addUserNoticeOptIn(); ?>
@@ -2930,26 +2931,6 @@
                     <table class="pmpro_seq_linklist">
                         <?php };
 
-                        /**
-                         * Flow of post display:
-                         *      Iterate through all the posts that belong to the sequence
-                         *         if isPastDelay() == true then
-                         *              $noPostsDisplayed = false;
-                         *              if ( ( $id == $closestPostId ) && ( $highlight ) )
-                         *                  Show post link with 'Current' value & highlight CSS . ( $button ? 'Available Now' : '');
-                         *              else
-                         *                  Show post link as normal . ( $button ? 'Available Now' : '')
-                         *         elseif (! isPastDelay()) &&  (! hideUpcomingPosts() )
-                         *              $noPostsDisplayed = false;
-                         *              if ( ($id == $closestPostId) && ( $highlight ) )
-                         *                    Show post with dashed underline (in highlight color);
-                         *              else
-                         *                  Show post link as normal;
-                         *         elseif ($noPostsDisplayed && (! isPastDelay()) // Not allowed to show any posts)
-                         *               Show 'no posts available' message
-                         *
-                         *
-                         */
                         // Loop through all of the posts in the sequence
                         while ( $seqEntries->have_posts() ) : $seqEntries->the_post();
 
@@ -3062,6 +3043,8 @@
 
             $html .= ob_get_contents();
             ob_end_clean();
+
+            dbgOut("createSequenceList() - Returning the - possibly filtered - HTML for the sequence_list shortcode");
 
             return apply_filters( 'pmpro_sequence_list_html', $html );
 
@@ -3584,11 +3567,11 @@
                 return true; //user has one of the all access levels
             }
 
-/*            if ( ! in_array( $post_id, $post_sequence ) ) {
+            if ( ! in_array( $this->sequence_id, $post_sequence ) ) {
                 dbgOut("hasAccess() - Post # {$post_id} is not accessible to user with ID {$user_id} at this time");
                 return false;
             }
-*/
+
             // Iterate through all sequences that the $post_id is included in
             foreach ($post_sequence as $sequence_id) {
 
@@ -3636,7 +3619,6 @@
                             // Don't add 'preview' value if this is for an alert notice.
                             if (! $isAlert) {
 
-                                dbgOut("hasAccess() - Adding previewOffset of {$this->options->previewOffset} days to the number of days active..");
                                 $durationOfMembership = $this->getMemberDays( $user_id, $level_id ) + $this->options->previewOffset;
                             }
                             else {
