@@ -70,12 +70,11 @@ if ( ! function_exists( 'dbgOut' ) ):
 	 *
 	 * @param $msg -- Debug message to print to debug log.
 	 */
-	function dbgOut( $msg )
-	{
+	function dbgOut( $msg ) {
+
 		$dbgPath = plugin_dir_path( __FILE__ ) . DIRECTORY_SEPARATOR . 'debug';
 
-		if (PMPRO_SEQUENCE_DEBUG)
-		{
+		if (PMPRO_SEQUENCE_DEBUG) {
 
 			if (!  file_exists( $dbgPath )) {
 				// Create the debug logging directory
@@ -98,8 +97,9 @@ if ( ! function_exists( 'dbgOut' ) ):
 				fwrite( $fh, $dbgMsg . "\r\n" );
 				fclose( $fh );
 			}
-			else
-				error_log('PMPro Sequence: Unable to open debug log');
+			else {
+                error_log( 'PMPro Sequence: Unable to open debug log' );
+            }
 		}
 	}
 
@@ -119,45 +119,47 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
      *
      * @returns mixed - The start date for this user_id at the specific level_id (or in general)
      */
-    function pmpro_getMemberStartdate($user_id = NULL, $level_id = 0)
-	{		
-		if(empty($user_id))
-		{
+    function pmpro_getMemberStartdate( $user_id = NULL, $level_id = 0 ) {
+		if ( empty( $user_id ) ) {
+
 			global $current_user;
 			$user_id = $current_user->ID;
 		}
 
 		global $pmpro_startdates;	//for cache
 
-		if(empty($pmpro_startdates[$user_id][$level_id]))
-		{			
+		if( empty( $pmpro_startdates[$user_id][$level_id] ) ) {
+
 			global $wpdb;
 			
-			if(!empty($level_id))
-				$sqlQuery = $wpdb->prepare(
-					"
-						SELECT UNIX_TIMESTAMP(startdate)
+			if ( ! empty( $level_id ) ) {
+
+                $sqlQuery = $wpdb->prepare(
+                    "
+						SELECT UNIX_TIMESTAMP( startdate )
 						FROM {$wpdb->pmpro_memberships_users}
 						WHERE status = %s AND membership_id IN ( %d ) AND user_id = %d
 						ORDER BY id LIMIT 1
 					",
-					'active',
-					$level_id,
-					$user_id
-				);
-			else
-				$sqlQuery = $wpdb->prepare(
-					"
-						SELECT UNIX_TIMESTAMP(startdate)
+                    'active',
+                    $level_id,
+                    $user_id
+                );
+            }
+            else {
+                $sqlQuery = $wpdb->prepare(
+                    "
+						SELECT UNIX_TIMESTAMP( startdate )
 						FROM {$wpdb->pmpro_memberships_users}
 						WHERE status = %s AND user_id = %d
 						ORDER BY id LIMIT 1
 					",
-					'active',
-					$user_id
-				);
-				
-			$startdate = apply_filters("pmpro_member_startdate", $wpdb->get_var($sqlQuery), $user_id, $level_id);
+                    'active',
+                    $user_id
+                );
+            }
+
+			$startdate = apply_filters( "pmpro_member_startdate", $wpdb->get_var( $sqlQuery ), $user_id, $level_id );
 			
 			$pmpro_startdates[$user_id][$level_id] = $startdate;
 		}
@@ -201,28 +203,94 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 */
 endif;
 
-if ( ! function_exists ('pmpro_seq_import_series') ):
+if ( ! function_exists ('pmpro_sequence_import_from_series') ):
 
-    function pmpro_seq_import_series() {
+    function pmpro_sequence_import_all_PMProSeries() {
 
-        global $wpdb;
+        if ( __return_false() !== apply_filters( 'pmpro_sequence_import_all_series', __return_false() ) ) {
 
-        //Get all of the defined series on this site
-        $sql = $wpdb->prepare(
-            "
-	                SELECT *
-	                FROM {$wpdb->posts}
-	                WHERE post_type = 'pmpro_series'
-            	"
-        );
+            global $wpdb;
 
-        $series = $wpdb->get_results( $sql );
+            //Get all of the defined series on this site
+            $series_sql = $wpdb->prepare(
+                "
+                        SELECT *
+                        FROM {$wpdb->posts}
+                        WHERE post_type = 'pmpro_series'
+                    "
+            );
 
-        // Process the list of sequences
-        foreach ( $series as $s ) {
-            dbgOut("Series # {$s->ID}: " . get_the_title( $s->ID ) );
 
-        }
+            $series_list = $wpdb->get_results( $series_sql );
+
+            // Series meta: '_post_series' => the series this post belongs to.
+            //              '_series_posts' => the posts in the series
+            /*
+                    $format = array(
+                        '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s',
+                        '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s','%d','%s',
+                        '%s', '%d'
+                    );
+            */
+            // Process the list of sequences
+            foreach ( $series_list as $series ) {
+
+                dbgOut( "Adding Series ID {$series->ID} (" . get_the_title( $series->ID ) . ") to the database" );
+                $wp_error = true;
+
+                $seq_id = wp_insert_post( array(
+                        'post_author'           => $series->post_author,
+                        'post_date'             => date_i18n( 'Y-m-d H:i:s' ),
+                        'post_date_gmt'         => date_i18n( 'Y-m-d H:i:s' ),
+                        'post_content'          => $series->post_content,
+                        'post_title'            => $series->post_title,
+                        'post_excerpt'          => $series->post_excerpt,
+                        'post_status'           => $series->post_status,
+                        'comment_status'        => $series->comment_status,
+                        'ping_status'           => $series->ping_status,
+                        'post_password'         => $series->post_password,
+                        'post_name'             => $series->post_name,
+                        'to_ping'               => $series->to_ping,
+                        'pinged'                => $series->pinged,
+                        'post_modified'         => $series->post_modified,
+                        'post_modified_gmt'     => $series->post_modified_gmt,
+                        'post_content_filtered' => $series->post_content_filtered,
+                        'post_parent'           => $series->post_parent,
+                        'guid'                  => $series->guid,
+                        'menu_order'            => $series->menu_order,
+                        'post_type'             => 'pmpro_sequence',
+                        'post_mime_type'        => $series->post_mime_type,
+                        'comment_count'         => $series->comment_count
+                    ),
+                    $wp_error );
+
+                if ( ! is_wp_error( $seq_id ) ) {
+
+                    $post_list = get_post_meta( $series->ID, '_series_posts', true );
+
+                    $seq = new PMProSequence( $seq_id );
+                    $seq->init( $seq_id );
+
+                    foreach ( $post_list as $seq_member ) {
+
+                        if ( ! $seq->addPost( $seq_member->id, $seq_member->delay ) ) {
+                            return new WP_Error( 'sequence_import',
+                                sprintf( __( 'Could not complete import for series %s', 'pmprosequence' ), $series->post_title ), $seq->getError() );
+                        }
+                    } // End of foreach
+
+                    // Save the settings for this Drip Feed Sequence
+                    $seq->save_sequence_meta();
+
+                    // update_post_meta( $seq_id, "_sequence_posts", $post_list );
+                } else {
+
+                    return new WP_Error( 'db_query_error',
+                        sprintf( __( 'Could not complete import for series %s', 'pmprosequence' ), $series->post_title ), $wpdb->last_error );
+
+                }
+            } // End of foreach (DB result)
+        }// End of filtered import function
     }
 endif;
 
