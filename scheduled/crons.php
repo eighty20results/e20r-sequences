@@ -83,6 +83,8 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 		{
 			// Grab a sequence object
 			$sequence = new PMProSequence( $s->seq_id );
+            $sequence->init( $s->seq_id );
+
 			dbgOut('cron() - Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
 
 			if ( ($sequence->options->sendNotice == 1) && ($all_sequences === true) ) {
@@ -116,7 +118,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
                 // Get the most recent post in the sequence and notify for it (if we're supposed to notify.
                 $post_id = $sequence->get_closestPost( $s->user_id );
-                $membership_day = pmpro_sequence_getMemberDays( $s->user_id );
+                $membership_day = $sequence->getMemberDays( $s->user_id );
                 $post = $sequence->get_postDetails( $post_id );
 
                 dbgOut( 'cron() - Post: "' . get_the_title($post_id) . '"' .
@@ -124,8 +126,8 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
                         ', membership day: ' . $membership_day .
                         ', post delay: ' . $post->delay .
                         ', user ID: ' . $s->user_id .
-                        ', already notified: ' . ( in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) /*.
-                         ', has access: ' . ( pmpro_sequence_hasAccess( $s->user_id, $post_id, true ) === true ? 'true' : 'false' )*/ );
+                        ', already notified: ' . ( in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
+                         ', has access: ' . ( $sequence->hasAccess( $s->user_id, $post_id, true ) === true ? 'true' : 'false' ) );
 
                 // dbgOut("cron() - # of posts in sequence (" . count($sequence_posts) . ") vs number of posts we've already notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
                 dbgOut( "Evaluating whether to notify {$s->user_id} of availability of post # {$post_id}" );
