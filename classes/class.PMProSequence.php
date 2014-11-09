@@ -180,7 +180,7 @@
 
             $this->options = (object) array_replace( (array)$default_options, (array)$loaded_options );
 
-            dbgOut( "fetchOptions() for {$this->sequence_id}: Current: " . print_r( $this->options, true ) );
+            // dbgOut( "fetchOptions() for {$this->sequence_id}: Current: " . print_r( $this->options, true ) );
 
 	        return $this->options;
 	    }
