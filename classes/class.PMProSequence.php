@@ -29,7 +29,7 @@
 		private $post; // Individual post
         private $refreshed;
 		public $error = null;
-
+        private $managed_types = null;
         /**
          * Constructor for the Sequence
          *
@@ -47,6 +47,8 @@
                     throw new Exception( "A Sequence with the ID {$this->sequence_id} does not exist on this system");
                 }
             }
+
+            $this->managed_types = apply_filters("pmpro_sequence_managed_post_types", array("post", "page") );
 		}
 
         /**
@@ -78,7 +80,8 @@
 
             // Load add/save actions
             add_action( 'admin_notices', array( &$this, 'display_error' ) );
-            add_action( 'save_post', array( &$this, 'post_save_action' ) );
+            // add_action( 'save_post', array( &$this, 'post_save_action' ) );
+            add_action( 'post_updated', array( &$this, 'post_save_action' ) );
 
             add_action( 'admin_menu', array( &$this, "defineMetaBoxes" ) );
             add_action( 'save_post', array( &$this, 'savePostMeta' ), 10, 2 );
@@ -1297,9 +1300,9 @@
 
             dbgOut("Post metaboxes being configured");
 
-            $post_types = apply_filters("pmpro_sequencepost_types", array("post", "page") );
+            // $post_types = apply_filters("pmpro_sequence_managed_post_types", array("post", "page") );
 
-            foreach( $post_types as $type ) {
+            foreach( $this->managed_types as $type ) {
 
                 if ( $type !== 'pmpro_sequence' ) {
                     add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', 'pmprosequence' ), array( &$this, 'renderEditorMetabox' ), $type, 'side', 'high' );
@@ -1514,7 +1517,13 @@
             return $html;
         }
 
-
+        /**
+         * Check that the delay specified by the user is valid for this plugin
+         *
+         * @param $delay -- The value to test for validity
+         *
+         * @return bool|int|string|void
+         */
         public function validatePOSTDelay( $delay ) {
 
             $delay = ( is_numeric( $delay ) ? intval( $delay ) : esc_attr( $delay ) );
@@ -2827,6 +2836,8 @@
          * Formats the title (unless its empty, then we set it to the post title for the current sequence)
          *
          * @param string|null $title -- A string (title) to apply formatting to & return
+         *
+         * @return null|string - The title string
          */
         private function setShortcodeTitle( $title = null ) {
 
@@ -3074,14 +3085,24 @@
          */
         public function post_save_action( $post_id ) {
 
-            global $current_user;
+            global $current_user, $post;
 
             if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
                 dbgOut("Exit during autosave");
                 return;
             }
 
-            dbgOut("post_save_action() - Sequences & Delays have been configured for page save");
+            if ( wp_is_post_revision( $post_id ) !== false ) {
+                dbgOut("post_save_action() - Not saving revisions ({$post_id}) to sequence");
+                return;
+            }
+
+            if ( ! in_array( $post->post_type, $this->managed_types ) ) {
+                dbgOut("post_save_action() - Not saving delay info for {$post->post_type}");
+                return;
+            }
+
+            dbgOut("post_save_action() - Sequences & Delays have been configured for page save. " . $this->whoCalledMe());
 
             $seq_ids = is_array( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
             $delays = is_array( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
@@ -3094,11 +3115,6 @@
             }
 
             $errMsg = null;
-
-            if ( wp_is_post_revision( $post_id ) !== false ) {
-                dbgOut("post_save_action() - Not saving revisions ({$post_id}) to sequence");
-                return;
-            }
 
             $already_in = get_post_meta( $post_id, "_post_sequences", true );
 
@@ -3588,6 +3604,9 @@
             return $hasaccess;
         }
 
+        /**
+         * Displays the 2nd function in the current stack trace (i.e. the one that called the one that called "me"
+         */
         private function whoCalledMe() {
 
             $trace=debug_backtrace();
@@ -3599,6 +3618,7 @@
 
             return $trace;
         }
+
         /**
          * Check the whether the User ID has access to the post ID
          * Make sure people can't view content they don't have access to.
