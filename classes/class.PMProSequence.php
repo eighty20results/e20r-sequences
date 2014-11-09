@@ -230,7 +230,7 @@
 	        $settings->excerpt_intro = __('A summary of the post follows below:', 'pmprosequence');
 		    $settings->replyto = pmpro_getOption("from_email");
 		    $settings->fromname = pmpro_getOption("from_name");
-		    $settings->subject = __('New Content: ', 'pmprosequence');
+		    $settings->subject = __('New Content ', 'pmprosequence');
             $settings->dateformat = __('m-d-Y', 'pmprosequence'); // Using American MM-DD-YYYY format.
 
 	        $this->options = $settings; // Save as options for this sequence
@@ -468,7 +468,7 @@
                 dbgOut('save_settings(): POST value for settings->subject: ' . esc_attr($_POST['hidden_pmpro_seq_subject']) );
             }
             else
-                $this->options->subject = __('New Content: ', 'pmprosequence');
+                $this->options->subject = __('New Content ', 'pmprosequence');
 
             // $sequence->options = $settings;
             if ( $this->options->sendNotice == 1 ) {
