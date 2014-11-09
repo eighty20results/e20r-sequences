@@ -3384,6 +3384,8 @@
          */
         function seq_datediff( $startdate, $enddate = null, $tz = 'UTC' ) {
 
+            $days = 0;
+
             // use current day as $enddate if nothing is specified
             if ( ( is_null( $enddate ) ) && ( $tz == 'UTC') ) {
 
@@ -3421,7 +3423,7 @@
                 $diff = abs($dStartStr - $dEndStr);
 
                 // Convert to days.
-                $days = $diff * 86400;
+                $days = $diff * 86400; // Won't manage DST correctly, but not sure that's a problem here..?
 
                 // Sign flip if needed.
                 if ( gmp_sign($dStartStr - $dEndStr) == -1)
@@ -3596,7 +3598,7 @@
         {
             // If the user has been granted access already, we'll verify that they have access to the specific post
             if ( $hasaccess ) {
-
+                // dbgOut( "has_membership_access_filter() - (current access - 1 == true: {$hasaccess}) for {$myuser->ID} related to post {$mypost->ID} and sequence {$this->sequence_id}");
                 //See if the user has access to the specific post
                 return $this->hasAccess( $myuser->ID, $mypost->ID );
             }
@@ -3636,26 +3638,59 @@
 
             if (!empty($all_access_levels) && pmpro_hasMembershipLevel($all_access_levels, $user_id)) {
 
-                dbgOut("hasAccess() - This user has one of the 'all access' membership levels");
+                dbgOut("hasAccess() - This user ({$user_id}) has one of the 'all access' membership levels");
                 return true; //user has one of the all access levels
             }
 
             $post_sequence = get_post_meta( $post_id, "_post_sequences", true );
 
             if ( empty( $post_sequence ) ) {
-                // dbgOut( "hasAccess() with empty post_sequence: " . $this->whoCalledMe() );
+                dbgOut( "hasAccess() with empty post_sequence: " . $this->whoCalledMe() );
                 // dbgOut( "hasAccess() - No sequences manage this post {$post_id} for user {$user_id} so granting access (seq: {$this->sequence_id}): " . print_r( $post_sequence, true ) );
                 return true;
             }
-            elseif ( in_array( $this->sequence_id, $post_sequence ) ) {
 
-                // dbgOut( "hasAccess() for post {$post_id} is managed by PMProSequence: " . $this->whoCalledMe() );
+            if ( $this->sequence_id == 0) {
+
+                dbgOut( "hasAccess(): Sequence ID was NOT set by calling function: " . $this->whoCalledMe() );
+                foreach ( $post_sequence as $seqId ) {
+
+                    $this->init( $seqId );
+                    return $this->get_accessStatus( $post_id, $user_id, $post_sequence, $isAlert );
+                }
+            }
+            else {
+
+                return $this->get_accessStatus( $post_id, $user_id, $post_sequence, $isAlert );
+            }
+
+        } // End of function
+
+        /**
+         * Does the heavy lifting in checking access the sequence post for the user_id
+         *
+         * @since 2.0
+         *
+         * @param $post_id (int) - ID of the post to check access for
+         * @param $user_id (int) - User ID for the user to check access for
+         * @param $post_sequences (array) - Array of sequences that $post_id claims to belong to.
+         * @param $isAlert -- Whether or not we're checking access as part of alert processing or not.
+         *
+         * @return bool -- True if the user has a membership level and the post's delay value is <= the # of days the user has been a member.
+         *
+         * @accesss private
+         */
+        private function get_accessStatus( $post_id, $user_id, $post_sequences, $isAlert ) {
+
+            if ( in_array( $this->sequence_id, $post_sequences ) ) {
+
+                // dbgOut( "get_AccessStatus() for post {$post_id} is managed by PMProSequence: " . $this->whoCalledMe() );
                 /* Bugfix: It's possible there are duplicate values in the list of sequences for this post. */
-                $sequence_list = array_unique( $post_sequence );
+                $sequence_list = array_unique( $post_sequences );
 
-                if ( count( $sequence_list ) < count( $post_sequence ) ) {
+                if ( count( $sequence_list ) < count( $post_sequences ) ) {
 
-                    dbgOut("hasAccess() - Saving the pruned array of sequences");
+                    dbgOut("get_AccessStatus() - Saving the pruned array of sequences");
                     update_post_meta( $post_id, '_post_sequences', $sequence_list );
                 }
 
@@ -3667,7 +3702,7 @@
 
                 if ( $results[0] !== true ) { // First item in results array == true if user has access
 
-                    dbgOut( "hasAccess() - User {$user_id} does NOT have access to this sequence ({$this->sequence_id})" );
+                    dbgOut( "get_AccessStatus() - User {$user_id} does NOT have access to this sequence ({$this->sequence_id})" );
                     return false;
                 }
 
@@ -3733,11 +3768,10 @@
 
             } // End of if
 
-            dbgOut("hasAccess() - User {$user_id} does NOT have access to post {$post_id} in sequence {$this->sequence_id}" );
+            dbgOut("get_AccessStatus() - User {$user_id} does NOT have access to post {$post_id} in sequence {$this->sequence_id}" );
             // Haven't found anything yet, so must not have access.
             return false;
-
-        } // End of function
+        }
 
         /**
          * Filter the message for users to check for sequence info.
@@ -3751,14 +3785,17 @@
 
             if ( ! empty( $current_user ) && ( ! empty( $post ) ) ) {
 
+                // dbgOut(" text_filter() - Current sequence ID: {$this->sequence_id}" );
+                // $this->init( $post->ID );
+
                 if ( ! $this->hasAccess( $current_user->ID, $post->ID ) ) {
 
-                    $post_sequence = get_post_meta($post->ID, "_post_sequences", true);
+                    $post_sequences = get_post_meta($post->ID, "_post_sequences", true);
 
                     //Update text. The user either will have to wait or sign up.
                     $insequence = false;
 
-                    foreach ( $post_sequence as $ps ) {
+                    foreach ( $post_sequences as $ps ) {
 
                         if ( pmpro_has_membership_access( $ps ) ) {
 
@@ -3770,7 +3807,7 @@
                         }
                     }
 
-                    if ( $insequence ) {
+                    if ( $insequence !== false ) {
 
                         //user has one of the sequence levels, find out which one and tell him how many days left
                         $text = sprintf("%s<br/>", sprintf( __("This content managed as part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($ps), get_the_title($ps)) );
@@ -3806,16 +3843,16 @@
                     else
                     {
                         // User has to sign up for one of the sequence(s)
-                        if ( count( $post_sequence ) == 1 ) {
+                        if ( count( $post_sequences ) == 1 ) {
 
-                            $text = sprintf("%s<br/>", sprintf( __( "This content is part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence' ), get_permalink( $post_sequence[0] ), get_the_title( $post_sequence[0] ) ) );
+                            $text = sprintf("%s<br/>", sprintf( __( "This content is part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence' ), get_permalink( $post_sequences[0] ), get_the_title( $post_sequences[0] ) ) );
                         }
                         else {
 
                             $text = sprintf( "<p>%s</p>", __( 'This content is part of the following members only sequences: ', 'pmprosequence' ) );
                             $seq_links = array();
 
-                            foreach ( $post_sequence as $sequence_id ) {
+                            foreach ( $post_sequences as $sequence_id ) {
 
                                 $seq_links[] = "<p><a href='" . get_permalink( $sequence_id ) . "'>" . get_the_title( $sequence_id ) . "</a></p>";
                             }
