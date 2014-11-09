@@ -251,7 +251,8 @@
 		    global $post;
 
 	        // Check that the function was called correctly. If not, just return
-	        if(empty($post_id)) {
+	        if ( empty( $post_id ) ) {
+
 		        dbgOut('savePostMeta(): No post ID supplied...');
 		        return false;
 	        }
@@ -259,7 +260,7 @@
 		    if ( wp_is_post_revision( $post_id ) )
 			    return $post_id;
 
-		    if ( defined('DOING_AUTOSAVE') && DOING_AUTOSAVE ) {
+		    if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
 			    return $post_id;
 		    }
 
@@ -302,7 +303,7 @@
          * @return bool - Returns true if save is successful
          */
 
-        function save_settings( $sequence_id )
+        public function save_settings( $sequence_id )
         {
 
             $settings = $this->options;
@@ -686,11 +687,11 @@
 
 		    try {
 			    /* current time & date */
-	            $schedHour = date( 'H', strtotime($timeString));
-			    $schedMin = date('i', strtotime($timeString));
+	            $schedHour = date_i18n( 'H', strtotime($timeString));
+			    $schedMin = date_i18n('i', strtotime($timeString));
 
-	            $nowHour = date('H', $timestamp);
-			    $nowMin = date('i', $timestamp);
+	            $nowHour = date_i18n('H', $timestamp);
+			    $nowMin = date_i18n('i', $timestamp);
 
 			    dbgOut('calculateTimestamp() - Timestring: ' . $timeString . ', scheduled Hour: ' . $schedHour . ' and current Hour: ' .$nowHour );
 
@@ -3645,7 +3646,7 @@
             $post_sequence = get_post_meta( $post_id, "_post_sequences", true );
 
             if ( empty( $post_sequence ) ) {
-                dbgOut( "hasAccess() with empty post_sequence: " . $this->whoCalledMe() );
+                // dbgOut( "hasAccess() with empty post_sequence: " . $this->whoCalledMe() );
                 // dbgOut( "hasAccess() - No sequences manage this post {$post_id} for user {$user_id} so granting access (seq: {$this->sequence_id}): " . print_r( $post_sequence, true ) );
                 return true;
             }
@@ -4429,7 +4430,7 @@
             /* Register the default cron job to send out new content alerts */
             wp_schedule_event( current_time( 'timestamp' ), 'daily', 'pmpro_sequence_cron_hook' );
 
-            pmpro_seq_import_series();
+            pmpro_sequence_import_all_PMProSeries();
         }
 
     }
