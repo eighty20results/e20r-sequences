@@ -207,7 +207,7 @@ if ( ! function_exists ('pmpro_sequence_import_from_series') ):
 
     function pmpro_sequence_import_all_PMProSeries() {
 
-        if ( __return_false() !== apply_filters( 'pmpro_sequence_import_all_series', __return_false() ) ) {
+        if ( __return_false() !== apply_filters( 'pmpro_sequence_import_pmpro_series', __return_false() ) ) {
 
             global $wpdb;
 
