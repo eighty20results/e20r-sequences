@@ -1304,8 +1304,6 @@
 
             dbgOut("Post metaboxes being configured");
 
-            // $post_types = apply_filters("pmpro_sequence_managed_post_types", array("post", "page") );
-
             foreach( $this->managed_types as $type ) {
 
                 if ( $type !== 'pmpro_sequence' ) {
@@ -1511,8 +1509,8 @@
             </table>
             <div id="pmpro-seq-new">
                 <hr class="pmpro-seq-hr" />
-                <a href="#" id="pmpro-seq-new-meta" class="button-primary">New</a>
-                <a href="#" id="pmpro-seq-new-meta-reset" class="button">Cancel</a>
+                <a href="#" id="pmpro-seq-new-meta" class="button-primary"><?php _e( "Add", "pmprosequence" ); ?></a>
+                <a href="#" id="pmpro-seq-new-meta-reset" class="button"><?php _e( "Reset", "pmprosequence" ); ?></a>
             </div>
             <?php
 
@@ -1771,8 +1769,8 @@
 
 			global $wpdb;
 
-			$post_types = apply_filters("pmpro_sequencepost_types", array("post", "page") );
-			$status = apply_filters( "pmpro_sequencepost_status", array('publish', 'draft', 'future', 'pending', 'private') );
+			$post_types = apply_filters("pmpro_sequence_managed_post_types", array("post", "page") );
+			$status = apply_filters( "pmpro_sequence_can_add_post_status", array('publish', 'draft', 'future', 'pending', 'private') );
 
 			$sql = $wpdb->prepare(
 				"
@@ -2413,16 +2411,12 @@
 
 			if ( ! empty( $this->posts ) ) {
 
-	            // Order the posts in accordance with the 'sortOrder' option
-	            dbgOut('getPostLists(): Sorting posts for display');
-	            // usort($this->posts, array(&$this, "sortByDelay"));
-
 	            // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
 
 				$content = $this->createSequenceList( true, 25, true, null, false	);
 
-				//filter
-				$content = apply_filters("pmpro_sequence_get_post_list", $content, $this);
+				//filter - Not needed. Being filtered in createSequenceList()
+				// $content = apply_filters("pmpro_sequence_get_post_list", $content, $this);
 
 				if($echo)
 					echo $content;
@@ -2903,7 +2897,7 @@
             /* Get the ID of the post in the sequence who's delay is the closest
              *  to the members 'days since start of membership'
              */
-            $closestPostId = apply_filters( 'pmpro_seq_find_closest_post', $this->get_closestPost( $current_user->ID ) );
+            $closestPostId = apply_filters( 'pmpro_sequence_found_closest_post', $this->get_closestPost( $current_user->ID ) );
 
             // Image to bring attention to the closest post item
             $closestPostImg = '<img src="' . plugins_url( '/../images/most-recent.png', __FILE__ ) . '" >';
@@ -2945,7 +2939,7 @@
             <!-- Preface the table of links with the title of the sequence -->
             <div id="pmpro_sequence-<?php echo $this->sequence_id; ?>" class="pmpro_sequence_list">
 
-            <?php echo apply_filters( 'pmpro_seq_list_title',  $this->setShortcodeTitle( $title ) ); ?>
+            <?php echo apply_filters( 'pmpro_sequence_list_title',  $this->setShortcodeTitle( $title ) ); ?>
 
             <!-- Add opt-in to the top of the shortcode display. -->
             <?php echo $this->addUserNoticeOptIn(); ?>
@@ -2977,7 +2971,7 @@
                                     // Show the highlighted post info
                                     ?>
                                     <tr id="pmpro-seq-selected-post">
-                                        <td class="pmpro-seq-post-img"><?php echo apply_filters( 'pmpro_seq_closestpost_img', $closestPostImg ); ?></td>
+                                        <td class="pmpro-seq-post-img"><?php echo apply_filters( 'pmpro_sequence_closest_post_indicator_image', $closestPostImg ); ?></td>
                                         <td class="pmpro-seq-post-hl">
                                             <a href="<?php the_permalink(); ?>" title="<?php the_title(); ?>"><strong><?php the_title(); ?></strong>&nbsp;&nbsp;<em>(Current)</em></a>
                                         </td>
@@ -3065,7 +3059,7 @@
                 </div>
                 <div class="clear"></div>
                 <?php
-                echo apply_filters( 'pmpro_seq_paginate_list', $this->post_paging_nav( $seqEntries->max_num_pages ) );
+                echo apply_filters( 'pmpro_sequence_paginate_list', $this->post_paging_nav( $seqEntries->max_num_pages ) );
                 wp_reset_postdata();
             }
             ?>
