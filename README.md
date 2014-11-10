@@ -80,11 +80,14 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 = 2.0 =
 * Complete refactor of plugin. Moved anything sequence related into the PMProSequence class and cleaned out pmpro-sequence.php file.
 * Feature: Sequence metabox on post editor page (allows assignment of sequence & delay within post/page editor)
-* Feature: Import of PMPro Series posts on plugin activation (use filter to enable)
-* Feature: Filter to select post types that can be added to a drip-content feed
-* Feature:
-
-* Fix: Only send new content alert for the current & accessible post in the sequence.
+* Feature: Import of PMPro Series posts on plugin activation (use filter 'pmpro_sequence_import_all_series' to enable)
+* Feature: New filters, see readme.md for details.
+* Feature: Let admin schedule if and when email alerts are supposed to be processed for a specific sequence.
+* Feature: Let admin decide whether to show availablility date for upcoming sequence posts as a date or "days since membership started"
+*
+* Fix: Send new content alert for the current & accessible post in the sequence, only - Old behavior would send a number of email alerts per user (one per "not yet alerted on" post)
+* Fix: Only let user access posts that match the 'pmpro-sequence-allowed-post-statuses' filter result or have a post status of 'private', 'publish' and 'future'.
+* Fix:
 
 = .1 =
 * Initial version of the Sequence plugin including support Sequence specific display & delay type options.
