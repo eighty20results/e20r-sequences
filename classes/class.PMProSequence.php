@@ -3688,7 +3688,18 @@
 
             if ( in_array( $this->sequence_id, $post_sequences ) ) {
 
+                $allowed_post_statuses = apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) );
+                $curr_post_status = get_post_status( $post_id );
+
+                // Only consider granting access to the post if it is in one of the allowed statuses
+                if ( ! in_array( $curr_post_status, $allowed_post_statuses ) ) {
+
+                    dbgOut("get_accessStatus() - Post {$post_id} with status {$curr_post_status} isn't accessible");
+                    return false;
+                }
+
                 // dbgOut( "get_AccessStatus() for post {$post_id} is managed by PMProSequence: " . $this->whoCalledMe() );
+
                 /* Bugfix: It's possible there are duplicate values in the list of sequences for this post. */
                 $sequence_list = array_unique( $post_sequences );
 
