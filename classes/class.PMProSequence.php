@@ -957,6 +957,9 @@
 
                 $this->refreshed = current_time('timestamp', true);
                 $this->posts = get_post_meta( $this->sequence_id, "_sequence_posts", true );
+
+                dbgOut( "getPosts() - Sorting the current post list");
+                usort( $this->posts, array( &$this, "sortByDelay" ) );
             }
 
 			return $this->posts;
@@ -2613,11 +2616,11 @@
 	     */
 	    public function normalizeDelay( $delay ) {
 
-            if ( is_int( $delay ) ) {
+/*            if ( is_int( $delay ) ) {
 
                 return $delay;
             }
-
+*/
 	        if ( $this->isValidDate($delay) ) {
 	            // dbgOut('normalizeDelay(): Delay specified as a valid date: ' . $delay);
 	            return $this->convertToDays($delay);
@@ -2639,12 +2642,12 @@
 	     */
 	    public function convertToDays( $date, $userId = null, $levelId = null ) {
 
-            // Return immediately if the value we're given is a # of days (i.e. an integer)
-            if ( is_int( $date ) ) {
-                return $date;
-            }
+            $days = 0;
 
-		    $days = 0;
+            // Return immediately if the value we're given is a # of days (i.e. an integer)
+            if ( is_numeric( $date ) ) {
+                $days = $date;
+            }
 
 	        if ( $this->isValidDate( $date ) )
 	        {
@@ -2753,11 +2756,11 @@
 	        switch ($this->options->sortOrder)
 	        {
 	            case SORT_ASC:
-	                // dbgOut('sortByDelay(): Sorted in Ascending order');
+	                //dbgOut('sortByDelay(): Sorted in Ascending order');
 	                return $this->sortAscending($a, $b);
 	                break;
 	            case SORT_DESC:
-	                // dbgOut('sortByDelay(): Sorted in Descending order');
+	                //dbgOut('sortByDelay(): Sorted in Descending order');
 	                return $this->sortDescending($a, $b);
 	                break;
 	            default:
