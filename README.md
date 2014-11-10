@@ -42,11 +42,11 @@ See ./email/README.txt for information on templates for the email alerts.
 
 == Filters & Actions ==
 
-| Filter | Description | Default |
+| Filter | Description | Default value |
 |--------------|:------------:|-------------:|
 | pmpro_sequence_widget_seqid | Override the widget specified sequence ID (post ID for the Sequence CPT) | $instance['sequence_id'] |
 | pmpro_sequence_managed_post_types | The post types the sequence plugin can mange. This is how to add CPTs, for instance | array( "post", "page" ) |
-| pmpro_sequence_cpt_labels | Override the Custom Post Type labels | array of label definitions |
+| pmpro_sequence_cpt_labels | Override the Custom Post Type labels | array() of label definitions |
 | pmpro_sequence_can_add_post_status | Post statuses (i.e. the status of the post) that can be added to a sequence. It may (still) not display unless the 'pmpro-sequence-allowed-post-statuses' filter also matches | array( 'publish', 'draft', 'future', 'pending', 'private') |
 | pmpro_sequence_found_closest_post | The post ID that is the closest to the day of membership for the currently logged in user | Result from get_closestPost() function |
 | pmpro_sequence_list_query | Query (SQL) to use to fetch list of sequences from the database. | the WP_Query compatible array of query arguments |
@@ -56,6 +56,8 @@ See ./email/README.txt for information on templates for the email alerts.
 | pmpro_sequence_list_html | The HTML (as a table) for a paginated list of posts (PMPro Sequence posts) | $html - the HTML that will render to show the paginated list (self-contained <div> |
 | pmpro-sequence-has-edit-privileges | Used to indicate whether the user is permitted to do something - like edit the sequence member list, settings, etc | true/false from userCan() function |
 | pmpro-sequence-allowed-post-statuses | The post has to have one of these statuses in order for the user to be granted access to the post (and it shows up in the post list) | array( 'publish', 'future', 'private' ) |
+| pmpro_sequence_import_pmpro_series | Whether to automatically try to import PMPro Series CPT entries to this plugin | __return_false() |
+
 == TODO ==
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
 
