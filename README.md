@@ -130,11 +130,11 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Version bump for fixes added after the initial version (minor typo & namespace bugs)
 
 ###.1.2 
-* Bug Fix: Incorrect page ID supplied when filtering sequence member pages
+* Fix: Incorrect page ID supplied when filtering sequence member pages
 
 ###.2 
-* Added support for templated and configurable new content alerts. Includes scheduling (cron) by sequence
-* Reformatted Sequence Settings metabox.
+* Added support for templates and configurable new content alerts. Includes scheduling (cron) by sequence.
+* Reformat of the Sequence Settings meta box.
 * Added support for pre PHP v5.3 releases. (tentative - not been able to test)
 * Optimized settings save functionality (one instance of the save functionality).
 * Separated out Javascript & cleaned up AJAX handling for sequence handling, post addition/removal & settings. (@Askelon)
@@ -145,7 +145,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 ** Only applies when the Delay Type is configured as "Days after sign-up".
 * Added support for admin configurable format of !!today!! (date) placeholder in email templates
 * Added a message to the front-end sequence page for when there are no released (visible) posts available to the user in that sequence.
-* Bugfix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
+* Fix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
 * More bug fixes and updates.
 
 ###.3 
