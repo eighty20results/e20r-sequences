@@ -225,6 +225,7 @@
 	        $settings->startWhen =  0; // startWhen == immediately (in current_time('timestamp') + n seconds)
 		    $settings->sendNotice = 1; // sendNotice == Yes
 		    $settings->noticeTemplate = 'new_content.html'; // Default plugin template
+            $settings->noticeSendAs = PMPRO_SEQ_SEND_AS_SINGLE; // ALways send the alert notice as one notice per message.
 		    $settings->noticeTime = '00:00'; // At Midnight (server TZ)
 	        $settings->noticeTimestamp = current_time('timestamp'); // The current time (in UTC)
 	        $settings->excerpt_intro = __('A summary of the post follows below:', 'pmprosequence');
@@ -408,6 +409,14 @@
             elseif (empty($this->options->sendNotice)) {
                 $this->options->sendNotice = 1;
             }
+
+            if ( isset($_POST['hidden_pmpro_seq_sendas']) )
+            {
+                $this->options->noticeSendAs = esc_attr($_POST['hidden_pmpro_seq_sendas']);
+                dbgOut('save_settings(): POST value for settings->noticeSendAs: ' . esc_attr($_POST['hidden_pmpro_seq_sendas']) );
+            }
+            else
+                $this->options->noticeSendAs = PMPRO_SEQ_SEND_AS_SINGLE;
 
             if ( isset($_POST['hidden_pmpro_seq_noticetemplate']) )
             {
@@ -2078,8 +2087,7 @@
 						                <span class="screen-reader-text"><?php echo sprintf( __( 'Manually trigger sending of alert notices for the %s sequence', 'pmprosequence'), get_the_title( $this->sequence_id) ); ?></span>
 						            </a>
 						            <?php wp_nonce_field('pmpro-sequence-sendalert', 'pmpro_sequence_sendalert_nonce'); ?>
-					            </div>
-					            <div class="pmpro-sequence-hidden pmpro-sequence-email">
+                                    <div class="pmpro-sequence-hidden pmpro-sequence-email">
 						            <p class="pmpro-seq-email-hl"><?php _e("From:", 'pmprosequence'); ?></p>
 						            <div class="pmpro-sequence-replyto">
 							            <label class="pmpro-sequence-label" for="pmpro-seq-replyto"><?php _e('Email:', 'pmprosequence'); ?> </label>
@@ -2110,9 +2118,29 @@
 							            </p>
 						            </div>
 					            </div>
+                                    <div class="pmpro-sequence-hidden pmpro-sequence-sendas">
+                                        <hr width="60%"/>
+                                        <label class="pmpro-sequence-label" for="pmpro-seq-sendas"><?php _e('Send as:', 'pmprosequence'); ?> </label>
+                                        <span id="pmpro-seq-sendas-status" class="pmpro-sequence-status"><?php echo ( $this->options->noticeSendAs = 10 ? _e('One alert per post', 'pmprosequence') : _e('List of post links', 'pmprosequence')); ?></span>
+                                        <a href="#" id="pmpro-seq-edit-sendas" class="pmpro-seq-edit">
+                                            <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
+                                            <span class="screen-reader-text"><?php _e('Select the format of the alert notice when posting new content for this sequence', 'pmprosequence'); ?></span>
+                                        </a>
+                                        <div id="pmpro-seq-sendas-select" class="pmpro-sequence-hidden">
+                                            <input type="hidden" name="hidden_pmpro_seq_sendas" id="hidden_pmpro_seq_sendas" value="<?php echo esc_attr($this->options->noticeSendAs); ?>" >
+                                            <label for="pmpro_sequence_sendas"></label>
+                                            <select onchange="pmpro_sequence_sendAsChange(<?php echo $this->sequence_id; ?>); return false;" name="pmpro_sequence_sendas" id="pmpro_sequence_sendas">
+                                                <option value="<?php echo PMPRO_SEQ_SEND_AS_SINGLE; ?>" <?php selected( $this->options->noticeSendAs, PMPRO_SEQ_SEND_AS_SINGLE ); ?> ><?php _e('One alert per post', 'pmprosequence'); ?></option>
+                                                <option value="<?php echo PMPRO_SEQ_SEND_AS_LIST; ?>" <?php selected( $this->options->noticeSendAs, PMPRO_SEQ_SEND_AS_LIST ); ?> ><?php _e('List of post links', 'pmprosequence'); ?></option>
+                                            </select>
+                                            <p class="pmpro-seq-btns">
+                                                <a href="#" id="ok-pmpro-seq-sendas" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
+                                                <a href="#" id="cancel-pmpro-seq-sendas" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                            </p>
+                                        </div>
+                                    </div>
 
 					            <div class="pmpro-sequence-hidden pmpro-sequence-template">
-						            <hr width="60%"/>
 						            <label class="pmpro-sequence-label" for="pmpro-seq-template"><?php _e('Template:', 'pmprosequence'); ?> </label>
 						            <span id="pmpro-seq-template-status" class="pmpro-sequence-status"><?php echo esc_attr( $this->options->noticeTemplate ); ?></span>
 						            <a href="#" id="pmpro-seq-edit-template" class="pmpro-seq-edit">

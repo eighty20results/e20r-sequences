@@ -30,7 +30,7 @@ License:
 */
 
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '2.0');
+define('PMPRO_SEQUENCE_VERSION', '2.1');
 
 /* Enable / Disable DEBUG logging to separate file */
 define('PMPRO_SEQUENCE_DEBUG', false);
@@ -47,6 +47,8 @@ define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('PMPRO_SEQ_AS_DAYNO', 1);
 define('PMPRO_SEQ_AS_DATE', 2);
 
+define('PMPRO_SEQ_SEND_AS_SINGLE', 10);
+define('PMPRO_SEQ_SEND_AS_LIST', 20);
 
 /**
   *	Include the class for PMProSequences

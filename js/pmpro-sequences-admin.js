@@ -39,6 +39,7 @@ jQuery(document).ready(function(){
         var $timeCtl        = $('#pmpro_sequence_noticetime');
         var $dateCtl        = $('#pmpro_sequence_dateformat');
         var $offsetCtl      = $('#pmpro_sequence_offset');
+        var $sndAsCtl       = $('#pmpro_sequence_sendas');
 
         /* Input */
         var $excerptCtl     = $('#pmpro_sequence_excerpt');
@@ -128,6 +129,7 @@ jQuery(document).ready(function(){
 
  //           console.log('Checkbox to allow sending notice clicked');
             $('#hidden_pmpro_seq_sendnotice').val( this.checked ? 1 : 0 );
+            $('.pmpro-sequence-sendas').slideToggle();
             $('.pmpro-sequence-template').slideToggle();
             $('.pmpro-sequence-noticetime').slideToggle();
             $('.pmpro-sequence-email').slideToggle();
@@ -150,6 +152,13 @@ jQuery(document).ready(function(){
             //           console.log('Edit button for delay type clicked');
             $('#pmpro-seq-edit-offset').slideToggle();
             $('#pmpro-seq-offset-select').slideToggle();
+        });
+
+
+        $(document).on( "click", '#pmpro-seq-edit-sendas', function(){
+            //           console.log('Edit button for delay type clicked');
+            $('#pmpro-seq-edit-sendas').slideToggle();
+            $('#pmpro-seq-sendas-select').slideToggle();
         });
 
         /* Admin clicked the 'Edit' button for the delayType settings. Show the select field & hide the "edit" button */
@@ -245,6 +254,17 @@ jQuery(document).ready(function(){
             // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
             $('#pmpro-seq-sort-select').slideToggle();
             $('#pmpro-seq-edit-sort').slideToggle();
+
+        });
+
+        /** Admin clicked the 'Cancel' button for the SortOrder edit settings. Reset
+         * the value of the label & select, then hide everything again.
+         */
+        $(document).on( "click", '#cancel-pmpro-seq-sendas', function(){
+//            console.log('Cancel button for Sort order was clicked');
+            // $('#pmpro_sequence_sortorder').getAttribute('hidden_pmpro_seq_sortorder');
+            $('#pmpro-seq-sendas-select').slideToggle();
+            $('#pmpro-seq-edit-sendas').slideToggle();
 
         });
 
@@ -451,6 +471,21 @@ jQuery(document).ready(function(){
 
         });
 
+        $(document).on( "click", '#ok-pmpro-seq-sendas', function(){
+
+            var $hCtl = $('#hidden_pmpro_seq_sendas');
+
+            configSelected(
+                $sndAsCtl,
+                $hCtl.val(),
+                $('#pmpro-seq-sendas-status'),
+                $hCtl,
+                $('#pmpro-seq-edit-sendas'),
+                $('#pmpro-seq-sendas-input')
+            );
+
+        });
+
         $(document).on( "click", '#ok-pmpro-seq-subject', function(){
 
             var $hCtl = $('#hidden_pmpro_seq_subject');
@@ -505,8 +540,6 @@ jQuery(document).ready(function(){
         $(document).on( "click", '.delay-row-input input:checkbox', function() {
 
             console.log("The 'remove' checkbox was clicked...");
-            // TODO: Lock everything until the remove returns.
-
             lockMetaRows();
 
             $('div .seq_spinner').show();
@@ -554,7 +587,6 @@ jQuery(document).ready(function(){
 
         $(document).on( "click", "#pmpro-seq-new-meta", function() {
 
-            // TODO: Lock all other rows of data except the 'new' labels, select & delay input box(es).
             lockMetaRows();
             console.log("Add new table row for metabox");
             $('div .seq_spinner').show();
