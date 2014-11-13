@@ -948,6 +948,8 @@ function configSelected( $selectCtl, $oldValue, $statusCtl, $hiddenCtl, $editBtn
         $hiddenCtl.val($val); // Set the value='' for the hidden input field
     }
 
+    $selectCtl.css('margin-top', '10px');
+
     $selCtl.hide(); // Hide the Input field + OK & Cancel buttons
     $editBtn.show(); // Show edit button again
 }
@@ -976,6 +978,7 @@ function configInput( $inputCtl, $oldValue, $statusCtl, $hiddenCtl, $editBtn, $i
     $inpCtl.hide(); // Hide the Input field + OK & Cancel buttons
     $editBtn.show(); // Show edit button again
 
+    $inputCtl.css('margin-top', '10px');
 }
 
 function editDelaySettings() {
@@ -1265,6 +1268,7 @@ function pmpro_sequence_saveSettings( sequence_id ) {
             hidden_pmpro_seq_offset: jQuery('#hidden_pmpro_seq_offset').val(),
             hidden_pmpro_seq_sendnotice: jQuery('#hidden_pmpro_seq_sendnotice').val(),
             hidden_pmpro_seq_noticetime: jQuery('#hidden_pmpro_seq_noticetime').val(),
+            hidden_pmpro_seq_noticesaveas: jQuery('#hidden_pmpro_seq_noticesendas').val(),
             hidden_pmpro_seq_noticetemplate: jQuery('#hidden_pmpro_seq_noticetemplate').val(),
             hidden_pmpro_seq_fromname: jQuery('#hidden_pmpro_seq_fromname').val(),
             hidden_pmpro_seq_replyto: jQuery('#hidden_pmpro_seq_replyto').val(),
