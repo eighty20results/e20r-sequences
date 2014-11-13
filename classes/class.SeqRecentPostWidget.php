@@ -19,7 +19,7 @@
 
 */
 
-class PMProSeqRecentPost extends WP_Widget {
+class SeqRecentPostWidget extends WP_Widget {
 
 	public function __construct() {
 		parent::__construct(

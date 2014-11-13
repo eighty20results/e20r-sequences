@@ -7,14 +7,10 @@
     <orderEntry type="module-library">
       <library name="PHP">
         <CLASSES>
-          <root url="file://$USER_HOME$/strongcubedfitness.com/wp-content/plugins/sp-gf-mysql-connect" />
-          <root url="file://$USER_HOME$/strongcubedfitness.com/wp-content/plugins/paid-memberships-pro" />
-          <root url="file://$MODULE_DIR$/../wordpress" />
+          <root url="file://$MODULE_DIR$/../Wordpress-Includes" />
         </CLASSES>
         <SOURCES>
-          <root url="file://$USER_HOME$/strongcubedfitness.com/wp-content/plugins/sp-gf-mysql-connect" />
-          <root url="file://$USER_HOME$/strongcubedfitness.com/wp-content/plugins/paid-memberships-pro" />
-          <root url="file://$MODULE_DIR$/../wordpress" />
+          <root url="file://$MODULE_DIR$/../Wordpress-Includes" />
         </SOURCES>
       </library>
     </orderEntry>

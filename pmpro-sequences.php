@@ -60,52 +60,12 @@ if (! class_exists( 'PMProSequence' )):
 
 endif;
 
-if ( ! class_exists( 'PMProSeqRecentPost' )):
-	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.PMProSeqRecentPost.php");
+if ( ! class_exists( 'SeqRecentPostWidget' )):
+	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.SeqRecentPostWidget.php");
 endif;
 
 
 /** A debug function */
-if ( ! function_exists( 'dbgOut' ) ):
-	/**
-	 * Debug function (if executes if DEBUG is defined)
-	 *
-	 * @param $msg -- Debug message to print to debug log.
-	 */
-	function dbgOut( $msg ) {
-
-		$dbgPath = plugin_dir_path( __FILE__ ) . DIRECTORY_SEPARATOR . 'debug';
-
-		if (PMPRO_SEQUENCE_DEBUG) {
-
-			if (!  file_exists( $dbgPath )) {
-				// Create the debug logging directory
-				mkdir( $dbgPath, 0750 );
-
-				if (! is_writable( $dbgPath )) {
-					error_log('PMPro Sequence: Debug log directory is not writable. exiting.');
-					return;
-				}
-			}
-
-			$dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d', current_time("timestamp") ) . '.txt';
-
-			if ( ($fh = fopen($dbgFile, 'a')) !== false ) {
-
-				// Format the debug log message
-				$dbgMsg = '(' . date('d-m-y H:i:s', current_time( "timestamp" ) ) . ') -- '. $msg;
-
-				// Write it to the debug log file
-				fwrite( $fh, $dbgMsg . "\r\n" );
-				fclose( $fh );
-			}
-			else {
-                error_log( 'PMPro Sequence: Unable to open debug log' );
-            }
-		}
-	}
-
-endif;
 
 /**
   *	Couple functions from PMPro in case we don't have them loaded yet.
@@ -205,15 +165,26 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 */
 endif;
 
-if ( ! function_exists ('pmpro_sequence_import_from_series') ):
+if ( ! function_exists ('pmpro_sequence_import_all_PMProSeries') ):
 
+    /**
+     * Import PMPro Series as specified by the pmpro-sequence-import-pmpro-series filter
+     */
     function pmpro_sequence_import_all_PMProSeries() {
 
-        if ( __return_false() !== apply_filters( 'pmpro_sequence_import_pmpro_series', __return_false() ) ) {
+        $importStatus = apply_filters( 'pmpro-sequence-import-pmpro-series', __return_false() );
 
-            global $wpdb;
+        // Don't import anything.
+        if ( __return_false() === $importStatus ) {
 
-            //Get all of the defined series on this site
+            return;
+        }
+
+        global $wpdb;
+
+        if ( ( __return_true() === $importStatus ) || ( 'all' === $importStatus ) ) {
+
+            //Get all of the defined PMPro Series posts to import from this site.
             $series_sql = $wpdb->prepare(
                 "
                         SELECT *
@@ -221,78 +192,101 @@ if ( ! function_exists ('pmpro_sequence_import_from_series') ):
                         WHERE post_type = 'pmpro_series'
                     "
             );
+        }
+        elseif ( is_array( $importStatus ) ) {
 
+            //Get the specified list of PMPro Series posts to import
+            $series_sql = $wpdb->prepare(
+                "
+                        SELECT *
+                        FROM {$wpdb->posts}
+                        WHERE post_type = 'pmpro_series'
+                        AND ID IN (" . implode( ",", $importStatus ) . ")
+                    "
+            );
+        }
+        elseif ( is_numeric( $importStatus ) ) {
 
-            $series_list = $wpdb->get_results( $series_sql );
+            //Get the specified (by Post ID, we assume) PMPro Series posts to import
+            $series_sql = $wpdb->prepare(
+                "
+                        SELECT *
+                        FROM {$wpdb->posts}
+                        WHERE post_type = 'pmpro_series'
+                        AND ID = %d
+                    ",
+                $importStatus
+            );
+        }
 
-            // Series meta: '_post_series' => the series this post belongs to.
-            //              '_series_posts' => the posts in the series
-            /*
-                    $format = array(
-                        '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s',
-                        '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s','%d','%s',
-                        '%s', '%d'
-                    );
-            */
-            // Process the list of sequences
-            foreach ( $series_list as $series ) {
+        $series_list = $wpdb->get_results( $series_sql );
 
-                dbgOut( "Adding Series ID {$series->ID} (" . get_the_title( $series->ID ) . ") to the database" );
-                $wp_error = true;
+        // Series meta: '_post_series' => the series this post belongs to.
+        //              '_series_posts' => the posts in the series
+        /*
+                $format = array(
+                    '%s', '%s', '%s', '%s', '%s', '%s', '%s','%s','%s','%s',
+                    '%s', '%s', '%s', '%s', '%s', '%s', '%d','%s','%d','%s',
+                    '%s', '%d'
+                );
+        */
+        // Process the list of sequences
+        foreach ( $series_list as $series ) {
 
-                $seq_id = wp_insert_post( array(
-                        'post_author'           => $series->post_author,
-                        'post_date'             => date_i18n( 'Y-m-d H:i:s' ),
-                        'post_date_gmt'         => date_i18n( 'Y-m-d H:i:s' ),
-                        'post_content'          => $series->post_content,
-                        'post_title'            => $series->post_title,
-                        'post_excerpt'          => $series->post_excerpt,
-                        'post_status'           => $series->post_status,
-                        'comment_status'        => $series->comment_status,
-                        'ping_status'           => $series->ping_status,
-                        'post_password'         => $series->post_password,
-                        'post_name'             => $series->post_name,
-                        'to_ping'               => $series->to_ping,
-                        'pinged'                => $series->pinged,
-                        'post_modified'         => $series->post_modified,
-                        'post_modified_gmt'     => $series->post_modified_gmt,
-                        'post_content_filtered' => $series->post_content_filtered,
-                        'post_parent'           => $series->post_parent,
-                        'guid'                  => $series->guid,
-                        'menu_order'            => $series->menu_order,
-                        'post_type'             => 'pmpro_sequence',
-                        'post_mime_type'        => $series->post_mime_type,
-                        'comment_count'         => $series->comment_count
-                    ),
-                    $wp_error );
+            $wp_error = true;
 
-                if ( ! is_wp_error( $seq_id ) ) {
+            $seq_id = wp_insert_post( array(
+                    'post_author'           => $series->post_author,
+                    'post_date'             => date_i18n( 'Y-m-d H:i:s' ),
+                    'post_date_gmt'         => date_i18n( 'Y-m-d H:i:s' ),
+                    'post_content'          => $series->post_content,
+                    'post_title'            => $series->post_title,
+                    'post_excerpt'          => $series->post_excerpt,
+                    'post_status'           => $series->post_status,
+                    'comment_status'        => $series->comment_status,
+                    'ping_status'           => $series->ping_status,
+                    'post_password'         => $series->post_password,
+                    'post_name'             => $series->post_name,
+                    'to_ping'               => $series->to_ping,
+                    'pinged'                => $series->pinged,
+                    'post_modified'         => $series->post_modified,
+                    'post_modified_gmt'     => $series->post_modified_gmt,
+                    'post_content_filtered' => $series->post_content_filtered,
+                    'post_parent'           => $series->post_parent,
+                    'guid'                  => $series->guid,
+                    'menu_order'            => $series->menu_order,
+                    'post_type'             => 'pmpro_sequence',
+                    'post_mime_type'        => $series->post_mime_type,
+                    'comment_count'         => $series->comment_count
+                ),
+                $wp_error );
 
-                    $post_list = get_post_meta( $series->ID, '_series_posts', true );
+            if ( ! is_wp_error( $seq_id ) ) {
 
-                    $seq = new PMProSequence( $seq_id );
-                    $seq->init( $seq_id );
+                $post_list = get_post_meta( $series->ID, '_series_posts', true );
 
-                    foreach ( $post_list as $seq_member ) {
+                $seq = new PMProSequence( $seq_id );
+                $seq->init( $seq_id );
 
-                        if ( ! $seq->addPost( $seq_member->id, $seq_member->delay ) ) {
-                            return new WP_Error( 'sequence_import',
-                                sprintf( __( 'Could not complete import for series %s', 'pmprosequence' ), $series->post_title ), $seq->getError() );
-                        }
-                    } // End of foreach
+                foreach ( $post_list as $seq_member ) {
 
-                    // Save the settings for this Drip Feed Sequence
-                    $seq->save_sequence_meta();
+                    if ( ! $seq->addPost( $seq_member->id, $seq_member->delay ) ) {
+                        return new WP_Error( 'sequence_import',
+                            sprintf( __( 'Could not complete import for series %s', 'pmprosequence' ), $series->post_title ), $seq->getError() );
+                    }
+                } // End of foreach
 
-                    // update_post_meta( $seq_id, "_sequence_posts", $post_list );
-                } else {
+                // Save the settings for this Drip Feed Sequence
+                $seq->save_sequence_meta();
 
-                    return new WP_Error( 'db_query_error',
-                        sprintf( __( 'Could not complete import for series %s', 'pmprosequence' ), $series->post_title ), $wpdb->last_error );
+                // update_post_meta( $seq_id, "_sequence_posts", $post_list );
+            } else {
 
-                }
-            } // End of foreach (DB result)
-        }// End of filtered import function
+                return new WP_Error( 'db_query_error',
+                    sprintf( __( 'Could not complete import for series %s', 'pmprosequence' ), $series->post_title ), $wpdb->last_error );
+
+            }
+        } // End of foreach (DB result)
     }
 endif;
 
@@ -362,7 +356,7 @@ try {
     $sequence->load_actions();
 }
 catch ( Exception $e ) {
-    dbgOut( "PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage() );
+    error_log( "PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage() );
 }
 
 register_activation_hook( __FILE__, array( &$sequence, 'activation' ) );

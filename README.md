@@ -47,18 +47,21 @@ See ./email/README.txt for information on templates for the email alerts.
 | Filter | Description | Default value |
 |--------------|:------------:|-------------:|
 | pmpro_sequence_widget_seqid | Override the widget specified sequence ID (post ID for the Sequence CPT) | $instance['sequence_id'] |
-| pmpro_sequence_managed_post_types | The post types the sequence plugin can mange. This is how to add CPTs, for instance | array( "post", "page" ) |
-| pmpro_sequence_cpt_labels | Override the Custom Post Type labels | array() of label definitions |
-| pmpro_sequence_can_add_post_status | Post statuses (i.e. the status of the post) that can be added to a sequence. It may (still) not display unless the 'pmpro-sequence-allowed-post-statuses' filter also matches | array( 'publish', 'draft', 'future', 'pending', 'private') |
-| pmpro_sequence_found_closest_post | The post ID that is the closest to the day of membership for the currently logged in user | Result from get_closestPost() function |
-| pmpro_sequence_list_query | Query (SQL) to use to fetch list of sequences from the database. | the WP_Query compatible array of query arguments |
-| pmpro_sequence_list_title | The HTML formatted title to use when displaying the list of sequences on the front-end | HTML formatted $title |
-| pmpro_sequence_closest_post_indicator_image | URL to the image to use to indicate which of the posts in the post list is the most recently available post for the current user | URL to ./images/most-recent.png|
-| pmpro_sequence_paginate_list | The Pagination code for the Sequence List being rendered | Result from post_paging_nav() function |
-| pmpro_sequence_list_html | The HTML (as a table) for a paginated list of posts (PMPro Sequence posts) | $html - the HTML that will render to show the paginated list (self-contained <div> |
-| pmpro-sequence-has-edit-privileges | Used to indicate whether the user is permitted to do something - like edit the sequence member list, settings, etc | true/false from userCan() function |
+| pmpro-sequence-managed-post-types | The post types the sequence plugin can mange. This is how to add CPTs, for instance | array( "post", "page" ) |
+| pmpro-seqence-cpt-labels | Override the Custom Post Type labels | array() of label definitions |
+| pmpro-sequence-can-add-post-status | Post statuses (i.e. the status of the post) that can be added to a sequence. It may (still) not display unless the 'pmpro-sequence-allowed-post-statuses' filter also matches | array( 'publish', 'draft', 'future', 'pending', 'private') |
+| pmpro-sequence-found-closest-post | The post ID that is the closest to the day of membership for the currently logged in user | Result from PMProSequence::get_closestPost() function |
+| pmpro-sequence-list-sequences-wpquery | Query (WP_Query) to fetch list of sequences from the database. | the WP_Query compatible array of query arguments |
+| pmpro-sequence-list-title | The HTML formatted title to use when displaying the list of sequences on the front-end | Output from PMProSequence::setShortcodeTitle() - HTML formatted $title |
+| pmpro-sequence-closest-post-indicator-image | URL to the image to use to indicate which of the posts in the post list is the most recently available post for the current user | URL to __PLUGIN_DIR__/images/most-recent.png|
+| pmpro-sequence-list-pagination-code | The Pagination code for the Sequence List being rendered | Result from PMProSequence::post_paging_nav() function |
+| pmpro-sequence-list-html | The HTML (as a table) for a paginated list of posts (PMPro Sequence posts) | $html - the HTML that will render to show the paginated list (self-contained <div> |
+| pmpro-sequence-has-edit-privileges | Used to indicate whether the user is permitted to do something - like edit the sequence member list, settings, etc | true/false from PMProSequence::userCanEdit() function |
 | pmpro-sequence-allowed-post-statuses | The post has to have one of these statuses in order for the user to be granted access to the post (and it shows up in the post list) | array( 'publish', 'future', 'private' ) |
-| pmpro_sequence_import_pmpro_series | Whether to automatically try to import PMPro Series CPT entries to this plugin | __return_false() |
+| pmpro-sequence-check-valid-date | Check whether the supplied string is a valid date. Return true if so. | Return value from PMProSequence::isValidDate( $delay ) |
+| pmpro-sequence-import-pmpro-series | Whether to automatically try to import PMPro Series CPT entries to this plugin. Accepts a number of different return values: The string 'all' or boolean true will import all defined series. An array of Post IDs, i.e. array( 2000, 4000 ), will treat the numbers as the post id for the Series. A single number (array or otherwise) will be treated as a Post ID to import.  | __return_false() |
+| pmpro-sequence-alert-message-excerpt-intro | Sets the text to use in place of the !!excerpt_intro!! placeholder in the "new content alert" message | PMProSequence->options->excerpt_intro |
+| pmpro-sequence-alert-message-title | The in-message post title ( replacing the !!ptitle!! placeholder) for the "new content alert" email message. | post_title for the post id being processed |
 
 ##TODO
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
@@ -78,6 +81,8 @@ TBD
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/pmpro-sequence/issues
 
 ##Changelog
+
+###2.1
 
 ###2.0
 * Complete refactor of plugin. Moved anything sequence related into the PMProSequence class and cleaned out pmpro-sequence.php file.
