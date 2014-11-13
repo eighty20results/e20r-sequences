@@ -50,6 +50,8 @@ jQuery(document).ready(function(){
         /* Checkbox */
         var $offsetChkCtl   = $('#pmpro_sequence_offsetchk');
 
+        var $spinner = $('div .seq_spinner');
+
         console.log('Sort Order on load: ' + $sortOrderCtl.find('option:selected').val());
 
         /* Get the current values */
@@ -542,7 +544,7 @@ jQuery(document).ready(function(){
             console.log("The 'remove' checkbox was clicked...");
             lockMetaRows();
 
-            $('div .seq_spinner').show();
+            $spinner.show();
 
             jQuery.ajax({
                 url: pmpro_sequence.ajaxurl,
@@ -578,7 +580,7 @@ jQuery(document).ready(function(){
 
                     showMetaControls();
                     unlockMetaRows();
-                    $('div .seq_spinner').hide();
+                    $spinner.hide();
 
 
                 }
@@ -589,11 +591,11 @@ jQuery(document).ready(function(){
 
             lockMetaRows();
             console.log("Add new table row for metabox");
-            $('div .seq_spinner').show();
+            $spinner.show();
 
             rowVisibility( jQuery( '.new-sequence-select' ), 'select' );
 
-            $('div .seq_spinner').hide();
+            $spinner.hide();
             // $(this).hide();
             // $('#pmpro-seq-new-meta-reset').show();
             unlockMetaRows();
@@ -602,9 +604,13 @@ jQuery(document).ready(function(){
         $(document).on( "click", "#pmpro-seq-new-meta-reset", function() {
 
             lockMetaRows();
-            $('div .seq_spinner').show();
+
+            $spinner.show();
+
             showMetaControls();
-            $('div .seq_spinner').hide();
+
+            $spinner.hide();
+
             unlockMetaRows();
         });
 
@@ -716,7 +722,7 @@ function lockMetaRows() {
 
     jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', true );
     jQuery( '#pmpro-seq-new-meta-reset' ).attr( 'disabled', true );
-};
+}
 
 function unlockMetaRows() {
 
@@ -779,7 +785,6 @@ function postMetaSelectChanged( $self ) {
 
             if ( $data.data ) {
                 alert($data.data);
-                return;
             }
         },
         success: function($data){
@@ -846,6 +851,7 @@ function setLabels()
     var entryHTML_start = '<th id="pmpro_sequence_delayentrytype">';
     var entryHTML_end = '</th>';
 
+
     var labelText = pmpro_sequence.lang.undefined; // 'Not Defined';
     var entryText = pmpro_sequence.lang.undefined;
 
@@ -892,7 +898,7 @@ function pmpro_seq_setErroMsg( $msg ) {
  *
  * Check whether to hide all future posts for the sequence.
  *
- * @returns {0|1} -
+ * @return int - 0 if not checked, 1 if it is checked.
  */
 function isHidden()
 {
