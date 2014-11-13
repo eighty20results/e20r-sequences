@@ -39,7 +39,7 @@
          */
         function PMProSequence($id = null) {
 
-            // Not a dummy sequence.
+            // Make sure it's not a dummy construct() call - i.e. for a post that doesn't exist.
             if ( ( $id != null ) && ( $this->sequence_id == 0 ) ) {
 
                 $this->sequence_id = $this->getSequenceByID( $id ); // Try to load it from the DB
@@ -1147,7 +1147,7 @@
                                         <div id="pmpro-seq-sendas-select" class="pmpro-sequence-hidden">
                                             <input type="hidden" name="hidden_pmpro_seq_sendas" id="hidden_pmpro_seq_sendas" value="<?php echo esc_attr($this->options->noticeSendAs); ?>" >
                                             <label for="pmpro_sequence_sendas"></label>
-                                            <select onchange="pmpro_sequence_sendAsChange(<?php echo $this->sequence_id; ?>); return false;" name="pmpro_sequence_sendas" id="pmpro_sequence_sendas">
+                                            <select name="pmpro_sequence_sendas" id="pmpro_sequence_sendas">
                                                 <option value="<?php echo PMPRO_SEQ_SEND_AS_SINGLE; ?>" <?php selected( $this->options->noticeSendAs, PMPRO_SEQ_SEND_AS_SINGLE ); ?> ><?php _e('One alert per post', 'pmprosequence'); ?></option>
                                                 <option value="<?php echo PMPRO_SEQ_SEND_AS_LIST; ?>" <?php selected( $this->options->noticeSendAs, PMPRO_SEQ_SEND_AS_LIST ); ?> ><?php _e('List of post links', 'pmprosequence'); ?></option>
                                             </select>
