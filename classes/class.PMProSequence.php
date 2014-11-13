@@ -2292,7 +2292,7 @@
          *
          * @return int - number of days (decimal, possibly).
          */
-        private function getMemberDays( $user_id = NULL, $level_id = 0 ) {
+        public function getMemberDays( $user_id = NULL, $level_id = 0 ) {
 
             if(empty($user_id))
             {
@@ -2896,9 +2896,9 @@
          *
          * @return bool -- TRUE if we should let the user get notified about this post, false otherwise.
          *
-         * @access private
+         * @access public
          */
-        private function isAfterOptIn( $user_id, $optinTS, $post ) {
+        public function isAfterOptIn( $user_id, $optinTS, $post ) {
 
             // = $user_settings->sequence[ $this->sequence_id ]->optinTS;
 
@@ -3004,11 +3004,11 @@
          * @param $seq_id -- ID of sequence to process (not used)
          * @return bool - True if sent successfully. False otherwise.
          *
-         * @access private
+         * @access public
          *
          * TODO: Fix email body to be correct (standards compliant) MIME encoded HTML mail or text mail.
          */
-        private function sendEmail($post_id, $user_id, $seq_id) {
+        public function sendEmail($post_id, $user_id, $seq_id) {
 
             // Make sure the email class is loaded.
             if ( ! class_exists( 'PMProEmail' ) ) {
@@ -3280,10 +3280,10 @@
          *
          * @param $msg -- Debug message to print to debug log.
          *
-         * @access private
+         * @access public
          * @since v2.1
          */
-        private function dbgOut( $msg ) {
+        public function dbgOut( $msg ) {
 
             $dbgPath = plugin_dir_path( __FILE__ ) . DIRECTORY_SEPARATOR . 'debug';
 
@@ -3320,9 +3320,9 @@
          * Access the private $error value
          *
          * @return string|null -- Error message or NULL
-         * @access private
+         * @access public
          */
-        private function getError() {
+        public function getError() {
 
             if ( empty( $this->error ) ) {
 
