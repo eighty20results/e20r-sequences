@@ -33,7 +33,7 @@ License:
 define('PMPRO_SEQUENCE_VERSION', '2.1');
 
 /* Enable / Disable DEBUG logging to separate file */
-define('PMPRO_SEQUENCE_DEBUG', false);
+define('PMPRO_SEQUENCE_DEBUG', true);
 
 /* Set the max number of email alerts to send in one go to one user */
 define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
@@ -42,7 +42,7 @@ define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
 define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.2.2');
 
 /* Set the path to the PMPRO Sequence plugin */
-define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ));
 
 define('PMPRO_SEQ_AS_DAYNO', 1);
 define('PMPRO_SEQ_AS_DATE', 2);

@@ -3285,7 +3285,7 @@
          */
         public function dbgOut( $msg ) {
 
-            $dbgPath = plugin_dir_path( __FILE__ ) . DIRECTORY_SEPARATOR . 'debug';
+            $dbgPath = PMPRO_SEQUENCE_PLUGIN_DIR . 'debug';
 
             if (PMPRO_SEQUENCE_DEBUG) {
 
@@ -3294,7 +3294,7 @@
                     mkdir( $dbgPath, 0750 );
 
                     if (! is_writable( $dbgPath )) {
-                        error_log('PMPro Sequence: Debug log directory is not writable. exiting.');
+                        error_log("PMPro Sequence: Debug log directory {$dbgPath} is not writable. exiting.");
                         return;
                     }
                 }
