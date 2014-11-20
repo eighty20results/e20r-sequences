@@ -417,3 +417,11 @@ a:hover.page-numbers {
 .pmpro-seq-when {
     font-size: 0.75em;
 }
+
+#pmpro-seq-widget-recentpost-title {
+    font-size: 180%;
+    color: #9C0000;
+    font-weight: bold;
+    font-variant: small-caps;
+    line-height: 130%;
+}
