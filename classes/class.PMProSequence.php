@@ -522,6 +522,9 @@
         public function loadPostMetabox( $object, $box ) {
 
             $this->dbgOut("Post metaboxes being configured");
+            global $load_pmpro_sequence_admin_script;
+
+            $load_pmpro_sequence_admin_script = true;
 
             foreach( $this->managed_types as $type ) {
 
@@ -743,8 +746,8 @@
          *
          * @access public
 	     */
-	    public function defineMetaBoxes()
-		{
+	    public function defineMetaBoxes() {
+
 			//PMPro box
 			add_meta_box('pmpro_page_meta', __('Require Membership', 'pmprosequence'), 'pmpro_page_meta', 'pmpro_sequence', 'side');
 
@@ -762,8 +765,7 @@
          *
          * @access public
          */
-        public function sequenceMetaBox()
-		{
+        public function sequenceMetaBox() {
 			global $post;
 
 			if ( ! isset( $this->sequence_id ) || ( $this->sequence_id != $post->ID )  ) {
@@ -789,8 +791,7 @@
          *
          * @access public
 		 */
-		public function getPostListForMetaBox()
-		{
+		public function getPostListForMetaBox() {
 			// global $wpdb;
 
 			//show posts
@@ -933,8 +934,8 @@
          * @access public
 	     *
 	     */
-	    public function settings_meta_box( $object, $box )
-	    {
+	    public function settings_meta_box( $object, $box ) {
+
 	        global $post;
 
             $this->dbgOut("settings_meta_box() - Post ID: {$post->ID} and Sequence ID: {$this->sequence_id}");
@@ -1096,7 +1097,7 @@
 				            <div class="pmpro-sequence-alerts">
 					            <input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', 'pmprosequence'); ?>" id="pmpro_sequence_sendnotice" name="pmpro_sequence_sendnotice" <?php checked($this->options->sendNotice, 1); ?> />
 					            <input type="hidden" name="hidden_pmpro_seq_sendnotice" id="hidden_pmpro_seq_sendnotice" value="<?php echo esc_attr($this->options->sendNotice); ?>" >
-					            <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Allow email alerts', 'pmprosequence'); ?></label>
+					            <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Send email alerts', 'pmprosequence'); ?></label>
 					            <?php /* Add 'send now' button if checkbox is set */ ?>
 					            <div class="pmpro-sequence-hidden pmpro-sequence-sendnowbtn">
 						            <label for="pmpro_seq_send"><?php _e('Send alerts now', 'pmprosequence'); ?></label>
@@ -1336,12 +1337,15 @@
          * @param $content -- The content to process as part of the filter action
          * @return string -- The filtered content
          */
-        public function display_sequence_content( $content )
-        {
+        public function display_sequence_content( $content ) {
             global $post;
 
             if ( ( $post->post_type == "pmpro_sequence" ) && pmpro_has_membership_access() )
             {
+                global $load_pmpro_sequence_script;
+
+                $load_pmpro_sequence_script = true;
+
                 $this->dbgOut( "PMPRO Sequence display {$post->ID} - " . get_the_title( $post->ID ) );
 
                 $this->init( $post->ID );
@@ -2075,11 +2079,12 @@
 
 		    if ($this->isValidDate($delay))
 	        {
-                // TODO: Fix this as it doesn't support DST changes.
-	            $now = current_time('timestamp') + ($offset * 86400);
+                // Fixed: Now supports DST changes (i.e. no "early or late availability" in DST timezones
+	            // $now = current_time('timestamp') + ($offset * 86400);
+                $now = $this->calculateNowPlusOffsetSecs( $offset );
 
 	            // TODO: Add support for startWhen options (once the plugin supports differentiating on when the drip starts)
-	            $delayTime = strtotime( $delay . ' 00:00:00.0' );
+	            $delayTime = strtotime( $delay . ' 00:00:00.0 ' . get_option( 'timezone_string' ) );
 	            // $this->dbgOut('isPastDelay() - Now = ' . $now . ' and delay time = ' . $delayTime );
 
 	            return ( $now >= $delayTime ? true : false ); // a date specified as the $delay
@@ -2323,6 +2328,36 @@
             }
 
             return $pmpro_member_days[$user_id][$level_id];
+        }
+
+        /**
+         * Calculate the # of seconds to use as the offset value while respecting Timezones & Daylight Savings settings.
+         *
+         * @param int $days - Number of days for the offset value.
+         *
+         * @return int - The number of seconds in the offset.
+         */
+        private function calculateNowPlusOffsetSecs( $days ) {
+
+            $seconds = 0;
+            $serverTZ = get_option( 'timezone_string' );
+
+            $now = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
+
+            if ( $days > 1) {
+                $dayStr = "{$days} days";
+            }
+            else {
+                $dayStr = "{$days} day";
+            }
+
+            $now->modify( $dayStr );
+
+            $now->setTimezone( new DateTimeZone( $serverTZ ) );
+            $seconds = $now->format( 'U' );
+
+            $this->dbgOut("calculateOffsetSecs() - Offset Days: {$days} = When (in seconds): {$seconds}", DEBUG_SEQ_INFO );
+            return $seconds;
         }
 
         /**
@@ -3148,7 +3183,7 @@
                 // Only consider granting access to the post if it is in one of the allowed statuses
                 if ( ! in_array( $curr_post_status, $allowed_post_statuses ) ) {
 
-                    $this->dbgOut("get_accessStatus() - Post {$post_id} with status {$curr_post_status} isn't accessible");
+                    $this->dbgOut("get_accessStatus() - Post {$post_id} with status {$curr_post_status} isn't accessible", DEBUG_SEQ_WARNING );
                     return false;
                 }
 
@@ -3171,7 +3206,7 @@
 
                 if ( $results[0] !== true ) { // First item in results array == true if user has access
 
-                    $this->dbgOut( "get_AccessStatus() - User {$user_id} does NOT have access to this sequence ({$this->sequence_id})" );
+                    $this->dbgOut( "get_AccessStatus() - User {$user_id} does NOT have access to this sequence ({$this->sequence_id})", DEBUG_SEQ_WARNING );
                     return false;
                 }
 
@@ -3283,11 +3318,11 @@
          * @access public
          * @since v2.1
          */
-        public function dbgOut( $msg ) {
+        public function dbgOut( $msg, $lvl = DEBUG_SEQ_INFO ) {
 
             $dbgPath = PMPRO_SEQUENCE_PLUGIN_DIR . 'debug';
 
-            if (PMPRO_SEQUENCE_DEBUG) {
+            if ( PMPRO_SEQUENCE_DEBUG && ($lvl >= DEBUG_SEQ_LOG_LEVEL) ) {
 
                 if (!  file_exists( $dbgPath )) {
                     // Create the debug logging directory
@@ -3377,7 +3412,7 @@
             if ( empty( $delays ) ) {
 
                 $this->setError( __( "Error: No delay value(s) received", "pmprosequence") );
-                $this->dbgOut( "post_save_action() - Error: delay not specified! " );
+                $this->dbgOut( "post_save_action() - Error: delay not specified! ", DEBUG_SEQ_CRITICAL );
                 return;
             }
 
@@ -3402,7 +3437,7 @@
                 if (! $user_can ) {
 
                     $this->setError( __( 'Incorrect privileges for this operation', 'pmprosequence' ) );
-                    $this->dbgOut("post_save_action() - User lacks privileges to edit");
+                    $this->dbgOut("post_save_action() - User lacks privileges to edit", DEBUG_SEQ_WARNING);
                     return;
                 }
 
@@ -3413,7 +3448,7 @@
                 }
                 elseif ( empty( $delays[$key] ) ) {
 
-                    $this->dbgOut("post_save_action() - Not a valid delay value...: " . $delays[$key]);
+                    $this->dbgOut("post_save_action() - Not a valid delay value...: " . $delays[$key], DEBUG_SEQ_CRITICAL);
                     $this->setError( sprintf( __( "You must specify a delay value for the '%s' sequence", 'pmprosequence'), get_the_title( $id ) ) );
                 }
                 else {
@@ -3439,7 +3474,7 @@
             // Check that the function was called correctly. If not, just return
             if ( empty( $post_id ) ) {
 
-                $this->dbgOut('savePostMeta(): No post ID supplied...');
+                $this->dbgOut('savePostMeta(): No post ID supplied...', DEBUG_SEQ_WARNING);
                 return false;
             }
 
@@ -3520,7 +3555,7 @@
 
                                     if ( ! delete_post_meta( $sequence_id, '_sequence_posts' ) ) {
 
-                                        $this->dbgOut( 'ajaxSaveSettings() - Unable to delete the posts in sequence # ' . $sequence_id );
+                                        $this->dbgOut( 'ajaxSaveSettings() - Unable to delete the posts in sequence # ' . $sequence_id, DEBUG_SEQ_CRITICAL );
                                         $this->setError( __('Unable to wipe existing posts', 'pmprosequence') );
                                         $status = false;
                                     }
@@ -3547,7 +3582,7 @@
 
                 $status = false;
                 $this->setError( printf( __('(exception) %s', 'pmprosequence'), $e->getMessage()) );
-                $this->dbgOut(print_r($this->getError(), true));
+                $this->dbgOut(print_r($this->getError(), true), DEBUG_SEQ_CRITICAL);
             }
 
 
@@ -3582,7 +3617,7 @@
 
                 }
                 else {
-                    $this->dbgOut( 'No user ID specified. Ignoring settings!' );
+                    $this->dbgOut( 'No user ID specified. Ignoring settings!', DEBUG_SEQ_WARNING );
 
                     wp_send_json_error( __('Unable to save your settings', 'pmprosequence') );
                 }
@@ -3593,7 +3628,7 @@
                 }
                 else {
 
-                    $this->dbgOut( 'No sequence number specified. Ignoring settings for user' );
+                    $this->dbgOut( 'No sequence number specified. Ignoring settings for user', DEBUG_SEQ_WARNING );
 
                     wp_send_json_error( __('Unable to save your settings', 'pmprosequence') );
                 }
@@ -3642,7 +3677,7 @@
                 }
                 else {
 
-                    $this->dbgOut('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID);
+                    $this->dbgOut('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID, DEBUG_SEQ_CRITICAL);
                     $this->setError( __( 'Unable to save your settings', 'pmprosequence' ) );
                     $status = false;
                 }
@@ -3650,7 +3685,7 @@
             catch (Exception $e) {
                 $this->setError( sprintf( __('Error: %s', 'pmprosequence' ), $e->getMessage() ) );
                 $status = false;
-                $this->dbgOut('optin_save() - Exception error: ' . $e->getMessage());
+                $this->dbgOut('optin_save() - Exception error: ' . $e->getMessage(), DEBUG_SEQ_CRITICAL);
             }
 
             if ($status)
@@ -3706,7 +3741,7 @@
 
                     if (! delete_post_meta($sequence_id, '_sequence_posts'))
                     {
-                        $this->dbgOut('Unable to delete the posts in sequence # ' . $sequence_id);
+                        $this->dbgOut('Unable to delete the posts in sequence # ' . $sequence_id, DEBUG_SEQ_CRITICAL);
                         $this->setError( __('Could not delete posts from this sequence', 'pmprosequence'));
 
                     }
@@ -3969,7 +4004,7 @@
 
             // Verify that we're allowed to update the sequence data
             if ( !current_user_can( 'edit_post', $sequence_id ) ) {
-                $this->dbgOut('save_settings(): User is not allowed to edit this post type');
+                $this->dbgOut('save_settings(): User is not allowed to edit this post type', DEBUG_SEQ_CRITICAL);
                 $this->setError( __('User is not allowed to change settings', 'pmprosequence'));
                 return false;
             }
@@ -4130,7 +4165,7 @@
                 $this->dbgOut( 'save_settings(): Updating the cron job for sequence ' . $this->sequence_id );
 
                 if (! $this->updateNoticeCron() )
-                    $this->dbgOut('save_settings() - Error configuring cron() system for sequence ' . $this->sequence_id);
+                    $this->dbgOut('save_settings() - Error configuring cron() system for sequence ' . $this->sequence_id, DEBUG_SEQ_CRITICAL);
             }
 
             // $this->dbgOut('save_settings() - Settings are now: ' . print_r($settings, true));
@@ -4249,7 +4284,7 @@
             $error = register_post_type('pmpro_sequence',
                 array( 'labels' => apply_filters( 'pmpro-seqence-cpt-labels', $labels ),
                     'public' => true,
-                    /*'menu_icon' => plugins_url('../images/icon-sequence16-sprite.png', dirname(__FILE__)),*/
+                    /*'menu_icon' =>  PMPRO_SEQUENCE_PLUGIN_URL . '/images/icon-sequence16-sprite.png',*/
                     'show_ui' => true,
                     'show_in_menu' => true,
                     'publicly_queryable' => true,
@@ -4268,7 +4303,7 @@
             if (! is_wp_error($error) )
                 return true;
             else {
-                PMProSequence::dbgOut('Error creating post type: ' . $error->get_error_message());
+                PMProSequence::dbgOut('Error creating post type: ' . $error->get_error_message(), DEBUG_SEQ_CRITICAL);
                 wp_die($error->get_error_message());
                 return false;
             }
@@ -4282,14 +4317,14 @@
             <style>
                 /* Admin Menu - 16px */
                 #menu-posts-pmpro_sequence .wp-menu-image {
-                    background: url(<?php echo plugins_url('../images/icon-sequence16-sprite.png', __FILE__); ?>) no-repeat 6px 6px !important;
+                    background: url(<?php echo PMPRO_SEQUENCE_PLUGIN_URL . 'images/icon-sequence16-sprite.png'; ?>) no-repeat 6px 6px !important;
                 }
                 #menu-posts-pmpro_sequence:hover .wp-menu-image, #menu-posts-pmpro_sequence.wp-has-current-submenu .wp-menu-image {
                     background-position: 6px -26px !important;
                 }
                 /* Post Screen - 32px */
                 .icon32-posts-pmpro_sequence {
-                    background: url(<?php echo plugins_url('../images/icon-sequence32.png', __FILE__); ?>) no-repeat left top !important;
+                    background: url(<?php echo PMPRO_SEQUENCE_PLUGIN_URL . 'images/icon-sequence32.png'; ?>) no-repeat left top !important;
                 }
                 @media
                 only screen and (-webkit-min-device-pixel-ratio: 1.5),
@@ -4300,14 +4335,14 @@
 
                     /* Admin Menu - 16px @2x */
                     #menu-posts-pmpro_sequence .wp-menu-image {
-                        background-image: url(<?php echo plugins_url('../images/icon-sequence16-sprite_2x.png', __FILE__); ?>) !important;
+                        background-image: url(<?php echo PMPRO_SEQUENCE_PLUGIN_URL . 'images/icon-sequence16-sprite_2x.png'; ?>) !important;
                         -webkit-background-size: 16px 48px;
                         -moz-background-size: 16px 48px;
                         background-size: 16px 48px;
                     }
                     /* Post Screen - 32px @2x */
                     .icon32-posts-pmpro_sequence {
-                        background-image:url(<?php echo plugins_url('../images/icon-sequence32_2x.png', __FILE__); ?>) !important;
+                        background-image:url(<?php echo PMPRO_SEQUENCE_PLUGIN_URL . 'images/icon-sequence32_2x.png'; ?>) !important;
                         -webkit-background-size: 32px 32px;
                         -moz-background-size: 32px 32px;
                         background-size: 32px 32px;
@@ -4317,32 +4352,33 @@
         <?php
         }
 
-        /**
-         * Add javascript and CSS for end-users.
-         */
-        public function enqueue_user_scripts() {
+        public function register_user_scripts() {
 
-            wp_register_script('pmpro_sequence_script', plugins_url('/../js/pmpro-sequences.js', __FILE__), array('jquery'), null, true);
+            $this->dbgOut("Running register_user_scripts()");
 
-            wp_localize_script('pmpro_sequence_script', 'pmpro_sequence',
+            wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), null, true);
+
+            wp_localize_script('pmpro-sequence-user', 'pmpro_sequence',
                 array(
                     'ajaxurl' => admin_url('admin-ajax.php'),
                 )
             );
 
-            wp_enqueue_style("pmpro_sequence_css", plugins_url('/../css/pmpro_sequences.css', __FILE__ ));
-            wp_enqueue_script('pmpro_sequence_script');
+            wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
+            wp_enqueue_style( "pmpro-sequence" );
         }
 
-        /**
-         * Load all JS & CSS for Admin page
-         */
-        function enqueue_admin_scripts() {
+        public function register_admin_scripts() {
 
-            wp_register_script('pmpro_sequence_admin_script', plugins_url('/../js/pmpro-sequences-admin.js', __FILE__), array('jquery'), null, true);
+            $this->dbgOut("Running register_admin_scripts()");
+            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array('jquery'), null, true);
+            wp_register_script('select2', PMPRO_SEQUENCE_PLUGIN_URL . 'js/select2.js', array( 'jquery' ), '3.1' );
+
+            wp_register_style( 'select2', PMPRO_SEQUENCE_PLUGIN_URL . 'css/select2.css', '', '3.1', 'screen');
+            wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
 
             /* Localize ajax script */
-            wp_localize_script('pmpro_sequence_admin_script', 'pmpro_sequence',
+            wp_localize_script('pmpro-sequence-admin', 'pmpro_sequence',
                 array(
                     'ajaxurl' => admin_url('admin-ajax.php'),
                     'lang' => array(
@@ -4365,11 +4401,37 @@
                 )
             );
 
-            wp_enqueue_style( "pmpro_sequence_css", plugins_url( '/../css/pmpro_sequences.css', __FILE__ ));
-            wp_enqueue_script( 'pmpro_sequence_admin_script' );
+            wp_enqueue_style( "pmpro-sequence" );
+            wp_enqueue_style( "select2" );
+        }
 
-            wp_enqueue_style( 'pmpros-select2', plugins_url('/../css/select2.css', __FILE__), '', '3.1', 'screen');
-            wp_enqueue_script( 'pmpros-select2', plugins_url('/../js/select2.js', __FILE__), array( 'jquery' ), '3.1' );
+        /**
+         * Add javascript and CSS for end-users.
+         */
+        public function enqueue_user_scripts() {
+
+            global $load_pmpro_sequence_script;
+
+            if ( ! $load_pmpro_sequence_script ) {
+                return;
+            }
+
+            wp_print_scripts('pmpro-sequence-user');
+
+        }
+
+        /**
+         * Load all JS & CSS for Admin page
+         */
+        function enqueue_admin_scripts() {
+
+            $this->dbgOut("Starting of loading admin scripts & styles");
+            $this->register_admin_scripts();
+
+            wp_print_scripts( 'select2' );
+            wp_print_scripts( 'pmpro-sequence-admin' );
+
+            $this->dbgOut("End of loading admin scripts & styles");
         }
 
         /**
@@ -4400,7 +4462,9 @@
          */
         public function sequence_links_shortcode( $attributes ) {
 
-            global $current_user;
+            global $current_user, $load_pmpro_sequence_script;
+
+            $load_pmpro_sequence_script = true;
 
             // To avoid errors in development tool
             $highlight = false;
@@ -4477,7 +4541,7 @@
          */
         public function ajaxUnprivError() {
 
-            $this->dbgOut('Unprivileged ajax call attempted');
+            $this->dbgOut('Unprivileged ajax call attempted', DEBUG_SEQ_CRITICAL);
 
             wp_send_json_error( array(
                 'message' => __('You must be logged in to edit PMPro Sequences', 'pmprosequence')
@@ -4496,16 +4560,21 @@
             add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 10, 4);
             add_filter("pmpro_non_member_text_filter", array(&$this, "text_filter"));
             add_filter("pmpro_not_logged_in_text_filter", array(&$this, "text_filter"));
-            add_filter("the_content", array(&$this, "sequence_content"));
+            add_filter("the_content", array(&$this, "display_sequence_content"));
 
             // Add Custom Post Type
             add_action("init", array(&$this, "load_textdomain"), 9);
             add_action("init", array(&$this, "createCPT"), 10);
             add_action("init", array(&$this, "register_shortcodes"), 11);
 
+//            add_action("init", array(&$this, "register_user_scripts") );
+//            add_action("init", array(&$this, "register_admin_scripts") );
+
             // Add CSS & Javascript
+            add_action("init", array(&$this, 'register_user_scripts'));
+            add_action("wp_footer", array( &$this, 'enqueue_user_scripts') );
+
             add_action("admin_enqueue_scripts", array(&$this, 'enqueue_admin_scripts'));
-            add_action("wp_enqueue_scripts", array(&$this, 'enqueue_user_scripts'));
             add_action('admin_head', array(&$this, 'post_type_icon'));
 
             // Load metaboxes for editor(s)
