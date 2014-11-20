@@ -34,6 +34,10 @@ class SeqRecentPostWidget extends WP_Widget {
 
 	public function widget( $args, $instance) {
 
+        global $load_pmpro_sequence_script;
+
+        $load_pmpro_sequence_script = true;
+
 		extract($args);
 
 		$title = apply_filters( 'widget_title', $instance['title'] );
@@ -73,7 +77,7 @@ class SeqRecentPostWidget extends WP_Widget {
 
 		}
 		else {
-			dbgOut("Widget config: No config found");
+			// dbgOut("Widget config: No config found");
 			$default_title = __('Your most recently available content', 'pmprosequence');
 			$title = null;
 			$show_title = 0;
@@ -145,7 +149,7 @@ class SeqRecentPostWidget extends WP_Widget {
 			?><option value="0" <?php echo ( $sequence_id != 0 ? '' : 'selected="selected"' ); ?>></option><?php
 
 			while ( $sequences->have_posts() ) : $sequences->the_post();
-				dbgOut('widget options: value: ' . $id . ' and title: ' . get_the_title()); ?>
+				$sequences->dbgOut('widget options: value: ' . $id . ' and title: ' . get_the_title()); ?>
 				<option	value="<?php echo $id; ?>" <?php echo selected( $id, $sequence_id ); ?> ><?php echo get_the_title(); ?></option><?php
 			endwhile;
 		}
@@ -186,7 +190,7 @@ class SeqRecentPostWidget extends WP_Widget {
 
 			if ( $sequence->hasAccess( $current_user->ID, $seqPostId, false ) ) {
 
-				add_image_size( 'pmpro_seq_widget_size', 85, 45, false );
+				add_image_size( 'pmpro_seq_recentpost_widget_size', 85, 45, false );
 
 				$seq_post = new WP_Query( array(
 					'post_type'           => 'any',
@@ -196,20 +200,20 @@ class SeqRecentPostWidget extends WP_Widget {
 					'ignore_sticky_posts' => true,
 				) );
 
-				dbgOut("Number of posts in {$sequence_id} is {$seq_post->found_posts}");
+				$sequence->dbgOut("Number of posts in {$sequence_id} is {$seq_post->found_posts}");
 
 				if ( $seq_post->found_posts > 0 ) {
 
 					while ( $seq_post->have_posts() ) : $seq_post->the_post();
 
-						$image = ( has_post_thumbnail( $post->ID ) ? get_the_post_thumbnail( $post->ID, 'pmpro_seq_widget_size' ) : '<div class="noThumb"></div>' );
+						$image = ( has_post_thumbnail( $post->ID ) ? get_the_post_thumbnail( $post->ID, 'pmpro_seq_recentpost_widget_size' ) : '<div class="noThumb"></div>' );
 						?>
 					<?php if ($show_title) { ?>
-						<h3 class="widget-title">
+						<h3 id="<?php echo apply_filters('pmpro-seq-recent-post-widget-title-id', 'pmpro-seq-widget-recentpost-title'); ?>" class="widget-title">
 							<span class="widget-inner"><?php echo ( $seqPrefix != '' ? $seqPrefix . ' ' : ' ' ) . get_the_title(); ?></span>
 						</h3>
 					<?php }	else { ?>
-						<h3 class="widget-title"><?php echo $defaultTitle; ?></h3>
+						<h3 id="<?php echo apply_filters('pmpro-seq-recent-post-widget-title-id', 'pmpro-seq-widget-recentpost-title'); ?>" class="widget-title"><?php echo $defaultTitle; ?></h3>
 					<?php } ?>
 						<div id="pmpro-seq-post-body" class="text-widget">
 							<!-- <p class="pmpro-seq-when">Available on <?php $this->print_available_date($sequence, $seqPostId); ?></p> -->
@@ -217,7 +221,7 @@ class SeqRecentPostWidget extends WP_Widget {
 								echo $image;
 								echo $this->limit_excerpt_words( get_the_excerpt(), $excerpt_length ); ?>
 							</div>
-							<div id="pmpro-seq-post-link">
+							<div id="pmpro-seq-post-link" <?php echo apply_filters('pmpro-seq-widget-postlink-class', ''); ?>>
 								<a href="<?php echo get_permalink() ?>" title="<?php the_title(); ?>"><?php _e('Click to read', 'pmprosequence'); ?></a>
 							</div>
 						</div>
@@ -227,8 +231,8 @@ class SeqRecentPostWidget extends WP_Widget {
 				} else {
 					?>
 					<span id="pmpro-seq-post-notfound">
-					<h3 class="widget-title">Configuration Error</h3>
-					<div id="pmpro-seq-post-body" class="text-widget">
+					<h3 id="<?php echo apply_filters('pmpro-seq-recentpost-widget-nopostfound', 'pmpro-seq-widget-recentpost-nopostfound-title'); ?>" class="widget-title">Configuration Error</h3>
+					<div id="pmpro-seq-post-body" class="text-widget <?php echo apply_filters( 'pmpro-seq-widget-recentpost-nopostfound-body', ''); ?>">
 						<?php echo ( $sequence_id != 0 ? get_the_title($sequence_id) . __(': No post(s) found!', 'pmprosequence') : __('No sequence specified', 'pmprosequence') ); ?>
 					</div>
 				</span>
