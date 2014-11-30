@@ -2696,15 +2696,14 @@
             $post_types = apply_filters("pmpro-sequence-managed-post-types", array("post", "page") );
             $status = apply_filters( "pmpro-sequence-can-add-post-status", array('publish', 'draft', 'future', 'pending', 'private') );
 
-            $sql = $wpdb->prepare(
-                "
+            $sql = "
 					SELECT ID, post_title, post_status
 					FROM {$wpdb->posts}
 					WHERE post_status IN ('" .implode( "', '", $status ). "')
 					AND post_type IN ('" .implode( "', '", $post_types ). "')
 					AND post_title <> ''
 					ORDER BY post_title
-				");
+				";
 
             if ( NULL !== ($all_posts = $wpdb->get_results($sql)) )
                 return $all_posts;
@@ -3171,11 +3170,16 @@
          *
          * @return bool -- True if the user has a membership level and the post's delay value is <= the # of days the user has been a member.
          *
-         * @accesss private
+         * @access private
          */
         private function get_accessStatus( $post_id, $user_id, $post_sequences, $isAlert ) {
 
             if ( in_array( $this->sequence_id, $post_sequences ) ) {
+
+                if ( user_can( $user_id, 'publish_posts' ) && ( is_preview() ) ) {
+                    $this->dbgOut("Post #{$post_id} is a preview for {$user_id}");
+                    return true;
+                }
 
                 $allowed_post_statuses = apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) );
                 $curr_post_status = get_post_status( $post_id );
@@ -4199,13 +4203,11 @@
 
             // Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
 
-            $sql = $wpdb->prepare(
-                "
+            $sql = "
 		        SELECT *
 		        FROM {$wpdb->posts}
 		        WHERE post_type = 'pmpro_sequence'
-	    	"
-            );
+	    	";
 
             $seqs = $wpdb->get_results( $sql );
 
