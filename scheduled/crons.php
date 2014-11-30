@@ -41,8 +41,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 			dbgOut('cron() - No Sequence ID specified. Processing for all sequences');
 			$all_sequences = true;
 
-			$sql = $wpdb->prepare(
-				"
+			$sql = "
 					SELECT usrs.*, pgs.page_id AS seq_id
 					FROM {$wpdb->pmpro_memberships_users} AS usrs
 						INNER JOIN {$wpdb->pmpro_memberships_pages} AS pgs
@@ -50,8 +49,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 						INNER JOIN {$wpdb->posts} AS posts
 							ON ( pgs.page_id = posts.ID AND posts.post_type = 'pmpro_sequence')
 					WHERE (usrs.status = 'active')
-				"
-			);
+				";
 		}
 		// Get the specified sequence and its associated users
 		else {
