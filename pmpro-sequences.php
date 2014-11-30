@@ -191,25 +191,21 @@ if ( ! function_exists ('pmpro_sequence_import_all_PMProSeries') ):
         if ( ( __return_true() === $importStatus ) || ( 'all' === $importStatus ) ) {
 
             //Get all of the defined PMPro Series posts to import from this site.
-            $series_sql = $wpdb->prepare(
-                "
+            $series_sql = "
                         SELECT *
                         FROM {$wpdb->posts}
                         WHERE post_type = 'pmpro_series'
-                    "
-            );
+                    ";
         }
         elseif ( is_array( $importStatus ) ) {
 
             //Get the specified list of PMPro Series posts to import
-            $series_sql = $wpdb->prepare(
-                "
+            $series_sql = "
                         SELECT *
                         FROM {$wpdb->posts}
                         WHERE post_type = 'pmpro_series'
                         AND ID IN (" . implode( ",", $importStatus ) . ")
-                    "
-            );
+                    ";
         }
         elseif ( is_numeric( $importStatus ) ) {
 
