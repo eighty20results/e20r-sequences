@@ -128,7 +128,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
                          ', has access: ' . ( $sequence->hasAccess( $s->user_id, $post_id, true ) === true ? 'true' : 'false' ) );
 
                 // dbgOut("cron() - # of posts in sequence (" . count($sequence_posts) . ") vs number of posts we've already notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
-                $sequence->dbgOut( "Evaluating whether to notify {$s->user_id} of availability of post # {$post_id}" );
+                $sequence->dbgOut( "cron() - Do we notify {$s->user_id} of availability of post # {$post_id}?" );
 
                 if  ( ( $post_id !== false ) &&
                       /* ( pmpro_sequence_hasAccess( $s->user_id, $post_id, true ) ) && */
