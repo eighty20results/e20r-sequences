@@ -25,11 +25,14 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
 	add_action('pmpro_sequence_cron_hook', 'pmpro_sequence_check_for_new_content', 10, 2);
 
-	/**
-	 * Cron job - defined per sequence, unless the sequence ID is empty, then we'll run through all sequences
-	 */
-
-	function pmpro_sequence_check_for_new_content( $sequenceId )
+    /**
+     * Cron job - defined per sequence, unless the sequence ID is empty, then we'll run through all sequences
+     *
+     * @param $sequenceId - The Sequence ID (if supplied)
+     *
+     * @throws Exception
+     */
+	function pmpro_sequence_check_for_new_content( $sequenceId = 0 )
 	{
 
 		global $wpdb;
