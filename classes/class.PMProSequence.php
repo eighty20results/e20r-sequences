@@ -3149,7 +3149,7 @@
          *
          * @access private
          */
-        private function email_body( $phpmailer ) {
+        public function email_body( $phpmailer ) {
 
             //	$this->dbgOut('email_body filter() -  Mailer Obj contains: ' . print_r($phpmailer, true));
 
