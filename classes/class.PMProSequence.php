@@ -4243,11 +4243,11 @@
             flush_rewrite_rules();
 
             /* Search for existing pmpro_series posts & import */
+            pmpro_sequence_import_all_PMProSeries();
 
             /* Register the default cron job to send out new content alerts */
             wp_schedule_event( current_time( 'timestamp' ), 'daily', 'pmpro_sequence_cron_hook' );
 
-            pmpro_sequence_import_all_PMProSeries();
         }
 
         /**
@@ -4284,9 +4284,8 @@
             );
 
             $error = register_post_type('pmpro_sequence',
-                array( 'labels' => apply_filters( 'pmpro-seqence-cpt-labels', $labels ),
+                array( 'labels' => apply_filters( 'pmpro-sequence-cpt-labels', $labels ),
                     'public' => true,
-                    /*'menu_icon' =>  PMPRO_SEQUENCE_PLUGIN_URL . '/images/icon-sequence16-sprite.png',*/
                     'show_ui' => true,
                     'show_in_menu' => true,
                     'publicly_queryable' => true,
@@ -4295,10 +4294,10 @@
                     'can_export' => true,
                     'show_in_nav_menus' => true,
                     'rewrite' => array(
-                        'slug' => 'sequence',
+                        'slug' => apply_filters('pmpro-sequence-cpt-slug', 'sequence'),
                         'with_front' => false
                     ),
-                    'has_archive' => 'sequences'
+                    'has_archive' => apply_filters('pmpro-sequence-cpt-archive-slug', 'sequences')
                 )
             );
 
