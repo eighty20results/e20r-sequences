@@ -48,7 +48,9 @@ See ./email/README.txt for information on templates for the email alerts.
 |--------------|:------------:|-------------:|
 | pmpro_sequence_widget_seqid | Override the widget specified sequence ID (post ID for the Sequence CPT) | $instance['sequence_id'] |
 | pmpro-sequence-managed-post-types | The post types the sequence plugin can mange. This is how to add CPTs, for instance | array( "post", "page" ) |
-| pmpro-seqence-cpt-labels | Override the Custom Post Type labels | array() of label definitions |
+| pmpro-sequence-cpt-labels | Override the Custom Post Type labels | array() of label definitions |
+| pmpro-sequence-cpt-slug | Set the Custom Post Type Slug | 'sequence' |
+| pmpro-sequence-cpt-archive-slug | Set the archive slug for the Custom Post Type | 'sequence' |
 | pmpro-sequence-can-add-post-status | Post statuses (i.e. the status of the post) that can be added to a sequence. It may (still) not display unless the 'pmpro-sequence-allowed-post-statuses' filter also matches | array( 'publish', 'draft', 'future', 'pending', 'private') |
 | pmpro-sequence-found-closest-post | The post ID that is the closest to the day of membership for the currently logged in user | Result from PMProSequence::get_closestPost() function |
 | pmpro-sequence-list-sequences-wpquery | Query (WP_Query) to fetch list of sequences from the database. | the WP_Query compatible array of query arguments |

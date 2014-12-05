@@ -62,10 +62,11 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Organized source files a bit more
 * Feature: UI for Selectable alert listings (in addition to selecting the template for the alert message, the admin will be able to set the alert as "one email per new piece of content" or "list of links to new content".
 * Renamed most of the filters (see README.md for details)
+* Enh: Debug uses levels DEBUG_SEQ_[CRITICAL|WARNING|INFO]. INFO is default level.
 * Fix: Moved a number of formerly public functions to private.
 * Fix: Renamed Widget class to seqRecentPostWidget()
 * Fix: Renamed userCan() to userCanEdit()
-
+* Fix: Debug causing the cron job to not complete.
 = 2.0 =
 * Complete refactor of plugin. Moved anything sequence related into the PMProSequence class and cleaned out pmpro-sequence.php file.
 
