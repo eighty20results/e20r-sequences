@@ -2480,6 +2480,8 @@
          */
         public function hasAccess($user_id, $post_id, $isAlert = false)
         {
+            // FixMe: Fix cases where user is member of one sequence but not another.
+
             // Does the current user have a membership level giving them access to everything?
             $all_access_levels = apply_filters("pmproap_all_access_levels", array(), $user_id, $post_id);
 
@@ -4318,14 +4320,14 @@
             <style>
                 /* Admin Menu - 16px */
                 #menu-posts-pmpro_sequence .wp-menu-image {
-                    background: url(<?php echo PMPRO_SEQUENCE_PLUGIN_URL . 'images/icon-sequence16-sprite.png'; ?>) no-repeat 6px 6px !important;
+                    background: url("<?php echo PMPRO_SEQUENCE_PLUGIN_URL; ?>images/icon-sequence16-sprite.png") no-repeat 6px 6px !important;
                 }
                 #menu-posts-pmpro_sequence:hover .wp-menu-image, #menu-posts-pmpro_sequence.wp-has-current-submenu .wp-menu-image {
                     background-position: 6px -26px !important;
                 }
                 /* Post Screen - 32px */
                 .icon32-posts-pmpro_sequence {
-                    background: url(<?php echo PMPRO_SEQUENCE_PLUGIN_URL . 'images/icon-sequence32.png'; ?>) no-repeat left top !important;
+                    background: url("<?php echo PMPRO_SEQUENCE_PLUGIN_URL; ?>images/icon-sequence32.png") no-repeat left top !important;
                 }
                 @media
                 only screen and (-webkit-min-device-pixel-ratio: 1.5),
@@ -4336,14 +4338,14 @@
 
                     /* Admin Menu - 16px @2x */
                     #menu-posts-pmpro_sequence .wp-menu-image {
-                        background-image: url(<?php echo PMPRO_SEQUENCE_PLUGIN_URL . 'images/icon-sequence16-sprite_2x.png'; ?>) !important;
+                        background-image: url("<?php echo PMPRO_SEQUENCE_PLUGIN_URL; ?>images/icon-sequence16-sprite_2x.png") !important;
                         -webkit-background-size: 16px 48px;
                         -moz-background-size: 16px 48px;
                         background-size: 16px 48px;
                     }
                     /* Post Screen - 32px @2x */
                     .icon32-posts-pmpro_sequence {
-                        background-image:url(<?php echo PMPRO_SEQUENCE_PLUGIN_URL . 'images/icon-sequence32_2x.png'; ?>) !important;
+                        background-image:url("<?php echo PMPRO_SEQUENCE_PLUGIN_URL; ?>images/icon-sequence32_2x.png") !important;
                         -webkit-background-size: 32px 32px;
                         -moz-background-size: 32px 32px;
                         background-size: 32px 32px;
