@@ -564,6 +564,25 @@
         }
 
         /**
+         * Returns a list of all defined drip-sequences
+         *
+         * @param $statuses string|array - Post statuses to return posts for.
+         * @return mixed - Array of post objects
+         */
+        public function getAllSequences( $statuses = 'publish' ) {
+
+            $query = array(
+                'post_type' => 'pmpro_sequence',
+                'post_status' => $statuses,
+            );
+
+            wp_reset_query();
+
+            /* Fetch all Sequence posts */
+            return get_posts( $query );
+        }
+
+        /**
          * Loads metabox content for the editor metabox (sidebar)
          *
          * @param int|null $post_id -- ID of Post being edited
@@ -576,15 +595,8 @@
             $this->dbgOut("Parameters for load_sequence_meta() {$post_id} and {$seq_id}.");
             $belongs_to = array();
 
-            $query = array(
-                'post_type' => 'pmpro_sequence',
-                'post_status' => 'any',
-            );
-
-            wp_reset_query();
-
             /* Fetch all Sequence posts */
-            $sequence_list = get_posts( $query );
+            $sequence_list = $this->getAllSequences( 'any' );
 
             $this->dbgOut("Loading Sequences (count: " . count($sequence_list) . ")");
 
