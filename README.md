@@ -67,6 +67,7 @@ See ./email/README.txt for information on templates for the email alerts.
 
 ##TODO
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
+2. Link has_access() to WP role() and membership plugin. 
 
 ##Known Issues
 
