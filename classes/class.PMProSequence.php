@@ -3340,7 +3340,7 @@
 
             $dbgPath = PMPRO_SEQUENCE_PLUGIN_DIR . 'debug';
 
-            if ( PMPRO_SEQUENCE_DEBUG && ($lvl >= DEBUG_SEQ_LOG_LEVEL) ) {
+            if ( ( WP_DEBUG === true ) && ( $lvl >= DEBUG_SEQ_LOG_LEVEL ) ) {
 
                 if (!  file_exists( $dbgPath )) {
                     // Create the debug logging directory
