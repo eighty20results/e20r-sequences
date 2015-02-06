@@ -766,7 +766,7 @@
             $this->dbgOut("Loading post meta boxes");
 
 			// sequence settings box (for posts & pages)
-	        add_meta_box('pmpros-sequence-settings', __('Settings the Sequence', 'pmprosequence'), array( &$this, 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
+	        add_meta_box('pmpros-sequence-settings', __('Settings for this Sequence', 'pmprosequence'), array( &$this, 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
 
 			//sequence meta box
 			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', 'pmprosequence'), array(&$this, "sequenceMetaBox"), 'pmpro_sequence', 'normal', 'high');
@@ -4371,6 +4371,16 @@
 
             $this->dbgOut("Running register_user_scripts()");
 
+            global $e20r_sequence_editor_page;
+            global $post;
+
+            if ( (! has_shortcode( $post->post_content, 'sequence_links') ) ||
+                 ( $this->getCurrentPostType() !== 'pmpro_sequence' ) ) {
+
+                $this->dbgOut("Not a PMPro Sequence post/page so not loading javascript/CSS.");
+                return;
+            }
+
             wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), null, true);
 
             wp_localize_script('pmpro-sequence-user', 'pmpro_sequence',
@@ -4386,10 +4396,11 @@
         public function register_admin_scripts() {
 
             $this->dbgOut("Running register_admin_scripts()");
-            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array('jquery'), null, true);
-            wp_register_script('select2', PMPRO_SEQUENCE_PLUGIN_URL . 'js/select2.js', array( 'jquery' ), '3.1' );
 
-            wp_register_style( 'select2', PMPRO_SEQUENCE_PLUGIN_URL . 'css/select2.css', '', '3.1', 'screen');
+            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array('jquery'), null, true);
+            wp_register_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
+
+            wp_register_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
             wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
 
             /* Localize ajax script */
@@ -4438,13 +4449,19 @@
         /**
          * Load all JS & CSS for Admin page
          */
-        function enqueue_admin_scripts() {
+        function enqueue_admin_scripts( $hook ) {
 
-            $this->dbgOut("Starting of loading admin scripts & styles");
-            $this->register_admin_scripts();
+            if ( $hook == 'edit.php' || $hook == 'post.php' || $hook == 'post-new.php' ) {
 
-            wp_print_scripts( 'select2' );
-            wp_print_scripts( 'pmpro-sequence-admin' );
+                switch( self::getCurrentPostType() ) {
+                    case 'pmpro_sequence':
+
+                        $this->dbgOut("Starting of loading admin scripts & styles");
+                        $this->register_admin_scripts();
+                        break;
+                }
+
+            }
 
             $this->dbgOut("End of loading admin scripts & styles");
         }
@@ -4625,5 +4642,36 @@
             add_action('wp_ajax_nopriv_pmpro_sequence_save_user_optin', array(&$this, 'ajaxUnprivError'));
             add_action('wp_ajax_nopriv_pmpro_save_settings', array(&$this, 'ajaxUnprivError'));
 
+        }
+
+        /**
+         * Returns the current post type of the post being processed by WP
+         *
+         * @return mixed | null - The post type for the current post.
+         */
+        private function getCurrentPostType() {
+
+            global $post, $typenow, $current_screen;
+
+            //we have a post so we can just get the post type from that
+            if ( $post && $post->post_type ) {
+
+                return $post->post_type;
+            } //check the global $typenow - set in admin.php
+            elseif( $typenow ) {
+
+                return $typenow;
+            } //check the global $current_screen object - set in sceen.php
+            elseif( $current_screen && $current_screen->post_type ) {
+
+                return $current_screen->post_type;
+            } //lastly check the post_type querystring
+            elseif( isset( $_REQUEST['post_type'] ) ) {
+
+                return sanitize_key( $_REQUEST['post_type'] );
+            }
+
+            //we do not know the post type!
+            return null;
         }
     }
