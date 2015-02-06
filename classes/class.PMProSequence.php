@@ -3357,7 +3357,8 @@
                 if ( ($fh = fopen($dbgFile, 'a')) !== false ) {
 
                     // Format the debug log message
-                    $dbgMsg = '(' . date('d-m-y H:i:s', current_time( "timestamp" ) ) . ') -- '. $msg;
+                    $tid = sprintf("%08x", abs(crc32($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_TIME'] . $_SERVER['REMOTE_PORT'])));
+                    $dbgMsg = '(' . date('d-m-y H:i:s', current_time( "timestamp" ) ) . "-{$tid}) -- ". $msg;
 
                     // Write it to the debug log file
                     fwrite( $fh, $dbgMsg . "\r\n" );
@@ -3664,7 +3665,7 @@
                     else // Saves existing settings
                         $new = $usrSettings;
 
-                    $this->dbgOut('addUserNoticeOptIn() - Using default setting for user ' . $current_user->ID . ' and sequence ' . $this->sequence_id);
+                    $this->dbgOut('Using default setting for user ' . $current_user->ID . ' and sequence ' . $this->sequence_id);
 
                     $usrSettings = $new;
                 }
@@ -4374,31 +4375,35 @@
             global $e20r_sequence_editor_page;
             global $post;
 
-            if ( (! has_shortcode( $post->post_content, 'sequence_links') ) ||
-                 ( $this->getCurrentPostType() !== 'pmpro_sequence' ) ) {
+            $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
 
-                $this->dbgOut("Not a PMPro Sequence post/page so not loading javascript/CSS.");
-                return;
+            $this->dbgOut("'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
+
+            if ( ( $foundShortcode ) || ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
+
+                $this->dbgOut("Loading client side javascript and CSS");
+
+                wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
+                wp_enqueue_style( "pmpro-sequence" );
+
+                wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), null, true);
+
+                wp_localize_script('pmpro-sequence-user', 'pmpro_sequence',
+                    array(
+                        'ajaxurl' => admin_url('admin-ajax.php'),
+                    )
+                );
             }
 
-            wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), null, true);
-
-            wp_localize_script('pmpro-sequence-user', 'pmpro_sequence',
-                array(
-                    'ajaxurl' => admin_url('admin-ajax.php'),
-                )
-            );
-
-            wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
-            wp_enqueue_style( "pmpro-sequence" );
         }
 
         public function register_admin_scripts() {
 
             $this->dbgOut("Running register_admin_scripts()");
 
-            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array('jquery'), null, true);
             wp_register_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
+            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array( 'jquery', 'select2' ), null, true);
+
 
             wp_register_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
             wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
@@ -4429,6 +4434,9 @@
 
             wp_enqueue_style( "pmpro-sequence" );
             wp_enqueue_style( "select2" );
+
+            wp_enqueue_script( 'select2' );
+            wp_enqueue_script( 'pmpro-sequence-admin' );
         }
 
         /**
@@ -4453,10 +4461,13 @@
 
             if ( $hook == 'edit.php' || $hook == 'post.php' || $hook == 'post-new.php' ) {
 
+                $this->dbgOut("PMProSequence::enqueue_admin_scripts() - On one of the editor pages...");
+
                 switch( self::getCurrentPostType() ) {
+
                     case 'pmpro_sequence':
 
-                        $this->dbgOut("Starting of loading admin scripts & styles");
+                        $this->dbgOut("Loading admin scripts & styles for PMPro Sequence");
                         $this->register_admin_scripts();
                         break;
                 }
@@ -4603,7 +4614,7 @@
 //            add_action("init", array(&$this, "register_admin_scripts") );
 
             // Add CSS & Javascript
-            add_action("init", array(&$this, 'register_user_scripts'));
+            add_action("wp_enqueue_scripts", array(&$this, 'register_user_scripts'));
             add_action("wp_footer", array( &$this, 'enqueue_user_scripts') );
 
             add_action("admin_enqueue_scripts", array(&$this, 'enqueue_admin_scripts'));
