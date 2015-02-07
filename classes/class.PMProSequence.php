@@ -4463,15 +4463,12 @@
 
                 $this->dbgOut("PMProSequence::enqueue_admin_scripts() - On one of the editor pages...");
 
-                switch( self::getCurrentPostType() ) {
-
-                    case 'pmpro_sequence':
+                if ( in_array( self::getCurrentPostType(),
+                    apply_filters( "pmpro_sequence_managed_post_types", array( "post", "page" ) ) ) ) {
 
                         $this->dbgOut("Loading admin scripts & styles for PMPro Sequence");
                         $this->register_admin_scripts();
-                        break;
                 }
-
             }
 
             $this->dbgOut("End of loading admin scripts & styles");
