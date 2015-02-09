@@ -148,9 +148,8 @@ class SeqRecentPostWidget extends WP_Widget {
 		else {
 			?><option value="0" <?php echo ( $sequence_id != 0 ? '' : 'selected="selected"' ); ?>></option><?php
 
-			while ( $sequences->have_posts() ) : $sequences->the_post();
-				$sequences->dbgOut('widget options: value: ' . $id . ' and title: ' . get_the_title()); ?>
-				<option	value="<?php echo $id; ?>" <?php echo selected( $id, $sequence_id ); ?> ><?php echo get_the_title(); ?></option><?php
+			while ( $sequences->have_posts() ) : $sequences->the_post(); ?>
+				<option	value="<?php echo $id; ?>" <?php echo selected( $id, $sequence_id ); ?> ><?php echo the_title_attribute(); ?></option><?php
 			endwhile;
 		}
 
@@ -194,11 +193,12 @@ class SeqRecentPostWidget extends WP_Widget {
 
 				$seq_post = new WP_Query( array(
 					'post_type'           => 'any',
-					'post_status'         => 'publish',
+					'post_status'         => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
 					'posts_per_page'      => 1,
 					'p'                   => $seqPostId,
 					'ignore_sticky_posts' => true,
 				) );
+				$sequence->dbgOut("Posts: " . print_r($seq_post, true));
 
 				$sequence->dbgOut("Number of posts in {$sequence_id} is {$seq_post->found_posts}");
 
