@@ -3152,6 +3152,24 @@
 
             return $template_path;
         }
+
+        /**
+         * Resets the user-specific alert settings for a specified sequence Id.
+         *
+         * TODO: Make it sequence specific - right now it's too broad.
+         *
+         * @param $userId - User's ID
+         * @param $sequenceId - ID of the sequence we're clearning
+         *
+         * @return mixed - false means the reset didn't work.
+         */
+        public function resetUserNotifications( $userId, $sequenceId ) {
+
+            global $wpdb;
+
+            return delete_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence_notices' );
+        }
+
         /**
          * Changes the content of the following placeholders as described:
          *
