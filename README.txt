@@ -3,10 +3,10 @@ Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.2 or later.
-Tested up to: 4.0
-Stable tag: 2.0
+Tested up to: 4.1
+Stable tag: 2.1.2
 
-Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
+Create a drip feed "Sequence" which are groups of posts/pages where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
 == Description ==
 This plugin currently requires Paid Memberships Pro and started life as a complete rip-off of the pmpro_series
@@ -42,11 +42,13 @@ See ./email/README.txt for information on templates for the email alerts.
 
 == TODO ==
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
+2. Decide how and where to utilize the user notification reset
+3. Remove existing select2.js file from source tree
 
 == Known Issues ==
 
 DEBUG
- Currently disabled. To enable set PMPRO_SEQUENCE_DEBUG to 'true' in pmpro-sequences.php.
+ To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
  A fair bit (understatement) of data which will get dumped into debug/sequence_debug_log-[date].txt
  (located the under the plugin directory).
 
@@ -58,6 +60,27 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 == Changelog ==
 
+= 2.1.2 =
+Fix: Empty sequences would not be processed correctly.
+Fix: Error messages would occasionally cause PHP error
+Fix: Typo in filter for post types managed by the PMPro Sequence plugin (pmpro-sequence-managed-post-types)
+Enh: Moved select2() init to .js file
+Enh: Allow complete reset of user notifications. ()
+Enh: Load select2 functionality from CDN (performance & updatability).
+
+= 2.1.1 =
+* Feature: Enable WP_DEBUG to start logging copious amounts of debug info to a dedicated PMPro Sequence debug log (./debug/sequence_debug_log-<date>.txt)
+* Feature: Added 'pmpro-sequence-allowed-post-statuses' filter to widget
+* Feature: Added public getAllSequences() function (API)
+* Fix: Widget would sometimes attempt to list a sequence member that wasn't visible to end users.
+* Fix: Infinite loop in certain situations during configuration.
+* Fix: URL paths for icons
+* Fix: Typo in pmpro-sequence-cpt-labels fitler
+* Enh: Add filter for sequence slug (pmpro-sequence-cpt-slug)
+* Enh: Add filter for archive (pmpro-sequence-cpt-archive-slug)
+* Refactor: import PMPro Series before registering cron hook in plugin activation.
+* Removed: Not using PMPRO_SEQUENCE_DEBUG to enable debug logging to separate file.
+
 = 2.1 - DEV =
 * Organized source files a bit more
 * Feature: UI for Selectable alert listings (in addition to selecting the template for the alert message, the admin will be able to set the alert as "one email per new piece of content" or "list of links to new content".
@@ -67,6 +90,7 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Fix: Renamed Widget class to seqRecentPostWidget()
 * Fix: Renamed userCan() to userCanEdit()
 * Fix: Debug causing the cron job to not complete.
+
 = 2.0 =
 * Complete refactor of plugin. Moved anything sequence related into the PMProSequence class and cleaned out pmpro-sequence.php file.
 
@@ -109,15 +133,14 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Fix: Clean up duplication of sequence post->ID's in the post meta tag '_post_sequences'
 * Fix: createTimestamp() used UTC
 
-= .1 =
-* Initial version of the Sequence plugin including support Sequence specific display & delay type options.
-* Renamed from "Series" to try and avoid namespace collisions and allow people to transition manually to this plugin if desirable.
+= 1.0 =
+* Set version number
+* Feature: Widget containing excerpt from most recently available post in a sequence (by user ID)
 
-= .1.1 =
-* Version bump for fixes added after the initial version (minor typo & namespace bugs)
-
-= .1.2 =
-* Bug Fix: Incorrect page ID supplied when filtering sequence member pages
+= .3 =
+* Translation for Norwegian and English (US)
+* Feature: Trigger sending of email alerts from the admin UI
+* Support "preview" functionality for posts in sequence. (Is this really needed..?)
 
 = .2 =
 * Added support for templated and configurable new content alerts. Includes scheduling (cron) by sequence
@@ -135,11 +158,20 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 * Bugfix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
 * More bug fixes and updates.
 
-= .3 =
-* Translation for Norwegian and English (US)
-* Feature: Trigger sending of email alerts from the admin UI
-* Support "preview" functionality for posts in sequence. (Is this really needed..?)
+= .1.2 =
+* Bug Fix: Incorrect page ID supplied when filtering sequence member pages
 
-= 1.0 =
-* Set version number
-* Feature: Widget containing excerpt from most recently available post in a sequence (by user ID)
+= .1.1 =
+* Version bump for fixes added after the initial version (minor typo & namespace bugs)
+
+= .1 =
+* Initial version of the Sequence plugin including support Sequence specific display & delay type options.
+* Renamed from "Series" to try and avoid namespace collisions and allow people to transition manually to this plugin if desirable.
+
+
+
+
+
+
+
+
