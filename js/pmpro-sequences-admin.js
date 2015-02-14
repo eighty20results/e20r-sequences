@@ -26,6 +26,8 @@ jQuery.noConflict();
 jQuery(document).ready(function(){
     ( function($){
 
+        jQuery('#pmpro_sequencepost').select2();
+
         jQuery('div#pmpro-seq-error').hide();
 
         /* Controls that are reused (optimization) */
