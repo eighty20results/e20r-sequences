@@ -25,7 +25,7 @@
 	    public $options;
 	    public $sequence_id = 0;
 		private $id;
-		private $posts; // List of posts
+		private $posts = array(); // List of posts
 		private $post; // Individual post
         private $refreshed;
 		public $error = null;
@@ -244,14 +244,19 @@
             if ( ( $force === true ) || empty( $this->posts ) ||
                 ( ( $this->refreshed + 5*60 )  <= current_time( 'timestamp', true )  ) ) {
 
-                $this->posts = null;
+                $this->posts = array();
                 $this->dbgOut("getPosts() - Refreshing post list for sequence # {$this->sequence_id}");
 
                 $this->refreshed = current_time('timestamp', true);
-                $this->posts = get_post_meta( $this->sequence_id, "_sequence_posts", true );
+                $tmp = get_post_meta( $this->sequence_id, "_sequence_posts", true );
+                $this->posts = ( $tmp ? $tmp : array() ); // Fixed issue where empty sequences would generate error messages.
 
-                $this->dbgOut( "getPosts() - Sorting the current post list");
-                usort( $this->posts, array( &$this, "sortByDelay" ) );
+
+                if ( ! empty( $this->posts ) ) {
+
+                    $this->dbgOut( "getPosts() - Sorting the current post list" );
+                    usort( $this->posts, array( &$this, "sortByDelay" ) );
+                }
             }
 
             return $this->posts;
@@ -519,7 +524,7 @@
         /**
          * Configure metabox for the normal Post/Page editor
          */
-        public function loadPostMetabox( $object, $box ) {
+        public function loadPostMetabox( $object = null, $box = null ) {
 
             $this->dbgOut("Post metaboxes being configured");
             global $load_pmpro_sequence_admin_script;
@@ -836,16 +841,14 @@
 			<?php
 			$count = 1;
 
-			if(empty($this->posts))
-			{
+			if ( empty($this->posts ) ) {
 	            $this->dbgOut('No Posts found?');
 
 				$this->setError( __('No posts/pages found for this sequence', 'pmprosequence') );
 			?>
 			<?php
 			}
-			else
-			{
+			else {
 				foreach($this->posts as $post)
 				{
 				?>
@@ -904,12 +907,8 @@
 								}
 							?>
 							</select>
-							<style>
-								.select2-container {width: 100%;}
-							</style>
-							<script>
-								jQuery('#pmpro_sequencepost').select2();
-							</script>
+							<style> .select2-container {width: 100%;} </style>
+                            <!-- <script type="text/javascript"> jQuery('#pmpro_sequencepost').select2();</script> -->
 							</td>
 							<td>
 								<input id="pmpro_sequencedelay" name="pmpro_sequencedelay" type="text" value="" size="7" />
@@ -932,7 +931,7 @@
 
 			return array(
 				'success' => ( is_null( $this->getError() ) ? true : false ),
-				'message' => ( is_null( $this->getError() ) ? null : join( ', ', $this->getError() ) ),
+				'message' => ( is_null( $this->getError() ) ? null : ( is_array( $this->getError() ) ? join( ', ', $this->getError() ) : $this->getError() ) ),
 				'html' => $html,
 			);
 		}
