@@ -65,7 +65,7 @@ Fix: Empty sequences would not be processed correctly.
 Fix: Error messages would occasionally cause PHP error
 Fix: Typo in filter for post types managed by the PMPro Sequence plugin (pmpro-sequence-managed-post-types)
 Enh: Moved select2() init to .js file
-Enh: Allow complete reset of user notifications. ()
+Enh: Allow complete reset of user notifications.
 Enh: Load select2 functionality from CDN (performance & updatability).
 
 = 2.1.1 =
