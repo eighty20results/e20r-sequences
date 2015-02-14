@@ -83,7 +83,7 @@ See ./email/README.txt for information on templates for the email alerts.
 ##Known Issues
 
 ###DEBUG
- Linked to WP_DEBUG setting in wp-config.php.
+ To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
  A fair bit (understatement) of data which will get dumped into debug/sequence_debug_log-[date].txt
  (located the under the plugin directory).
 
