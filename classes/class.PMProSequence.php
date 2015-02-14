@@ -49,7 +49,7 @@
                 }
             }
 
-            $this->managed_types = apply_filters("pmpro_sequence_managed_post_types", array("post", "page") );
+            $this->managed_types = apply_filters("pmpro-sequence-managed-post-types", array("post", "page") );
 		}
 
         /**
@@ -4480,8 +4480,7 @@
 
                 $this->dbgOut("PMProSequence::enqueue_admin_scripts() - On one of the editor pages...");
 
-                if ( in_array( self::getCurrentPostType(),
-                    apply_filters( "pmpro_sequence_managed_post_types", array( "post", "page" ) ) ) ) {
+                if ( in_array( self::getCurrentPostType(), $this->managed_types ) ) {
 
                         $this->dbgOut("Loading admin scripts & styles for PMPro Sequence");
                         $this->register_admin_scripts();
