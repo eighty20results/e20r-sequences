@@ -46,7 +46,18 @@ See ./email/README.txt for information on templates for the email alerts.
 
 | Filter | Description | Default value |
 |--------------|:------------:|-------------:|
-| pmpro_sequence_widget_seqid | Override the widget specified sequence ID (post ID for the Sequence CPT) | $instance['sequence_id'] |
+| pmpro-sequence-widget-prefix | Set prefix for the widget | $instance['prefix'] |
+| pmpro-sequence-widget-default-post-title | Set the default title for the member post | $instance['default_post_title'] |
+| pmpro-sequence-widget-before-widget-title | Insert text before the widget title | $instance['before_title'] |
+| pmpro-sequence-widget-after-widget-title | Insert text after the widget title | $instance['after_title' |
+| pmpro-sequence-before-widget | Insert stuff before the widget gets rendered | $instance['before_widget'] |
+| pmpro-sequence-after-widget | Insert stuff after the widget gets rendered | $instance['after_widget'] |
+| pmpro-sequence-widget-seqid | Override the widget specified sequence ID (post ID for the Sequence CPT) | $instance['sequence_id'] |
+| pmpro-seq-recent-post-widget-title-id | Set the element ID for the widget title | pmpro-seq-widget-recentpost-title |
+| pmpro-seq-widget-postlink-class | Set a class for the link to the post in the widget | empty |
+| pmpro-seq-recentpost-widget-nopostfound | Set ID for the <h3> element if a post isn't found | pmpro-seq-widget-recentpost-nopostfound-title |
+| pmpro-seq-widget-recentpost-nopostfound-body | Set the class for the error message if no post is found | empty |
+
 | pmpro-sequence-managed-post-types | The post types the sequence plugin can mange. This is how to add CPTs, for instance | array( "post", "page" ) |
 | pmpro-sequence-cpt-labels | Override the Custom Post Type labels | array() of label definitions |
 | pmpro-sequence-cpt-slug | Set the Custom Post Type Slug | 'sequence' |
