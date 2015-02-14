@@ -57,7 +57,6 @@ See ./email/README.txt for information on templates for the email alerts.
 | pmpro-seq-widget-postlink-class | Set a class for the link to the post in the widget | empty |
 | pmpro-seq-recentpost-widget-nopostfound | Set ID for the <h3> element if a post isn't found | pmpro-seq-widget-recentpost-nopostfound-title |
 | pmpro-seq-widget-recentpost-nopostfound-body | Set the class for the error message if no post is found | empty |
-
 | pmpro-sequence-managed-post-types | The post types the sequence plugin can mange. This is how to add CPTs, for instance | array( "post", "page" ) |
 | pmpro-sequence-cpt-labels | Override the Custom Post Type labels | array() of label definitions |
 | pmpro-sequence-cpt-slug | Set the Custom Post Type Slug | 'sequence' |
