@@ -41,17 +41,17 @@ class SeqRecentPostWidget extends WP_Widget {
 		extract($args);
 
 		$title = apply_filters( 'widget_title', $instance['title'] );
-		$seqPrefix = apply_filters( 'pmpro_sequence_widget_prefix', $instance['prefix']) ;
-		$sequence_id = apply_filters( 'pmpro_sequence_widget_seqid', $instance['sequence_id'] );
+		$seqPrefix = apply_filters( 'pmpro-sequence-widget-prefix', $instance['prefix']) ;
+		$sequence_id = apply_filters( 'pmpro-sequence-widget-seqid', $instance['sequence_id'] );
 
-        $defaultTitle = apply_filters('pmpro_sequence_widget_default_post_title', $instance['default_post_title']);
-        $before_title = apply_filters('pmpro_sequence_widget_before_widget_title', $instance['before_title'] );
-        $after_title = apply_filters('pmpro_sequence_widget_before_widget_title', $instance['after_title'] );
+        $defaultTitle = apply_filters('pmpro-sequence-widget-default-post-title', $instance['default_post_title']);
+        $before_title = apply_filters('pmpro-sequence-widget-before-widget-title', $instance['before_title'] );
+        $after_title = apply_filters('pmpro-sequence-widget-after-widget-title', $instance['after_title'] );
 
 		$wordcount = $instance['wordcount'];
 		$show_title = ($instance['show_title'] == 1 ) ? true : false;
-        $before_widget = apply_filters( 'pmpro_sequence_before_widget', $instance['before_widget'] );
-        $after_widget = apply_filters( 'pmpro_sequence_after_widget', $instance['after_widget'] );
+        $before_widget = apply_filters( 'pmpro-sequence-before-widget', $instance['before_widget'] );
+        $after_widget = apply_filters( 'pmpro-sequence-after-widget', $instance['after_widget'] );
 
         echo $before_widget;
 
