@@ -60,6 +60,9 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 == Changelog ==
 
+= 2.1.3 =
+Fix: Renamed all of the widget filters
+
 = 2.1.2 =
 Fix: Empty sequences would not be processed correctly.
 Fix: Error messages would occasionally cause PHP error
