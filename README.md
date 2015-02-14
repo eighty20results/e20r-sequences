@@ -96,14 +96,29 @@ Please report it in the issues section of GitHub and we'll fix it as soon as we 
 
 ##Changelog
 
-###2.1 - Dev
-* Organized source files a bit more
-* Feature: UI for Selectable alert listings (in addition to selecting the template for the alert message, the admin will be able to set the alert as "one email per new piece of content" or "list of links to new content".
-* Renamed most of the filters (see README.md for details)
-* Fix: Moved a number of formerly public functions to private.
-* Fix: Renamed Widget class to seqRecentPostWidget()
-* Fix: Renamed userCan() to userCanEdit()
-* Enh: Linked dbgOut() to WP_DEBUG variable.
+###2.1.3
+* Fix: Renamed all of the widget filters
+
+###2.1.2
+* Fix: Empty sequences would not be processed correctly.
+* Fix: Error messages would occasionally cause PHP error
+* Fix: Typo in filter for post types managed by the PMPro Sequence plugin (pmpro-sequence-managed-post-types)
+* Enh: Moved select2() init to .js file
+* Enh: Allow complete reset of user notifications.
+* Enh: Load select2 functionality from CDN (performance & updatability).
+
+###2.1.1
+* Feature: Enable WP_DEBUG to start logging copious amounts of debug info to a dedicated PMPro Sequence debug log (./debug/sequence_debug_log-<date>.txt)
+* Feature: Added 'pmpro-sequence-allowed-post-statuses' filter to widget
+* Feature: Added public getAllSequences() function (API)
+* Fix: Widget would sometimes attempt to list a sequence member that wasn't visible to end users.
+* Fix: Infinite loop in certain situations during configuration.
+* Fix: URL paths for icons
+* Fix: Typo in pmpro-sequence-cpt-labels fitler
+* Enh: Add filter for sequence slug (pmpro-sequence-cpt-slug)
+* Enh: Add filter for archive (pmpro-sequence-cpt-archive-slug)
+* Refactor: import PMPro Series before registering cron hook in plugin activation.
+* Removed: Not using PMPRO_SEQUENCE_DEBUG to enable debug logging to separate file.
 
 ###2.0
 * Complete refactor of plugin. Moved anything sequence related into the PMProSequence class and cleaned out pmpro-sequence.php file.
