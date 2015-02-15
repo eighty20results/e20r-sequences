@@ -1349,7 +1349,14 @@
          * @return string -- The filtered content
          */
         public function display_sequence_content( $content ) {
+
             global $post;
+            global $pagenow;
+
+            if ( ( $pagenow == 'post-new.php' || $pagenow == 'edit.php' || $pagenow == 'post.php' ) ) {
+
+                return $content;
+            }
 
             if ( ( $post->post_type == "pmpro_sequence" ) && pmpro_has_membership_access() )
             {
@@ -1357,7 +1364,7 @@
 
                 $load_pmpro_sequence_script = true;
 
-                $this->dbgOut( "PMPRO Sequence display {$post->ID} - " . get_the_title( $post->ID ) );
+                $this->dbgOut( "PMPRO Sequence display {$post->ID} - " . get_the_title( $post->ID ) . " : " . $this->whoCalledMe() . ' and page base: ' . $pagenow );
 
                 $this->init( $post->ID );
 
@@ -1382,7 +1389,13 @@
          */
         public function text_filter($text) {
 
-            global $current_user, $post;
+            global $current_user, $post, $pagenow;
+
+            if ( ( $pagenow == 'post-new.php' || $pagenow == 'edit.php' || $pagenow == 'post.php' ) ) {
+
+                return $text;
+            }
+
 
             if ( ! empty( $current_user ) && ( ! empty( $post ) ) ) {
 
@@ -2804,7 +2817,19 @@
                 }
             }
 
-            return $postArr[ array_search( min( $distances ) , $distances ) ];
+            // Verify that we have one or more than one element
+            if ( count( $distances ) > 1 ) {
+
+                $retVal = $postArr[ array_search( min( $distances ) , $distances ) ];
+            }
+            elseif ( count( $distances ) == 1 ) {
+                $retVal = $postArr[$key];
+            }
+            else {
+                $retval = null;
+            }
+
+            return  $retVal;
 
         }
 
@@ -4478,13 +4503,8 @@
 
             if ( $hook == 'edit.php' || $hook == 'post.php' || $hook == 'post-new.php' ) {
 
-                $this->dbgOut("PMProSequence::enqueue_admin_scripts() - On one of the editor pages...");
-
-                if ( in_array( self::getCurrentPostType(), $this->managed_types ) ) {
-
-                        $this->dbgOut("Loading admin scripts & styles for PMPro Sequence");
-                        $this->register_admin_scripts();
-                }
+                $this->dbgOut("Loading admin scripts & styles for PMPro Sequence");
+                $this->register_admin_scripts();
             }
 
             $this->dbgOut("End of loading admin scripts & styles");
