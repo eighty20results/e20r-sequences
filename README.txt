@@ -60,16 +60,22 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 == Changelog ==
 
+= 2.1.4 =
+* Fix: Calculating "most recent post" with only one post defined in the sequence would generate error message.
+* Fix: Font size for settings metabox
+* Fix: Would not consistently load admin specific JavaScript.
+* Fix: Displays membership length in wp-admin.
+
 = 2.1.3 =
-Fix: Renamed all of the widget filters
+* Fix: Renamed all of the widget filters
 
 = 2.1.2 =
-Fix: Empty sequences would not be processed correctly.
-Fix: Error messages would occasionally cause PHP error
-Fix: Typo in filter for post types managed by the PMPro Sequence plugin (pmpro-sequence-managed-post-types)
-Enh: Moved select2() init to .js file
-Enh: Allow complete reset of user notifications.
-Enh: Load select2 functionality from CDN (performance & updatability).
+* Fix: Empty sequences would not be processed correctly.
+* Fix: Error messages would occasionally cause PHP error
+* Fix: Typo in filter for post types managed by the PMPro Sequence plugin (pmpro-sequence-managed-post-types)
+* Enh: Moved select2() init to .js file
+* Enh: Allow complete reset of user notifications.
+* Enh: Load select2 functionality from CDN (performance & updatability).
 
 = 2.1.1 =
 * Feature: Enable WP_DEBUG to start logging copious amounts of debug info to a dedicated PMPro Sequence debug log (./debug/sequence_debug_log-<date>.txt)
