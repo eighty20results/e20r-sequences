@@ -30,6 +30,9 @@
 .pmpro_sequence_item-available {display: inline-block; float: right; width: auto; }
 .pmpro_sequence_item-unavailable {display: inline-block; float: right; width: auto; font-style: italic; font-size: .9em; text-align: center;  }
 
+#pmpro_sequence_meta td {
+    font-size: 0.8em !important;
+}
 .pmpro-seq-centered {
     margin-top: 30px;
     text-align: center;
