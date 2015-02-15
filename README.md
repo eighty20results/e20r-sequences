@@ -96,6 +96,12 @@ Please report it in the issues section of GitHub and we'll fix it as soon as we 
 
 ##Changelog
 
+###2.1.4
+* Fix: Calculating "most recent post" with only one post defined in the sequence would generate error message.
+* Fix: Font size for settings metabox
+* Fix: Would not consistently load admin specific JavaScript.
+* Fix: Displays membership length in wp-admin.
+
 ###2.1.3
 * Fix: Renamed all of the widget filters
 
