@@ -18,8 +18,8 @@
 
  */
 
-// Save the value of the User sequence notification optin for the current user
-// var userNotice = jQuery('#hidden_pmpro_seq_useroptin').val();
+// Set no-conflict mode for JQuery.
+jQuery.noConflict();
 
 /**
  *

@@ -157,9 +157,16 @@
 	        // Check that we're being called in context of an actual Sequence 'edit' operation
 	        $this->dbgOut('fetchOptions(): Loading settings from DB for (' . $this->sequence_id . ') "' . get_the_title($this->sequence_id) . '"');
 
-	        $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', false);
-	        $loaded_options = $settings[0];
+	        $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', true);
+            $this->dbgOut("fetchOptions() - Settings are now: " . print_r( $settings, true ) );
 
+            // Fix: Offset error when creating a brand new sequence for the first time.
+            if ( empty( $settings ) ) {
+
+                $settings = $this->defaultOptions();
+            }
+
+            $loaded_options = $settings;
             $default_options = $this->defaultOptions();
 
             $this->options = (object) array_replace( (array)$default_options, (array)$loaded_options );
@@ -1523,8 +1530,10 @@
          */
         public function createSequenceList( $highlight = false, $pagesize = 0, $button = false, $title = null, $scrollbox = false ) {
 
-            global $wpdb, $current_user, $id;
+            global $wpdb, $current_user, $id, $post;
             $html = '';
+
+            $savePost = $post;
 
             // Set a default page size.
             if ($pagesize == 0) {
@@ -1580,7 +1589,7 @@
                 'orderby'             => 'post__in'
             );
 
-            $seqEntries = new WP_Query( apply_filters( 'pmpro-sequence-list-sequences-wpquery', $query_args ) );
+            $seqList = new WP_Query( apply_filters( 'pmpro-sequence-list-sequences-wpquery', $query_args ) );
 
             $listed_postCnt   = 0;
             // $noPostsDisplayed = true;
@@ -1598,7 +1607,7 @@
 
             <!-- List of sequence entries (paginated as needed) -->
             <?php
-            if ( $seqEntries->post_count == 0 ) {
+            if ( $seqList->post_count == 0 ) {
 
                 echo '<span style="text-align: center;">' . __( "There is <em>no content available</em> for you at this time. Please check back later.", "pmprosequence" ) . "</span>";
 
@@ -1612,7 +1621,7 @@
                 <?php };
 
                 // Loop through all of the posts in the sequence
-                while ( $seqEntries->have_posts() ) : $seqEntries->the_post();
+                while ( $seqList->have_posts() ) : $seqList->the_post();
 
                     // Should the current post be highlighted?
                     if ( ( $this->isPastDelay( $memberDayCount, $this->posts[ $this->getPostKey( $id ) ]->delay ) ) ) {
@@ -1711,11 +1720,13 @@
                 </div>
                 <div class="clear"></div>
                 <?php
-                echo apply_filters( 'pmpro-sequence-list-pagination-code', $this->post_paging_nav( $seqEntries->max_num_pages ) );
+                echo apply_filters( 'pmpro-sequence-list-pagination-code', $this->post_paging_nav( $seqList->max_num_pages ) );
                 wp_reset_postdata();
             }
             ?>
             </div><?php
+
+            $post = $savePost;
 
             $html .= ob_get_contents();
             ob_end_clean();
@@ -2209,15 +2220,18 @@
             // Load all posts in this sequence
             $this->getPosts();
 
+            $this->dbgOut("get_closestPost() - Found " . count($this->posts) . ".");
+
             // Find the post ID in the postList array that has the delay closest to the membershipday.
             $closest = $this->get_closestByDelay( $membershipDay, $this->posts, $user_id );
 
-	        $this->dbgOut("get_closestPost() - For user {$user_id} on day {$membershipDay}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})");
+            if ( isset($closest->id) ) {
 
-            if ( !empty($closest->id) )
+                $this->dbgOut("get_closestPost() - For user {$user_id} on day {$membershipDay}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})");
                 return $closest->id;
+            }
 
-			return false;
+			return 0;
 		}
 
         /**
@@ -2826,10 +2840,10 @@
                 $retVal = $postArr[$key];
             }
             else {
-                $retval = null;
+                $retVal = null;
             }
 
-            return  $retVal;
+            return $retVal;
 
         }
 
@@ -3546,7 +3560,7 @@
                 return $post_id;
             }
 
-            if ( $post->post_type != 'pmpro_sequence' ) {
+            if ( ! isset( $post->post_type) || ( $post->post_type != 'pmpro_sequence' ) ) {
                 return $post_id;
             }
 
@@ -4296,6 +4310,16 @@
          */
         public function activation()
         {
+            if ( ! function_exists( 'pmpro_getOption' ) ) {
+
+                $errorMessage = "The PMPro Sequence plugin requires the ";
+                $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='Opens in a new window/tab.'>";
+                $errorMessage .= "Paid Memberships Pro</a> membership plugin.<br/><br/>";
+                $errorMessage .= "Please install Paid Memberships Pro before attempting to activate this PMPro Sequence plugin.<br/><br/>";
+                $errorMessage .= "Click the 'Back' button in your browser to return to the Plugin management page.";
+                wp_die($errorMessage);
+            }
+
             PMProSequence::createCPT();
             flush_rewrite_rules();
 

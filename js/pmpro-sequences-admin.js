@@ -20,8 +20,6 @@
 
  */
 
-//console.log('Loading pmpro-sequences-admin.js script');
-
 jQuery.noConflict();
 jQuery(document).ready(function(){
     ( function($){
