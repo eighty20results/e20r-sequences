@@ -4361,6 +4361,8 @@
                 return false;
             }
 
+            $defaultSlug = get_option( 'pmpro_sequence_slug', 'sequence' );
+
             $labels =  array(
                 'name' => __( 'Sequences', 'pmprosequence'  ),
                 'singular_name' => __( 'Sequence', 'pmprosequence' ),
@@ -4388,7 +4390,7 @@
                     'can_export' => true,
                     'show_in_nav_menus' => true,
                     'rewrite' => array(
-                        'slug' => apply_filters('pmpro-sequence-cpt-slug', 'sequence'),
+                        'slug' => apply_filters('pmpro-sequence-cpt-slug', $defaultSlug),
                         'with_front' => false
                     ),
                     'has_archive' => apply_filters('pmpro-sequence-cpt-archive-slug', 'sequences')
