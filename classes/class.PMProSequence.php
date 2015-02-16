@@ -1299,16 +1299,16 @@
 	                <tr id="pmpro_sequence_foreshadow_2" style="display: none;" id="pmpro_sequence_previewWindowOpt">
 	                    <td colspan="2">
 	                        <select name="pmpro_sequence_foreshadow" id="pmpro_sequence_previewwindow">
-	                            <option value="0" <?php selected( intval($this->options->previewWindow), '0'); ?> >All</option>
-	                            <option value="1" <?php selected( intval($this->options->previewWindow), '1'); ?> >1 day</option>
-	                            <option value="2" <?php selected( intval($this->options->previewWindow), '2'); ?> >2 days</option>
-	                            <option value="3" <?php selected( intval($this->options->previewWindow), '3'); ?> >3 days</option>
-	                            <option value="4" <?php selected( intval($this->options->previewWindow), '4'); ?> >4 days</option>
-	                            <option value="5" <?php selected( intval($this->options->previewWindow), '5'); ?> >5 days</option>
-	                            <option value="6" <?php selected( intval($this->options->previewWindow), '6'); ?> >1 week</option>
-	                            <option value="7" <?php selected( intval($this->options->previewWindow), '7'); ?> >2 weeks</option>
-	                            <option value="8" <?php selected( intval($this->options->previewWindow), '8'); ?> >3 weeks</option>
-	                            <option value="9" <?php selected( intval($this->options->previewWindow), '8'); ?> >1 month</option>
+	                            <option value="0" <?php //selected( intval($this->options->previewWindow), '0'); ?> >All</option>
+	                            <option value="1" <?php //selected( intval($this->options->previewWindow), '1'); ?> >1 day</option>
+	                            <option value="2" <?php //selected( intval($this->options->previewWindow), '2'); ?> >2 days</option>
+	                            <option value="3" <?php //selected( intval($this->options->previewWindow), '3'); ?> >3 days</option>
+	                            <option value="4" <?php //selected( intval($this->options->previewWindow), '4'); ?> >4 days</option>
+	                            <option value="5" <?php //selected( intval($this->options->previewWindow), '5'); ?> >5 days</option>
+	                            <option value="6" <?php //selected( intval($this->options->previewWindow), '6'); ?> >1 week</option>
+	                            <option value="7" <?php //selected( intval($this->options->previewWindow), '7'); ?> >2 weeks</option>
+	                            <option value="8" <?php //selected( intval($this->options->previewWindow), '8'); ?> >3 weeks</option>
+	                            <option value="9" <?php //selected( intval($this->options->previewWindow), '8'); ?> >1 month</option>
 	                        </select>
 	                    </td>
 	                </tr>
