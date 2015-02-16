@@ -432,7 +432,9 @@
 
                         // Bug Fix: Never checked if the Post/Page ID was already listed in the sequence.
                         $tmp = array_count_values( $post_sequence );
-                        $cnt = $tmp[ $this->sequence_id ];
+
+	                    // Bug Fix: Off by one error
+                        $cnt = $tmp[ ($this->sequence_id - 1) ];
 
                         if ( $cnt == 0 ) {
 
