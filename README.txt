@@ -60,6 +60,17 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 == Changelog ==
 
+= 2.1.5 =
+* Fix: Would sometimes fail to load default settings for new sequences
+* Fix: Correctly manage global $post data while processing shortcode.
+* Fix: Returned incorrect data for empty post lists when calculating the most recent post for the member.
+* Fix: Typo in return value when finding most recent post for certain members.
+* Fix: Incorrect handling of post_type variable while saving settings.
+* Fix: Would let user activate plugin even if Paid Memberships Pro was not present on system
+* Fix: noConflict() mode for pmpro-sequences.js
+* Nit: Remove commented out code from pmpro-sequences-admin.js
+* Nit: Remove inline php for disabled settings
+
 = 2.1.4 =
 * Fix: Calculating "most recent post" with only one post defined in the sequence would generate error message.
 * Fix: Font size for settings metabox
