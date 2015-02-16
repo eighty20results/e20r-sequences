@@ -3228,11 +3228,15 @@
          */
         public function email_body( $phpmailer ) {
 
-            //	$this->dbgOut('email_body filter() -  Mailer Obj contains: ' . print_r($phpmailer, true));
+            $this->dbgOut('email_body() action: Update body of message if it is sent by PMPro Sequence');
 
-            $phpmailer->Body = apply_filters( 'pmpro-sequence-alert-message-excerpt-intro', str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body ) );
-            // $phpmailer->Body = str_replace( "!!today!!", date($phpmailer->dateformat, current_time('timestamp')), $phpmailer->Body );
-            $phpmailer->Body = apply_filters( 'pmpro-sequence-alert-message-title', str_replace( "!!ptitle!!", $phpmailer->ptitle , $phpmailer->Body ) );
+            if ( isset( $phpmailer->excerpt_intro ) ) {
+                $phpmailer->Body = apply_filters( 'pmpro-sequence-alert-message-excerpt-intro', str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body ) );
+            }
+
+            if ( isset( $phpmailer->ptitle ) ) {
+                $phpmailer->Body = apply_filters( 'pmpro-sequence-alert-message-title', str_replace( "!!ptitle!!", $phpmailer->ptitle, $phpmailer->Body ) );
+            }
         }
 
         /**
