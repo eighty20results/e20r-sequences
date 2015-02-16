@@ -1842,6 +1842,9 @@
                 $this->dbgOut("setError(): {$msg}");
                 add_settings_error( 'pmpro_seq_errors', '', $msg, 'error' );
             }
+            else{
+
+            }
         }
 
         /**
@@ -2139,7 +2142,7 @@
 
             $delay = ( is_numeric( $delay ) ? intval( $delay ) : esc_attr( $delay ) );
 
-            if ( ! empty( $delay ) ) {
+            if ( ($delay !== 0) && ( ! empty( $delay ) ) ) {
 
                 // Check that the provided delay format matches the configured value.
                 if ( $this->isValidDelay( $delay ) ) {
@@ -2154,8 +2157,7 @@
 
                         $this->dbgOut( 'validatePOSTDelay(): Delay specified as the number of days' );
                     }
-                }
-                else {
+                } else {
                     // Ignore this post & return error message to display for the user/admin
                     // NOTE: Format of date is not translatable
                     $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __( 'date: YYYY-MM-DD', 'pmprosequence' ) : __( 'number: Days since membership started', 'pmprosequence' );
@@ -2163,8 +2165,13 @@
                     $this->dbgOut( 'validatePOSTDelay(): Invalid delay value specified, not adding the post. Delay is: ' . $delay );
                     $this->setError( sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', 'pmprosequence' ), $delay, $expectedDelay ) );
 
-                    $delay       = false;
+                    $delay = false;
                 }
+            } elseif ($delay === 0) {
+
+                // Special case:
+                return $delay;
+
             } else {
 
                 $this->dbgOut( 'validatePOSTDelay(): Delay value was not specified. Not adding the post. Delay is: ' . esc_attr( $delay ) );
@@ -3443,6 +3450,8 @@
             }
 
             if ( ! empty( $this->error ) ) {
+
+                $this->dbgOut("Error info found: " . print_r( $this->error, true));
                 return $this->error;
             }
             else {
@@ -4009,7 +4018,7 @@
 
                         $this->setError( sprintf( __( 'Did not specify a post/page to add', 'pmprosequence' ) ) );
                     }
-                    elseif ( empty( $delay ) ) {
+                    elseif ( ( $delay !== 0 ) && empty( $delay ) ) {
 
                         $this->setError( __( 'No delay has been specified', 'pmprosequence' ) );
                     }
