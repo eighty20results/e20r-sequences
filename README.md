@@ -104,6 +104,8 @@ Please report it in the issues section of GitHub and we'll fix it as soon as we 
 * Fix: Incorrect handling of post_type variable while saving settings.
 * Fix: Would let user activate plugin even if Paid Memberships Pro was not present on system
 * Fix: noConflict() mode for pmpro-sequences.js
+* Fix: Sequence would not be updated if user specified a delay value of 0 for a post/page
+* Fix: Paid Memberships Pro phpmailer action would sometimes trigger error for email messages not related to PMPro Sequence
 * Nit: Remove commented out code from pmpro-sequences-admin.js
 * Nit: Remove inline php for disabled settings
 

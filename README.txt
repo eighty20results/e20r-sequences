@@ -62,12 +62,14 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 
 = 2.1.5 =
 * Fix: Would sometimes fail to load default settings for new sequences
-* Fix: Correctly manage global $post data while processing shortcode.
-* Fix: Returned incorrect data for empty post lists when calculating the most recent post for the member.
-* Fix: Typo in return value when finding most recent post for certain members.
-* Fix: Incorrect handling of post_type variable while saving settings.
+* Fix: Correctly manage global $post data while processing shortcode
+* Fix: Returned incorrect data for empty post lists when calculating the most recent post for the member
+* Fix: Typo in return value when finding most recent post for certain members
+* Fix: Incorrect handling of post_type variable while saving settings
 * Fix: Would let user activate plugin even if Paid Memberships Pro was not present on system
 * Fix: noConflict() mode for pmpro-sequences.js
+* Fix: Sequence would not be updated if user specified a delay value of 0 for a post/page
+* Fix: Paid Memberships Pro phpmailer action would sometimes trigger error for email messages not related to PMPro Sequence
 * Nit: Remove commented out code from pmpro-sequences-admin.js
 * Nit: Remove inline php for disabled settings
 
