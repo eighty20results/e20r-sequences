@@ -631,7 +631,7 @@
 
 		        if ( ! $this->sequenceExists( $cId ) ) {
 
-			        $this->dbgOut("Sequence {$cId} does not exist. Remove it from this ({$post_id}) post.");
+			        $this->dbgOut("Sequence {$cId} does not exist. Remove it (post id: {$post_id}).");
 
 			        if ( ($key = array_search($cId, $belongs_to ) ) !== false ) {
 
