@@ -622,15 +622,24 @@
                 $post_id = $post->ID;
             }
 
-            // if ( ! empty( $seq_id ) && ( $seq_id != 0 ) ) {
-            //    $belongs_to = array(  $seq_id );
-            // }
-            // else {
             $this->dbgOut("Loading sequence ID(s) from DB");
             $belongs_to = get_post_meta( $post_id, "_post_sequences", true );
 
-            // $this->dbgOut( "Sequences for {$post_id}: " . print_r($belongs_to, true) );
-            // $belongs_to = $this->update_postSeqList( $post_id, true );
+	        // Check that all of the sequences listed for the post actually exist.
+	        // If not, clean up the $belongs_to array.
+	        foreach ( $belongs_to as $cId ) {
+
+		        if ( ! $this->sequenceExists( $cId ) ) {
+
+			        $this->dbgOut("Sequence {$cId} does not exist. Remove it from this ({$post_id}) post.");
+
+			        if ( ($key = array_search($cId, $belongs_to ) ) !== false ) {
+
+				        $this->dbgOut("Sequence ID {$cId} being removed", DEBUG_SEQ_INFO );
+				        unset( $belongs_to[$key] );
+			        }
+		        }
+	        }
 
             if ( ! empty( $belongs_to ) ) { // get_post_meta( $post_id, "_post_sequences", true ) ) {
 
@@ -4624,6 +4633,15 @@
             }
             $this->dbgOut("We're given the ID of: {$id} ");
 
+	        // Make sure the sequence exists.
+	        if ( ! $this->sequenceExists( $id ) ) {
+
+		        $this->dbgOut("shortcode() - The requested sequence (id: {$id}) does not exist", DEBUG_SEQ_WARNING );
+		        $errorMsg = '<p class="error" style="text-align: center;">The specified PMPro Sequence was not found. <br/>Please report this error to the webmaster.</p>';
+
+		        return apply_filters( 'pmpro-sequence-not-found-msg', $errorMsg );
+	        }
+
             $this->init( $id );
 
             $this->dbgOut("shortcode() - Ready to build link list for sequence with ID of: " . $id);
@@ -4762,4 +4780,17 @@
             //we do not know the post type!
             return null;
         }
+
+		/**
+		 * Determines if a post, identified by the specified ID, exist
+		 * within the WordPress database.
+		 *
+		 * @param    int    $id    The ID of the post to check
+		 * @return   bool          True if the post exists; otherwise, false.
+		 * @since    1.0.0
+		 */
+		private function sequenceExists( $id ) {
+
+			return is_string( get_post_status( $id ) );
+		}
     }
