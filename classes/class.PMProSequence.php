@@ -1770,14 +1770,17 @@
                     // Create new opt-in settings for this user
                     if ( empty($optIn->sequence) ) {
 
+	                    // Bug Fix: Properly init the structure
                         $new = new stdClass();
+	                    $new->sequence = array();
+	                    $new->sequence[$this->sequence_id] = new stdClass();
                     }
                     else { // Saves existing settings
 
                         $new = $optIn;
                     }
 
-                    $new->sequence[$this->sequence_id]->sendNotice = $this->options->sendNotice;
+	                $new->sequence[$this->sequence_id]->sendNotice = $this->options->sendNotice;
 
                     $this->dbgOut('addUserNoticeOptIn() - Using default setting for user ' . $current_user->ID . ' and sequence ' . $this->sequence_id);
 
