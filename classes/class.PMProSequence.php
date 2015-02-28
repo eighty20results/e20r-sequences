@@ -627,16 +627,21 @@
 
 	        // Check that all of the sequences listed for the post actually exist.
 	        // If not, clean up the $belongs_to array.
-	        foreach ( $belongs_to as $cId ) {
+	        if ( $belongs_to != false ) {
 
-		        if ( ! $this->sequenceExists( $cId ) ) {
+		        $this->dbgOut("Belongs to: " .print_r( $belongs_to, true));
 
-			        $this->dbgOut("Sequence {$cId} does not exist. Remove it (post id: {$post_id}).");
+		        foreach ( $belongs_to as $cId ) {
 
-			        if ( ($key = array_search($cId, $belongs_to ) ) !== false ) {
+			        if ( ! $this->sequenceExists( $cId ) ) {
 
-				        $this->dbgOut("Sequence ID {$cId} being removed", DEBUG_SEQ_INFO );
-				        unset( $belongs_to[$key] );
+				        $this->dbgOut( "Sequence {$cId} does not exist. Remove it (post id: {$post_id})." );
+
+				        if ( ( $key = array_search( $cId, $belongs_to ) ) !== false ) {
+
+					        $this->dbgOut( "Sequence ID {$cId} being removed", DEBUG_SEQ_INFO );
+					        unset( $belongs_to[ $key ] );
+				        }
 			        }
 		        }
 	        }
