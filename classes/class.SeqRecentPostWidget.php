@@ -41,17 +41,17 @@ class SeqRecentPostWidget extends WP_Widget {
 		extract($args);
 
 		$title = apply_filters( 'widget_title', $instance['title'] );
-		$seqPrefix = apply_filters( 'pmpro-sequence-widget-prefix', $instance['prefix']) ;
-		$sequence_id = apply_filters( 'pmpro-sequence-widget-seqid', $instance['sequence_id'] );
+		$seqPrefix = apply_filters( 'pmpro-sequence-widget-prefix', ( isset( $instance['prefix'] ) ? $instance['prefix'] : null ) ) ;
+		$sequence_id = apply_filters( 'pmpro-sequence-widget-seqid', ( isset( $instance['sequence_id'] ) ? $instance['sequence_id'] : null ) );
 
-        $defaultTitle = apply_filters('pmpro-sequence-widget-default-post-title', $instance['default_post_title']);
-        $before_title = apply_filters('pmpro-sequence-widget-before-widget-title', $instance['before_title'] );
-        $after_title = apply_filters('pmpro-sequence-widget-after-widget-title', $instance['after_title'] );
+        $defaultTitle = apply_filters('pmpro-sequence-widget-default-post-title', ( isset( $instance['default_post_title'] ) ? $instance['default_post_title'] : null ) ) ;
+        $before_title = apply_filters('pmpro-sequence-widget-before-widget-title', ( isset( $instance['before_title'] ) ? $instance['before_title'] : null ) );
+        $after_title = apply_filters('pmpro-sequence-widget-after-widget-title', ( isset( $instance['after_title'] ) ? $instance['after_title'] : null ) );
 
 		$wordcount = $instance['wordcount'];
 		$show_title = ($instance['show_title'] == 1 ) ? true : false;
-        $before_widget = apply_filters( 'pmpro-sequence-before-widget', $instance['before_widget'] );
-        $after_widget = apply_filters( 'pmpro-sequence-after-widget', $instance['after_widget'] );
+        $before_widget = apply_filters( 'pmpro-sequence-before-widget', ( isset( $instance['before_widget'] ) ? $instance['before_widget'] : null )  );
+        $after_widget = apply_filters( 'pmpro-sequence-after-widget', ( isset( $instance['after_widget'] ) ? $instance['after_widget'] : null )  );
 
         echo $before_widget;
 
@@ -183,7 +183,7 @@ class SeqRecentPostWidget extends WP_Widget {
 			return false;
 		}
 
-		if ( $current_user != 0 ) {
+		if ( $current_user->ID != 0 ) {
 
 			$seqPostId = $sequence->get_closestPost( $current_user->ID );
 
