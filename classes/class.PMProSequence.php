@@ -4473,13 +4473,16 @@
             $this->dbgOut("Running register_user_scripts()");
 
             global $e20r_sequence_editor_page;
+	        global $load_pmpro_sequence_script;
             global $post;
 
             $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
 
             $this->dbgOut("'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
 
-            if ( ( $foundShortcode ) || ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
+            if ( ( $foundShortcode ) && ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
+
+	            $load_pmpro_sequence_script = true;
 
                 $this->dbgOut("Loading client side javascript and CSS");
 
@@ -4494,6 +4497,10 @@
                     )
                 );
             }
+	        else {
+
+		        $load_pmpro_sequence_script = false;
+	        }
 
         }
 
@@ -4546,12 +4553,11 @@
 
             global $load_pmpro_sequence_script;
 
-            if ( ! $load_pmpro_sequence_script ) {
+            if ( $load_pmpro_sequence_script !== true ) {
                 return;
             }
 
             wp_print_scripts('pmpro-sequence-user');
-
         }
 
         /**
