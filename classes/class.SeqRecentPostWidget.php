@@ -34,9 +34,9 @@ class SeqRecentPostWidget extends WP_Widget {
 
 	public function widget( $args, $instance) {
 
-        global $load_pmpro_sequence_script;
+        // global $load_pmpro_sequence_script;
 
-        $load_pmpro_sequence_script = true;
+        // $load_pmpro_sequence_script = true;
 
 		extract($args);
 
@@ -198,7 +198,7 @@ class SeqRecentPostWidget extends WP_Widget {
 					'p'                   => $seqPostId,
 					'ignore_sticky_posts' => true,
 				) );
-				$sequence->dbgOut("Posts: " . print_r($seq_post, true));
+				// $sequence->dbgOut("Posts: " . print_r($seq_post, true));
 
 				$sequence->dbgOut("Number of posts in {$sequence_id} is {$seq_post->found_posts}");
 
