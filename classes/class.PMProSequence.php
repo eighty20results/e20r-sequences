@@ -4511,7 +4511,6 @@
             wp_register_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
             wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array( 'jquery', 'select2' ), null, true);
 
-
             wp_register_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
             wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
 
@@ -4565,7 +4564,10 @@
          */
         function enqueue_admin_scripts( $hook ) {
 
-            if ( $hook == 'edit.php' || $hook == 'post.php' || $hook == 'post-new.php' ) {
+	        global $post;
+
+            if ( ($post->post_type == 'pmpro_sequence') &&
+                 ( $hook == 'edit.php' || $hook == 'post.php' || $hook == 'post-new.php' ) ) {
 
                 $this->dbgOut("Loading admin scripts & styles for PMPro Sequence");
                 $this->register_admin_scripts();
