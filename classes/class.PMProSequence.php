@@ -4566,6 +4566,11 @@
 
 	        global $post;
 
+	        if ( ! isset( $post->post_type ) )  {
+
+		        return;
+	        }
+
             if ( ($post->post_type == 'pmpro_sequence') &&
                  ( $hook == 'edit.php' || $hook == 'post.php' || $hook == 'post-new.php' ) ) {
 
