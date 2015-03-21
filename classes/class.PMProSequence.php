@@ -2570,7 +2570,7 @@
                 foreach ( $post_sequence as $seqId ) {
 
 	                if ( ( get_post_type( $seqId ) != 'pmpro_sequence') ||
-	                     ( FALSE === get_post_status( $id ) ) ) {
+	                     ( FALSE === get_post_status( $seqId ) ) ) {
 
 		                return true;
 	                }
