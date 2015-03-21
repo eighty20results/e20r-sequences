@@ -2566,10 +2566,17 @@
             if ( $this->sequence_id == 0) {
 
                 $this->dbgOut( "hasAccess(): Sequence ID was NOT set by calling function: " . $this->whoCalledMe() );
+
                 foreach ( $post_sequence as $seqId ) {
 
-                    $this->init( $seqId );
-                    return $this->get_accessStatus( $post_id, $user_id, $post_sequence, $isAlert );
+	                if ( ( get_post_type( $seqId ) != 'pmpro_sequence') ||
+	                     ( FALSE === get_post_status( $id ) ) ) {
+
+		                return true;
+	                }
+
+	                $this->init( $seqId );
+	                return $this->get_accessStatus( $post_id, $user_id, $post_sequence, $isAlert );
                 }
             }
             else {
@@ -3302,7 +3309,7 @@
                     update_post_meta( $post_id, '_post_sequences', $sequence_list );
                 }
 
-                // $this->dbgOut("UserID: {$user_id}, post: {$post_id}, Alert: {$isAlert} for sequence: {$this->sequence_id} - posts: " .print_r( $sequence_list, true));
+                $this->dbgOut("UserID: {$user_id}, post: {$post_id}, Alert: {$isAlert} for sequence: {$this->sequence_id} - posts: " .print_r( $sequence_list, true));
 
                 $results = pmpro_has_membership_access( $this->sequence_id, $user_id, true ); //Using true to return all level IDs that have access to the sequence
 
