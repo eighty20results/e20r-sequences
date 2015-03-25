@@ -4487,7 +4487,7 @@
 
             $this->dbgOut("'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
 
-            if ( ( $foundShortcode ) && ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
+            if ( ( $foundShortcode ) || ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
 
 	            $load_pmpro_sequence_script = true;
 
@@ -4558,12 +4558,20 @@
         public function enqueue_user_scripts() {
 
             global $load_pmpro_sequence_script;
+	        global $post;
 
             if ( $load_pmpro_sequence_script !== true ) {
                 return;
             }
 
-            wp_print_scripts('pmpro-sequence-user');
+	        $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
+
+	        $this->dbgOut("'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
+
+	        if ( ( $foundShortcode ) || ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
+
+		        wp_print_scripts( 'pmpro-sequence-user' );
+	        }
         }
 
         /**
