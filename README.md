@@ -4,8 +4,8 @@ Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.2 or later.
-Tested up to: 4.1
-Stable tag: 2.1.5
+Tested up to: 4.1.1
+Stable tag: 2.2
 
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -93,51 +93,49 @@ TBD
 ###I found a bug in the plugin.
 
 Please report it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/pmpro-sequence/issues
+You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.1.5
-* Fix: Would sometimes fail to load default settings for new sequences
-* Fix: Correctly manage global $post data while processing shortcode.
-* Fix: Returned incorrect data for empty post lists when calculating the most recent post for the member.
-* Fix: Typo in return value when finding most recent post for certain members.
-* Fix: Incorrect handling of post_type variable while saving settings.
-* Fix: Would let user activate plugin even if Paid Memberships Pro was not present on system
-* Fix: noConflict() mode for pmpro-sequences.js
-* Fix: Sequence would not be updated if user specified a delay value of 0 for a post/page
-* Fix: Paid Memberships Pro phpmailer action would sometimes trigger error for email messages not related to PMPro Sequence
-* Nit: Remove commented out code from pmpro-sequences-admin.js
-* Nit: Remove inline php for disabled settings
+###2.2
+* Fix: Complete load of select2 from CDN by removing local file(s).
+* Set version number and updated Readme files
 
-###2.1.4
-* Fix: Calculating "most recent post" with only one post defined in the sequence would generate error message.
-* Fix: Font size for settings metabox
-* Fix: Would not consistently load admin specific JavaScript.
-* Fix: Displays membership length in wp-admin.
+##Old releases
+###.1
+* Initial version of the Sequence plugin including support Sequence specific display & delay type options.
+* Renamed from "Series" to try and avoid namespace collisions and allow people to transition manually to this plugin if desirable.
 
-###2.1.3
-* Fix: Renamed all of the widget filters
+###.1.1
+* Version bump for fixes added after the initial version (minor typo & namespace bugs)
 
-###2.1.2
-* Fix: Empty sequences would not be processed correctly.
-* Fix: Error messages would occasionally cause PHP error
-* Fix: Typo in filter for post types managed by the PMPro Sequence plugin (pmpro-sequence-managed-post-types)
-* Enh: Moved select2() init to .js file
-* Enh: Allow complete reset of user notifications.
-* Enh: Load select2 functionality from CDN (performance & updatability).
+###.1.2 
+* Fix: Incorrect page ID supplied when filtering sequence member pages
 
-###2.1.1
-* Feature: Enable WP_DEBUG to start logging copious amounts of debug info to a dedicated PMPro Sequence debug log (./debug/sequence_debug_log-<date>.txt)
-* Feature: Added 'pmpro-sequence-allowed-post-statuses' filter to widget
-* Feature: Added public getAllSequences() function (API)
-* Fix: Widget would sometimes attempt to list a sequence member that wasn't visible to end users.
-* Fix: Infinite loop in certain situations during configuration.
-* Fix: URL paths for icons
-* Fix: Typo in pmpro-sequence-cpt-labels fitler
-* Enh: Add filter for sequence slug (pmpro-sequence-cpt-slug)
-* Enh: Add filter for archive (pmpro-sequence-cpt-archive-slug)
-* Refactor: import PMPro Series before registering cron hook in plugin activation.
-* Removed: Not using PMPRO_SEQUENCE_DEBUG to enable debug logging to separate file.
+###.2 
+* Added support for templates and configurable new content alerts. Includes scheduling (cron) by sequence.
+* Reformat of the Sequence Settings meta box.
+* Added support for pre PHP v5.3 releases. (tentative - not been able to test)
+* Optimized settings save functionality (one instance of the save functionality).
+* Separated out Javascript & cleaned up AJAX handling for sequence handling, post addition/removal & settings. (@Askelon)
+* Started adding support translations (I8N) based on work by Askelon (@Charlie Merland)
+* Split admin & user Javascript functionality.
+* Added support for all public & searchable CTPs plus Pages & Posts to the list of posts in a sequence (drip)
+* Admin may now select to let the delay time (when a post in the sequence will be accessible to the user) as a 'Calendar date' or as 'days since membership started'.
+** Only applies when the Delay Type is configured as "Days after sign-up".
+* Added support for admin configurable format of !!today!! (date) placeholder in email templates
+* Added a message to the front-end sequence page for when there are no released (visible) posts available to the user in that sequence.
+* Fix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
+* More bug fixes and updates.
+
+###.3 
+* Translation for Norwegian and English (US)
+* Feature: Trigger sending of email alerts from the admin UI
+* Support "preview" functionality for posts in sequence. (Is this really needed..?)
+
+###1.0
+* Set version number
+* Feature: Widget containing excerpt from most recently available post in a sequence (by user ID)
 
 ###2.0
 * Complete refactor of plugin. Moved anything sequence related into the PMProSequence class and cleaned out pmpro-sequence.php file.
@@ -181,38 +179,68 @@ Please report it in the issues section of GitHub and we'll fix it as soon as we 
 * Fix: Clean up duplication of sequence post->ID's in the post meta tag '_post_sequences'
 * Fix: createTimestamp() used UTC
 
-##Old releases
-###.1
-* Initial version of the Sequence plugin including support Sequence specific display & delay type options.
-* Renamed from "Series" to try and avoid namespace collisions and allow people to transition manually to this plugin if desirable.
+###2.1.1
+* Feature: Enable WP_DEBUG to start logging copious amounts of debug info to a dedicated PMPro Sequence debug log (./debug/sequence_debug_log-<date>.txt)
+* Feature: Added 'pmpro-sequence-allowed-post-statuses' filter to widget
+* Feature: Added public getAllSequences() function (API)
+* Fix: Widget would sometimes attempt to list a sequence member that wasn't visible to end users.
+* Fix: Infinite loop in certain situations during configuration.
+* Fix: URL paths for icons
+* Fix: Typo in pmpro-sequence-cpt-labels fitler
+* Enh: Add filter for sequence slug (pmpro-sequence-cpt-slug)
+* Enh: Add filter for archive (pmpro-sequence-cpt-archive-slug)
+* Refactor: import PMPro Series before registering cron hook in plugin activation.
+* Removed: Not using PMPRO_SEQUENCE_DEBUG to enable debug logging to separate file.
 
-###.1.1
-* Version bump for fixes added after the initial version (minor typo & namespace bugs)
+###2.1.2
+* Fix: Empty sequences would not be processed correctly.
+* Fix: Error messages would occasionally cause PHP error
+* Fix: Typo in filter for post types managed by the PMPro Sequence plugin (pmpro-sequence-managed-post-types)
+* Enh: Moved select2() init to .js file
+* Enh: Allow complete reset of user notifications.
+* Enh: Load select2 functionality from CDN (performance & updatability).
 
-###.1.2 
-* Fix: Incorrect page ID supplied when filtering sequence member pages
+###2.1.3
+* Fix: Renamed all of the widget filters
 
-###.2 
-* Added support for templates and configurable new content alerts. Includes scheduling (cron) by sequence.
-* Reformat of the Sequence Settings meta box.
-* Added support for pre PHP v5.3 releases. (tentative - not been able to test)
-* Optimized settings save functionality (one instance of the save functionality).
-* Separated out Javascript & cleaned up AJAX handling for sequence handling, post addition/removal & settings. (@Askelon)
-* Started adding support translations (I8N) based on work by Askelon (@Charlie Merland)
-* Split admin & user Javascript functionality.
-* Added support for all public & searchable CTPs plus Pages & Posts to the list of posts in a sequence (drip)
-* Admin may now select to let the delay time (when a post in the sequence will be accessible to the user) as a 'Calendar date' or as 'days since membership started'.
-** Only applies when the Delay Type is configured as "Days after sign-up".
-* Added support for admin configurable format of !!today!! (date) placeholder in email templates
-* Added a message to the front-end sequence page for when there are no released (visible) posts available to the user in that sequence.
-* Fix: Incorrect save of options when using "Publish" save vs Sequence Settings save.
-* More bug fixes and updates.
+###2.1.4
+* Fix: Calculating "most recent post" with only one post defined in the sequence would generate error message.
+* Fix: Font size for settings metabox
+* Fix: Would not consistently load admin specific JavaScript.
+* Fix: Displays membership length in wp-admin.
 
-###.3 
-* Translation for Norwegian and English (US)
-* Feature: Trigger sending of email alerts from the admin UI
-* Support "preview" functionality for posts in sequence. (Is this really needed..?)
+###2.1.5
+* Fix: Would sometimes fail to load default settings for new sequences
+* Fix: Correctly manage global $post data while processing shortcode.
+* Fix: Returned incorrect data for empty post lists when calculating the most recent post for the member.
+* Fix: Typo in return value when finding most recent post for certain members.
+* Fix: Incorrect handling of post_type variable while saving settings.
+* Fix: Would let user activate plugin even if Paid Memberships Pro was not present on system
+* Fix: noConflict() mode for pmpro-sequences.js
+* Fix: Sequence would not be updated if user specified a delay value of 0 for a post/page
+* Fix: Paid Memberships Pro phpmailer action would sometimes trigger error for email messages not related to PMPro Sequence
+* Nit: Remove commented out code from pmpro-sequences-admin.js
+* Nit: Remove inline php for disabled settings
 
-###1.0
-* Set version number
-* Feature: Widget containing excerpt from most recently available post in a sequence (by user ID)
+###2.1.6
+* Fix: Sequence would not be updated if user specified a delay value of 0 for a post/page.
+* Fix: Paid Memberships Pro phpmailer action would sometimes trigger error for email messages not related to PMPro Sequence
+* Fix: Adding new post to new (unsaved) sequence caused silent error on initial "Update Sequence" click.
+* Fix: Properly initialize the user notice data structure.
+* Fix: Remove all sequences that no longer exist while loading the Drip Sequence Settings metabox.
+* Fix: Return error message asking user to report this to the admin (filtered) if a shortcode uses a sequence ID that no longer exists.
+* Fix: Remove all sequences that no longer exist while loading the Drip Sequence Settings metabox.
+* Fix: Metabox - handle cases where a post/page/CPT doesn't belong to a sequence yet.
+* Fix: Variable init for widget instance
+* Fix: Load front-side javascript for widget that didn't need it.
+* Fix: Make sure we load the front-side javascript only if the sequence_links shortcode is used
+* Fix: Load admin scripts when editing PMPro Sequence post types only.
+* Fix: hasAccess() would incorrectly deny access in certain scenarios
+* Fix: Remove warning message during load of admin scripts due to un-inited variable(s)
+* Fix: Typo in variable
+* Fix: Didn't always load the user javascript when needed
+* Fix: Didn't always load stylesheets in backend
+* Fix: Removed local select2.css file
+* Fix: Get rid of unneeded whitespace in .css file
+* Enh: Add 'pmpro-sequence-not-found-msg' filter for short-code error message.
+* Enh: Infrastructure for setting/getting a default slug (future option / settings page

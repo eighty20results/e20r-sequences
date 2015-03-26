@@ -3,15 +3,16 @@ Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.2 or later.
-Tested up to: 4.1
-Stable tag: 2.1.5
+Tested up to: 4.1.1
+Stable tag: 2.2
 
 Create a drip feed "Sequence" which are groups of posts/pages where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
 == Description ==
 This plugin currently requires Paid Memberships Pro and started life as a complete rip-off of the pmpro_series
  plugin from strangerstudios. I needed a drip-content plugin that supported different delay type options, paginated
- lists of series posts, a way to let a user see an excerpt of
+ lists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type,
+ etc.
 
 Added a features that weren't included in pmpro_series, specifically the ability to:
 
@@ -26,6 +27,8 @@ Added a features that weren't included in pmpro_series, specifically the ability
 * [sequence_list] shortcode for paginated sequence list
 * Widget containing summary (excerpt) of most recent post in a sequence [***] for the logged in user.
 * Allows 'preview' of upcoming posts in the sequence (Not sure if this is really necessary to have...)
+* A settings metabox to simplify configuration (rather than only use filters)
+* Filters to let the admin specify the types of posts/pages to include in a sequence, etc.
 
 See ./email/README.txt for information on templates for the email alerts.
 
@@ -43,7 +46,6 @@ See ./email/README.txt for information on templates for the email alerts.
 == TODO ==
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
 2. Decide how and where to utilize the user notification reset
-3. Remove existing select2.js file from source tree
 
 == Known Issues ==
 
@@ -57,8 +59,36 @@ DEBUG
 = I found a bug in the plugin. =
 
 Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/pmpro-sequence/issues
+Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+= 2.2 =
+* Fix: Complete load of select2 from CDN by removing local file(s).
+* Set version number and updated Readme files
+
+= 2.1.6 =
+* Fix: Sequence would not be updated if user specified a delay value of 0 for a post/page.
+* Fix: Paid Memberships Pro phpmailer action would sometimes trigger error for email messages not related to PMPro Sequence
+* Fix: Adding new post to new (unsaved) sequence caused silent error on initial "Update Sequence" click.
+* Fix: Properly initialize the user notice data structure.
+* Fix: Remove all sequences that no longer exist while loading the Drip Sequence Settings metabox.
+* Fix: Return error message asking user to report this to the admin (filtered) if a shortcode uses a sequence ID that no longer exists.
+* Fix: Remove all sequences that no longer exist while loading the Drip Sequence Settings metabox.
+* Fix: Metabox - handle cases where a post/page/CPT doesn't belong to a sequence yet.
+* Fix: Variable init for widget instance
+* Fix: Load front-side javascript for widget that didn't need it.
+* Fix: Make sure we load the front-side javascript only if the sequence_links shortcode is used
+* Fix: Load admin scripts when editing PMPro Sequence post types only.
+* Fix: hasAccess() would incorrectly deny access in certain scenarios
+* Fix: Remove warning message during load of admin scripts due to un-inited variable(s)
+* Fix: Typo in variable
+* Fix: Didn't always load the user javascript when needed
+* Fix: Didn't always load stylesheets in backend
+* Fix: Removed local select2.css file
+* Fix: Get rid of unneeded whitespace in .css file
+* Enh: Add 'pmpro-sequence-not-found-msg' filter for short-code error message.
+* Enh: Infrastructure for setting/getting a default slug (future option / settings page
 
 = 2.1.5 =
 * Fix: Would sometimes fail to load default settings for new sequences
