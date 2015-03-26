@@ -4586,7 +4586,7 @@
 		        return;
 	        }
 
-            if ( ($post->post_type == 'pmpro_sequence') &&
+            if ( ($post->post_type == 'pmpro_sequence') ||
                  ( $hook == 'edit.php' || $hook == 'post.php' || $hook == 'post-new.php' ) ) {
 
                 $this->dbgOut("Loading admin scripts & styles for PMPro Sequence");
