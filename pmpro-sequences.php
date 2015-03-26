@@ -11,7 +11,7 @@ Text Domain: pmprosequence
 Domain Path: /languages
 License:
 
-	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
+	Copyright 2015 Thomas Sjolshagen (thomas@eighty20results.com)
 	Copyright 2013 Stranger Studios (jason@strangerstudios.com)
 
 	This program is free software; you can redistribute it and/or modify
