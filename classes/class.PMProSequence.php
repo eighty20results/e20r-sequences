@@ -3503,6 +3503,11 @@
 
             global $current_user, $post;
 
+	        if ( !isset( $post->post_type) ) {
+		        $this->dbgOut("post_save_action() - No post type defined for {$post_id}", DEBUG_SEQ_WARNING);
+		        return;
+	        }
+
             if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
                 $this->dbgOut("Exit during autosave");
                 return;
