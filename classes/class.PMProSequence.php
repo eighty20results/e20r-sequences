@@ -434,7 +434,8 @@
                         $tmp = array_count_values( $post_sequence );
 
 	                    // Bug Fix: Off by one error
-                        $cnt = $tmp[ ($this->sequence_id - 1) ];
+                        // $cnt = $tmp[ ($this->sequence_id - 1) ];
+	                    $cnt = $tmp[ $this->sequence_id ];
 
                         if ( $cnt == 0 ) {
 
