@@ -3524,6 +3524,10 @@
                 return;
             }
 
+	        if ( 'trash' == get_post_status( $post_id ) ) {
+		        return;
+	        }
+
             $this->dbgOut("post_save_action() - Sequences & Delays have been configured for page save. " . $this->whoCalledMe());
 
             $seq_ids = is_array( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
@@ -3608,6 +3612,10 @@
             if ( ! isset( $post->post_type) || ( $post->post_type != 'pmpro_sequence' ) ) {
                 return $post_id;
             }
+
+	        if ( 'trash' == get_post_status( $post_id ) ) {
+		        return $post_id;
+	        }
 
             $this->init( $post_id );
 
