@@ -1483,7 +1483,10 @@
                         // User has to sign up for one of the sequence(s)
                         if ( count( $post_sequences ) == 1 ) {
 
-                            $text = sprintf("%s<br/>", sprintf( __( "This content is part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence' ), get_permalink( $post_sequences[0] ), get_the_title( $post_sequences[0] ) ) );
+	                        $tmp = $post_sequences;
+	                        $seqId = array_pop( $tmp );
+
+                            $text = sprintf("%s<br/>", sprintf( __( "This content is part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence' ), get_permalink( $seqId ), get_the_title( $seqId ) ) );
                         }
                         else {
 
