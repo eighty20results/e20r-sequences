@@ -4500,6 +4500,10 @@
 	        global $load_pmpro_sequence_script;
             global $post;
 
+            if ( ! isset( $post->content ) ) {
+                return;
+            }
+
             $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
 
             $this->dbgOut("'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
