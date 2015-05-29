@@ -4501,6 +4501,7 @@
             global $post;
 
             if ( ! isset( $post->content ) ) {
+
                 return;
             }
 
@@ -4582,6 +4583,11 @@
 	        global $post;
 
             if ( $load_pmpro_sequence_script !== true ) {
+                return;
+            }
+
+            if ( ! isset($post->post_content) ) {
+
                 return;
             }
 
