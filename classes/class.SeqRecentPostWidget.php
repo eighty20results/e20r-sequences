@@ -245,7 +245,7 @@ class SeqRecentPostWidget extends WP_Widget {
 				<span id="pmpro-seq-post-notfound">
 					<h3 class="widget-title">Membership Level Error</h3>
 					<div id="pmpro-seq-post-body" class="text-widget">
-						<?php _e( "Sorry, your current membership level does not grant you access to this content.", 'pmprosequence' ); ?>
+						<?php _e( "Sorry, your current membership level does not give you access to this content.", 'pmprosequence' ); ?>
 					</div>
 				</span>
 			<?php
