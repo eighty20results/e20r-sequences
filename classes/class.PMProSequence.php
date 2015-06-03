@@ -1448,7 +1448,7 @@
                     if ( $insequence !== false ) {
 
                         //user has one of the sequence levels, find out which one and tell him how many days left
-                        $text = sprintf("%s<br/>", sprintf( __("This content managed as part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence'), get_permalink($ps), get_the_title($ps)) );
+                        $text = sprintf("%s<br/>", sprintf( __("This content is only available to existing members at the specified time or day. (Required membership: <a href='%s'>%s</a>", 'pmprosequence'), get_permalink($ps), get_the_title($ps)) );
 
                         switch ( $this->options->delayType ) {
 
@@ -1458,19 +1458,19 @@
 
                                     case PMPRO_SEQ_AS_DAYNO:
 
-                                        $text .= sprintf( __( 'You will get access to this content ("%s") on day %s of your membership', 'pmprosequence' ), get_the_title( $post->ID ), $this->displayDelay( $delay ) );
+                                        $text .= sprintf( __( 'You will be able to access "%s" on day %s of your membership', 'pmprosequence' ), get_the_title( $post->ID ), $this->displayDelay( $delay ) );
                                         break;
 
                                     case PMPRO_SEQ_AS_DATE:
 
-                                        $text .= sprintf( __( 'You will get access to this content ("%s") on %s', 'pmprosequence' ), get_the_title( $post->ID ), $this->displayDelay( $delay ) );
+                                        $text .= sprintf( __( 'You will be able to  access "%s" on %s', 'pmprosequence' ), get_the_title( $post->ID ), $this->displayDelay( $delay ) );
                                         break;
                                 }
 
                                 break;
 
                             case 'byDate':
-                                $text .= sprintf( __('You will get access to this content ("%s") on %s', 'pmprosequence'), get_the_title($post->ID), $delay );
+                                $text .= sprintf( __('You will be able to access "%s" on %s', 'pmprosequence'), get_the_title($post->ID), $delay );
                                 break;
 
                             default:
@@ -1486,11 +1486,11 @@
 	                        $tmp = $post_sequences;
 	                        $seqId = array_pop( $tmp );
 
-                            $text = sprintf("%s<br/>", sprintf( __( "This content is part of the members only <a href='%s'>%s</a> sequence", 'pmprosequence' ), get_permalink( $seqId ), get_the_title( $seqId ) ) );
+                            $text = sprintf("%s<br/>", sprintf( __( "This content is only available to existing members who are already logged in. ( Reqired level: <a href='%s'>%s</a>)", 'pmprosequence' ), get_permalink( $seqId ), get_the_title( $seqId ) ) );
                         }
                         else {
 
-                            $text = sprintf( "<p>%s</p>", __( 'This content is part of the following members only sequences: ', 'pmprosequence' ) );
+                            $text = sprintf( "<p>%s</p>", __( 'This content is only available to existing members who have logged in. ( For levels:  ', 'pmprosequence' ) );
                             $seq_links = array();
 
                             foreach ( $post_sequences as $sequence_id ) {
@@ -1498,7 +1498,7 @@
                                 $seq_links[] = "<p><a href='" . get_permalink( $sequence_id ) . "'>" . get_the_title( $sequence_id ) . "</a></p>";
                             }
 
-                            $text .= implode( $seq_links );
+                            $text .= implode( $seq_links ) . " )";
                         }
                     }
                 }
