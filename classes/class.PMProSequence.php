@@ -3533,8 +3533,19 @@
 
             $this->dbgOut("post_save_action() - Sequences & Delays have been configured for page save. " . $this->whoCalledMe());
 
-            $seq_ids = is_array( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
-            $delays = is_array( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
+            if ( isset( $_POST['pmpro_seq-sequences'] ) ) {
+                $seq_ids = is_array( $_POST['pmpro_seq-sequences'] ) ? $_POST['pmpro_seq-sequences'] : null;
+            }
+            else {
+                $seq_ids = null;
+            }
+
+            if ( isset( $_POST['pmpro_seq-delay'] ) ) {
+                $delays = is_array( $_POST['pmpro_seq-delay']) ? $_POST['pmpro_seq-delay'] : null;
+            }
+            else {
+                $delays = null;
+            }
 
             if ( empty( $delays ) ) {
 
