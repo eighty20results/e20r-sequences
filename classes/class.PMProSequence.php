@@ -435,7 +435,7 @@
 
 	                    // Bug Fix: Off by one error
                         // $cnt = $tmp[ ($this->sequence_id - 1) ];
-	                    $cnt = $tmp[ $this->sequence_id ];
+	                    $cnt = isset( $tmp[ $this->sequence_id ] ) ? $tmp[ $this->sequence_id ] : 0;
 
                         if ( $cnt == 0 ) {
 
