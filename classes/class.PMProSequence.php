@@ -45,7 +45,7 @@
                 $this->sequence_id = $this->getSequenceByID( $id ); // Try to load it from the DB
 
                 if ( $this->sequence_id == false ) {
-                    throw new Exception( "A Sequence with the ID {$this->sequence_id} does not exist on this system");
+                    throw new Exception( __("A Sequence with the specified ID does not exist on this system", "pmprosequence" ) );
                 }
             }
 
@@ -75,7 +75,7 @@
             }
 
             if (( $id == null ) && ( $this->sequence_id == 0 ) ) {
-                throw new Exception('No sequence ID specified.');
+                throw new Exception( __('No sequence ID specified.', 'pmprosequence') );
             }
 
             return false;
