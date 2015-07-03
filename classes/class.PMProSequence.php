@@ -3242,7 +3242,23 @@
 
             global $wpdb;
 
-            return delete_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence_notices' );
+            $notices = get_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence_notices' );
+
+            if ( isset( $notices->sequences ) ) {
+
+                foreach( $notices->sequences as $seqId => $noticeList ) {
+
+                    if ( $seqId == $sequenceId ) {
+
+                        $this->dbgOut("Deleting user notices for sequence with ID: {$sequenceId}", DEBUG_SEQ_INFO);
+
+                        unset($notices->sequences[$seqId]);
+                        return update_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence_notices', $notices );
+                    }
+                }
+            }
+
+            return false;
         }
 
         /**

@@ -3,8 +3,8 @@ Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.2 or later.
-Tested up to: 4.1.1
-Stable tag: 2.2
+Tested up to: 4.2.2
+Stable tag: 2.2.1
 
 Create a drip feed "Sequence" which are groups of posts/pages where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -62,6 +62,10 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+= 2.2.1 =
+* Enh: Clears list of notified posts for specific sequence ID (not all notices for the user id)
+* Version number bump
 
 = 2.2 =
 * Fix: Complete load of select2 from CDN by removing local file(s).
