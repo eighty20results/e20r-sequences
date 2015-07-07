@@ -1810,6 +1810,14 @@
 
                 update_user_meta($current_user->ID, $meta_key, $optIn);
 
+                if ( isset( $optIn->sequence[$this->sequence_id] ) ) {
+
+                    $noticeVal = isset( $optIn->sequence[$this->sequence_id]->sendNotice ) ? $optIn->sequence[$this->sequence_id]->sendNotice : 0;
+                }
+                else {
+                    $noticeVal = 0;
+                }
+
                 /* Add form information */
                 ob_start();
                 ?>
@@ -1817,12 +1825,12 @@
                     <div class="pmpro-sequence-hidden pmpro_sequence_useroptin">
                         <div class="seq_spinner"></div>
                         <form class="pmpro-sequence" action="<?php echo admin_url('admin-ajax.php'); ?>" method="post">
-                            <input type="hidden" name="hidden_pmpro_seq_useroptin" id="hidden_pmpro_seq_useroptin" value="<?php echo $optIn->sequence[$this->sequence_id]->sendNotice; ?>" >
+                            <input type="hidden" name="hidden_pmpro_seq_useroptin" id="hidden_pmpro_seq_useroptin" value="<?php echo $noticeVal; ?>" >
                             <input type="hidden" name="hidden_pmpro_seq_id" id="hidden_pmpro_seq_id" value="<?php echo $this->sequence_id; ?>" >
                             <input type="hidden" name="hidden_pmpro_seq_uid" id="hidden_pmpro_seq_uid" value="<?php echo $current_user->ID; ?>" >
                             <?php wp_nonce_field('pmpro-sequence-user-optin', 'pmpro_sequence_optin_nonce'); ?>
                             <span>
-                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($optIn->sequence[$this->sequence_id]->sendNotice == 1 ? ' checked="checked"' : ''); ?> " />
+                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : ''); ?> " />
                                 <label for="pmpro-seq-useroptin"><?php _e('Yes, please send me email alerts!', 'pmprosequence'); ?></label>
                             </span>
                         </form>
@@ -2438,6 +2446,8 @@
         private function seq_datediff( $startdate, $enddate = null, $tz = 'UTC' ) {
 
             $days = 0;
+
+            $this->dbgOut("seq_datediff() - Timezone: {$tz}");
 
             // use current day as $enddate if nothing is specified
             if ( ( is_null( $enddate ) ) && ( $tz == 'UTC') ) {
@@ -3451,38 +3461,79 @@
          */
         public function dbgOut( $msg, $lvl = DEBUG_SEQ_INFO ) {
 
-            $dbgPath = PMPRO_SEQUENCE_PLUGIN_DIR . 'debug';
+            $uplDir = wp_upload_dir();
+            $plugin = "/pmpro-sequences/";
 
-            if ( ( WP_DEBUG === true ) && ( $lvl >= DEBUG_SEQ_LOG_LEVEL ) ) {
+            $dbgRoot = $uplDir['basedir'] . "${plugin}";
+            // $dbgRoot = "${plugin}/";
+            $dbgPath = "${dbgRoot}/debug";
 
-                if (!  file_exists( $dbgPath )) {
+            // $dbgPath = PMPRO_SEQUENCE_PLUGIN_DIR . 'debug';
+
+            if ( ( WP_DEBUG === true ) && ( ( $lvl >= DEBUG_SEQ_LOG_LEVEL ) || ( $lvl == DEBUG_SEQ_INFO ) ) ) {
+
+                if (!file_exists($dbgPath)) {
+
                     // Create the debug logging directory
-                    mkdir( $dbgPath, 0750 );
+                    mkdir($dbgPath, 0750);
 
-                    if (! is_writable( $dbgPath )) {
+                    if (!is_writable($dbgPath)) {
                         error_log("PMPro Sequence: Debug log directory {$dbgPath} is not writable. exiting.");
                         return;
                     }
                 }
 
-                $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d', current_time("timestamp") ) . '.txt';
+                // $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d', current_time("timestamp") ) . '.txt';
+                $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'pmpro_seq_debug_log.txt';
 
-                if ( ($fh = fopen($dbgFile, 'a')) !== false ) {
+                $tid = sprintf("%08x", abs(crc32($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_TIME'] . $_SERVER['REMOTE_PORT'])));
 
-                    // Format the debug log message
-                    $tid = sprintf("%08x", abs(crc32($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_TIME'] . $_SERVER['REMOTE_PORT'])));
-                    $dbgMsg = '(' . date('d-m-y H:i:s', current_time( "timestamp" ) ) . "-{$tid}) -- ". $msg;
+                $dbgMsg = '(' . date('d-m-y H:i:s', current_time('timestamp')) . "-{$tid}) -- " .
+                    ((is_array($msg) || (is_object($msg))) ? print_r($msg, true) : $msg) . "\n";
 
-                    // Write it to the debug log file
-                    fwrite( $fh, $dbgMsg . "\r\n" );
-                    fclose( $fh );
-                }
-                else {
-                    error_log( 'PMPro Sequence: Unable to open debug log' );
-                }
+                $this->add_log_text($dbgMsg, $dbgFile);
             }
         }
 
+        private function add_log_text($text, $filename) {
+
+            if ( !file_exists($filename) ) {
+
+                touch( $filename );
+                chmod( $filename, 0640 );
+            }
+
+            if ( filesize( $filename ) > MAX_LOG_SIZE ) {
+
+                $filename2 = "$filename.old";
+
+                if ( file_exists( $filename2 ) ) {
+
+                    unlink($filename2);
+                }
+
+                rename($filename, $filename2);
+                touch($filename);
+                chmod($filename,0640);
+            }
+
+            if ( !is_writable( $filename ) ) {
+
+                error_log( "Unable to open debug log file ($filename)" );
+            }
+
+            if ( !$handle = fopen( $filename, 'a' ) ) {
+
+                error_log("Unable to open debug log file ($filename)");
+            }
+
+            if ( fwrite( $handle, $text ) === FALSE ) {
+
+                error_log("Unable to write to debug log file ($filename)");
+            }
+
+            fclose($handle);
+        }
         /**
          * Access the private $error value
          *
@@ -4521,8 +4572,6 @@
 
         public function register_user_scripts() {
 
-            $this->dbgOut("Running register_user_scripts()");
-
             global $e20r_sequence_editor_page;
 	        global $load_pmpro_sequence_script;
             global $post;
@@ -4532,20 +4581,21 @@
                 return;
             }
 
+            $this->dbgOut("Running register_user_scripts()");
+
             $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
 
             $this->dbgOut("'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
 
-            if ( ( $foundShortcode ) || ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
+            if ( ( true == $foundShortcode ) || ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
 
 	            $load_pmpro_sequence_script = true;
 
                 $this->dbgOut("Loading client side javascript and CSS");
+                wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), '1.0', true);
 
                 wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
                 wp_enqueue_style( "pmpro-sequence" );
-
-                wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), null, true);
 
                 wp_localize_script('pmpro-sequence-user', 'pmpro_sequence',
                     array(
@@ -4554,9 +4604,9 @@
                 );
             }
 	        else {
-
-		        $load_pmpro_sequence_script = false;
-	        }
+                $load_pmpro_sequence_script = false;
+                $this->dbgOut("Didn't find the expected shortcode... Not loading client side javascript and CSS");
+            }
 
         }
 
@@ -4620,12 +4670,19 @@
 
 	        $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
 
-	        $this->dbgOut("'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
+	        $this->dbgOut("enqueue_user_scripts() - 'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
+            wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), '1.0', true);
 
-	        if ( ( $foundShortcode ) || ( $this->getCurrentPostType() == 'pmpro_sequence' ) ) {
+            wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
+            wp_enqueue_style( "pmpro-sequence" );
 
-		        wp_print_scripts( 'pmpro-sequence-user' );
-	        }
+            wp_localize_script('pmpro-sequence-user', 'pmpro_sequence',
+                array(
+                    'ajaxurl' => admin_url('admin-ajax.php'),
+                )
+            );
+
+            wp_print_scripts( 'pmpro-sequence-user' );
         }
 
         /**

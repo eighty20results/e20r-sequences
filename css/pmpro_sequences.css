@@ -181,6 +181,10 @@ table#newmeta td { vertical-align: middle !important; }
     width: 100%;
 }
 .pmpro_sequence_postscroll tbody {
+    border-bottom: none;
+    border-top: none;
+    border-left: none;
+    border-right: none;
     display: block;
     float: left;
     width: 100%;
