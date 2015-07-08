@@ -96,10 +96,10 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 			// Get user specific settings regarding sequence alerts.
 			$noticeSettings = get_user_meta( $s->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
 
-            if (empty ($noticeSettings) ) {
+            // The user has no previously defined sequence alert settings.
+            if ( empty ( $noticeSettings ) ) {
 
-                $noticeSettings = new stdClass();
-                $noticeSettings->sequence = array();
+                $noticeSettings = $sequence->defaultNoticeSettings( $sequence->sequence_id );
             }
 
 			// Check if this user wants new content notices/alerts

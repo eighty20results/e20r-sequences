@@ -63,6 +63,10 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+= 2.2.3 =
+* Fix: Create default user notice settings
+* Version number bump
+
 = 2.2.1 =
 * Enh: Clears list of notified posts for specific sequence ID (not all notices for the user id)
 * Version number bump

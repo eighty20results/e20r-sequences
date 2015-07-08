@@ -97,8 +97,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-### 2.2.1
-* Enh: Clears list of notified posts for specific sequence ID (not all notices for the user id)
+= 2.2.3 =
+* Fix: Create default user notice settings
 * Version number bump
 
 ##Old releases
@@ -248,3 +248,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 ###2.2
 * Fix: Complete load of select2 from CDN by removing local file(s).
 * Set version number and updated Readme files
+
+### 2.2.1
+* Enh: Clears list of notified posts for specific sequence ID (not all notices for the user id)
+* Version number bump

@@ -4185,6 +4185,18 @@
             }
         }
 
+        public function defaultNoticeSettings( $sequence_id = 0 ) {
+
+            $noticeSettings = new stdClass();
+            $noticeSettings->sequence = array();
+
+            $noticeSettings->sequence[ $sequence_id ] = new stdClass();
+            $noticeSettings->sequence[ $sequence_id ]->sendNotice = 1;
+            $noticeSettings->sequence[ $sequence_id ]->optinTS = current_time('timestamp');
+            $noticeSettings->sequence[ $sequence_id ]->notifiedPosts = array();
+
+            return $noticeSettings;
+        }
         /**
          * Save the settings for a sequence ID as post_meta for that Sequence CPT
          *
