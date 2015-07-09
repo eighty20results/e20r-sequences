@@ -63,6 +63,10 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+= 2.2.4 =
+* Fix: Didn't always send notifications when using date based delays.
+* Enh: New notification email template example (VPT Reminder)
+
 = 2.2.3 =
 * Fix: Create default user notice settings
 * Version number bump

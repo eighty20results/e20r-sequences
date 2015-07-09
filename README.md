@@ -97,9 +97,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-= 2.2.3 =
-* Fix: Create default user notice settings
-* Version number bump
+###2.2.4
+* Fix: Didn't always send notifications when using date based delays.
+* Enh: New notification email template example (VPT Reminder)
 
 ##Old releases
 ###.1
@@ -249,6 +249,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fix: Complete load of select2 from CDN by removing local file(s).
 * Set version number and updated Readme files
 
-### 2.2.1
+###2.2.1
 * Enh: Clears list of notified posts for specific sequence ID (not all notices for the user id)
+* Version number bump
+
+###2.2.3
+* Fix: Create default user notice settings
 * Version number bump

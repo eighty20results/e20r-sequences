@@ -31,6 +31,9 @@
 		public $error = null;
         private $managed_types = null;
 
+        public $pmpro_sequence_user_level;
+        public $pmpro_sequence_user_id;
+
         /**
          * Constructor for the Sequence
          *
@@ -2258,7 +2261,7 @@
             // Load all posts in this sequence
             $this->getPosts();
 
-            $this->dbgOut("get_closestPost() - Found " . count($this->posts) . ".");
+            $this->dbgOut("get_closestPost() - Found " . count($this->posts) . " posts in sequence.");
 
             // Find the post ID in the postList array that has the delay closest to the membershipday.
             $closest = $this->get_closestByDelay( $membershipDay, $this->posts, $user_id );
@@ -2339,6 +2342,16 @@
 
             $days = 0;
 
+            if ( null === $userId ) {
+
+                $userId = $this->pmpro_sequence_user_id;
+            }
+
+            if ( null === $levelId ) {
+
+                $levelId = $this->pmpro_sequence_user_level;
+            }
+
             // Return immediately if the value we're given is a # of days (i.e. an integer)
             if ( is_numeric( $date ) ) {
                 $days = $date;
@@ -2347,9 +2360,11 @@
             if ( $this->isValidDate( $date ) )
             {
                 $startDate = pmpro_getMemberStartdate( $userId, $levelId); /* Needs userID & Level ID ... */
+                // $this->dbgOut("convertToDays() - Given date: {$date} and startdate: {$startDate} for user {$userId} for level {$levelId}");
 
-                if (empty($startDate))
+                if (empty($startDate)) {
                     $startDate = 0;
+                }
 
                 try {
 
@@ -2559,6 +2574,10 @@
         public function hasAccess($user_id, $post_id, $isAlert = false)
         {
             // FixMe: Fix cases where user is member of one sequence but not another.
+
+            if ( $this->pmpro_sequence_user_id !== $user_id ) {
+                $this->pmpro_sequence_user_id = $user_id;
+            }
 
             // Does the current user have a membership level giving them access to everything?
             $all_access_levels = apply_filters("pmproap_all_access_levels", array(), $user_id, $post_id);
@@ -2860,13 +2879,14 @@
         private function get_closestByDelay( $delayComp, $postArr, $user_id = null ) {
 
 
-            if ( empty($user_id) ) {
+            if ( null === $user_id ) {
 
-                global $current_user;
-                $user_id = $current_user->ID;
+                $user_id = $this->pmpro_sequence_user_id;
             }
 
             $distances = array();
+
+            // $this->dbgOut( $postArr );
 
             foreach ( $postArr as $key => $post ) {
 
@@ -2874,7 +2894,10 @@
                 // TODO: Rather than look up one post at a time, should just compare against an array of posts we have access to.
                 if ( $this->hasAccess( $user_id, $post->id, true ) ) {
 
-                    $distances[ $key ] = abs( $delayComp - ( $this->normalizeDelay( $post->delay ) /* + 1 */ ) );
+                    $nDelay = $this->normalizeDelay( $post->delay );
+                    $this->dbgOut("get_closestByDelay() - Normalized delay value: {$nDelay}");
+
+                    $distances[ $key ] = abs( $delayComp - ( $nDelay /* + 1 */ ) );
                 }
             }
 
@@ -3339,7 +3362,7 @@
                     update_post_meta( $post_id, '_post_sequences', $sequence_list );
                 }
 
-                $this->dbgOut("UserID: {$user_id}, post: {$post_id}, Alert: {$isAlert} for sequence: {$this->sequence_id} - posts: " .print_r( $sequence_list, true));
+                $this->dbgOut("UserID: {$user_id}, post: {$post_id}, Alert: {$isAlert} for sequence: {$this->sequence_id} - sequence_list: " .print_r( $sequence_list, true));
 
                 $results = pmpro_has_membership_access( $this->sequence_id, $user_id, true ); //Using true to return all level IDs that have access to the sequence
 
@@ -3380,6 +3403,9 @@
                             // $this->dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days. The post has a delay of: %d', $user_id, $level_id, $durationOfMembership, $sp->delay) );
 
                             if ( $durationOfMembership >= $sp->delay ) {
+
+                                // Set users membership Level
+                                $this->pmpro_sequence_user_level = $level_id;
                                 // $this->dbgOut("hatByAccess() - using byDays as the delay type, this user is given access to post ID {$post_id}.");
                                 return true;
                             }
@@ -3395,6 +3421,8 @@
                             $today = date( __( 'Y-m-d', 'pmprosequence' ), ( current_time( 'timestamp' ) + $previewAdd ) );
 
                             if ( $today >= $sp->delay ) {
+
+                                $this->pmpro_sequence_user_level = $level_id;
                                 // $this->dbgOut("hasAccess() - using byDate as the delay type, this user is given access to post ID {$post_id}.");
                                 return true;
                             }
@@ -4185,14 +4213,24 @@
             }
         }
 
+        /**
+         * Define default settings for sending sequence notifications to a new user.
+         *
+         * @param int $sequence_id - The ID of the sequence.
+         * @return stdClass -- Returns a $noticeSettings object
+         *
+         */
         public function defaultNoticeSettings( $sequence_id = 0 ) {
 
+            $starting = date('Y-m-d H:i:s', current_time( 'timestamp' ) );
+
+            $this->dbgOut("Start time for default Notice settings will be today at midnight: {$starting}");
             $noticeSettings = new stdClass();
             $noticeSettings->sequence = array();
 
             $noticeSettings->sequence[ $sequence_id ] = new stdClass();
             $noticeSettings->sequence[ $sequence_id ]->sendNotice = 1;
-            $noticeSettings->sequence[ $sequence_id ]->optinTS = current_time('timestamp');
+            $noticeSettings->sequence[ $sequence_id ]->optinTS = strtotime( $starting );
             $noticeSettings->sequence[ $sequence_id ]->notifiedPosts = array();
 
             return $noticeSettings;

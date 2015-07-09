@@ -88,6 +88,9 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
 			$sequence->dbgOut('cron() - Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
 
+            // Set the user ID we're processing for:
+            $sequence->pmpro_sequence_user_id = $s->user_id;
+
 			if ( ($sequence->options->sendNotice == 1) && ($all_sequences === true) ) {
 				$sequence->dbgOut('cron() - This sequence will be processed directly. Skipping it for now (All)');
 				continue;
@@ -99,6 +102,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
             // The user has no previously defined sequence alert settings.
             if ( empty ( $noticeSettings ) ) {
 
+                $sequence->dbgOut("User with ID {$s->user_id} has no notice settings. Setting defaults");
                 $noticeSettings = $sequence->defaultNoticeSettings( $sequence->sequence_id );
             }
 
@@ -109,8 +113,10 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				  ( $sequence->options->sendNotice == 1 ) ) ) {
 
 				// Set the opt-in timestamp if this is the first time we're processing alert settings for this user ID.
-				if ( empty( $noticeSettings->sequence[ $sequence->sequence_id ]->optinTS ) )
-					$noticeSettings->sequence[ $sequence->sequence_id ]->optinTS = current_time('timestamp');
+				if ( empty( $noticeSettings->sequence[ $sequence->sequence_id ]->optinTS ) ) {
+
+                    $noticeSettings->sequence[ $sequence->sequence_id ]->optinTS = current_time('timestamp');
+                }
 
                 $sequence->dbgOut('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
 
@@ -125,18 +131,17 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
                 $sequence->dbgOut( 'cron() - Post: "' . get_the_title($post_id) . '"' .
                         ', post ID: ' . $post_id .
                         ', membership day: ' . $membership_day .
-                        ', post delay: ' . $post->delay .
+                        ', post delay: ' . $sequence->normalizeDelay( $post->delay ).
                         ', user ID: ' . $s->user_id .
                         ', already notified: ' . ( in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
                          ', has access: ' . ( $sequence->hasAccess( $s->user_id, $post_id, true ) === true ? 'true' : 'false' ) );
 
-                // dbgOut("cron() - # of posts in sequence (" . count($sequence_posts) . ") vs number of posts we've already notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
+                $sequence->dbgOut("cron() - # of posts we've already notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
                 $sequence->dbgOut( "cron() - Do we notify {$s->user_id} of availability of post # {$post_id}?" );
 
-                if  ( ( $post_id !== false ) &&
-                      /* ( pmpro_sequence_hasAccess( $s->user_id, $post_id, true ) ) && */
-                      ( $membership_day == $post->delay ) &&
-                      ( ! in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) ) ) {
+                if  ( ( false !== $post_id ) &&
+                      ( $membership_day == $sequence->normalizeDelay( $post->delay ) ) &&
+                    ( ! in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts ) ) ) {
 
                     $sequence->dbgOut( "cron() - Need to send alert to {$s->user_id} for '" . get_the_title( $post_id ) . "'" );
 
