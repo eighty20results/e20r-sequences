@@ -99,6 +99,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###2.3
 * Enh: Adding Wordpress update functionality.
+* Fix: Path to plugin debug log
 
 ##Old releases
 ###.1

@@ -65,6 +65,7 @@ Or you can email support@eighty20results.zendesk.com
 
 = 2.3 =
 * Enh: Adding Wordpress update functionality.
+* Fix: Path to plugin debug log
 
 = 2.2.4 =
 * Fix: Didn't always send notifications when using date based delays.
