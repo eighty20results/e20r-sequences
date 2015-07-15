@@ -31,6 +31,7 @@ cd ${dst_path}/..
 zip -r ${kit_name}.zip ${plugin_path}
 scp ${kit_name}.zip siteground-e20r:./www/protected-content/${short_name}/
 scp ${metadata} siteground-e20r:./www/protected-content/${short_name}/
+ssh siteground-e20r "ln -sf ./www/protected-content/\"${short_name}\"/\"${short_name}\"-\"${version}\".zip ./www/protected-content/\"${short_name}\".zip"
 rm -rf ${dst_path}
 
 
