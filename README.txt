@@ -6,7 +6,7 @@ Requires PHP 5.2 or later.
 Tested up to: 4.2.2
 Stable tag: 2.2.1
 
-Create a drip feed "Sequence" which are groups of posts/pages where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
+Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
 == Description ==
 This plugin currently requires Paid Memberships Pro and started life as a complete rip-off of the pmpro_series
@@ -62,6 +62,9 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+= 2.3 =
+* Enh: Adding Wordpress update functionality.
 
 = 2.2.4 =
 * Fix: Didn't always send notifications when using date based delays.
