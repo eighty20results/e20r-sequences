@@ -3494,11 +3494,21 @@
 
             $dbgRoot = $uplDir['basedir'] . "${plugin}";
             // $dbgRoot = "${plugin}/";
-            $dbgPath = "${dbgRoot}/debug";
+            $dbgPath = "${dbgRoot}";
 
             // $dbgPath = PMPRO_SEQUENCE_PLUGIN_DIR . 'debug';
 
             if ( ( WP_DEBUG === true ) && ( ( $lvl >= DEBUG_SEQ_LOG_LEVEL ) || ( $lvl == DEBUG_SEQ_INFO ) ) ) {
+
+                if ( !file_exists( $dbgRoot ) ) {
+
+                    mkdir($dbgRoot, 0750);
+
+                    if (!is_writable($dbgRoot)) {
+                        error_log("PMPro Sequence: Debug log directory {$dbgRoot} is not writable. exiting.");
+                        return;
+                    }
+                }
 
                 if (!file_exists($dbgPath)) {
 
