@@ -5,6 +5,7 @@ include=(classes email scheduled css images js languages pmpro-sequences.php REA
 short_name="pmpro-sequences"
 plugin_path="${short_name}"
 version=$(egrep "^Version:" ../${short_name}.php | awk '{print $2}')
+metadata="../metadata.json"
 src_path="../"
 dst_path="../build/${plugin_path}"
 kit_path="../build/kits"
@@ -28,7 +29,8 @@ done
 
 cd ${dst_path}/..
 zip -r ${kit_name}.zip ${plugin_path}
-scp ${kit_name}.zip siteground-e20r:./www/protected-content/
+scp ${kit_name}.zip siteground-e20r:./www/protected-content/${short_name}/
+scp ${metadata} siteground-e20r:./www/protected-content/${short_name}/
 rm -rf ${dst_path}
 
 
