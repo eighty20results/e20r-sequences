@@ -59,6 +59,11 @@ define( 'PMPRO_SEQUENCE_DEBUG', true );
 define( 'DEBUG_SEQ_LOG_LEVEL', DEBUG_SEQ_INFO );
 
 /**
+ * Include the class for the update checker
+ */
+require_once( PMPRO_SEQUENCE_PLUGIN_DIR . "classes/plugin-updates/plugin-update-checker.php" );
+
+/**
   *	Include the class for PMProSequences
   */
 if (! class_exists( 'PMProSequence' )):
@@ -71,7 +76,6 @@ endif;
 if ( ! class_exists( 'SeqRecentPostWidget' )):
 	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.SeqRecentPostWidget.php");
 endif;
-
 
 /** A debug function */
 
