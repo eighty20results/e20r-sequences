@@ -40,7 +40,7 @@
          * @param null $id -- The ID of the sequence to initialize
          * @throws Exception - If the sequence doesn't exist.
          */
-        function PMProSequence($id = null) {
+        function __construct($id = null) {
 
             // Make sure it's not a dummy construct() call - i.e. for a post that doesn't exist.
             if ( ( $id != null ) && ( $this->sequence_id == 0 ) ) {
