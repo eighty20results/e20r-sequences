@@ -19,7 +19,14 @@
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-
+.clear-after { zoom: 1; }
+.clear-after:after {
+    content: ".";
+    display: block;
+    height: 0;
+    clear: both;
+    visibility: hidden;
+}
 .pmpro_sequence_list {list-style: none; margin: 1.5em 0; border-top: 1px solid #EEE; }
 .pmpro_sequence_list li {padding: .5em 1em; margin: 0; background: #F9F9F9; border-top: 1px solid #FFF; border-bottom: 1px solid #EEE; }
 .pmpro_sequence_list li:nth-child(odd) { }
@@ -33,7 +40,6 @@
     margin-top: 30px;
     text-align: center;
 }
-.pmpro-sequence-hidden { display: none; }
 form.pmpro-sequence br { display:none; }
 div#pmpro-seq-error {
     height: 40px;
@@ -52,6 +58,23 @@ div#pmpro-seq-error {
     vertical-align: bottom;
     width: 67px;
     overflow: hidden;
+    font-size: 0.7rem;
+}
+.pmpro-sequence-settings {
+    float: left;
+    display: flex;
+}
+.pmpro-sequence-setting-col-1 {
+    float: left;
+    order: 1;
+}
+.pmpro-sequence-setting-col-2 {
+    float: left;
+    order: 2;
+}
+.pmpro-sequence-setting-col-3 {
+    float: left;
+    order: 3;
 }
 .sequence-list-dropdown,
 .pmpro_seq-memberof-sequences {
@@ -69,8 +92,9 @@ div#pmpro-seq-error {
     width: 150px;
     white-space: nowrap;
     text-overflow: ellipsis;
-    /* -o-text-overflow: ellipsis; */
-    /* -moz-binding: url('assets/xml/ellipsis.xml#ellipsis'); */
+    padding-left: 5px;
+    -o-text-overflow: ellipsis;
+    -moz-binding: url('assets/xml/ellipsis.xml#ellipsis');
     height: 18px;
     font-weight: bold;
     color: #3875d7;
@@ -89,12 +113,12 @@ div#pmpro-seq-error {
     right: 20px;
     display: inline-block;
 }
-#pmpro-seq-edit-showdelayas,
+/* #pmpro-seq-edit-showdelayas,
 #pmpro-seq-edit-delay {
     position: relative;
     right: 2px;
     display: inline-block;
-}
+}*/
 .widget-title {
     font-size: 24px;
     padding-bottom: 10px;
@@ -131,6 +155,7 @@ div#pmpro-seq-error {
     padding-top: 10px;
     font-size: 14px;
     font-weight: bold;
+    text-wrap: none;
     /* color: #9C0000; */
 }
 #pmpro_settings_save {
@@ -334,3 +359,17 @@ a:hover.page-numbers {
     font-variant: small-caps;
     line-height: 130%;
 }
+div.pmpro-sequence-settings-row {
+    display: inline-block;
+}
+div.pmpro-sequence-full-row {
+   width: 100%;
+}
+div.pmpro-sequence-settings-display {
+    display: block;
+}
+div.pmpro-sequence-settings-display .pmpro-sequence-setting-col-3 {
+
+}
+.pmpro-sequence-hidden { display: none; }
+.pmpro-sequence-setting-col-2 strong { padding-left: 10px; }
