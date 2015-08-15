@@ -1,17 +1,17 @@
 {
   "name" : "PMPro Sequences",
   "slug" : "pmpro-sequences",
-  "download_url" : "https://eighty20results.com/protected-content/pmpro-sequences/pmpro-sequences-2.3.zip",
-  "version" : "2.3",
-  "tested": "4.2.2",
+  "download_url" : "https://eighty20results.com/protected-content/pmpro-sequences/pmpro-sequences-2.4.zip",
+  "version" : "2.4",
+  "tested": "4.2.4",
   "requires": "4.0",
   "author" : "Thomas Sjolshagen",
   "author_homepage": "https://eighty20results.com/thomas-sjolshagen",
-  "last_updated": "2015-07-15 09:00:00",
+  "last_updated": "2015-08-15 21:11:00",
   "homepage": "https://eighty20results.com/plugins/pmpro-sequences",
   "sections" : {
     "description" : "Create a drip feed 'Sequence' which are groups of posts/pages/CPTs where the content is revealed to members over time. This is a replacement for the 'drip feed content' module for Paid Memberships Pro (pmpro-series).<hr/><p>This plugin currently requires Paid Memberships Pro and started life as a complete rip-off of the pmpro_series lugin from strangerstudios. I needed a drip-content plugin that supported different delay type options, paginatedlists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type,etc.</p><p>Added a features that weren't included in pmpro_series, specifically the ability to:<ol><li>Configure the sort order for the series/sequence</li><li>Show/hide upcoming series/sequence posts</li><li>Show/hide 'You are on day XXX of your membership' notice</li><li>Show 'delay time' as 'days since membership started' or calendar date to end user.</li><li>Admin defined schedule (using WP-Cron) for new content alert emails to users.</li><li>User opt-in for receiving email alerts</li><li>Templated email alerts for new content</li><li>Pagination of sequence lists in sequence page</li><li>[sequence_list] shortcode for paginated sequence list</li><li>Widget containing summary (excerpt) of most recent post in a sequence [***] for the logged in user.</li><li>Allows 'sneak preview' of upcoming posts in the sequence</li><li>A settings metabox to simplify configuration (rather than only use filters)</li><li>Filters to let the admin specify the types of posts/pages to include in a sequence, etc.",
-    "changelog": "<h2>Change Log</h2><h3>2.3</h3><ol><li>Added support for Wordpress update</li><li>Fix path to plugin debug log</li></ol><h3>2.2.4</h3><ol><li>Didn't always send notifications when using date based delays.</li><li>New notification email template example (VPT Reminder)</li><ol><h3>2.2.3<h3><ol><li>Create default user notice settings</li></ol>",
+    "changelog": "<h2>Change Log</h2><h3>2.4</h3><ol><li>Refactor for two classes & member functions.</li><li>Make settings updates more uniform w/o breaking compatibility with back-end.</li><li>Remove old function/event structure.</li><li>Refactor settings metabox to improve UI experience.</li><li>Add support for sending alerts as digests or as individual messages.</li><li>Updated text</li><li>Transition away from PHP4 constructors</li></ol><h3>2.3</h3><ol><li>Added support for Wordpress update</li><li>Fix path to plugin debug log</li></ol><h3>2.2.4</h3><ol><li>Didn't always send notifications when using date based delays.</li><li>New notification email template example (VPT Reminder)</li><ol><h3>2.2.3<h3><ol><li>Create default user notice settings</li></ol>",
     "faq": "<h3>I found a bug in the plugin.</h3>Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/pmpro-sequence/issuesOr you can email support@eighty20results.zendesk.com <h3>Do you have any filter/hook documentation</h3>Yes we do. Just jump over to the plugin page for the full list of hooks/filters available in this plugin."
   }
 }
