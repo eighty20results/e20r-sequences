@@ -61,7 +61,7 @@ define( 'DEBUG_SEQ_LOG_LEVEL', DEBUG_SEQ_INFO );
 /**
  * Include the class for the update checker
  */
-require_once( PMPRO_SEQUENCE_PLUGIN_DIR . "classes/plugin-updates/plugin-update-checker.php" );
+require_once( PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php" );
 
 /**
   *	Include the class for PMProSequences
