@@ -1,7 +1,2 @@
-Refactor for two classes & member functions.
-Make settings updates more uniform w/o breaking compatibility with back-end.
-Remove old function/event structure.
-Refactor settings metabox to improve UI experience.
-Add support for sending alerts as digests or as individual messages.
-Updated text
-Transition away from PHP4 constructors
+Fix settings text for previews
+Adjust new change log creation script for this plugin
