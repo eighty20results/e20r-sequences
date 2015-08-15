@@ -1043,7 +1043,7 @@
                         <div class="pmpro-sequence-offset pmpro-sequence-hidden pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-settings pmpro-sequence-offset">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-offset"><?php _e('Days of prev:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-offset"><?php _e('Days of preview:', 'pmprosequence'); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <span id="pmpro-seq-offset-status" class="pmpro-sequence-status"><?php echo ( $this->options->previewOffset == 0 ? 'None' : $this->options->previewOffset ); ?></span>
