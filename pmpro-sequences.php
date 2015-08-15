@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sequences
 Plugin URI: http://www.eighty20results.com/pmpro-sequences/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 2.4.1
+Version: 2.4.0
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
@@ -369,3 +369,9 @@ catch ( Exception $e ) {
 
 register_activation_hook( __FILE__, array( &$sequence, 'activation' ) );
 register_deactivation_hook( __FILE__, array( &$sequence, 'deactivation' ) );
+
+$plugin_updates = PucFactory::buildUpdateChecker(
+    'https://eighty20results.com/protected-content/pmpro-sequences/metadata.json',
+    __FILE__,
+    'pmpro-sequences'
+);
