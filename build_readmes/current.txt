@@ -1,2 +1,2 @@
-Fix settings text for previews
-Adjust new change log creation script for this plugin
+Init the update checker on plugin load
+Correct path to update check functionality

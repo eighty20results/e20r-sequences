@@ -63,6 +63,12 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 2.4.2 ==
+
+* Init the update checker on plugin load
+* Correct path to update check functionality
+
+
 == 2.4.1 ==
 
 * Fix settings text for previews
