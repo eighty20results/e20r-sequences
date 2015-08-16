@@ -11,7 +11,7 @@ Text Domain: pmprosequence
 Domain Path: /languages
 License:
 
-	Copyright 2015 Thomas Sjolshagen (thomas@eighty20results.com)
+	Copyright 2015 Wicked Strong Chicks, LLC (info@eighty20results.com)
 	Copyright 2013 Stranger Studios (jason@strangerstudios.com)
 
 	This program is free software; you can redistribute it and/or modify
@@ -30,7 +30,7 @@ License:
 */
 
 /* Version number */
-define( 'PMPRO_SEQUENCE_VERSION', '2.3' );
+define( 'PMPRO_SEQUENCE_VERSION', '2.4.3' );
 
 /* Set the max number of email alerts to send in one go to one user */
 define( 'PMPRO_SEQUENCE_MAX_EMAILS', 3 );
