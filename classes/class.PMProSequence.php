@@ -3366,12 +3366,12 @@
 
             $emails = array();
             $post_links = '';
+            $excerpt = '';
 
             if ( PMPRO_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
+
                 $post_link_prefix = "<ul>\n";
                 $post_link_postfix = "</ul>\n";
-
-
             }
             else {
                 $post_link_prefix = '';
@@ -3397,7 +3397,6 @@
                     $emails[$idx]->template = $templ[0];
                     $emails[$idx]->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
                     $emails[$idx]->email = $user->user_email;
-                    $emails[$idx]->ptitle = $post->post_title;
                     $emails[$idx]->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", current_time('timestamp') ));
                     $emails[$idx]->dateformat = $this->options->dateformat;
 
@@ -3406,13 +3405,13 @@
                         $this->dbgOut("Adding the post excerpt to email notice");
 
                         if ( empty( $this->options->excerpt_intro ) ) {
-                            $this->options->excerpt_intro = __('A summary of the post(s) follows:', 'pmprosequence');
+                            $this->options->excerpt_intro = __('A summary of the post:', 'pmprosequence');
                         }
 
-                        $emails[$idx]->excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
+                        $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>\n';
                     }
                     else {
-                        $emails[$idx]->excerpt = '';
+                        $excerpt = '';
                     }
 
                     if (false === ($template_content = file_get_contents( $this->getEmailTemplatePath() ) ) ) {
@@ -3427,14 +3426,14 @@
                     $emails[$idx]->data = array(
                         "name" => $user->first_name, // Options are: display_name, first_name, last_name, nickname
                         "sitename" => get_option("blogname"),
-                        "post_list" => $post_link_prefix . $post_links . $post_link_postfix,
+                        "post_link" => $post_link_prefix . $post_links . $post_link_postfix,
                         "today" => date($this->options->dateformat, current_time('timestamp')),
+                        "excerpt" => $excerpt,
+                        "ptitle" => $post->post_title
                     );
 
                 }
             }
-
-            wp_reset_postdata();
 
             if ( empty($emails) ) {
 
@@ -3442,7 +3441,6 @@
                 $email->template = $templ[0];
                 $email->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
                 $email->email = $user->user_email;
-                $email->ptitle = $post->post_title;
                 $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", current_time('timestamp') ));
                 $email->dateformat = $this->options->dateformat;
 
@@ -3451,13 +3449,13 @@
                     $this->dbgOut("Adding the post excerpt to email notice");
 
                     if ( empty( $this->options->excerpt_intro ) ) {
-                        $this->options->excerpt_intro = __('A summary of the post(s) follows:', 'pmprosequence');
+                        $this->options->excerpt_intro = __('A summary of the post(s):', 'pmprosequence');
                     }
 
-                    $email->excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
+                    $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>\n';
                 }
                 else {
-                    $email->excerpt = '';
+                    $excerpt = '';
                 }
 
                 if (false === ($template_content = file_get_contents( $this->getEmailTemplatePath() ) ) ) {
@@ -3470,8 +3468,10 @@
                 $email->data = array(
                     "name" => $user->first_name, // Options are: display_name, first_name, last_name, nickname
                     "sitename" => get_option("blogname"),
-                    "post_list" => $post_link_prefix . $post_links . $post_link_postfix,
+                    "post_link" => $post_link_prefix . $post_links . $post_link_postfix,
                     "today" => date($this->options->dateformat, current_time('timestamp')),
+                    "excerpt" => $excerpt,
+                    "ptitle" => $post->post_title
                 );
 
                 $email->sendEmail();
@@ -3486,6 +3486,7 @@
                 }
             }
 
+            wp_reset_postdata();
             // All of the array list names are !!<name>!! escaped values.
             return true;
         }
@@ -5154,7 +5155,7 @@
         {
 
             // Load filters
-            add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
+            // add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
             add_filter('pmpro_sequencepost_types', array(&$this, 'included_cpts'));
 
             add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 10, 4);
