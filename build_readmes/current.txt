@@ -1,2 +1,1 @@
-Init the update checker on plugin load
-Correct path to update check functionality
+Updated translations
