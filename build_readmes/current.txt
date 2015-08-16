@@ -1,1 +1,2 @@
-Edit license text (copyright)
+Fix excerpt, post_link and post title (ptitle) handling for pmproemail class.
+Remove pmpro_after_phptmailer_init filter/handler.
