@@ -535,6 +535,8 @@ var postMeta = {
         var $count = 0;
         var $class = this;
 
+        $class.sequence_list = jQuery( 'select.pmpro_seq-memberof-sequences');
+
         $class.sequence_list.each( function() {
 
             $class.row_visibility( this, 'all' );
@@ -569,9 +571,11 @@ var postMeta = {
             if (! jQuery( this ).is( ':disabled') ) {
 
                 jQuery(this).attr('disabled', true);
+                console.log("Setting " + this  + " to disabled");
             }
             else {
                 jQuery(this).attr('disabled', false);
+                console.log("Setting " + this  + " to enabled");
             }
         });
 
@@ -588,24 +592,24 @@ var postMeta = {
 
         if ( $show == 'all') {
 
-            jQuery($selectLabelRow).show();
-            jQuery($selectRow).show();
-            jQuery($delayLabelRow).show();
-            jQuery($delayRow).show();
+            $selectLabelRow.show();
+            $selectRow.show();
+            $delayLabelRow.show();
+            $delayRow.show();
         }
         else if (  $show == 'none') {
 
-            jQuery($selectLabelRow).hide();
-            jQuery($selectRow).hide();
-            jQuery($delayLabelRow).hide();
-            jQuery($delayRow).hide();
+            $selectLabelRow.hide();
+            $selectRow.hide();
+            $delayLabelRow.hide();
+            $delayRow.hide();
         }
         else if ( $show == 'select' ) {
 
-            jQuery($selectLabelRow).show();
-            jQuery($selectRow).show();
-            jQuery($delayLabelRow).hide();
-            jQuery($delayRow).hide();
+            $selectLabelRow.show();
+            $selectRow.show();
+            $delayLabelRow.hide();
+            $delayRow.hide();
         }
     },
     meta_select_changed: function( $self ) {
