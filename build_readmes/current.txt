@@ -1,2 +1,2 @@
-Fix excerpt, post_link and post title (ptitle) handling for pmproemail class.
-Remove pmpro_after_phptmailer_init filter/handler.
+Instantiate $class variable within bind_controls() function.
+Handle meta control display when adding/editing supported posts/pages.

@@ -97,10 +97,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.4.5
+###2.4.6
 
-* Fix excerpt, post_link and post title (ptitle) handling for pmproemail class.
-* Remove pmpro_after_phpmailer_init filter/handler.
+* Instantiate $class variable within bind_controls() function.
+* Handle meta control display when adding/editing supported posts/pages.
 
 ##Old releases
 ###.1
@@ -293,3 +293,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 ###2.4.4
 
 * Edit license text (copyright)
+
+###2.4.5
+
+* Fix excerpt, post_link and post title (ptitle) handling for pmproemail class.
+* Remove pmpro_after_phpmailer_init filter/handler.
