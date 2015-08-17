@@ -373,6 +373,8 @@ var postMeta = {
     },
     remove_entry: function( post_id ) {
 
+        var $class = this;
+
         jQuery('#pmpro_sequencesave').attr('disabled', 'disabled');
         // jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.saving);
 
@@ -428,6 +430,7 @@ var postMeta = {
             alert('Your browser settings prevents this action. You need to allow pop-ups');
     },
     add_entry: function() {
+
         var saveBtn = jQuery('#pmpro_sequencesave');
 
         if ('' == jQuery('#pmpro_sequence_post').val() || undefined != saveBtn.attr('disabled'))
@@ -607,6 +610,7 @@ var postMeta = {
     },
     meta_select_changed: function( $self ) {
 
+        var $class = this;
         $class.manage_meta_rows();
 
         console.log("Changed the Sequence this post is a member of");
