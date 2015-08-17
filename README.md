@@ -5,7 +5,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.2 or later.
 Tested up to: 4.2.2
-Stable tag: 2.4.5
+Stable tag: 2.4.8
 
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -97,9 +97,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.4.7
+###2.4.8
 
-* Instantiate $class variable
+* Reload content of sequence list select in post/page metabox
 
 ##Old releases
 ###.1
@@ -302,3 +302,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 * Instantiate $class variable within bind_controls() function.
 * Handle meta control display when adding/editing supported posts/pages.
+
+###2.4.7
+
+* Instantiate $class variable

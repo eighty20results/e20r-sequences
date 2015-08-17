@@ -1,1 +1,1 @@
-Instantiate $class variable
+Reload content of sequence list select in post/page metabox
