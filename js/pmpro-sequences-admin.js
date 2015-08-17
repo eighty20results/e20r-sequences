@@ -570,12 +570,12 @@ var postMeta = {
 
             if (! jQuery( this ).is( ':disabled') ) {
 
-                jQuery(this).attr('disabled', true);
-                console.log("Setting " + this  + " to disabled");
+                jQuery(this).attr('disabled', false);
+                console.log("Enable row");
             }
             else {
-                jQuery(this).attr('disabled', false);
-                console.log("Setting " + this  + " to enabled");
+                jQuery(this).attr('disabled', true);
+                console.log("Disable row");;
             }
         });
 
