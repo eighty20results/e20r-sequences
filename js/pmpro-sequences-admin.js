@@ -356,11 +356,25 @@ var postMeta = {
 
         var $class = this;
 
+        $class.sequence_list = jQuery( 'select.pmpro_seq-memberof-sequences');
+
         jQuery('.new-sequence-select, .pmpro_seq-memberof-sequences').each(function() {
             jQuery(this).unbind().on( 'change', function () {
 
                 $class.meta_select_changed( this );
             });
+        });
+
+        jQuery("#pmpro-seq-new-meta").on( "click", function() {
+
+            $class.manage_meta_rows();
+            console.log("Add new table row for metabox");
+            $class.spinner.show();
+
+            $class.row_visibility( jQuery( '.new-sequence-select' ), 'select' );
+
+            $class.spinner.hide();
+            $class.manage_meta_rows();
         });
 
         jQuery('.delay-row-input input:checkbox').unbind().on( 'click', function() {
@@ -411,6 +425,7 @@ var postMeta = {
             complete: function() {
                 // Enable the Save button again.
                 jQuery('#pmpro_sequencesave').removeAttr('disabled');
+                $class.bind_controls();
             }
         });
     },
@@ -479,6 +494,7 @@ var postMeta = {
                 // Re-enable save button
                 saveBtn.html(pmpro_sequence.lang.save);
                 saveBtn.removeAttr('disabled');
+                $class.bind_controls();
 
             }
         });
@@ -524,6 +540,7 @@ var postMeta = {
 
                 $class.show_controls();
                 $class.manage_meta_rows();
+                $class.bind_controls();
                 $class.spinner.hide();
 
 
@@ -534,8 +551,6 @@ var postMeta = {
 
         var $count = 0;
         var $class = this;
-
-        $class.sequence_list = jQuery( 'select.pmpro_seq-memberof-sequences');
 
         $class.sequence_list.each( function() {
 
@@ -668,6 +683,7 @@ var postMeta = {
                 console.log("Ajax function complete...");
                 $class.show_controls();
                 $class.manage_meta_rows();
+                $class.bind_controls();
                 jQuery( '#pmpro-seq-new').hide();
             }
         });
