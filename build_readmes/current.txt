@@ -1,1 +1,2 @@
-Reload content of sequence list select in post/page metabox
+Fix "Drip Feed Settings" metabox actions/events.
+We should _enable_ not _disable_ a disabled row.
