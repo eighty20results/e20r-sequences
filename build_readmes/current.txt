@@ -1,2 +1,1 @@
-Instantiate $class variable within bind_controls() function.
-Handle meta control display when adding/editing supported posts/pages.
+Instantiate $class variable

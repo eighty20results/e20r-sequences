@@ -97,10 +97,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.4.6
+###2.4.7
 
-* Instantiate $class variable within bind_controls() function.
-* Handle meta control display when adding/editing supported posts/pages.
+* Instantiate $class variable
 
 ##Old releases
 ###.1
@@ -298,3 +297,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 * Fix excerpt, post_link and post title (ptitle) handling for pmproemail class.
 * Remove pmpro_after_phpmailer_init filter/handler.
+
+###2.4.6
+
+* Instantiate $class variable within bind_controls() function.
+* Handle meta control display when adding/editing supported posts/pages.
