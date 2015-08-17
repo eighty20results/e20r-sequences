@@ -354,6 +354,8 @@ var postMeta = {
     },
     bind_controls: function() {
 
+        var $class = this;
+
         jQuery('.new-sequence-select, .pmpro_seq-memberof-sequences').each(function() {
             jQuery(this).unbind().on( 'change', function () {
 
@@ -366,6 +368,8 @@ var postMeta = {
             console.log("The 'remove' checkbox was clicked...");
             $class.remove_sequence( this );
         });
+
+        $class.show_controls();
     },
     remove_entry: function( post_id ) {
 
