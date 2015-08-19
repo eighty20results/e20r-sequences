@@ -3385,7 +3385,7 @@
 
                 if ( PMPRO_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
 
-                    $post_links .= '<li><a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a></li>' . "\n";
+                    $post_links .= '<li><a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a></li>';
 
                 }
                 else {
@@ -3408,7 +3408,7 @@
                             $this->options->excerpt_intro = __('A summary of the post:', 'pmprosequence');
                         }
 
-                        $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>\n';
+                        $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
                     }
                     else {
                         $excerpt = '';
