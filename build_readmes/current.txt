@@ -1,2 +1,2 @@
-Fix "Drip Feed Settings" metabox actions/events.
-We should _enable_ not _disable_ a disabled row.
+Remove redundant footer-like text
+Remove \n for replaceable text
