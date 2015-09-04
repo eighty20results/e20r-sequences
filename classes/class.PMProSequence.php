@@ -2723,19 +2723,19 @@
          * Filter pmpro_has_membership_access based on sequence access.
          *
          * @param $hasaccess (bool) -- Current access status
-         * @param $mypost (int) -- The post we're processing
-         * @param $myuser (int) -- The user ID we're testing
-         * @param $post_membership_levels -- The membership level(s) we're testing against
+         * @param $post (WP_Post) -- The post we're processing
+         * @param $user (WP_User) -- The user ID we're testing
+         * @param $levels (array) -- The membership level(s) we're testing against
          *
          * @return bool -- True if access is granted, false if not
          */
-        public function has_membership_access_filter($hasaccess, $mypost, $myuser, $post_membership_levels)
+        public function has_membership_access_filter($hasaccess, $post, $user, $levels)
         {
             // If the user has been granted access already, we'll verify that they have access to the specific post
             if ( $hasaccess ) {
                 // $this->dbgOut( "has_membership_access_filter() - (current access - 1 == true: {$hasaccess}) for {$myuser->ID} related to post {$mypost->ID} and sequence {$this->sequence_id}");
                 //See if the user has access to the specific post
-                return $this->hasAccess( $myuser->ID, $mypost->ID );
+                $hasaccess = apply_filters( 'pmpro-sequence-has-access-filter', $this->hasAccess( $user->ID, $post->ID ), $post, $user, $levels );
             }
 
             return $hasaccess;
@@ -5158,7 +5158,7 @@
             // add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
             add_filter('pmpro_sequencepost_types', array(&$this, 'included_cpts'));
 
-            add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 10, 4);
+            add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 9, 4);
             add_filter("pmpro_non_member_text_filter", array(&$this, "text_filter"));
             add_filter("pmpro_not_logged_in_text_filter", array(&$this, "text_filter"));
             add_filter("the_content", array(&$this, "display_sequence_content"));
