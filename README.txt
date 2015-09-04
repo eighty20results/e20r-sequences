@@ -63,6 +63,12 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 2.4.12 ==
+
+* Update docs for pmpro_has_membership_access_filter()
+* Apply new 'pmpro-sequence-has-access-filter' filter to result from $this->hasAccess() in has_membership_access_filter() function
+* Increase priority of has_membership_access_filter() function in pmpro_has_membership_access_filter.
+
 == 2.4.10 ==
 
 * Remove redundant footer-like text

@@ -74,6 +74,7 @@ See ./email/README.txt for information on templates for the email alerts.
 | pmpro-sequence-import-pmpro-series | Whether to automatically try to import PMPro Series CPT entries to this plugin. Accepts a number of different return values: The string 'all' or boolean true will import all defined series. An array of Post IDs, i.e. array( 2000, 4000 ), will treat the numbers as the post id for the Series. A single number (array or otherwise) will be treated as a Post ID to import.  | __return_false() |
 | pmpro-sequence-alert-message-excerpt-intro | Sets the text to use in place of the !!excerpt_intro!! placeholder in the "new content alert" message | PMProSequence->options->excerpt_intro |
 | pmpro-sequence-alert-message-title | The in-message post title ( replacing the !!ptitle!! placeholder) for the "new content alert" email message. | post_title for the post id being processed |
+| pmpro-sequence-has-access-filter | A plug-in specific version of the pmpro_has_membership_access_filter filter | $hasAccess (bool), (WP_Post) $post, (WP_User) $user, (array) $levels |
 
 ##TODO
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
@@ -84,7 +85,7 @@ See ./email/README.txt for information on templates for the email alerts.
 
 ###DEBUG
  To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
- A fair bit (understatement) of data which will get dumped into debug/sequence_debug_log-[date].txt
+ A fair bit (understatement) of data which will get dumped into uploads/pmpro-sequences/sequence_debug_log.txt
  (located the under the plugin directory).
 
 ##Frequently Asked Questions
@@ -97,10 +98,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.4.10
+###2.4.12
 
-* Remove redundant footer-like text
-* Remove \n for replaceable text
+* Update docs for pmpro_has_membership_access_filter()
+* Apply new 'pmpro-sequence-has-access-filter' filter to result from $this->hasAccess() in has_membership_access_filter() function
+* Increase priority of has_membership_access_filter() function in pmpro_has_membership_access_filter.
 
 ##Old releases
 ###.1
@@ -316,3 +318,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 * Fix 'Drip Feed Settings' metabox actions/events.
 * We should _enable_ not _disable_ a disabled row.
+
+###2.4.10
+
+* Remove redundant footer-like text
+* Remove \n for replaceable text
+
