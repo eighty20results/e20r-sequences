@@ -133,7 +133,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
                         ', membership day: ' . $membership_day .
                         ', post delay: ' . $sequence->normalizeDelay( $post->delay ).
                         ', user ID: ' . $s->user_id .
-                        ', already notified: ' . ( in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
+                        ', already notified: ' . ( in_array( "{$post_id}_{$post->delay}", $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) == false ? 'false' : 'true' ) .
                          ', has access: ' . ( $sequence->hasAccess( $s->user_id, $post_id, true ) === true ? 'true' : 'false' ) );
 
                 $sequence->dbgOut("cron() - # of posts we've already notified for: " . count($noticeSettings->sequence[$sequence->sequence_id]->notifiedPosts));
@@ -141,7 +141,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
                 if  ( ( false !== $post_id ) &&
                       ( $membership_day == $sequence->normalizeDelay( $post->delay ) ) &&
-                    ( ! in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts ) ) ) {
+                    ( ! in_array( "{$post_id}_{$post->delay}", $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts ) ) ) {
 
                     $sequence->dbgOut( "cron() - Need to send alert to {$s->user_id} for '" . get_the_title( $post_id ) . "'" );
 
@@ -156,12 +156,12 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
                             $sequence->dbgOut( 'cron() - Email was successfully sent' );
                             // Update the sequence metadata that user has been notified
-                            $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts[] = $post_id;
+                            $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts[] = "{$post_id}_{$post->delay}";
 
                             // Increment send count.
                             $sendCount[ $s->user_id ] ++;
 
-                            $sequence->dbgOut("cron() - Sent email to user {$s->user_id} about post {$post->id} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}" );
+                            $sequence->dbgOut("cron() - Sent email to user {$s->user_id} about post {$post->id} with delay {$post->delay} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}" );
                         }
                         else {
 
@@ -171,10 +171,11 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
                     else {
 
                         // Only add this post ID if it's not already present in the notifiedPosts array.
+						// FIXME: Need to find the postID where the ID & delay is what we're looking for.
                         if (! in_array( $post_id, $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts, true ) ) {
 
                             $sequence->dbgOut( "cron() - Adding this previously released (old) post to the notified list" );
-                            $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts[] = $post_id;
+                            $noticeSettings->sequence[ $sequence->sequence_id ]->notifiedPosts[] = "{$post_id}_{$post->delay}";
                         }
                     }
                 }
