@@ -2735,7 +2735,7 @@
             if ( $hasaccess ) {
                 // $this->dbgOut( "has_membership_access_filter() - (current access - 1 == true: {$hasaccess}) for {$myuser->ID} related to post {$mypost->ID} and sequence {$this->sequence_id}");
                 //See if the user has access to the specific post
-                $hasaccess = apply_filters( 'pmpro-sequence-has-access-filter', $this->hasAccess( $user->ID, $post->ID ), $post, $user, $levels );
+                $hasaccess = apply_filters( 'pmpro-sequence-has-access-filter', $this->hasAccess( $user->ID, $post->ID ), $hasaccess, $post, $user, $levels );
             }
 
             return $hasaccess;
@@ -3664,7 +3664,7 @@
                              *
                              * @since 2.4.13
                              */
-                            $offset = apply_filters( 'pmpro-sequence-add-startdate-offset', $this->sequence_id, 0 );
+                            $offset = apply_filters( 'pmpro-sequence-add-startdate-offset', __return_zero(), $this->sequence_id );
 
                             $durationOfMembership += $offset;
 
@@ -3692,7 +3692,7 @@
                              *
                              * @since 2.4.13
                              */
-                            $offset = apply_filters( 'pmpro-sequence-add-startdate-offset', $this->sequence_id, 0 );
+                            $offset = apply_filters( 'pmpro-sequence-add-startdate-offset', __return_zero(), $this->sequence_id );
 
                             $timestamp = ( current_time( 'timestamp' ) + $previewAdd + ( $offset * 60*60*24 ) );
 
@@ -5182,8 +5182,6 @@
             add_filter("pmpro_non_member_text_filter", array(&$this, "text_filter"));
             add_filter("pmpro_not_logged_in_text_filter", array(&$this, "text_filter"));
             add_filter("the_content", array(&$this, "display_sequence_content"));
-
-            add_filter( 'pmpro-sequence-add-startdate-offset', __return_zero(), 8, 2 );
 
             // Add Custom Post Type
             add_action("init", array(&$this, "load_textdomain"), 9);
