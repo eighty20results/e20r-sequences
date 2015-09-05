@@ -3658,6 +3658,16 @@
                                 $durationOfMembership = $this->getMemberDays( $user_id, $level_id );
                             }
 
+                            /**
+                             * Allow user to add an offset (pos/neg integer) to the 'current day' calculation so they may
+                             * offset when this user apparently started their access to the sequence
+                             *
+                             * @since 2.4.13
+                             */
+                            $offset = apply_filters( 'pmpro-sequence-add-startdate-offset', $this->sequence_id, 0 );
+
+                            $durationOfMembership += $offset;
+
                             // $this->dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days. The post has a delay of: %d', $user_id, $level_id, $durationOfMembership, $sp->delay) );
 
                             if ( $durationOfMembership >= $sp->delay ) {
@@ -3676,7 +3686,17 @@
                             else
                                 $previewAdd = 0;
 
-                            $today = date( __( 'Y-m-d', 'pmprosequence' ), ( current_time( 'timestamp' ) + $previewAdd ) );
+                            /**
+                             * Allow user to add an offset (pos/neg integer) to the 'current day' calculation so they may
+                             * offset when this user apparently started their access to the sequence
+                             *
+                             * @since 2.4.13
+                             */
+                            $offset = apply_filters( 'pmpro-sequence-add-startdate-offset', $this->sequence_id, 0 );
+
+                            $timestamp = ( current_time( 'timestamp' ) + $previewAdd + ( $offset * 60*60*24 ) );
+
+                            $today = date( __( 'Y-m-d', 'pmprosequence' ), $timestamp );
 
                             if ( $today >= $sp->delay ) {
 
@@ -5162,6 +5182,8 @@
             add_filter("pmpro_non_member_text_filter", array(&$this, "text_filter"));
             add_filter("pmpro_not_logged_in_text_filter", array(&$this, "text_filter"));
             add_filter("the_content", array(&$this, "display_sequence_content"));
+
+            add_filter( 'pmpro-sequence-add-startdate-offset', __return_zero(), 8, 2 );
 
             // Add Custom Post Type
             add_action("init", array(&$this, "load_textdomain"), 9);
