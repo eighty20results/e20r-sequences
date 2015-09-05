@@ -1,3 +1,1 @@
-Update docs for pmpro_has_membership_access_filter()
-Apply new 'pmpro-sequence-has-access-filter' filter to result from $this->hasAccess() in has_membership_access_filter() function
-Increase priority of has_membership_access_filter() function in pmpro_has_membership_access_filter.
+Added 'pmpro-sequence-add-startdate-offset' filter which will allow the admin to add an offset (pos/neg integer) to the 'current day' calculation. This modifies when the current user apparently started their access to the sequence. The filter expects a numeric value to be returned.

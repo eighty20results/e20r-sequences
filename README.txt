@@ -63,6 +63,13 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 2.4.13 ==
+
+* Added 'pmpro-sequence-add-startdate-offset' filter which will allow the admin to add an offset (pos/neg integer) to the
+'current day' calculation. This modifies when the current user apparently started their access to the sequence. The filter
+expects a numeric value to be returned.
+
+
 == 2.4.12 ==
 
 * Update docs for pmpro_has_membership_access_filter()

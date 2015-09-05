@@ -98,11 +98,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.4.12
-
-* Update docs for pmpro_has_membership_access_filter()
-* Apply new 'pmpro-sequence-has-access-filter' filter to result from $this->hasAccess() in has_membership_access_filter() function
-* Increase priority of has_membership_access_filter() function in pmpro_has_membership_access_filter.
+###2.4.13
+* Added 'pmpro-sequence-add-startdate-offset' filter which will allow the admin to add an offset (pos/neg integer) to the 'current day' calculation. This modifies when the current user apparently started their access to the sequence. The filter expects a numeric value to be returned.
 
 ##Old releases
 ###.1
@@ -269,7 +266,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fix: Path to plugin debug log
 
 ###2.4
-
 * Refactor for two classes & member functions.
 * Make settings updates more uniform w/o breaking compatibility with back-end.
 * Remove old function/event structure.
@@ -279,48 +275,42 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Transition away from PHP4 constructors
 
 ###2.4.1
-
 * Fix settings text for previews
 * Adjust new change log creation script for this plugin
 
 ###2.4.2
-
 * Init the update checker on plugin load
 * Correct path to update check functionality
 
 ###2.4.3
-
 * Updated translations
 
 ###2.4.4
-
 * Edit license text (copyright)
 
 ###2.4.5
-
 * Fix excerpt, post_link and post title (ptitle) handling for pmproemail class.
 * Remove pmpro_after_phpmailer_init filter/handler.
 
 ###2.4.6
-
 * Instantiate $class variable within bind_controls() function.
 * Handle meta control display when adding/editing supported posts/pages.
 
 ###2.4.7
-
 * Instantiate $class variable
 
 ###2.4.8
-
 * Reload content of sequence list select in post/page metabox
 
 ###2.4.9
-
 * Fix 'Drip Feed Settings' metabox actions/events.
 * We should _enable_ not _disable_ a disabled row.
 
 ###2.4.10
-
 * Remove redundant footer-like text
 * Remove \n for replaceable text
 
+###2.4.12
+* Update docs for pmpro_has_membership_access_filter()
+* Apply new 'pmpro-sequence-has-access-filter' filter to result from $this->hasAccess() in has_membership_access_filter() function
+* Increase priority of has_membership_access_filter() function in pmpro_has_membership_access_filter.
