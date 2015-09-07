@@ -3421,7 +3421,7 @@
                     }
 
                     $emails[$idx]->body = $template_content;
-                    $post_links .= '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>\n';
+                    $post_links .= '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>';
 
                     $emails[$idx]->data = array(
                         "name" => $user->first_name, // Options are: display_name, first_name, last_name, nickname
