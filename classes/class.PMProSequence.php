@@ -2729,14 +2729,10 @@
          *
          * @return bool -- True if access is granted, false if not
          */
-        public function has_membership_access_filter($hasaccess, $post, $user, $levels)
-        {
-            // If the user has been granted access already, we'll verify that they have access to the specific post
-            if ( $hasaccess ) {
-                // $this->dbgOut( "has_membership_access_filter() - (current access - 1 == true: {$hasaccess}) for {$myuser->ID} related to post {$mypost->ID} and sequence {$this->sequence_id}");
-                //See if the user has access to the specific post
-                $hasaccess = apply_filters( 'pmpro-sequence-has-access-filter', $this->hasAccess( $user->ID, $post->ID ), $hasaccess, $post, $user, $levels );
-            }
+        public function has_membership_access_filter($hasaccess, $post, $user, $levels) {
+
+            //See if the user has access to the specific post
+            $hasaccess = apply_filters( 'pmpro-sequence-has-access-filter', $this->hasAccess( $user->ID, $post->ID ), $hasaccess, $post, $user, $levels );
 
             return $hasaccess;
         }
@@ -2751,8 +2747,8 @@
          *
          * @return bool -- true | false -- Indicates user ID's access privileges to the post/sequence
          */
-        public function hasAccess($user_id, $post_id, $isAlert = false)
-        {
+        public function hasAccess($user_id, $post_id, $isAlert = false) {
+
             // FixMe: Fix cases where user is member of one sequence but not another.
 
             if ( $this->pmpro_sequence_user_id !== $user_id ) {

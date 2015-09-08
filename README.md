@@ -4,8 +4,8 @@ Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.2 or later.
-Tested up to: 4.2.2
-Stable tag: 2.4.13
+Tested up to: 4.3
+Stable tag: 2.4.14
 
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -99,8 +99,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.4.13
-* Added 'pmpro-sequence-add-startdate-offset' filter which will allow the admin to add an offset (pos/neg integer) to the 'current day' calculation. This modifies when the current user apparently started their access to the sequence. The filter expects a numeric value to be returned.
+###2.4.14
+* Removed CR+LF (\n) from sendEmail()
 
 ##Old releases
 ###.1
@@ -315,3 +315,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Update docs for pmpro_has_membership_access_filter()
 * Apply new 'pmpro-sequence-has-access-filter' filter to result from $this->hasAccess() in has_membership_access_filter() function
 * Increase priority of has_membership_access_filter() function in pmpro_has_membership_access_filter.
+
+###2.4.13
+* Added 'pmpro-sequence-add-startdate-offset' filter which will allow the admin to add an offset (pos/neg integer) to the 'current day' calculation. This modifies when the current user apparently started their access to the sequence. The filter expects a numeric value to be returned.
