@@ -116,7 +116,7 @@
             $settings->lengthVisible = 1; //'lengthVisible'
             $settings->sortOrder = SORT_ASC; // 'sortOrder'
             $settings->delayType = 'byDays'; // 'delayType'
-            $settings->allowRepeatPost = false; // Whether to allow a post to be repeated in the sequence (with different delay values)
+            $settings->allowRepeatPosts = false; // Whether to allow a post to be repeated in the sequence (with different delay values)
             $settings->showDelayAs = PMPRO_SEQ_AS_DAYNO; // How to display the time until available
             $settings->previewOffset = 0; // How many days into the future the sequence should allow somebody to see.
             $settings->startWhen =  0; // startWhen == immediately (in current_time('timestamp') + n seconds)
@@ -989,12 +989,12 @@
 						<td class="pmpro_sequence_tblNumber"><?php echo $count; ?>.</td>
 						<td class="pmpro_sequence_tblPostname"><?php echo get_the_title($post->id) . " (ID: {$post->id})"; ?></td>
 						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay; ?></td>
-						<td><a href="javascript:pmpro_sequence_editPost('<?php echo $post->id; ?>'); void(0); "><?php _e('Post','pmprosequence'); ?></a></td>
+						<td><a href="javascript:pmpro_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Post','pmprosequence'); ?></a></td>
 						<td>
-							<a href="javascript:pmpro_sequence_editEntry('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);"><?php _e('Edit', 'pmprosequence'); ?></a>
+							<a href="javascript:pmpro_sequence_editEntry( <?php echo "{$post->id}, {$post->delay}" ;?> ); void(0);"><?php _e('Edit', 'pmprosequence'); ?></a>
 						</td>
 						<td>
-							<a href="javascript:pmpro_sequence_removeEntry('<?php echo $post->id;?>'); void(0);"><?php _e('Remove', 'pmprosequence'); ?></a>
+							<a href="javascript:pmpro_sequence_removeEntry( <?php echo "{$post->id}, {$post->delay}" ?> ); void(0);"><?php _e('Remove', 'pmprosequence'); ?></a>
 						</td>
 					</tr>
 				<?php
@@ -1131,6 +1131,18 @@
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <label class="selectit pmpro-sequence-setting-col-2"><?php _e('Hide all future posts', 'pmprosequence'); ?></label>
+                                </div>
+                                <div class="pmpro-sequence-setting-col-3"></div>
+                            </div>
+                        </div>
+                        <div class="pmpro-sequence-settings-display clear-after">
+                            <div class="pmpro-sequences-settings-row pmpro-sequence-settings clear-after">
+                                <div class="pmpro-sequence-setting-col-1">
+                                    <input type="checkbox" value="1" id="pmpro_sequence_allowRepeatPosts" name="pmpro_sequence_allowRepeatPosts" title="<?php _e('Allow the admin to repeat the same post/page with different delay values', 'pmprosequence'); ?>" <?php checked( $this->options->allowRepeatPosts, 1); ?> />
+                                    <input type="hidden" name="hidden_pmpro_seq_allowRepeatPosts" id="hidden_pmpro_seq_allowRepeatPosts" value="<?php echo esc_attr($this->options->allowRepeatPosts); ?>" >
+                                </div>
+                                <div class="pmpro-sequence-setting-col-2">
+                                    <label class="selectit"><?php _e('Allow repeat posts/pages', 'pmprosequence'); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3"></div>
                             </div>
@@ -2914,7 +2926,7 @@
           */
         private function allow_repetition() {
 
-            return $this->options->allowRepeatPost;
+            return $this->options->allowRepeatPosts;
         }
 
         /************************************ Private Sequence Functions ***********************************************/
@@ -3116,6 +3128,73 @@
                 return false;
         }
 
+        private function get_users_of_sequence() {
+
+            global $wpdb;
+
+            // Find all users that are active members of this sequence.
+            $sql = $wpdb->prepare(
+                "
+				    SELECT *
+					FROM {$wpdb->pmpro_memberships_pages} AS pages
+						INNER JOIN {$wpdb->pmpro_memberships_users} AS users
+						ON (users.membership_id = pages.membership_id)
+					WHERE page_id = %d AND status = %s
+				",
+                $this->sequence_id,
+                "active"
+            );
+
+            return $wpdb->get_results( $sql );
+        }
+
+        public function convertNotifications() {
+
+            global $wpdb;
+
+            // Load all sequences from the DB
+            $query = array(
+                'post_type' => 'pmpro_sequence',
+                'posts_per_page' => -1
+            );
+
+            $sequence_list = new WP_Query( $query );
+
+            while ( $sequence_list->have_posts() ) {
+
+                $sequence_list->the_post();
+                $this->init( get_the_ID() );
+
+                $users = $this->get_users_of_sequence();
+
+                foreach ( $users as $user ) {
+
+                    $this->dbgOut( "convertNotifications() - Converting notification settings for user with ID: {$user->user_id}" );
+
+                    $userSettings = get_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
+
+                    if ( ( count($userSettings) != 0 ) && (!isset( $userSettings->sequence[ $this->sequence_id ]->converted )) ) {
+
+                        $this->dbgOut("convertNotifications() - Notification settings exist for user {$user->user_id} and sequence {$this->sequence_id} has not been converted to new format");
+
+                        $notifiedPosts = $userSettings->sequence[ $this->sequence_id ]->notifiedPosts;
+
+                        foreach( $notifiedPosts as $key => $post_id ) {
+
+                            $post = $this->get_postDetails( $post_id );
+                            $this->dbgOut("convertNotifications() - Changing notifiedPosts data from {$post_id} to '{$post->id}_{$post->delay}'");
+                            $userSettings->sequence[ $this->sequence_id ]->notifiedPosts[$key] = "{$post->id}_{$post->delay}";
+                        }
+
+                        $this->dbgOut( "convertNotifications() - Saving new notification settings for user with ID: {$user->user_id}" );
+                        update_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $userSettings );
+                    }
+                }
+			}
+
+            wp_reset_postdata();
+        }
+
         /**
          * Function will remove the flag indicating that the user has been notified already for this post.
          * Searches through all active User IDs with the same level as the Sequence requires.
@@ -3131,19 +3210,7 @@
             $this->dbgOut('removeNotifiedFlagForPost() - Preparing SQL. Using sequence ID: ' . $this->sequence_id);
 
             // Find all users that are active members of this sequence.
-            $sql = $wpdb->prepare(
-                "
-				    SELECT *
-					FROM {$wpdb->pmpro_memberships_pages} AS pages
-						INNER JOIN {$wpdb->pmpro_memberships_users} AS users
-						ON (users.membership_id = pages.membership_id)
-					WHERE page_id = %d AND status = %s
-				",
-                $this->sequence_id,
-                "active"
-            );
-
-            $users = $wpdb->get_results( $sql );
+            $users = $this->get_users_of_sequence();
 
             foreach ( $users as $user ) {
 
@@ -4410,7 +4477,7 @@
 
             $sequence_id = ( isset( $_POST['pmpro_sequence_id']) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null );
             $seq_post_id = ( isset( $_POST['pmpro_seq_post']) && '' != $_POST['pmpro_seq_post'] ? intval($_POST['pmpro_seq_post']) : null );
-            $delay = ( isset( $_POST['pmpro_sequencedelay']) && '' != $_POST['pmpro_sequencedelay'] ? intval($_POST['pmpro_sequencedelay']) : null );
+            $delay = ( isset( $_POST['pmpro_seq_delay']) && '' != $_POST['pmpro_seq_delay'] ? intval($_POST['pmpro_seq_delay']) : null );
 
             $this->init( $sequence_id );
 
@@ -4457,7 +4524,7 @@
 
             $sequence_id = ( isset( $_POST['pmpro_sequence_id'] ) && ( intval( $_POST['pmpro_sequence_id'] ) != 0 ) ) ? intval( $_POST['pmpro_sequence_id'] ) : null;
             $post_id = isset( $_POST['pmpro_seq_post_id'] ) ? intval( $_POST['pmpro_seq_post_id'] ) : null;
-            $delay = isset( $_POST['pmpro_sequencedelay'] ) ? intval( $_POST['pmpro_sequencedelay'] ) : null;
+            $delay = isset( $_POST['pmpro_seq_delay'] ) ? intval( $_POST['pmpro_seq_delay'] ) : null;
 
             $this->init( $sequence_id );
             $this->setError( null ); // Clear any pending error messages (don't care at this point).
@@ -4526,7 +4593,7 @@
             // Fetch the ID of the sequence to add the post to
             $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null;
             $seq_post_id = isset( $_POST['pmpro_sequencepost'] ) && '' != $_POST['pmpro_sequencepost'] ? intval( $_REQUEST['pmpro_sequencepost'] ) : null;
-            $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? $_POST['pmpro_sequencedelay'] : null ;
+            $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? intval( $_POST['pmpro_sequencedelay'] ) : null ;
 
             if ( $sequence_id != 0 ) {
 
@@ -4622,6 +4689,7 @@
             $noticeSettings->sequence[ $sequence_id ]->sendNotice = 1;
             $noticeSettings->sequence[ $sequence_id ]->optinTS = strtotime( $starting );
             $noticeSettings->sequence[ $sequence_id ]->notifiedPosts = array();
+            $noticeSettings->sequence[ $sequence_id ]->converted = true;
 
             return $noticeSettings;
         }
@@ -4637,6 +4705,7 @@
 
             $settings = $this->options;
             $this->dbgOut('Saving settings for Sequence w/ID: ' . $sequence_id);
+            $this->dbgOut($_POST);
 
             // Check that the function was called correctly. If not, just return
             if(empty($sequence_id)) {
@@ -4661,6 +4730,22 @@
             if (!$this->options) {
                 $this->options = $this->defaultOptions();
             }
+
+            if ( isset($_POST['pmpro_sequence_allowRepeatPosts']) )
+            {
+                $this->options->allowRepeatPosts = intval( $_POST['pmpro_sequence_allowRepeatPosts'] ) == 0 ? false : true;
+                $this->dbgOut('save_settings(): POST value for settings->allowRepeatPost: ' . intval($_POST['pmpro_sequence_allowRepeatPosts']) );
+            }
+            elseif (empty($this->options->allowRepeatPosts))
+                $this->options->allowRepeatPosts = false;
+
+            if ( isset($_POST['pmpro_sequence_hidden']) )
+            {
+                $this->options->hidden = intval( $_POST['pmpro_sequence_hidden'] ) == 0 ? false : true;
+                $this->dbgOut('save_settings(): POST value for settings->allowRepeatPost: ' . intval($_POST['pmpro_sequence_hidden']) );
+            }
+            elseif (empty($this->options->hidden))
+                $this->options->hidden = false;
 
             // Checkbox - not included during post/save if unchecked
             if ( isset($_POST['hidden_pmpro_seq_future']) )
@@ -4886,11 +4971,11 @@
         {
             if ( ! function_exists( 'pmpro_getOption' ) ) {
 
-                $errorMessage = "The PMPro Sequence plugin requires the ";
-                $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='Opens in a new window/tab.'>";
-                $errorMessage .= "Paid Memberships Pro</a> membership plugin.<br/><br/>";
-                $errorMessage .= "Please install Paid Memberships Pro before attempting to activate this PMPro Sequence plugin.<br/><br/>";
-                $errorMessage .= "Click the 'Back' button in your browser to return to the Plugin management page.";
+                $errorMessage = __( "The PMPro Sequence plugin requires the ", "pmprosequence" );
+                $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='" . __("Opens in a new window/tab.", "pmprosequence" ) . "'>";
+                $errorMessage .= __( "Paid Memberships Pro</a> membership plugin.<br/><br/>", "pmprosequence" );
+                $errorMessage .= __( "Please install Paid Memberships Pro before attempting to activate this PMPro Sequence plugin.<br/><br/>", "pmprosequence");
+                $errorMessage .= __( "Click the 'Back' button in your browser to return to the Plugin management page.", "pmprosequence" );
                 wp_die($errorMessage);
             }
 
@@ -4902,6 +4987,8 @@
 
             /* Register the default cron job to send out new content alerts */
             wp_schedule_event( current_time( 'timestamp' ), 'daily', 'pmpro_sequence_cron_hook' );
+
+            $this->convertNotifications();
 
         }
 
