@@ -99,8 +99,21 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.4.14
-* Removed CR+LF (\n) from sendEmail()
+###2.4.15
+* Set allowRepeatPosts default to false
+* Add $delay to javascript entries for edit/remove post entries in sequence
+* Add allowRepeatPosts setting to sequence settings metabox
+* Fix typo in allowRepeatPosts setting
+* Refactor getting the sequence users for a sequence to its own private function (get_users_of_sequence())
+* Add convertNotifications() function to convert post notification settings for all users/sequences to new post_id & delay format
+* Use get_users_of_sequence() in removeNotifiedFlagForPost()
+* Add $delay value to add/remove callbacks for
+* Make PMPro dependency error message translatable
+* Make sure settings for hiding any future sequence posts get saved
+* Add convertNotifications() to activation hook
+* Fix edit/remove/add posts to sequence in back-end scripts
+* Add short code - &#91;sequence_opt_in sequence=<sequence_post_id>&#93; - for the Alert/Notification email opt-in (user managed).
+* Simplify has_membership_access_filter() (Thanks to Jessica Oros @ PMPro)
 
 ##Old releases
 ###.1
@@ -318,3 +331,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###2.4.13
 * Added 'pmpro-sequence-add-startdate-offset' filter which will allow the admin to add an offset (pos/neg integer) to the 'current day' calculation. This modifies when the current user apparently started their access to the sequence. The filter expects a numeric value to be returned.
+
+###2.4.14
+* Removed CR+LF (\n) from sendEmail()
