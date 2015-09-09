@@ -5165,6 +5165,25 @@
 
             // Generates paginated list of links to sequence members
             add_shortcode( 'sequence_links', array( &$this, 'sequence_links_shortcode' ) );
+            add_shortcode( 'sequence_opt_in', array( &$this, 'sequence_option_shortcode' ) );
+        }
+
+      /**
+        * Shortcode to display notification opt-in checkbox
+        * @param string $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
+        *
+        * @return string - HTML of the opt-in
+        */
+        public function sequence_optin_shortcode( $attributes ) {
+
+            $sequence = null;
+
+            extract( shortcode_atts( array(
+                'sequence' => 0,
+            ), $attributes ) );
+
+            $this->init( $sequence );
+            return $this->addUserNoticeOptIn();
         }
 
         /**
