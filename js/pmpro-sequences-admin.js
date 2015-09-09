@@ -41,6 +41,7 @@ var sequenceSettings = {
         this.timeCtl        = jQuery('#pmpro_sequence_noticetime');
         this.dateCtl        = jQuery('#pmpro_sequence_dateformat');
         this.offsetCtl      = jQuery('#pmpro_sequence_offset');
+        this.repeatCtl      = jQuery('#pmpro_sequence_allowRepeatPosts');
         this.sndAsCtl       = jQuery('#pmpro_sequence_sendas');
 
         /* Input */
@@ -141,6 +142,7 @@ var sequenceSettings = {
     },
     checked_box: function( $checkbox ) {
 
+        console.log("Updating checkbox for ", $checkbox );
         var $class = this;
         $checkbox = jQuery($checkbox);
 
@@ -156,7 +158,6 @@ var sequenceSettings = {
             var $inputs = $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset').next('.pmpro-sequence-offset');
             var $status = $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset');
 
-
             $inputs.find('input[type="hidden"]').val(0);
             $inputs.find('#pmpro_sequence_offset').val(0);
 
@@ -165,6 +166,9 @@ var sequenceSettings = {
 
             $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset').hide();
             // jQuery('.pmpro-sequence-offset').hide();
+        }
+        else {
+
         }
 
         if ( 'pmpro_sequence_sendnotice' == $checkbox.attr('id')  ) {
@@ -385,7 +389,7 @@ var postMeta = {
 
         $class.show_controls();
     },
-    remove_entry: function( post_id ) {
+    remove_entry: function( post_id, delay ) {
 
         var $class = this;
 
@@ -401,6 +405,7 @@ var postMeta = {
                 action: 'pmpro_sequence_rm_post',
                 pmpro_sequence_id: jQuery('#pmpro_sequence_id').val(),
                 pmpro_seq_post: post_id,
+                pmpro_seq_delay: delay,
                 pmpro_sequence_rmpost_nonce: jQuery('#pmpro_sequence_rmpost_nonce').val()
             },
             error: function($data){
@@ -732,9 +737,9 @@ function pmpro_sequence_editEntry(post_id, delay) {
     postMeta.edit_entry( post_id, delay );
 }
 
-function pmpro_sequence_removeEntry(post_id) {
+function pmpro_sequence_removeEntry(post_id, delay) {
 
-    postMeta.remove_entry( post_id );
+    postMeta.remove_entry( post_id, delay );
 }
 
 jQuery(document).ready(function(){

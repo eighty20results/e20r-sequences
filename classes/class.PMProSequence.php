@@ -116,6 +116,7 @@
             $settings->lengthVisible = 1; //'lengthVisible'
             $settings->sortOrder = SORT_ASC; // 'sortOrder'
             $settings->delayType = 'byDays'; // 'delayType'
+            $settings->allowRepeatPosts = false; // Whether to allow a post to be repeated in the sequence (with different delay values)
             $settings->showDelayAs = PMPRO_SEQ_AS_DAYNO; // How to display the time until available
             $settings->previewOffset = 0; // How many days into the future the sequence should allow somebody to see.
             $settings->startWhen =  0; // startWhen == immediately (in current_time('timestamp') + n seconds)
@@ -280,7 +281,7 @@
          *
          * @access public
          */
-        public function getPostKey($post_id) {
+        public function getPostKey($post_id, $delay = null ) {
 
             $this->getPosts();
 
@@ -291,7 +292,12 @@
 
             foreach( $this->posts as $key => $post ) {
 
-                if ( $post->id == $post_id ) {
+                if ( (!$this->allow_repetition() ) && ( $post->id == $post_id ) ) {
+
+                    return $key;
+                }
+
+                if ( $this->allow_repetition() && !is_null( $delay ) && ( $post->delay == $delay ) ) {
 
                     return $key;
                 }
@@ -367,42 +373,52 @@
 			$temp->id = $post_id;
 			$temp->delay = $delay;
 
-            $key = $this->hasPost( $post_id );
+            $key = $this->hasPost( $post_id, $delay );
 
 			/* Only add the post if it's not already present. */
 			if ( $key === false ) {
 
-                $this->dbgOut( "addPost(): Not previously saved in the list of posts for this ({$this->sequence_id}) sequence" );
+                $this->dbgOut( "addPost(): Not previously saved (or we're allowing duplicates) in the list of posts for this ({$this->sequence_id}) sequence" );
                 $this->posts[] = $temp;
             }
             else {
                 $this->dbgOut( "addPost() - Post already in sequence. Check if we need to update it. Post: {$this->posts[$key]->id} with delay {$this->posts[$key]->delay} versus {$delay}");
 
-                switch ($this->options->delayType) {
+                // switch ($this->options->delayType) {
 
-                    case 'byDays':
+                /*    case 'byDays':
 
-                        if  ( intval($this->posts[$key]->delay) != intval($delay) ) {
+                        if  ( intval($this->posts[$key]->delay) != intval($delay) && !$this->allow_repetition() ) {
 
                             $this->dbgOut("addPost(): Delay is different. Need to update everything and clear the notices");
                             $this->removePost( $post_id, true );
                             $this->posts[] = $temp;
                             $key = false;
                         }
+                        else {
+                            $this->posts[] = $temp;
+                            $key = false;
+                        }
+
                         break;
 
                     case 'byDate':
+                 */
+                if ( ( $delay != $this->posts[$key]->delay ) && ( !$this->allow_repetition() ) ) {
 
-                        if ( $this->posts[$key]->delay != $delay ) {
-
-                            $this->dbgOut("addPost(): Delay is different. Need to update everything and clear the notices");
-                            $this->removePost( $post_id, true );
-                            $this->posts[] = $temp;
-                            $key = false;
-                        }
+                    $this->dbgOut("addPost(): Delay is different. Need to update everything and clear any notices");
+                    $this->removePost( $post_id, $delay, true );
+                    $this->posts[] = $temp;
+                    $key = false;
+                }
+                else {
+                    $this->posts[] = $temp;
+                    $key = false;
+                }
+                /*
                         break;
                 }
-
+                */
             }
 
             if ( $key === false ) {
@@ -431,7 +447,8 @@
 
                         $this->dbgOut( 'addPost(): Not (yet) an array of posts. Adding the single new post to a new array' );
                         $post_sequence = array( $this->sequence_id );
-                    } else {
+                    }
+                    else {
 
                         // Bug Fix: Never checked if the Post/Page ID was already listed in the sequence.
                         $tmp = array_count_values( $post_sequence );
@@ -462,6 +479,16 @@
                     }
                 }
 
+                // Fetch the list of sequences for this post, clean it up and save it (if needed)
+                $post_sequence =  get_post_meta($post_id, "_post_sequences", true);
+
+                //sort
+                $this->dbgOut('addPost(): Sorting the Sequence by delay');
+                usort( $this->posts, array(&$this, "sortByDelay"));
+
+                //save
+                update_post_meta($this->sequence_id, "_sequence_posts", $this->posts);
+
                 // Save the sequence list for this post id
                 update_post_meta( $post_id, "_post_sequences", $post_sequence );
 
@@ -474,7 +501,86 @@
 
 			return true;
 	    }
+/*
+        public function updatePost( $post_id, $delay ) {
 
+            $this->dbgOut("updatePost() for sequence {$this->sequence_id}: " . $this->whoCalledMe() );
+
+	        if (! $this->isValidDelay($delay) )
+	        {
+	            $this->dbgOut('updatePost(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
+	            $this->setError( sprintf(__('Invalid delay value - %s', 'pmprosequence'), ( empty($delay) ? 'blank' : $delay ) ) );
+	            return false;
+	        }
+
+			if(empty($post_id) || !isset($delay))
+			{
+				$this->setError( __("Please enter a value for post and delay", 'pmprosequence') );
+	            $this->dbgOut('updatePost(): No Post ID or delay specified');
+				return false;
+			}
+
+	        $this->dbgOut('updatePost(): Post ID: ' . $post_id . ' and delay: ' . $delay);
+
+			if ( $post = get_post($post_id) === null ) {
+
+                $this->setError( __("A post with that id does not exist", 'pmprosequence') );
+                $this->dbgOut('updatePost(): No Post with ' . $post_id . ' found');
+
+                return false;
+            }
+
+            // Refresh the post list for the sequence, ignore cache
+            $this->dbgOut("updatePost(): Force refresh of post list for sequence");
+            $this->getPosts( true );
+
+			// Add post
+			$temp = new stdClass();
+			$temp->id = $post_id;
+			$temp->delay = $delay;
+
+            $key = $this->hasPost( $post_id );
+
+			// Only update the post if it's already present.
+			if ( $key !== false ) {
+
+                $this->dbgOut( "updatePost() - Post already in sequence. Check if we need to update it. Post: {$this->posts[$key]->id} with delay {$this->posts[$key]->delay} versus {$delay}");
+
+                switch ($this->options->delayType) {
+
+                    case 'byDays':
+
+                        if  ( intval($this->posts[$key]->delay) != intval($delay) ) {
+
+                            $this->dbgOut("updatePost(): Delay is different. Need to update everything and clear the notices");
+                            $this->removePost( $post_id, true );
+                            $this->posts[] = $temp;
+                            $key = false;
+                        }
+                        break;
+
+                    case 'byDate':
+
+                        if ( $this->posts[$key]->delay != $delay ) {
+
+                            $this->dbgOut("updatePost(): Delay is different. Need to update everything and clear the notices");
+                            $this->removePost( $post_id, true );
+                            $this->posts[] = $temp;
+                            $key = false;
+                        }
+                        break;
+                }
+
+                // Save the sequence list for this post id
+                update_post_meta( $post_id, "_post_sequences", $post_sequence );
+
+                $this->dbgOut('updatePost(): Post/Page list updated and saved');
+
+            }
+
+            return false;
+        }
+*/
         /**
          * Removes a post from the list of posts belonging to this sequence
          *
@@ -484,7 +590,7 @@
          *
          * @access public
          */
-        public function removePost($post_id, $remove_alerted = true)
+        public function removePost($post_id, $delay = null, $remove_alerted = true)
 		{
 			if ( empty( $post_id ) ) {
 
@@ -501,26 +607,26 @@
 			//remove this post from the sequence
 			foreach( $this->posts as $i => $post ) {
 
-				if ( $post->id == $post_id ) {
+				if ( ( $post_id == $post->id ) && ( $delay == $post->delay ) ) {
 
 					unset($this->posts[$i]);
 					$this->posts = array_values( $this->posts );
 					update_post_meta( $this->sequence_id, "_sequence_posts", $this->posts );
-
-					break;	//assume there is only one
 				}
 			}
 
 			// Remove the post ($post_id) from all cases where a User has been notified.
             if ( $remove_alerted ) {
 
-                $this->removeNotifiedFlagForPost( $post_id );
+                $this->removeNotifiedFlagForPost( $post_id, $delay );
             }
 
 			// Remove the sequence id from the post's metadata
 			$post_sequence = get_post_meta($post_id, "_post_sequences", true);
 
 			if ( is_array( $post_sequence ) && ( $key = array_search( $this->sequence_id, $post_sequence ) ) !== false ) {
+
+                // TODO: Handle situations where the post_id is repeated with different delay values in the sequence?
 
 				unset( $post_sequence[$key] );
 				update_post_meta( $post_id, "_post_sequences", $post_sequence );
@@ -883,12 +989,12 @@
 						<td class="pmpro_sequence_tblNumber"><?php echo $count; ?>.</td>
 						<td class="pmpro_sequence_tblPostname"><?php echo get_the_title($post->id) . " (ID: {$post->id})"; ?></td>
 						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay; ?></td>
-						<td><a href="javascript:pmpro_sequence_editPost('<?php echo $post->id; ?>'); void(0); "><?php _e('Post','pmprosequence'); ?></a></td>
+						<td><a href="javascript:pmpro_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Post','pmprosequence'); ?></a></td>
 						<td>
-							<a href="javascript:pmpro_sequence_editEntry('<?php echo $post->id;?>', '<?php echo $post->delay;?>'); void(0);"><?php _e('Edit', 'pmprosequence'); ?></a>
+							<a href="javascript:pmpro_sequence_editEntry( <?php echo "{$post->id}, {$post->delay}" ;?> ); void(0);"><?php _e('Edit', 'pmprosequence'); ?></a>
 						</td>
 						<td>
-							<a href="javascript:pmpro_sequence_removeEntry('<?php echo $post->id;?>'); void(0);"><?php _e('Remove', 'pmprosequence'); ?></a>
+							<a href="javascript:pmpro_sequence_removeEntry( <?php echo "{$post->id}, {$post->delay}" ?> ); void(0);"><?php _e('Remove', 'pmprosequence'); ?></a>
 						</td>
 					</tr>
 				<?php
@@ -1025,6 +1131,18 @@
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <label class="selectit pmpro-sequence-setting-col-2"><?php _e('Hide all future posts', 'pmprosequence'); ?></label>
+                                </div>
+                                <div class="pmpro-sequence-setting-col-3"></div>
+                            </div>
+                        </div>
+                        <div class="pmpro-sequence-settings-display clear-after">
+                            <div class="pmpro-sequences-settings-row pmpro-sequence-settings clear-after">
+                                <div class="pmpro-sequence-setting-col-1">
+                                    <input type="checkbox" value="1" id="pmpro_sequence_allowRepeatPosts" name="pmpro_sequence_allowRepeatPosts" title="<?php _e('Allow the admin to repeat the same post/page with different delay values', 'pmprosequence'); ?>" <?php checked( $this->options->allowRepeatPosts, 1); ?> />
+                                    <input type="hidden" name="hidden_pmpro_seq_allowRepeatPosts" id="hidden_pmpro_seq_allowRepeatPosts" value="<?php echo esc_attr($this->options->allowRepeatPosts); ?>" >
+                                </div>
+                                <div class="pmpro-sequence-setting-col-2">
+                                    <label class="selectit"><?php _e('Allow repeat posts/pages', 'pmprosequence'); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3"></div>
                             </div>
@@ -2795,6 +2913,18 @@
 
         } // End of function
 
+        /**
+          *  Check whether to permit a given Post ID to have multiple entries and as a result delay values.
+          *
+          * @return bool - Depends on the setting.
+          * @access private
+          * @since 2.4.11
+          */
+        private function allow_repetition() {
+
+            return $this->options->allowRepeatPosts;
+        }
+
         /************************************ Private Sequence Functions ***********************************************/
 
         /**
@@ -2806,11 +2936,12 @@
          *
          * @access private
          */
-        private function hasPost( $post_id ) {
+        private function hasPost( $post_id, $delay = null ) {
 
             $this->getPosts();
 
-            if ( ( $key = $this->getPostKey( $post_id ) ) !== false ) {
+            if ( ( ( $key = $this->getPostKey( $post_id ) ) !== false ) &&
+                ( ( !is_null( $delay ) ) && ( $this->posts[$key]->delay == $delay ) ) ) {
 
                 return $key;
             }
@@ -2993,19 +3124,9 @@
                 return false;
         }
 
-        /**
-         * Function will remove the flag indicating that the user has been notified already for this post.
-         * Searches through all active User IDs with the same level as the Sequence requires.
-         *
-         * @param $post_id - The ID of the post to search through the active member list for
-         *
-         * @access private
-         */
-        private function removeNotifiedFlagForPost( $post_id ) {
+        private function get_users_of_sequence() {
 
             global $wpdb;
-
-            $this->dbgOut('removeNotifiedFlagForPost() - Preparing SQL. Using sequence ID: ' . $this->sequence_id);
 
             // Find all users that are active members of this sequence.
             $sql = $wpdb->prepare(
@@ -3020,7 +3141,72 @@
                 "active"
             );
 
-            $users = $wpdb->get_results( $sql );
+            return $wpdb->get_results( $sql );
+        }
+
+        public function convertNotifications() {
+
+            global $wpdb;
+
+            // Load all sequences from the DB
+            $query = array(
+                'post_type' => 'pmpro_sequence',
+                'posts_per_page' => -1
+            );
+
+            $sequence_list = new WP_Query( $query );
+
+            while ( $sequence_list->have_posts() ) {
+
+                $sequence_list->the_post();
+                $this->init( get_the_ID() );
+
+                $users = $this->get_users_of_sequence();
+
+                foreach ( $users as $user ) {
+
+                    $this->dbgOut( "convertNotifications() - Converting notification settings for user with ID: {$user->user_id}" );
+
+                    $userSettings = get_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
+
+                    if ( ( count($userSettings) != 0 ) && (!isset( $userSettings->sequence[ $this->sequence_id ]->converted )) ) {
+
+                        $this->dbgOut("convertNotifications() - Notification settings exist for user {$user->user_id} and sequence {$this->sequence_id} has not been converted to new format");
+
+                        $notifiedPosts = $userSettings->sequence[ $this->sequence_id ]->notifiedPosts;
+
+                        foreach( $notifiedPosts as $key => $post_id ) {
+
+                            $post = $this->get_postDetails( $post_id );
+                            $this->dbgOut("convertNotifications() - Changing notifiedPosts data from {$post_id} to '{$post->id}_{$post->delay}'");
+                            $userSettings->sequence[ $this->sequence_id ]->notifiedPosts[$key] = "{$post->id}_{$post->delay}";
+                        }
+
+                        $this->dbgOut( "convertNotifications() - Saving new notification settings for user with ID: {$user->user_id}" );
+                        update_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $userSettings );
+                    }
+                }
+			}
+
+            wp_reset_postdata();
+        }
+
+        /**
+         * Function will remove the flag indicating that the user has been notified already for this post.
+         * Searches through all active User IDs with the same level as the Sequence requires.
+         *
+         * @param $post_id - The ID of the post to search through the active member list for
+         *
+         * @access private
+         */
+        private function removeNotifiedFlagForPost( $post_id, $delay ) {
+
+            global $wpdb;
+
+            $this->dbgOut('removeNotifiedFlagForPost() - Preparing SQL. Using sequence ID: ' . $this->sequence_id);
+
+            // Find all users that are active members of this sequence.
+            $users = $this->get_users_of_sequence();
 
             foreach ( $users as $user ) {
 
@@ -3032,7 +3218,7 @@
                 $notifiedPosts = $userSettings->sequence[ $this->sequence_id ]->notifiedPosts;
 
                 if ( is_array( $notifiedPosts ) &&
-                    ($key = array_search( $post_id, $notifiedPosts ) ) !== false ) {
+                    ($key = array_search( "{$post_id}_{$delay}", $notifiedPosts ) ) !== false ) {
 
                     $this->dbgOut( "removeNotifiedFlagForPost() - Found post # {$post_id} in the notification settings for user_id {$user->user_id} with key: {$key}" );
                     $this->dbgOut( "removeNotifiedFlagForPost() - Found in settings: {$userSettings->sequence[ $this->sequence_id ]->notifiedPosts[ $key ]}");
@@ -3448,7 +3634,7 @@
                         $this->options->excerpt_intro = __('A summary of the post(s):', 'pmprosequence');
                     }
 
-                    $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>\n';
+                    $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
                 }
                 else {
                     $excerpt = '';
@@ -4307,13 +4493,15 @@
 
             $sequence_id = ( isset( $_POST['pmpro_sequence_id']) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null );
             $seq_post_id = ( isset( $_POST['pmpro_seq_post']) && '' != $_POST['pmpro_seq_post'] ? intval($_POST['pmpro_seq_post']) : null );
+            $delay = ( isset( $_POST['pmpro_seq_delay']) && '' != $_POST['pmpro_seq_delay'] ? intval($_POST['pmpro_seq_delay']) : null );
 
             $this->init( $sequence_id );
 
             // Remove the post (if the user is allowed to)
-            if ( current_user_can( 'edit_posts' ) && ! is_null($seq_post_id) ) {
+            if ( current_user_can( 'edit_posts' ) && !is_null($seq_post_id) ) {
 
-                $this->removePost($seq_post_id);
+                $this->removePost( $seq_post_id, $delay );
+
                 //$result = __('The post has been removed', 'pmprosequence');
                 $success = true;
 
@@ -4352,6 +4540,7 @@
 
             $sequence_id = ( isset( $_POST['pmpro_sequence_id'] ) && ( intval( $_POST['pmpro_sequence_id'] ) != 0 ) ) ? intval( $_POST['pmpro_sequence_id'] ) : null;
             $post_id = isset( $_POST['pmpro_seq_post_id'] ) ? intval( $_POST['pmpro_seq_post_id'] ) : null;
+            $delay = isset( $_POST['pmpro_seq_delay'] ) ? intval( $_POST['pmpro_seq_delay'] ) : null;
 
             $this->init( $sequence_id );
             $this->setError( null ); // Clear any pending error messages (don't care at this point).
@@ -4360,7 +4549,7 @@
             if ( current_user_can( 'edit_posts' ) && ( ! is_null( $post_id ) ) && ( ! is_null( $sequence_id ) ) ) {
 
                 $this->dbgOut("Removing post # {$post_id} from sequence {$sequence_id}");
-                $this->removePost( $post_id, true );
+                $this->removePost( $post_id, $delay, true );
                 //$result = __('The post has been removed', 'pmprosequence');
                 $success = true;
             } else {
@@ -4420,7 +4609,7 @@
             // Fetch the ID of the sequence to add the post to
             $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null;
             $seq_post_id = isset( $_POST['pmpro_sequencepost'] ) && '' != $_POST['pmpro_sequencepost'] ? intval( $_REQUEST['pmpro_sequencepost'] ) : null;
-            $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? $_POST['pmpro_sequencedelay'] : null ;
+            $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? intval( $_POST['pmpro_sequencedelay'] ) : null ;
 
             if ( $sequence_id != 0 ) {
 
@@ -4516,6 +4705,7 @@
             $noticeSettings->sequence[ $sequence_id ]->sendNotice = 1;
             $noticeSettings->sequence[ $sequence_id ]->optinTS = strtotime( $starting );
             $noticeSettings->sequence[ $sequence_id ]->notifiedPosts = array();
+            $noticeSettings->sequence[ $sequence_id ]->converted = true;
 
             return $noticeSettings;
         }
@@ -4531,6 +4721,7 @@
 
             $settings = $this->options;
             $this->dbgOut('Saving settings for Sequence w/ID: ' . $sequence_id);
+            $this->dbgOut($_POST);
 
             // Check that the function was called correctly. If not, just return
             if(empty($sequence_id)) {
@@ -4555,6 +4746,22 @@
             if (!$this->options) {
                 $this->options = $this->defaultOptions();
             }
+
+            if ( isset($_POST['pmpro_sequence_allowRepeatPosts']) )
+            {
+                $this->options->allowRepeatPosts = intval( $_POST['pmpro_sequence_allowRepeatPosts'] ) == 0 ? false : true;
+                $this->dbgOut('save_settings(): POST value for settings->allowRepeatPost: ' . intval($_POST['pmpro_sequence_allowRepeatPosts']) );
+            }
+            elseif (empty($this->options->allowRepeatPosts))
+                $this->options->allowRepeatPosts = false;
+
+            if ( isset($_POST['pmpro_sequence_hidden']) )
+            {
+                $this->options->hidden = intval( $_POST['pmpro_sequence_hidden'] ) == 0 ? false : true;
+                $this->dbgOut('save_settings(): POST value for settings->allowRepeatPost: ' . intval($_POST['pmpro_sequence_hidden']) );
+            }
+            elseif (empty($this->options->hidden))
+                $this->options->hidden = false;
 
             // Checkbox - not included during post/save if unchecked
             if ( isset($_POST['hidden_pmpro_seq_future']) )
@@ -4780,11 +4987,11 @@
         {
             if ( ! function_exists( 'pmpro_getOption' ) ) {
 
-                $errorMessage = "The PMPro Sequence plugin requires the ";
-                $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='Opens in a new window/tab.'>";
-                $errorMessage .= "Paid Memberships Pro</a> membership plugin.<br/><br/>";
-                $errorMessage .= "Please install Paid Memberships Pro before attempting to activate this PMPro Sequence plugin.<br/><br/>";
-                $errorMessage .= "Click the 'Back' button in your browser to return to the Plugin management page.";
+                $errorMessage = __( "The PMPro Sequence plugin requires the ", "pmprosequence" );
+                $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='" . __("Opens in a new window/tab.", "pmprosequence" ) . "'>";
+                $errorMessage .= __( "Paid Memberships Pro</a> membership plugin.<br/><br/>", "pmprosequence" );
+                $errorMessage .= __( "Please install Paid Memberships Pro before attempting to activate this PMPro Sequence plugin.<br/><br/>", "pmprosequence");
+                $errorMessage .= __( "Click the 'Back' button in your browser to return to the Plugin management page.", "pmprosequence" );
                 wp_die($errorMessage);
             }
 
@@ -4796,6 +5003,8 @@
 
             /* Register the default cron job to send out new content alerts */
             wp_schedule_event( current_time( 'timestamp' ), 'daily', 'pmpro_sequence_cron_hook' );
+
+            $this->convertNotifications();
 
         }
 
@@ -5059,6 +5268,25 @@
 
             // Generates paginated list of links to sequence members
             add_shortcode( 'sequence_links', array( &$this, 'sequence_links_shortcode' ) );
+            add_shortcode( 'sequence_opt_in', array( &$this, 'sequence_option_shortcode' ) );
+        }
+
+      /**
+        * Shortcode to display notification opt-in checkbox
+        * @param string $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
+        *
+        * @return string - HTML of the opt-in
+        */
+        public function sequence_optin_shortcode( $attributes ) {
+
+            $sequence = null;
+
+            extract( shortcode_atts( array(
+                'sequence' => 0,
+            ), $attributes ) );
+
+            $this->init( $sequence );
+            return $this->addUserNoticeOptIn();
         }
 
         /**
