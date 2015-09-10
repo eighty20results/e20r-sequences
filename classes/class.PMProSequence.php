@@ -284,26 +284,35 @@
         public function getPostKey($post_id, $delay = null ) {
 
             $this->getPosts();
+            $retval = false;
 
             if ( empty( $this->posts ) ) {
 
-                return false;
+                $this->dbgOut("getPostKey() - No posts found for sequence: {$this->sequence_id}");
+                return $retval;
             }
 
             foreach( $this->posts as $key => $post ) {
 
                 if ( (!$this->allow_repetition() ) && ( $post->id == $post_id ) ) {
 
-                    return $key;
+                    $retval = $key;
+                    break;
                 }
 
                 if ( $this->allow_repetition() && !is_null( $delay ) && ( $post->delay == $delay ) ) {
 
-                    return $key;
+                    $retval = $key;
+                    break;
+                }
+
+                if ( $this->allow_repetition() && is_null( $delay ) ) {
+                    //Return all keys with the postId
+                    $retval[] = $key;
                 }
             }
 
-            return false;
+            return $retval;
         }
 
         /**
@@ -316,6 +325,7 @@
          */
         public function get_postDetails( $post_id ) {
 
+            // FIXME: Doesn't include test for $delay value.
             if ( ( $key = $this->hasPost( $post_id ) ) !== false ) {
 
                 return $this->posts[$key];
@@ -2939,7 +2949,8 @@
         private function hasPost( $post_id, $delay = null ) {
 
             $this->getPosts();
-
+            $this->dbgOut("hasPost() - Locate post {$post_id} " . ( is_null($delay) ? "with no delay given" : " with delay of {$delay}") );
+            // FIXME: Need to respect delay but also handle situations where delay isn't specified.
             if ( ( ( $key = $this->getPostKey( $post_id ) ) !== false ) &&
                 ( ( !is_null( $delay ) ) && ( $this->posts[$key]->delay == $delay ) ) ) {
 
@@ -3141,7 +3152,10 @@
                 "active"
             );
 
-            return $wpdb->get_results( $sql );
+            $users = $wpdb->get_results( $sql );
+
+            $this->dbgOut("get_users_of_sequence() - Fetched " . count($users) . " user records for {$this->sequence_id}");
+            return $users;
         }
 
         public function convertNotifications() {
@@ -3156,6 +3170,8 @@
 
             $sequence_list = new WP_Query( $query );
 
+            $this->dbgOut( "convertNotifications() - Found " . count($sequence_list) . " sequences to process for alert conversion" );
+
             while ( $sequence_list->have_posts() ) {
 
                 $sequence_list->the_post();
@@ -3169,19 +3185,30 @@
 
                     $userSettings = get_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
 
-                    if ( ( count($userSettings) != 0 ) && (!isset( $userSettings->sequence[ $this->sequence_id ]->converted )) ) {
+                    if ( ( count($userSettings->sequence[ $this->sequence_id ]->notifiedPosts) != 0 ) && (!isset( $userSettings->sequence[ $this->sequence_id ]->completed )) ) {
 
                         $this->dbgOut("convertNotifications() - Notification settings exist for user {$user->user_id} and sequence {$this->sequence_id} has not been converted to new format");
 
-                        $notifiedPosts = $userSettings->sequence[ $this->sequence_id ]->notifiedPosts;
+                        $notified = $userSettings->sequence[ $this->sequence_id ]->notifiedPosts;
 
-                        foreach( $notifiedPosts as $key => $post_id ) {
+                        foreach( $notified as $key => $post_id ) {
 
-                            $post = $this->get_postDetails( $post_id );
-                            $this->dbgOut("convertNotifications() - Changing notifiedPosts data from {$post_id} to '{$post->id}_{$post->delay}'");
-                            $userSettings->sequence[ $this->sequence_id ]->notifiedPosts[$key] = "{$post->id}_{$post->delay}";
+                            $this->dbgOut("convertNotifications() - Load post data for {$key}/{$post_id} in sequence {$this->sequence_id}");
+
+                            $pKey = $this->getPostKey( $post_id, null );
+
+                            if ( false !== $pKey ) {
+
+                                $data = $this->posts[$pKey];
+                                $this->dbgOut("convertNotifications() - Changing notifiedPosts data from {$post_id} to '{$data->id}_{$data->delay}'");
+                                $userSettings->sequence[ $this->sequence_id ]->notifiedPosts[$key] = "{$data->id}_{$data->delay}";
+                            }
+                            else {
+                                $this->dbgOut("convertNotifications() - Couldn't find sequence details for post {$data->id}");
+                            }
                         }
 
+                        $userSettings->sequence[ $this->sequence_id ]->completed = true;
                         $this->dbgOut( "convertNotifications() - Saving new notification settings for user with ID: {$user->user_id}" );
                         update_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $userSettings );
                     }
@@ -3816,8 +3843,25 @@
 
                 $usersLevels = pmpro_getMembershipLevelsForUser( $user_id );
 
+                // FixMe: Verify that this works as expected.
+                $key = $this->getPostKey( $post_id );
+
+                $delay_arr = array();
+
+                if ( is_array( $key ) ) {
+
+                    foreach( $key as $k ) {
+                        $delay_arr[] = $this->posts[$k]->delay;
+                    }
+                }
+
+                if ( $key !== false ) {
+                    $delay_arr = array( $this->posts[$key]->delay );
+                }
+
+
                 // Check if the post exists in the list of posts for the current sequence & return its details if it's there
-                if ( ( $sp = $this->get_postDetails( $post_id ) ) !== null ) {
+                if ( !empty( $delay_arr ) ) {
 
                     // Verify for all levels given access to this post
                     foreach ( $results[1] as $level_id ) {
@@ -3852,14 +3896,16 @@
 
                             // $this->dbgOut( sprintf('hasAccess() - Member %d has been active at level %d for %f days. The post has a delay of: %d', $user_id, $level_id, $durationOfMembership, $sp->delay) );
 
-                            if ( $durationOfMembership >= $sp->delay ) {
+                            foreach( $delay_arr as $delay ) {
 
-                                // Set users membership Level
-                                $this->pmpro_sequence_user_level = $level_id;
-                                // $this->dbgOut("hatByAccess() - using byDays as the delay type, this user is given access to post ID {$post_id}.");
-                                return true;
+                                if ( $delay <= $durationOfMembership ) {
+
+                                    // Set users membership Level
+                                    $this->pmpro_sequence_user_level = $level_id;
+                                    // $this->dbgOut("hatByAccess() - using byDays as the delay type, this user is given access to post ID {$post_id}.");
+                                    return true;
+                                }
                             }
-
                         } elseif ( $this->options->delayType == 'byDate' ) {
 
                             // Don't add 'preview' value if this is for an alert notice.
@@ -3880,11 +3926,14 @@
 
                             $today = date( __( 'Y-m-d', 'pmprosequence' ), $timestamp );
 
-                            if ( $today >= $sp->delay ) {
+                            foreach( $delay_arr as $delay ) {
 
-                                $this->pmpro_sequence_user_level = $level_id;
-                                // $this->dbgOut("hasAccess() - using byDate as the delay type, this user is given access to post ID {$post_id}.");
-                                return true;
+                                if ( $delay <= $today ) {
+
+                                    $this->pmpro_sequence_user_level = $level_id;
+                                    // $this->dbgOut("hasAccess() - using byDate as the delay type, this user is given access to post ID {$post_id}.");
+                                    return true;
+                                }
                             }
                         } // EndIf for delayType
                     } // End of foreach -> $level_id
