@@ -5123,8 +5123,6 @@
          * Configure & display the icon for the Sequence Post type (in the Dashboard)
          */
         function post_type_icon() {
-
-            wp_enqueue_style('fontawesome', '//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css', false, '4.4.0' );
             ?>
             <style>
                 @font-face {
