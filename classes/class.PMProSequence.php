@@ -1532,7 +1532,7 @@
                                     <label class="pmpro-sequence-label" for="pmpro-seq-noticetime"><?php _e('Timezone:', 'pmprosequence'); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <span class="pmpro-sequence-status" id="pmpro-seq-noticetimetz-status"><?php echo '  ' . get_option('timezone_string'); ?></span>
+                                    <span class="pmpro-sequence-status" id="pmpro-seq-noticetimetz-status"><?php echo get_option('timezone_string'); ?></span>
                                 </div>
                             </div>
                         </div><!-- end of setting -->
@@ -4813,10 +4813,10 @@
                 $this->options->hidden = false;
 
             // Checkbox - not included during post/save if unchecked
-            if ( isset($_POST['hidden_pmpro_seq_future']) )
+            if ( isset($_POST['pmpro_seq_future']) )
             {
-                $this->options->hidden = intval($_POST['hidden_pmpro_seq_future']);
-                $this->dbgOut('save_settings(): POST value for settings->hidden: ' . $_POST['hidden_pmpro_seq_future'] );
+                $this->options->hidden = intval($_POST['pmpro_seq_future']);
+                $this->dbgOut('save_settings(): POST value for settings->hidden: ' . $_POST['pmpro_seq_future'] );
             }
             elseif ( empty($this->options->hidden) )
                 $this->options->hidden = 0;
@@ -4874,16 +4874,16 @@
                 $this->options->startWhen = 0;
 
             // Checkbox - not included during post/save if unchecked
-            if ( isset($_POST['hidden_pmpro_seq_sendnotice']) )
+            if ( isset($_POST['pmpro_seq_sendnotice']) )
             {
-                $this->options->sendNotice = intval($_POST['hidden_pmpro_seq_sendnotice']);
+                $this->options->sendNotice = intval($_POST['pmpro_seq_sendnotice']);
 
                 if ( $this->options->sendNotice == 0 ) {
 
                     $this->stopSendingNotices();
                 }
 
-                $this->dbgOut('save_settings(): POST value for settings->sendNotice: ' . intval($_POST['hidden_pmpro_seq_sendnotice']) );
+                $this->dbgOut('save_settings(): POST value for settings->sendNotice: ' . intval($_POST['pmpro_seq_sendnotice']) );
             }
             elseif (empty($this->options->sendNotice)) {
                 $this->options->sendNotice = 1;
@@ -5123,16 +5123,21 @@
          * Configure & display the icon for the Sequence Post type (in the Dashboard)
          */
         function post_type_icon() {
+
+            wp_enqueue_style('fontawesome', '//maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css', false, '4.4.0' );
             ?>
             <style>
-                /* Admin Menu - 16px */
-                #menu-posts-pmpro_sequence .wp-menu-image {
-                    background: url("<?php echo PMPRO_SEQUENCE_PLUGIN_URL; ?>images/icon-sequence16-sprite.png") no-repeat 6px 6px !important;
+                @font-face {
+                    font-family: FontAwesome;
+                    src: url(https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css);
                 }
-                #menu-posts-pmpro_sequence:hover .wp-menu-image, #menu-posts-pmpro_sequence.wp-has-current-submenu .wp-menu-image {
-                    background-position: 6px -26px !important;
+
+                #menu-posts-pmpro_sequence .menu-top  div.wp-menu-image:before {
+                    font-family:  FontAwesome !important;
+                    content: '\f160';
                 }
-                /* Post Screen - 32px */
+
+                /* Post Screen - 32px
                 .icon32-posts-pmpro_sequence {
                     background: url("<?php echo PMPRO_SEQUENCE_PLUGIN_URL; ?>images/icon-sequence32.png") no-repeat left top !important;
                 }
@@ -5140,17 +5145,20 @@
                 only screen and (-webkit-min-device-pixel-ratio: 1.5),
                 only screen and (   min--moz-device-pixel-ratio: 1.5),
                 only screen and (     -o-min-device-pixel-ratio: 3/2),
-                    /* only screen and (        min-device-pixel-ratio: 1.5), */
+                only screen and (        min-device-pixel-ratio: 1.5),
                 only screen and (                min-resolution: 1.5dppx) {
-
+*/
                     /* Admin Menu - 16px @2x */
+                    /*
                     #menu-posts-pmpro_sequence .wp-menu-image {
                         background-image: url("<?php echo PMPRO_SEQUENCE_PLUGIN_URL; ?>images/icon-sequence16-sprite_2x.png") !important;
                         -webkit-background-size: 16px 48px;
                         -moz-background-size: 16px 48px;
                         background-size: 16px 48px;
                     }
+                    */
                     /* Post Screen - 32px @2x */
+                    /*
                     .icon32-posts-pmpro_sequence {
                         background-image:url("<?php echo PMPRO_SEQUENCE_PLUGIN_URL; ?>images/icon-sequence32_2x.png") !important;
                         -webkit-background-size: 32px 32px;
@@ -5158,6 +5166,7 @@
                         background-size: 32px 32px;
                     }
                 }
+                */
             </style>
         <?php
         }
