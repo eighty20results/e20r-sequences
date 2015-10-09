@@ -32,8 +32,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
      *
      * @throws Exception
      */
-	function pmpro_sequence_check_for_new_content( $sequenceId = 0 )
-	{
+	function pmpro_sequence_check_for_new_content( $sequenceId = 0 ) {
 
 		global $wpdb;
 		$all_sequences = false; // Default: Assume only one sequence is being processed.
