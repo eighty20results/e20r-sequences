@@ -185,76 +185,58 @@ class SeqRecentPostWidget extends WP_Widget {
 
 		if ( $current_user->ID != 0 ) {
 
-			$seqPostId = $sequence->get_closestPost( $current_user->ID );
+			$seqPost = $sequence->find_closest_post( $current_user->ID );
 
-			if ( $sequence->hasAccess( $current_user->ID, $seqPostId, false ) ) {
+			if ( empty( $seqPost ) ) { ?>
+				<span id="pmpro-seq-post-notfound">
+				<h3 id="<?php echo apply_filters('pmpro-seq-recentpost-widget-nopostfound', 'pmpro-seq-widget-recentpost-nopostfound-title'); ?>" class="widget-title">Configuration Error</h3>
+					<div id="pmpro-seq-post-body" class="text-widget <?php echo apply_filters( 'pmpro-seq-widget-recentpost-nopostfound-body', ''); ?>">
+						<?php echo ( $sequence_id != 0 ? get_the_title( $sequence_id ) . __(': No post(s) found!', 'pmprosequence') : __('No sequence specified', 'pmprosequence') ); ?>
+					</div>
+				</span><?php
+			}
+			elseif ( $sequence->has_post_access( $current_user->ID, $seqPost->id, false ) ) {
 
 				add_image_size( 'pmpro_seq_recentpost_widget_size', 85, 45, false );
 
-				$seq_post = new WP_Query( array(
-					'post_type'           => 'any',
-					'post_status'         => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
-					'posts_per_page'      => 1,
-					'p'                   => $seqPostId,
-					'ignore_sticky_posts' => true,
-				) );
 				// $sequence->dbgOut("Posts: " . print_r($seq_post, true));
 
-				$sequence->dbgOut("Number of posts in {$sequence_id} is {$seq_post->found_posts}");
+				$image = ( has_post_thumbnail( $seqPost->id ) ? get_the_post_thumbnail( $seqPost->id, 'pmpro_seq_recentpost_widget_size' ) : '<div class="noThumb"></div>' );
 
-				if ( $seq_post->found_posts > 0 ) {
-
-					while ( $seq_post->have_posts() ) : $seq_post->the_post();
-
-						$image = ( has_post_thumbnail( $post->ID ) ? get_the_post_thumbnail( $post->ID, 'pmpro_seq_recentpost_widget_size' ) : '<div class="noThumb"></div>' );
-						?>
-					<?php if ($show_title) { ?>
-						<h3 id="<?php echo apply_filters('pmpro-seq-recent-post-widget-title-id', 'pmpro-seq-widget-recentpost-title'); ?>" class="widget-title">
-							<span class="widget-inner"><?php echo ( $seqPrefix != '' ? $seqPrefix . ' ' : ' ' ) . get_the_title(); ?></span>
-						</h3>
-					<?php }	else { ?>
-						<h3 id="<?php echo apply_filters('pmpro-seq-recent-post-widget-title-id', 'pmpro-seq-widget-recentpost-title'); ?>" class="widget-title"><?php echo $defaultTitle; ?></h3>
-					<?php } ?>
-						<div id="pmpro-seq-post-body" class="text-widget">
-							<!-- <p class="pmpro-seq-when">Available on <?php $this->print_available_date($sequence, $seqPostId); ?></p> -->
-							<div id="pmpro-seq-post-body-text"><?php
-								echo $image;
-								echo $this->limit_excerpt_words( get_the_excerpt(), $excerpt_length ); ?>
-							</div>
-							<div id="pmpro-seq-post-link" <?php echo apply_filters('pmpro-seq-widget-postlink-class', ''); ?>>
-								<a href="<?php echo get_permalink() ?>" title="<?php the_title(); ?>"><?php _e('Click to read', 'pmprosequence'); ?></a>
-							</div>
-						</div>
-					<?php
-					endwhile;?>
-				<?php
-				} else {
-					?>
-					<span id="pmpro-seq-post-notfound">
-					<h3 id="<?php echo apply_filters('pmpro-seq-recentpost-widget-nopostfound', 'pmpro-seq-widget-recentpost-nopostfound-title'); ?>" class="widget-title">Configuration Error</h3>
-					<div id="pmpro-seq-post-body" class="text-widget <?php echo apply_filters( 'pmpro-seq-widget-recentpost-nopostfound-body', ''); ?>">
-						<?php echo ( $sequence_id != 0 ? get_the_title($sequence_id) . __(': No post(s) found!', 'pmprosequence') : __('No sequence specified', 'pmprosequence') ); ?>
-					</div>
-				</span>
-				<?php
+				if ($show_title) { ?>
+				<h3 id="<?php echo apply_filters('pmpro-seq-recent-post-widget-title-id', 'pmpro-seq-widget-recentpost-title'); ?>" class="widget-title">
+					<span class="widget-inner"><?php echo ( $seqPrefix != '' ? $seqPrefix . ' ' : ' ' ) . $seqPost->title; ?></span>
+				</h3><?php
 				}
+				else { ?>
 
+				<h3 id="<?php echo apply_filters('pmpro-seq-recent-post-widget-title-id', 'pmpro-seq-widget-recentpost-title'); ?>" class="widget-title"><?php echo $defaultTitle; ?></h3><?php
+
+				} ?>
+				<div id="pmpro-seq-post-body" class="text-widget">
+					<!-- <p class="pmpro-seq-when">Available on <?php $this->print_available_date( $sequence, $seqPost->id ); ?></p> -->
+					<div id="pmpro-seq-post-body-text"><?php
+						echo $image;
+						echo $this->limit_excerpt_words( get_the_excerpt( $seqPost->id ), $excerpt_length ); ?>
+					</div>
+					<div id="pmpro-seq-post-link" <?php echo apply_filters('pmpro-seq-widget-postlink-class', ''); ?>>
+						<a href="<?php echo $seqPost->permalink; ?>" title="<?php echo $seqPost->title; ?>"><?php _e('Click to read', 'pmprosequence'); ?></a>
+					</div>
+				</div> <?php
 			}
-			else {
-				?>
+			else { ?>
 				<span id="pmpro-seq-post-notfound">
 					<h3 class="widget-title">Membership Level Error</h3>
 					<div id="pmpro-seq-post-body" class="text-widget">
 						<?php _e( "Sorry, your current membership level does not give you access to this content.", 'pmprosequence' ); ?>
 					</div>
-				</span>
-			<?php
+				</span><?php
 			}
-			wp_reset_postdata();
 		}
 	}
 
 	private function limit_excerpt_words( $string, $word_limit ) {
+
 		$words = explode( " ", $string, ($word_limit + 1));
 
 		if ( count($words) > $word_limit ) {
@@ -267,13 +249,27 @@ class SeqRecentPostWidget extends WP_Widget {
 
 	private function print_available_date( PMProSequence $seq, $postId ) {
 
-		$seqPost = $seq->get_postDetails($postId);
+		$seqPost = $seq->get_post_details( $postId );
+		$max_delay = 0;
+
+		foreach( $seqPost as $k => $post ) {
+
+			if ( $post->delay < $max_delay->delay ) {
+
+				unset( $seqPost[$k] );
+			}
+			else {
+				$max_delay = clone $post;
+			}
+		}
+
+		$post = $seqPost[0];
 
 		if ( ( $seq->options->delayType == 'byDays' ) && ( $seq->options->showDelayAs == PMPRO_SEQ_AS_DAYNO ) ) {
-			echo 'day ' . $seq->displayDelay($seqPost->delay) . ' of membership';
+			echo 'day ' . $seq->display_proper_delay( $post->delay ) . ' of membership';
 		}
 		else {
-			echo $seq->displayDelay($seqPost->delay);
+			echo $seq->display_proper_delay( $post->delay );
 		}
 	}
 }
