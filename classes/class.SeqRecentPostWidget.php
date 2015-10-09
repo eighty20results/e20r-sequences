@@ -77,7 +77,7 @@ class SeqRecentPostWidget extends WP_Widget {
 
 		}
 		else {
-			// dbgOut("Widget config: No config found");
+			// dbg_log("Widget config: No config found");
 			$default_title = __('Your most recently available content', 'pmprosequence');
 			$title = null;
 			$show_title = 0;
@@ -199,7 +199,7 @@ class SeqRecentPostWidget extends WP_Widget {
 
 				add_image_size( 'pmpro_seq_recentpost_widget_size', 85, 45, false );
 
-				// $sequence->dbgOut("Posts: " . print_r($seq_post, true));
+				// $sequence->dbg_log("Widget - Posts: " . print_r($seq_post, true));
 
 				$image = ( has_post_thumbnail( $seqPost->id ) ? get_the_post_thumbnail( $seqPost->id, 'pmpro_seq_recentpost_widget_size' ) : '<div class="noThumb"></div>' );
 
