@@ -3,7 +3,7 @@
 Plugin Name: PMPro Sequences
 Plugin URI: http://www.eighty20results.com/pmpro-sequences/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 2.4.15
+Version: 3.0
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
@@ -30,59 +30,59 @@ License:
 */
 
 /* Version number */
-define( 'PMPRO_SEQUENCE_VERSION', '2.4.15' );
+define('PMPRO_SEQUENCE_VERSION', '3.0');
 
 /* Set the max number of email alerts to send in one go to one user */
-define( 'PMPRO_SEQUENCE_MAX_EMAILS', 3 );
+define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
-define( 'PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.2.2' );
+define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.3');
 
 /* Set the path to the PMPRO Sequence plugin */
-define( 'PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
-define( 'PMPRO_SEQUENCE_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('PMPRO_SEQUENCE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-define( 'PMPRO_SEQ_AS_DAYNO', 1 );
-define( 'PMPRO_SEQ_AS_DATE', 2 );
+define('PMPRO_SEQ_AS_DAYNO', 1);
+define('PMPRO_SEQ_AS_DATE', 2);
 
-define( 'PMPRO_SEQ_SEND_AS_SINGLE', 10 );
-define( 'PMPRO_SEQ_SEND_AS_LIST', 20 );
+define('PMPRO_SEQ_SEND_AS_SINGLE', 10);
+define('PMPRO_SEQ_SEND_AS_LIST', 20);
 
-define( 'DEBUG_SEQ_INFO', 10 );
-define( 'DEBUG_SEQ_WARNING', 100 );
-define( 'DEBUG_SEQ_CRITICAL', 1000 );
+define('DEBUG_SEQ_INFO', 10);
+define('DEBUG_SEQ_WARNING', 100);
+define('DEBUG_SEQ_CRITICAL', 1000);
 
-define( 'MAX_LOG_SIZE', 3*1024*1024 );
+define('MAX_LOG_SIZE', 3 * 1024 * 1024);
 
 /* Enable / Disable DEBUG logging to separate file */
-define( 'PMPRO_SEQUENCE_DEBUG', true );
-define( 'DEBUG_SEQ_LOG_LEVEL', DEBUG_SEQ_INFO );
+define('PMPRO_SEQUENCE_DEBUG', true);
+define('DEBUG_SEQ_LOG_LEVEL', DEBUG_SEQ_INFO);
 
 /**
  * Include the class for the update checker
  */
-require_once( PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php" );
+require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php");
 
 /**
-  *	Include the class for PMProSequences
-  */
-if (! class_exists( 'PMProSequence' )):
+ *    Include the class for PMProSequences
+ */
+if (!class_exists('PMProSequence')):
 
-    require_once( PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.PMProSequence.php");
-	require_once( PMPRO_SEQUENCE_PLUGIN_DIR ."/scheduled/crons.php");
+    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.PMProSequence.php");
+    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/scheduled/crons.php");
 
 endif;
 
-if ( ! class_exists( 'SeqRecentPostWidget' )):
-	require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.SeqRecentPostWidget.php");
+if (!class_exists('SeqRecentPostWidget')):
+    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.SeqRecentPostWidget.php");
 endif;
 
 /** A debug function */
 
 /**
-  *	Couple functions from PMPro in case we don't have them loaded yet.
-  */
-if( ! function_exists("pmpro_getMemberStartdate") ):
+ *    Couple functions from PMPro in case we don't have them loaded yet.
+ */
+if (!function_exists("pmpro_getMemberStartdate")):
 
     /**
      *
@@ -93,20 +93,21 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
      *
      * @returns mixed - The start date for this user_id at the specific level_id (or in general)
      */
-    function pmpro_getMemberStartdate( $user_id = NULL, $level_id = 0 ) {
-		if ( empty( $user_id ) ) {
+    function pmpro_getMemberStartdate($user_id = NULL, $level_id = 0)
+    {
+        if (empty($user_id)) {
 
-			global $current_user;
-			$user_id = $current_user->ID;
-		}
+            global $current_user;
+            $user_id = $current_user->ID;
+        }
 
-		global $pmpro_startdates;	//for cache
+        global $pmpro_startdates;    //for cache
 
-		if( empty( $pmpro_startdates[$user_id][$level_id] ) ) {
+        if (empty($pmpro_startdates[$user_id][$level_id])) {
 
-			global $wpdb;
-			
-			if ( ! empty( $level_id ) ) {
+            global $wpdb;
+
+            if (!empty($level_id)) {
 
                 $sqlQuery = $wpdb->prepare(
                     "
@@ -119,8 +120,7 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
                     $level_id,
                     $user_id
                 );
-            }
-            else {
+            } else {
                 $sqlQuery = $wpdb->prepare(
                     "
 						SELECT UNIX_TIMESTAMP( startdate )
@@ -133,13 +133,13 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
                 );
             }
 
-			$startdate = apply_filters( "pmpro_member_startdate", $wpdb->get_var( $sqlQuery ), $user_id, $level_id );
-			
-			$pmpro_startdates[$user_id][$level_id] = $startdate;
-		}
-		
-		return $pmpro_startdates[$user_id][$level_id];
-	}
+            $startdate = apply_filters("pmpro_member_startdate", $wpdb->get_var($sqlQuery), $user_id, $level_id);
+
+            $pmpro_startdates[$user_id][$level_id] = $startdate;
+        }
+
+        return $pmpro_startdates[$user_id][$level_id];
+    }
 
     /**
      * Calculate the # of days since the membership level (or membership in general) was started for a specific user_id
@@ -177,24 +177,25 @@ if( ! function_exists("pmpro_getMemberStartdate") ):
 */
 endif;
 
-if ( ! function_exists ('pmpro_sequence_import_all_PMProSeries') ):
+if (!function_exists('pmpro_sequence_import_all_PMProSeries')):
 
     /**
      * Import PMPro Series as specified by the pmpro-sequence-import-pmpro-series filter
      */
-    function pmpro_sequence_import_all_PMProSeries() {
+    function pmpro_sequence_import_all_PMProSeries()
+    {
 
-        $importStatus = apply_filters( 'pmpro-sequence-import-pmpro-series', __return_false() );
+        $importStatus = apply_filters('pmpro-sequence-import-pmpro-series', __return_false());
 
         // Don't import anything.
-        if ( __return_false() === $importStatus ) {
+        if (__return_false() === $importStatus) {
 
             return;
         }
 
         global $wpdb;
 
-        if ( ( __return_true() === $importStatus ) || ( 'all' === $importStatus ) ) {
+        if ((__return_true() === $importStatus) || ('all' === $importStatus)) {
 
             //Get all of the defined PMPro Series posts to import from this site.
             $series_sql = "
@@ -202,18 +203,16 @@ if ( ! function_exists ('pmpro_sequence_import_all_PMProSeries') ):
                         FROM {$wpdb->posts}
                         WHERE post_type = 'pmpro_series'
                     ";
-        }
-        elseif ( is_array( $importStatus ) ) {
+        } elseif (is_array($importStatus)) {
 
             //Get the specified list of PMPro Series posts to import
             $series_sql = "
                         SELECT *
                         FROM {$wpdb->posts}
                         WHERE post_type = 'pmpro_series'
-                        AND ID IN (" . implode( ",", $importStatus ) . ")
+                        AND ID IN (" . implode(",", $importStatus) . ")
                     ";
-        }
-        elseif ( is_numeric( $importStatus ) ) {
+        } elseif (is_numeric($importStatus)) {
 
             //Get the specified (by Post ID, we assume) PMPro Series posts to import
             $series_sql = $wpdb->prepare(
@@ -227,7 +226,7 @@ if ( ! function_exists ('pmpro_sequence_import_all_PMProSeries') ):
             );
         }
 
-        $series_list = $wpdb->get_results( $series_sql );
+        $series_list = $wpdb->get_results($series_sql);
 
         // Series meta: '_post_series' => the series this post belongs to.
         //              '_series_posts' => the posts in the series
@@ -239,48 +238,48 @@ if ( ! function_exists ('pmpro_sequence_import_all_PMProSeries') ):
                 );
         */
         // Process the list of sequences
-        foreach ( $series_list as $series ) {
+        foreach ($series_list as $series) {
 
             $wp_error = true;
 
-            $seq_id = wp_insert_post( array(
-                    'post_author'           => $series->post_author,
-                    'post_date'             => date_i18n( 'Y-m-d H:i:s' ),
-                    'post_date_gmt'         => date_i18n( 'Y-m-d H:i:s' ),
-                    'post_content'          => $series->post_content,
-                    'post_title'            => $series->post_title,
-                    'post_excerpt'          => $series->post_excerpt,
-                    'post_status'           => $series->post_status,
-                    'comment_status'        => $series->comment_status,
-                    'ping_status'           => $series->ping_status,
-                    'post_password'         => $series->post_password,
-                    'post_name'             => $series->post_name,
-                    'to_ping'               => $series->to_ping,
-                    'pinged'                => $series->pinged,
-                    'post_modified'         => $series->post_modified,
-                    'post_modified_gmt'     => $series->post_modified_gmt,
-                    'post_content_filtered' => $series->post_content_filtered,
-                    'post_parent'           => $series->post_parent,
-                    'guid'                  => $series->guid,
-                    'menu_order'            => $series->menu_order,
-                    'post_type'             => 'pmpro_sequence',
-                    'post_mime_type'        => $series->post_mime_type,
-                    'comment_count'         => $series->comment_count
-                ),
-                $wp_error );
+            $seq_id = wp_insert_post(array(
+                'post_author' => $series->post_author,
+                'post_date' => date_i18n('Y-m-d H:i:s'),
+                'post_date_gmt' => date_i18n('Y-m-d H:i:s'),
+                'post_content' => $series->post_content,
+                'post_title' => $series->post_title,
+                'post_excerpt' => $series->post_excerpt,
+                'post_status' => $series->post_status,
+                'comment_status' => $series->comment_status,
+                'ping_status' => $series->ping_status,
+                'post_password' => $series->post_password,
+                'post_name' => $series->post_name,
+                'to_ping' => $series->to_ping,
+                'pinged' => $series->pinged,
+                'post_modified' => $series->post_modified,
+                'post_modified_gmt' => $series->post_modified_gmt,
+                'post_content_filtered' => $series->post_content_filtered,
+                'post_parent' => $series->post_parent,
+                'guid' => $series->guid,
+                'menu_order' => $series->menu_order,
+                'post_type' => 'pmpro_sequence',
+                'post_mime_type' => $series->post_mime_type,
+                'comment_count' => $series->comment_count
+            ),
+                $wp_error);
 
-            if ( ! is_wp_error( $seq_id ) ) {
+            if (!is_wp_error($seq_id)) {
 
-                $post_list = get_post_meta( $series->ID, '_series_posts', true );
+                $post_list = get_post_meta($series->ID, '_series_posts', true);
 
-                $seq = new PMProSequence( $seq_id );
-                $seq->init( $seq_id );
+                $seq = new PMProSequence($seq_id);
+                $seq->init($seq_id);
 
-                foreach ( $post_list as $seq_member ) {
+                foreach ($post_list as $seq_member) {
 
-                    if ( ! $seq->addPost( $seq_member->id, $seq_member->delay ) ) {
-                        return new WP_Error( 'sequence_import',
-                            sprintf( __( 'Could not complete import for series %s', 'pmprosequence' ), $series->post_title ), $seq->getError() );
+                    if (!$seq->addPost($seq_member->id, $seq_member->delay)) {
+                        return new WP_Error('sequence_import',
+                            sprintf(__('Could not complete import for series %s', 'pmprosequence'), $series->post_title), $seq->getError());
                     }
                 } // End of foreach
 
@@ -290,8 +289,8 @@ if ( ! function_exists ('pmpro_sequence_import_all_PMProSeries') ):
                 // update_post_meta( $seq_id, "_sequence_posts", $post_list );
             } else {
 
-                return new WP_Error( 'db_query_error',
-                    sprintf( __( 'Could not complete import for series %s', 'pmprosequence' ), $series->post_title ), $wpdb->last_error );
+                return new WP_Error('db_query_error',
+                    sprintf(__('Could not complete import for series %s', 'pmprosequence'), $series->post_title), $wpdb->last_error);
 
             }
         } // End of foreach (DB result)
@@ -309,12 +308,14 @@ endif;
  *
  * @return bool
  */
-function in_array_r( $needle, $haystack, $strict = false ) {
+function in_array_r($needle, $haystack, $strict = false)
+{
 
-    foreach ( $haystack as $item ) {
+    foreach ($haystack as $item) {
 
-        if ( ( $strict ? $item === $needle : $item == $needle ) ||
-             ( is_array( $item) && in_array_r( $needle, $item, $strict ) ) ) {
+        if (($strict ? $item === $needle : $item == $needle) ||
+            (is_array($item) && in_array_r($needle, $item, $strict))
+        ) {
 
             return true;
         }
@@ -323,34 +324,34 @@ function in_array_r( $needle, $haystack, $strict = false ) {
     return false;
 }
 
-function in_object_r( $key = null, $value = null, $object, $strict = false ) {
+function in_object_r($key = null, $value = null, $object, $strict = false)
+{
 
-    if ( $key == null ) {
+    if ($key == null) {
 
         trigger_error("in_object_r expects a key as the first parameter", E_USER_WARNING);
         return false;
     }
 
-    if ( $value == null ) {
+    if ($value == null) {
 
         trigger_error("in_object_r expects a value as the second parameter", E_USER_WARNING);
         return false;
     }
 
-    if ( ! is_object( $object ) ) {
-        $object = (object) $object;
+    if (!is_object($object) && (is_array($object))) {
+        $object = (object)$object;
     }
 
-    foreach ( $object as $k => $v ) {
+    foreach ($object as $k => $v) {
 
-        if ( ( ! is_object( $v ) ) && ( ! is_array( $v ) ) ) {
+        if ((!is_object($v)) && (!is_array($v))) {
 
-            if ( ( $k == $key ) && ( $strict ? $v === $value : $v == $value ) ) {
+            if (($k == $key) && ($strict ? $v === $value : $v == $value)) {
                 return true;
             }
-        }
-        else {
-            return in_object_r( $key, $value, $v, $strict );
+        } else {
+            return in_object_r($key, $value, $v, $strict);
         }
     }
 
@@ -362,13 +363,12 @@ try {
 
     $sequence = new PMProSequence();
     $sequence->load_actions();
-}
-catch ( Exception $e ) {
-    error_log( "PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage() );
+} catch (Exception $e) {
+    error_log("PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage());
 }
 
-register_activation_hook( __FILE__, array( &$sequence, 'activation' ) );
-register_deactivation_hook( __FILE__, array( &$sequence, 'deactivation' ) );
+register_activation_hook(__FILE__, array(&$sequence, 'activation'));
+register_deactivation_hook(__FILE__, array(&$sequence, 'deactivation'));
 
 $plugin_updates = PucFactory::buildUpdateChecker(
     'https://eighty20results.com/protected-content/pmpro-sequences/metadata.json',
