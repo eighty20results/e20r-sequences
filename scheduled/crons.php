@@ -90,7 +90,12 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 			$sequence->pmpro_sequence_user_id = $s->user_id;
 
 			// Load sequence data
-			$sequence->get_options( $s->seq_id );
+			if ( !$sequence->get_options( $s->seq_id ) ) {
+
+				$sequence->dbg_log("cron() - Sequence {$s->seq_id} is not converted to V3 metadata format. Exiting!");
+				$sequence->set_error_msg( __( "Please de-activiate and activiate the PMPro Sequences plug-in to facilitate conversion to v3 meta data format.", "pmprosequences" ) );
+				continue;
+			}
 
 			$sequence->dbg_log('cron() - Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
 
