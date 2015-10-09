@@ -452,6 +452,7 @@ var postMeta = {
     add_entry: function() {
 
         var saveBtn = jQuery('#pmpro_sequencesave');
+        var $class = this;
 
         if ('' == jQuery('#pmpro_sequence_post').val() || undefined != saveBtn.attr('disabled'))
             return false; //already processing, ignore this request
