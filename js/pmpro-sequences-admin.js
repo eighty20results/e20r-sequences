@@ -143,8 +143,12 @@ var sequenceSettings = {
     checked_box: function( $checkbox ) {
 
         console.log("Updating checkbox for ", $checkbox );
+
         var $class = this;
-        $checkbox = jQuery($checkbox);
+
+        if ( !( $checkbox instanceof jQuery ) ) {
+            $checkbox = jQuery($checkbox);
+        }
 
         if ( $checkbox.is(':checked') &&
             $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-settings-display').hasClass('pmpro-sequence-offset') ) {
@@ -167,9 +171,6 @@ var sequenceSettings = {
             $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset').hide();
             // jQuery('.pmpro-sequence-offset').hide();
         }
-        else {
-
-        }
 
         if ( 'pmpro_sequence_sendnotice' == $checkbox.attr('id')  ) {
 
@@ -189,6 +190,17 @@ var sequenceSettings = {
 
             };
         }
+
+        // if ( $checkbox.is(':checked') ) {
+            console.log("Setting checkbox hidden value for: ", $checkbox.attr('id'));
+            $checkbox.closest('.pmpro-sequence-setting-col-1').find('input[type=hidden]').val( ( $checkbox.is(':checked') ? 1 : 0 ));
+        // }
+
+        /* if ( $checkbox.not(':checked') &&
+            console.log("Setting checkbox hidden value for: ", $checkbox.attr('id'));
+            $checkbox.closest('.pmpro-sequence-setting-col-1').find('#hidden_pmpro_seq_allowRepeatPosts').val(1);
+        }*/
+
     },
     save_input: function( input ) {
 
