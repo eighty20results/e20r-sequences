@@ -113,6 +113,18 @@
             return false;
         }
 
+        public function check_conversion() {
+
+            $sequences = $this->get_all_sequences( 'publish' );
+
+            foreach( $sequences as $sequence ) {
+
+                if ( !$this->is_converted( $sequence->ID ) ) {
+                    $this->set_error_msg( sprintf( __( "Action: De-activate and activate the PMPro Sequences plugin to convert the '%s' sequence to the new metadata format", "pmprosequence" ), $sequence->post_title ) );
+                }
+            }
+        }
+
         public function convert_posts_to_v3() {
 
             $is_pre_v3 = get_post_meta( $this->sequence_id, "_sequence_posts", true );
@@ -3014,9 +3026,6 @@
 
                 $this->dbg_log("set_error_msg(): {$msg}");
                 add_settings_error( 'pmpro_seq_errors', '', $msg, 'error' );
-            }
-            else{
-
             }
         }
 
@@ -6761,6 +6770,7 @@
             add_action('add_meta_boxes', array(&$this, 'post_metabox'));
 
             // Load add/save actions
+            add_action('admin_init', array( &$this, 'check_conversion' ) );
             add_action('admin_notices', array(&$this, 'display_error'));
             // add_action( 'save_post', array( &$this, 'post_save_action' ) );
             add_action('post_updated', array(&$this, 'post_save_action'));
