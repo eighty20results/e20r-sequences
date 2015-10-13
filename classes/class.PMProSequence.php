@@ -1564,7 +1564,7 @@
             </table>
             <div id="pmpro-seq-new">
                 <hr class="pmpro-seq-hr" />
-                <a href="#" id="pmpro-seq-new-meta" class="button-primary"><?php _e( "Add", "pmprosequence" ); ?></a>
+                <a href="#" id="pmpro-seq-new-meta" class="button-primary"><?php _e( "New Sequence", "pmprosequence" ); ?></a>
                 <a href="#" id="pmpro-seq-new-meta-reset" class="button"><?php _e( "Reset", "pmprosequence" ); ?></a>
             </div>
             <?php
