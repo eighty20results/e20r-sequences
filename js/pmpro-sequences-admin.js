@@ -33,6 +33,7 @@ var sequenceSettings = {
         this.saveBtn        = jQuery('a[class^="save-pmproseq"]');
         this.cancelBtn      = jQuery('a[class^="cancel-pmproseq"]');
         this.editBtn        = jQuery('a.pmpro-seq-edit');
+
         this.selects        = jQuery('div.pmpro-sequence-settings-input select');
         this.sortOrderCtl   = jQuery('#pmpro_sequence_sortorder');
         this.delayCtl       = jQuery('#pmpro_sequence_delaytype');
@@ -363,6 +364,7 @@ var postMeta = {
 
         this.sequence_list = jQuery( 'select.pmpro_seq-memberof-sequences');
         this.spinner = jQuery('div.seq_spinner');
+        this.delay_type     = jQuery('#pmpro-seq-hidden-delay-type').val();
 
         var $class = this;
 
@@ -374,9 +376,10 @@ var postMeta = {
 
         $class.sequence_list = jQuery( 'select.pmpro_seq-memberof-sequences');
 
-        jQuery('.new-sequence-select, .pmpro_seq-memberof-sequences').each(function() {
+        jQuery('select.new-sequence-select, .pmpro_seq-memberof-sequences').each(function() {
             jQuery(this).unbind().on( 'change', function () {
 
+                console.log("User changed the content of the select box.")
                 $class.meta_select_changed( this );
             });
         });
@@ -387,7 +390,8 @@ var postMeta = {
             console.log("Add new table row for metabox");
             $class.spinner.show();
 
-            $class.row_visibility( jQuery( '.new-sequence-select' ), 'select' );
+            // $class.row_visibility( jQuery( '.new-sequence-select' ), 'select' );
+            $class.add_sequence_post_row();
 
             $class.spinner.hide();
             $class.manage_meta_rows();
@@ -396,7 +400,32 @@ var postMeta = {
         jQuery('.delay-row-input input:checkbox').unbind().on( 'click', function() {
 
             console.log("The 'remove' checkbox was clicked...");
-            $class.remove_sequence( this );
+            var $checkbox = this;
+
+            if ( !( $checkbox instanceof jQuery ) ) {
+                $checkbox = jQuery(this);
+            }
+
+            var delay_input = $checkbox.closest('td').find('.pmpro-seq-delay-info').val();
+
+            if ( ( '' == delay_input ) ) {
+
+                console.log("Value is empty so just clearing (removing) the HTML from the page");
+
+                var s_label = $checkbox.closest("tr.delay-row-input.sequence-delay").prev().prev().prev();
+                var s_input = $checkbox.closest("tr.delay-row-input.sequence-delay").prev().prev();
+                var d_label = $checkbox.closest("tr.delay-row-input.sequence-delay").prev();
+                var d_input = $checkbox.closest("tr.delay-row-input.sequence-delay");
+
+                s_label.remove();
+                s_input.remove();
+                d_label.remove();
+                d_input.remove();
+            }
+            else {
+
+                $class.remove_sequence(this);
+            }
         });
 
         $class.show_controls();
@@ -525,18 +554,29 @@ var postMeta = {
 
         $class.spinner.show();
 
+        console.log("Removing sequence info: ", $me );
+
+        if ( !( $me instanceof jQuery ) ){
+
+            $me = jQuery($me);
+        }
+
+        var delay_ctrl = $me.closest('td').find('input.pmpro-seq-delay-info.pmpro-seq-days');
+        console.log("Delay value: ", delay_ctrl.val() );
+
         jQuery.ajax({
             url: pmpro_sequence.ajaxurl,
-            type:'POST',
-            timeout:10000,
+            type: 'POST',
+            timeout: 10000,
             dataType: 'JSON',
             data: {
                 action: 'pmpro_rm_sequence_from_post',
-                pmpro_sequence_id: jQuery($me).val(),
+                pmpro_sequence_id: $me.val(),
+                pmpro_seq_delay: delay_ctrl.val(),
                 pmpro_seq_post_id: jQuery('#post_ID').val(),
                 pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val()
             },
-            error: function($data){
+            error: function ($data) {
 
                 console.dir($data);
 
@@ -545,25 +585,24 @@ var postMeta = {
                 }
 
             },
-            success: function($data){
+            success: function ($data) {
 
                 console.dir($data);
 
                 if ($data.data) {
-                    jQuery('#pmpro_seq-configure-sequence').html( $data.data );
+                    jQuery('#pmpro_seq-configure-sequence').html($data.data);
                 }
 
             },
-            complete: function() {
+            complete: function () {
 
                 $class.show_controls();
                 $class.manage_meta_rows();
                 $class.bind_controls();
                 $class.spinner.hide();
-
-
             }
         });
+
     },
     show_controls: function() {
 
@@ -645,6 +684,116 @@ var postMeta = {
             $delayRow.hide();
         }
     },
+    _delay_label: function( sequence_id ) {
+
+        // console.log("Delay settings: ", pmpro_sequence.delay_config);
+        var $html;
+        var $label;
+
+        if ( 'byDate' == pmpro_sequence.delay_config[ sequence_id ]  ) {
+            $label = "Delay (Format: Date)";
+
+        }
+
+        if ( 'byDays' ==  pmpro_sequence.delay_config[ sequence_id ] ) {
+            $label = "Delay (Format: Day count)";
+        }
+
+        $html = '<label for="pmpro_seq-delay_' + sequence_id + '">' + $label + '</label>';
+        return $html;
+    },
+    _delay_input: function( sequence_id ) {
+
+        console.log("Delay settings: ", pmpro_sequence.delay_config);
+        var $html;
+
+        if ( 'byDate' == pmpro_sequence.delay_config[ sequence_id ]  ) {
+
+            var today = new Date();
+            var dd = today.getDate();
+            var mm = today.getMonth()+1; //January is 0!
+            var yyyy = today.getFullYear();
+
+            if ( dd < 10 ) {
+                dd = '0' + dd;
+            }
+
+            if ( mm < 10 ) {
+                mm = '0' + mm;
+            }
+
+            var starts = yyyy + '-' + mm - '-' + dd;
+
+            $html = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' value='' name='pmpro_seq-delay[]' min='" + starts + "'>";
+        }
+
+        if ( 'byDays' ==  pmpro_sequence.delay_config[ sequence_id ] ) {
+            $html = "<input class='pmpro-seq-delay-info pmpro-seq-days' type='text' name='pmpro_seq-delay[]' value=''>";
+        }
+
+        return $html;
+    },
+    add_sequence_post_row: function( ) {
+
+        var $class = this;
+
+        var table = jQuery("#pmpro-seq-metatable").find('tbody');
+
+        var select_label_row = table.find('tr.select-row-label.sequence-select-label:first').clone();
+        var select_row = table.find('tr.select-row-input.sequence-select:first').clone();
+        var delay_label_row = table.find('tr.delay-row-label.sequence-delay-label:first').clone();
+        var delay_row = table.find('tr.delay-row-input.sequence-delay:first').clone();
+
+        console.log("Unselect the new sequence ID and clear any delay value(s)");
+        select_row.find('.pmpro_seq-memberof-sequences').val('');
+        delay_row.find('.pmpro-seq-delay-info.pmpro-seq-days').val('');
+
+        table.append( select_label_row );
+        table.append( select_row );
+        table.append( delay_label_row );
+        table.append( delay_row );
+
+        $class.bind_controls();
+
+        console.log("Added 4 rows for the new sequence.");
+    },
+    /* _duplicate_meta_entry: function( sequence_id, delay_val, entry ) {
+
+        var $class = this;
+        console.log("Using sequence ID: " + sequence_id + ' at element: ', entry );
+
+        jQuery("tr.select-row-input.sequence-select select.pmpro_seq-memberof-sequences").each( function() {
+
+            var sequence = jQuery( this );
+
+            if ( sequence_id === sequence.val() ) {
+                select_label = sequence.closest('tr .select-row-label.sequence-select-label');
+                return false;
+            }
+        });
+
+        console.log("Select label entry for the specific sequence ID: " + sequence_id, select_label );
+
+        if ( ( null !== select_label ) || ( false !== select_label ) ) {
+            var select = select_label.next();
+            var delay_label = select.next();
+            var delay = delay_label.next();
+
+            console.log("Delay value is now: ", delay.find('input.pmpro-seq-delay-info.pmpro-seq-days').val() );
+            delay.find('input.pmpro-seq-delay-info.pmpro-seq-days').val('');
+            console.log("After (supposed) clear... Delay value is now: ", delay.find('input.pmpro-seq-delay-info.pmpro-seq-days').val() );
+
+            console.log("Find the last delay value input in the list: ", jQuery("tr.delay-row-input.sequence-delay:last") );
+
+            jQuery("tr.delay-row-input.sequence-delay:last").appendTo(select_label);
+            console.log("Attempted to add select label: ", select_label );
+            jQuery("tr.select-row-label.sequence-select-label:last").appendTo(select);
+            jQuery("tr.select-row-input.sequence-select:last").appendTo(delay_label);
+            jQuery("tr.delay-row-label.sequence-delay-label:last").appendTo(delay);
+
+            console.log("Added rows");
+        }
+    }, */
     meta_select_changed: function( $self ) {
 
         var $class = this;
@@ -653,16 +802,62 @@ var postMeta = {
         console.log("Changed the Sequence this post is a member of");
         $class.spinner.show();
 
-        var $sequence_id = jQuery( $self ).val();
+        console.log("Self is: ", $self );
 
-        if ( ! $sequence_id ) {
-            console.log("Empty Id");
+        if ( !( $self instanceof jQuery ) ) {
+
+            $self = jQuery( $self );
+        }
+
+        var managed_sequences = {};
+
+        $self.closest('#pmpro-seq-metatable').find('tr.select-row-input').find('select.pmpro_seq-memberof-sequences option:selected').each(function() {
+
+            var input = jQuery(this);
+
+            if ( '' != input.val() ) {
+                var key = input.val();
+                console.log("Is_managed: Sequence ID: ", key );
+                managed_sequences[ key ] = input.closest('tr');
+            }
+        });
+
+        var sequence_id = $self.val();
+        var delay_value =  $self.closest('tr.select-row-input.new-sequence-select').next().next().find('input.pmpro-seq-delay-info').val();
+
+        if ( ( ( managed_sequences.hasOwnProperty( sequence_id ) ) && ( managed_sequences[ sequence_id ] instanceof jQuery ) ) && ('' == delay_value ) ) {
+
+            console.log("No delay value specified but the current sequence_id is already being managed");
+            console.log("Duplicate all 4 rows and insert after the last (with empty delay value)");
+
+            // $self.closest('tr.select-row-input.sequence-select').
+            $class.add_sequence_post_row();
+
+            return;
+        }
+
+        if ( ( '' == sequence_id ) ) {
+
+            console.log("sequence_id is empty for: ", $self );
             return;
             console.log("Should have exited...")
         }
-        console.log("Sequence ID: " + $sequence_id );
-        // Disable delay and sequence input.
 
+        console.log("Sequence ID: " + sequence_id );
+
+        var $input = $class._delay_input( sequence_id );
+        var $label = $class._delay_label( sequence_id );
+
+        console.log("Setting label to: ", $label);
+        console.log("Setting input to: ", $input);
+
+        // Disable delay and sequence input.
+        var delay_label_row = $self.closest('tr.select-row-input.sequence-select').next();
+        var delay_row = $self.closest('tr.select-row-input.sequence-select').next().next();
+
+        delay_label_row.find('label[for^="pmpro_seq-delay"]').replaceWith($label);
+        delay_row.find('input.pmpro-seq-delay-info.pmpro-seq-days').replaceWith($input);
+/*
         jQuery.ajax({
             url: pmpro_sequence.ajaxurl,
             type:'POST',
@@ -670,7 +865,7 @@ var postMeta = {
             dataType: 'JSON',
             data: {
                 action: 'pmpro_sequence_update_post_meta',
-                pmpro_sequence_id: $sequence_id,
+                pmpro_sequence_id: sequence_id,
                 pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val(),
                 pmpro_sequence_post_id: jQuery('#post_ID').val()
             },
@@ -705,6 +900,7 @@ var postMeta = {
                 jQuery( '#pmpro-seq-new').hide();
             }
         });
+        */
     },
     _set_labels: function() {
 
