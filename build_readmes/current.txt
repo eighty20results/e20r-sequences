@@ -1,14 +1,17 @@
-Set allowRepeatPosts default to false
-Add $delay to javascript entries for edit/remove post entries in sequence
-Add allowRepeatPosts setting to sequence settings metabox
-Fix typo in allowRepeatPosts setting
-Refactor getting the sequence users for a sequence to its own private function (get_users_of_sequence())
-Add convertNotifications() function to convert post notification settings for all users/sequences to new post_id & delay format
-Use get_users_of_sequence() in removeNotifiedFlagForPost()
-Add $delay value to add/remove callbacks for
-Make PMPro dependency error message translatable
-Make sure settings for hiding any future sequence posts get saved
-Add convertNotifications() to activation hook
-Fix edit/remove/add posts to sequence in back-end scripts
-Add short code - &#91;sequence_opt_in sequence=<sequence_post_id>&#93; - for the Alert/Notification email opt-in (user managed).
-Simplify has_membership_access_filter() (Thanks to Jessica Oros @ PMPro)
+Track conversion to v3 metadata based on sequence ID in options table
+If option value isn't configured, double-check that the V3 metadata isn't there in is_converted()
+Reduce the number of error messages on back-end
+Wouldn't always reload posts when changing sequence ID to manage
+Load delay type for each sequence to front-end (JavaScript)
+Add test for old-style metadata use if a sequence is found to be empty.
+Convert if needed. Warn admin/editor/user if a sequence hasn't been converted yet.
+Didn't always save the sequence ID when a post was added to a new sequence in edit.php
+Removed redundant saving of sequence ID for a post_id during add_post()
+Load all instances of a sequence/delay combination in edit.php
+Refactor edit.php metabox rendering
+Avoid warning message when no posts are found in get_delay_for_post()
+Remove unused code paths
+Simplify addition of new sequence/delay values to a post in edit.php
+No longer calling back-end when adding new sequence ID to post/page in edit.php
+Simplify removal of sequence/delay pair from a post in edit.php
+Support removing one of multiple sequence entries from a post/page in edit.php

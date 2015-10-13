@@ -99,21 +99,24 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###2.4.15
-* Set allowRepeatPosts default to false
-* Add $delay to javascript entries for edit/remove post entries in sequence
-* Add allowRepeatPosts setting to sequence settings metabox
-* Fix typo in allowRepeatPosts setting
-* Refactor getting the sequence users for a sequence to its own private function (get_users_of_sequence())
-* Add convertNotifications() function to convert post notification settings for all users/sequences to new post_id & delay format
-* Use get_users_of_sequence() in removeNotifiedFlagForPost()
-* Add $delay value to add/remove callbacks for
-* Make PMPro dependency error message translatable
-* Make sure settings for hiding any future sequence posts get saved
-* Add convertNotifications() to activation hook
-* Fix edit/remove/add posts to sequence in back-end scripts
-* Add short code - &#91;sequence_opt_in sequence=<sequence_post_id>&#93; - for the Alert/Notification email opt-in (user managed).
-* Simplify has_membership_access_filter() (Thanks to Jessica Oros @ PMPro)
+###3.0-beta-2
+* Track conversion to v3 metadata based on sequence ID in options table
+* If option value isn't configured, double-check that the V3 metadata isn't there in is_converted()
+* Reduce the number of error messages on back-end
+* Wouldn't always reload posts when changing sequence ID to manage
+* Load delay type for each sequence to front-end (JavaScript)
+* Add test for old-style metadata use if a sequence is found to be empty.
+* Convert if needed. Warn admin/editor/user if a sequence hasn't been converted yet.
+* Didn't always save the sequence ID when a post was added to a new sequence in edit.php
+* Removed redundant saving of sequence ID for a post_id during add_post()
+* Load all instances of a sequence/delay combination in edit.php
+* Refactor edit.php metabox rendering
+* Avoid warning message when no posts are found in get_delay_for_post()
+* Remove unused code paths
+* Simplify addition of new sequence/delay values to a post in edit.php
+* No longer calling back-end when adding new sequence ID to post/page in edit.php
+* Simplify removal of sequence/delay pair from a post in edit.php
+* Support removing one of multiple sequence entries from a post/page in edit.php
 
 ##Old releases
 ###.1
@@ -334,3 +337,62 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###2.4.14
 * Removed CR+LF (\n) from sendEmail()
+
+###2.4.15
+* Set allowRepeatPosts default to false
+* Add $delay to javascript entries for edit/remove post entries in sequence
+* Add allowRepeatPosts setting to sequence settings metabox
+* Fix typo in allowRepeatPosts setting
+* Refactor getting the sequence users for a sequence to its own private function (get_users_of_sequence())
+* Add convertNotifications() function to convert post notification settings for all users/sequences to new post_id & delay format
+* Use get_users_of_sequence() in removeNotifiedFlagForPost()
+* Add $delay value to add/remove callbacks for
+* Make PMPro dependency error message translatable
+* Make sure settings for hiding any future sequence posts get saved
+* Add convertNotifications() to activation hook
+* Fix edit/remove/add posts to sequence in back-end scripts
+* Add short code - &#91;sequence_opt_in sequence=<sequence_post_id>&#93; - for the Alert/Notification email opt-in (user managed).
+* Simplify has_membership_access_filter() (Thanks to Jessica Oros @ PMPro)
+
+###3.0-beta-1
+* Check whether V3 postmeta is the current format on admin_init.
+* Skip sending notices for sequences that haven't been converted yet.
+* Add error message if the meta data for the sequence members isn't in V3 format.
+* Ensure all posts in the sequence gets loaded when an admin/editor is processing the sequence CPT.
+* Correctly identify sequence members that haven't been converted to V3 format yet.
+* Add consistent error check (and error message) for init() of sequences
+* Fix issue where type of edit operation in sequence editor window wasn't working.
+* Didn't always save the repeat post setting for the sequence
+* Add conversion to V3 post meta_data to activate() function
+* Didn't always set the checkbox value for the sequence settings
+* Differentiate between cron processing and normal (admin) processing
+* Didn't always correctly indicate the most current post for the requested user_id
+* Simplify cache check for $this->posts content
+* Avoid perma-loop while in post loop
+* Would sometimes add posts the user_id didn't actually have access to yet
+* Removed duplicate processing for delay values.
+* Didn't correctly convert user alert (notice) settings to V3 format
+* Fixes to help user notice processing handle new v3 formats (and simplify post processing)
+* Consistently use post_id + post_delay values for alert keys
+* Adds support for multiple delay values for a single post_ID within the same sequence (i.e. repeating posts without duplication of content).
+* Add support for 'upcoming' specific post array
+* Record metadata as individual post entries (simplifies search/load of sequence info)
+* Renamed all active functions to 'WordPress friendly' naming (i.e. lower case and underscores)
+* Started work to allow tracking using google analytics. (Possible future feature, ETA is TBD if at all)
+* Simplify loading of sequence member post(s).
+* Simplified post/sequence member lookup.
+* Commented out duplicate or unnecessary code
+* Removed some unneeded code.
+* Updated path to login page in a template
+* Support V3 functions & post management
+* Use new user notification settings (per sequence rather than global)
+* Use new debug logger function
+* Renamed Debug logging function
+* Use new user notification settings (per sequence rather than global)
+* Support V3 functions & post management
+* Would generate undefined variable error in certain situations
+* Remove superfluous load of font-awesome css file
+* Use FontAwesome for admin page icon(s)
+* Fix getPostKey() function to support post_id/delay combinations (for repeating post IDs in sequence)
+* Add debug output for get_users_of_sequence() function
+* Fix convertNotification() function (works)
