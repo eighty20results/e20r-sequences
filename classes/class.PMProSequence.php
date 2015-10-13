@@ -6226,6 +6226,22 @@
                 return false;
             }
 
+            if ( isset( $_POST['hidden_pmpro_seq_wipesequence'] ) &&  ( 1 == intval( $_POST['hidden_pmpro_seq_wipesequence'] ) ) ) {
+
+                if ( $sequence_id == $this->sequence_id ) {
+
+                    if ( !$this->delete_post_meta_for_sequence( $sequence_id ) ) {
+
+                        $this->dbg_log( 'save_settings() - Unable to delete the posts in sequence # ' . $sequence_id, DEBUG_SEQ_CRITICAL );
+                        $this->set_error_msg( __('Unable to wipe existing posts', 'pmprosequence') );
+                    }
+                }
+                else {
+                    $this->dbg_log("save_settings() - the specified sequence id and the current sequence id were different!", DEBUG_SEQ_WARNING );
+                }
+
+            }
+
             if (!$this->options) {
                 $this->options = $this->default_options();
             }
