@@ -50,7 +50,6 @@ See ./email/README.txt for information on templates for the email alerts.
 == Known Issues ==
 
 1. Not sending alerts for repeating post_ids with different delay values?
-2. Duplicate rows added in edit.php when adding new sequence for the post (and one has been added already, but hasn't been saved).
 
 == DEBUG ==
 
@@ -66,6 +65,11 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 3.0-beta-3 ==
+
+* Renamed 'Add' button to 'New Sequence'
+* Would sometimes add an extra sequence/delay input field when the 'Add' button was clicked in edit.php
 
 == 3.0-beta-2 ==
 

@@ -99,24 +99,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0-beta-2
-* Track conversion to v3 metadata based on sequence ID in options table
-* If option value isn't configured, double-check that the V3 metadata isn't there in is_converted()
-* Reduce the number of error messages on back-end
-* Wouldn't always reload posts when changing sequence ID to manage
-* Load delay type for each sequence to front-end (JavaScript)
-* Add test for old-style metadata use if a sequence is found to be empty.
-* Convert if needed. Warn admin/editor/user if a sequence hasn't been converted yet.
-* Didn't always save the sequence ID when a post was added to a new sequence in edit.php
-* Removed redundant saving of sequence ID for a post_id during add_post()
-* Load all instances of a sequence/delay combination in edit.php
-* Refactor edit.php metabox rendering
-* Avoid warning message when no posts are found in get_delay_for_post()
-* Remove unused code paths
-* Simplify addition of new sequence/delay values to a post in edit.php
-* No longer calling back-end when adding new sequence ID to post/page in edit.php
-* Simplify removal of sequence/delay pair from a post in edit.php
-* Support removing one of multiple sequence entries from a post/page in edit.php
+###3.0-beta-3
+
+* Renamed 'Add' button to 'New Sequence'
+* Would sometimes add an extra sequence/delay input field when the 'Add' button was clicked in edit.php
 
 ##Old releases
 ###.1
@@ -396,3 +382,22 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fix getPostKey() function to support post_id/delay combinations (for repeating post IDs in sequence)
 * Add debug output for get_users_of_sequence() function
 * Fix convertNotification() function (works)
+
+###3.0-beta-2
+* Track conversion to v3 metadata based on sequence ID in options table
+* If option value isn't configured, double-check that the V3 metadata isn't there in is_converted()
+* Reduce the number of error messages on back-end
+* Wouldn't always reload posts when changing sequence ID to manage
+* Load delay type for each sequence to front-end (JavaScript)
+* Add test for old-style metadata use if a sequence is found to be empty.
+* Convert if needed. Warn admin/editor/user if a sequence hasn't been converted yet.
+* Didn't always save the sequence ID when a post was added to a new sequence in edit.php
+* Removed redundant saving of sequence ID for a post_id during add_post()
+* Load all instances of a sequence/delay combination in edit.php
+* Refactor edit.php metabox rendering
+* Avoid warning message when no posts are found in get_delay_for_post()
+* Remove unused code paths
+* Simplify addition of new sequence/delay values to a post in edit.php
+* No longer calling back-end when adding new sequence ID to post/page in edit.php
+* Simplify removal of sequence/delay pair from a post in edit.php
+* Support removing one of multiple sequence entries from a post/page in edit.php
