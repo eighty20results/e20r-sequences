@@ -49,7 +49,8 @@ See ./email/README.txt for information on templates for the email alerts.
 
 == Known Issues ==
 
-1. Can't add multiple delay values for the same post (in edit.php for the post/page)
+1. Not sending alerts for repeating post_ids with different delay values?
+2. Duplicate rows added in edit.php when adding new sequence for the post (and one has been added already, but hasn't been saved).
 
 == DEBUG ==
 
