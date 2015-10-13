@@ -384,7 +384,7 @@ var postMeta = {
             });
         });
 
-        jQuery("#pmpro-seq-new-meta").on( "click", function() {
+        jQuery("#pmpro-seq-new-meta").unbind().on( "click", function() {
 
             $class.manage_meta_rows();
             console.log("Add new table row for metabox");
