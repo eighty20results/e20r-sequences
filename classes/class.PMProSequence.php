@@ -37,6 +37,7 @@
 		public $error = null;
         private $managed_types = null;
 
+        private $current_metadata_versions = array();
         public $pmpro_sequence_user_level;
         public $pmpro_sequence_user_id;
         public $is_cron = false;
@@ -71,10 +72,11 @@
          */
         public function init( $id = null ) {
 
+            $this->current_metadata_versions = get_option( 'pmpro_sequence_metadata_version', array() );
+
             if ( !$this->is_converted( $id ) ) {
 
-                $this->set_error_msg( sprintf( __("Error: Please de-activate and activate the PMPro Sequences plugin. Sequence %d is not converted to the %s meta data format.", "pmprosequence"), $id, 'v3' ) );
-                return false;
+                $this->convert_posts_to_v3( $id );
             }
 
             if ( !is_null( $id ) ) {
@@ -100,32 +102,79 @@
 
         public function is_converted( $sequence_id ) {
 
-            $current_metadata_version = intval( get_option( "pmpro_sequence_metadata_version" ) );
+            if ( empty( $this->current_metadata_versions ) ) {
+
+                $this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
+            }
+
             $is_pre_v3 = get_post_meta( $sequence_id, "_sequence_posts", true );
 
-            if ( ( 3 == $current_metadata_version ) || (  false === $is_pre_v3 ) ) {
+            if ( isset( $this->current_metadata_versions[$sequence_id] ) && ( ( 3 == $this->current_metadata_versions[$sequence_id] )  || (  false === $is_pre_v3 ) ) ) {
 
-                $this->dbg_log("is_converted() - Already converted from old metadata format to new format for sequence {$sequence_id}");
+                // $this->dbg_log("is_converted() - Already converted from old metadata format to new format for sequence {$sequence_id}");
                 return true;
             }
 
-            $this->set_error_msg("Error: Please de-activate and then activate the PMPro Sequences plugin to convert from old to new metadata structure");
+            $args = array(
+                'posts_per_page' => -1,
+                'meta_query' => array(
+                        array(
+                            'key' => '_pmpro_sequence_post_belongs_to',
+                            'value' => $sequence_id,
+                            'compare' => '=',
+                        ),
+                    )
+                );
+
+            $is_converted = new WP_Query( $args );
+
+            if ( $is_converted->post_count >= 1 ) {
+
+                if ( !isset( $this->current_metadata_versions[$sequence_id] ) ) {
+
+                    $this->dbg_log( "is_converted() - Sequence # {$sequence_id} is converted already. Updating the settings");
+                    $this->current_metadata_versions[$sequence_id] = 3;
+                    update_option('pmpro_sequence_metadata_version', $this->current_metadata_versions, true );
+                }
+
+                return true;
+            }
+            // $this->set_error_msg("Error: Please de-activate and then activate the PMPro Sequences plugin to convert from old to new metadata structure");
             return false;
         }
 
         public function check_conversion() {
 
-            $sequences = $this->get_all_sequences( 'publish' );
+            $sequences = $this->get_all_sequences();
+            $flag = false;
 
             foreach( $sequences as $sequence ) {
 
                 if ( !$this->is_converted( $sequence->ID ) ) {
-                    $this->set_error_msg( sprintf( __( "Action: De-activate and activate the PMPro Sequences plugin to convert the '%s' sequence to the new metadata format", "pmprosequence" ), $sequence->post_title ) );
+
+                    $flag = $sequence->ID;
                 }
+            }
+
+            if ( $flag ) {
+
+                $this->set_error_msg( sprintf( __( "Required action: Please de-activate and then activate the PMPro Sequences plugin (%d)", "pmprosequence" ), $flag ) );
             }
         }
 
-        public function convert_posts_to_v3() {
+        public function convert_posts_to_v3( $sequence_id = null ) {
+
+            if ( !is_null( $sequence_id ) ) {
+
+                if ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) {
+
+                    $this->dbg_log("convert_posts_to_v3() - Sequence {$sequence_id} is already converted.");
+                    return;
+                }
+
+                $old_sequence_id = $this->sequence_id;
+                $this->get_options( $sequence_id );
+            }
 
             $is_pre_v3 = get_post_meta( $this->sequence_id, "_sequence_posts", true );
 
@@ -147,23 +196,27 @@
                 // $retval = $retval && $this->save_sequence_post();
 
                 $this->dbg_log("convert_posts_to_v3() - Removing old format meta... ", DEBUG_SEQ_WARNING );
-                // FixMe: Actually delete the old post_meta
-                // $retval = $retval && delete_post_meta( $this->sequence_id, "_sequence_posts" );
+                $retval = $retval && delete_post_meta( $this->sequence_id, "_sequence_posts" );
             }
             else {
 
                 $retval = false;
-                $this->set_error_msg( __("Cannot convert to V3 metadata format: No sequence has been specified.", "pmprosequence" ) );
+                $this->set_error_msg( __("Cannot convert to V3 metadata format: No sequences were defined.", "pmprosequence" ) );
             }
 
             if ( $retval == true ) {
 
                 $this->dbg_log("convert_posts_to_v3() - Successfully converted to v3 metadata format for all sequence member posts");
-                update_option( "pmpro_sequence_metadata_version", 3);
+                $this->current_metadata_versions[$this->sequence_id] = 3;
+                update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
             }
             else {
-                $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence with ID of: %d", "pmprosequence") , $this->sequence_id ) );
+                $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence (%s)", "pmprosequence") , get_the_title( $this->sequence_id ) ) );
             }
+
+            // Reset sequence info.
+            $this->init( $old_sequence_id );
+
             // wp_die();
         }
         /**
@@ -234,12 +287,14 @@
 
                 $this->dbg_log('get_options() - ID defined already but we were given a different sequence ID');
                 $this->sequence_id = $sequence_id;
+                $this->refreshed = null;
             }
             elseif ($this->sequence_id == 0) {
 
                 // This shouldn't be possible... (but never say never!)
 	            $this->dbg_log("The defined sequence ID is empty so we'll set it to " . $sequence_id);
                 $this->sequence_id = $sequence_id;
+                $this->refreshed = null;
             }
 
 	        // Check that we're being called in context of an actual Sequence 'edit' operation
@@ -252,6 +307,7 @@
             if ( empty( $settings ) ) {
 
                 $settings = $this->default_options();
+                $this->refreshed = null;
             }
 
             $loaded_options = $settings;
@@ -263,6 +319,26 @@
 
 	        return $this->options;
 	    }
+
+        public function set_delay_config() {
+
+            $sequences = $this->get_all_sequences('all');
+            $delays = array();
+
+            //Save state for the current sequence
+            $current_sequence = $this->sequence_id;
+
+            foreach( $sequences as $sequence ) {
+
+                $options = $this->get_options( $sequence->ID );
+                $delays[$sequence->ID] = $options->delayType;
+            }
+
+            // Restore state for the sequence we're processing.
+            $this->get_options( $current_sequence );
+
+            return ( !empty( $delays ) ? $delays : null );
+        }
 
         /**
          * Save the settings for the seuqence to the Wordpress DB.
@@ -455,6 +531,17 @@
             $this->dbg_log("load_sequence_post() - Loaded {$posts->post_count} posts from wordpress database for sequence {$sequence_id}");
             // $this->dbg_log( $posts );
 
+            if ( ( 0 === $posts->post_count ) && is_null( $pagesize ) && ( is_null( $post_id ) ) ) {
+
+                $this->dbg_log("load_sequence_post() - Didn't find any posts. Checking if we need to convert...?");
+
+                if ( !$this->is_converted( $sequence_id ) ) {
+
+                    $this->dbg_log("load_sequence_post() - Forcing conversion attempt for sequence # {$sequence_id}");
+                    $this->convert_posts_to_v3( $sequence_id );
+                }
+
+            }
             $member_days = is_admin() && ( $this->is_cron == false ) ? 9999 : $this->get_membership_days( $user_id );
 
             $this->dbg_log("load_sequence_post() - User {$user_id} has been a member for {$member_days} days");
@@ -517,7 +604,7 @@
 
             $this->dbg_log("load_sequence_post() - Found and sorted " . count( $found ) . " posts for sequence {$sequence_id} and user {$user_id}");
 
-            if ( is_null( $post_id ) ) {
+            if ( is_null( $post_id ) && !empty( $post_list ) ) {
 
                 $this->posts = $found;
 
@@ -744,13 +831,14 @@
 
             global $current_user;
 
-            $this->dbg_log("add_post_to_sequence() - Adding post {$post_id} sequence meta (v3 format)");
+            $this->dbg_log("add_post_to_sequence() - Adding post {$post_id} to sequence {$sequence_id} using v3 meta format");
 
             $posts = $this->find_by_id( $post_id );
 
             if ( !empty( $posts ) && ( !$this->allow_repetition() ) ) {
 
                 $this->dbg_log("add_post_to_sequence() - Post is a duplicate and we're not allowed to add duplicates");
+                $this->set_error_msg( sprintf( __("Warning: The '%s' sequence is not configured to allow multiple delay values for a single post!", "pmprosequence"), get_the_title( $sequence_id ) ) );
 
                 foreach ( $posts as $p ) {
 
@@ -778,16 +866,15 @@
             $new_post->current_post = false;
             $new_post->type = get_post_type( $p );
 
-            $delays = get_post_meta( $post_id, "_pmpro_sequence_post_belongs_to" );
+            $belongs_to = get_post_meta( $post_id, "_pmpro_sequence_post_belongs_to" );
+            $this->dbg_log("add_post_to_sequence() - Found the following sequences for post {$post_id}");
+            $this->dbg_log($belongs_to);
 
-            if ( empty( $delays ) ) {
+            if ( ( false === $belongs_to) || !in_array( $sequence_id, $belongs_to ) ) {
 
-                $this->dbg_log("add_post_to_sequence() - Adding this post {$post_id} to the sequence {$sequence_id} for the first time");
-                add_post_meta( $post_id, "_pmpro_sequence_post_belongs_to", $sequence_id, true );
-            }
-            else {
-
-                $this->dbg_log("add_post_to_sequence() - Post {$post_id} is already linked to sequence {$sequence_id}");
+                if ( !add_post_meta( $post_id, "_pmpro_sequence_post_belongs_to", $sequence_id ) ) {
+                    $this->dbg_log("add_post_to_sequence() - Unable to add/update this post {$post_id} for the sequence {$sequence_id}");
+                }
             }
 
             $this->dbg_log("add_post_to_sequence() - Attempting to add delay value {$delay} for post {$post_id} to sequence: {$sequence_id}");
@@ -797,8 +884,12 @@
                 if ( !add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay, true ) ) {
 
                     $this->dbg_log("add_post_to_sequenece() - Couldn't add {$post_id} with delay {$delay}. Attempting update operation" );
-                    update_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay );
+
+                    if (! update_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay ) ) {
+                        $this->dbg_log("add_post_to_sequence() - Both add and update operations for {$post_id} in sequence {$sequence_id} with delay {$delay} failed!", DEBUG_SEQ_WARNING);
+                    }
                 }
+
             }
             else {
 
@@ -843,6 +934,7 @@
             usort( $this->posts, array( $this, 'sort_posts_by_delay' ) );
 
             if ( !empty( $this->upcoming ) ) {
+
                 usort( $this->upcoming, array( $this, 'sort_posts_by_delay' ) );
             }
 
@@ -998,6 +1090,7 @@
                 return false;
             }
 
+/*
             // Fetch the list of sequences for this post, clean it up and save it (if needed)
             $post_in_sequences = $this->get_sequences_for_post( $post_id );
 
@@ -1046,14 +1139,14 @@
 
             //save
             // $this->save_sequence_post( $this->sequence_id, $post_id, $delay );
-
+*/
             //sort
             $this->dbg_log('add_post(): Sorting the sequence posts by delay value(s)');
             usort( $this->posts, array( $this, 'sort_posts_by_delay' ) );
 
             // Save the sequence list for this post id
 
-            $this->set_sequences_for_post( $post_id, $post_in_sequences );
+            /* $this->set_sequences_for_post( $post_id, $post_in_sequences ); */
             // update_post_meta( $post_id, "_post_sequences", $post_in_sequences );
 
             $this->dbg_log('add_post(): Post/Page list updated and saved');
@@ -1280,7 +1373,7 @@
 
             $seq = new PMProSequence();
 
-            $this->dbg_log("Page Metabox being loaded");
+            $this->dbg_log("render_post_edit_metabox() - Page Metabox being loaded");
 
             ob_start();
             ?>
@@ -1318,7 +1411,7 @@
         }
 
         /**
-         * Loads metabox content for the editor metabox (sidebar)
+         * Loads metabox content for the post/page/CPT editor metabox (sidebar)
          *
          * @param int|null $post_id -- ID of Post being edited
          * @param int $seq_id -- ID of the sequence being added/edited.
@@ -1327,13 +1420,14 @@
          */
         public function load_sequence_meta( $post_id = null, $seq_id = 0) {
 
-            $this->dbg_log("Parameters for load_sequence_meta() {$post_id} and {$seq_id}.");
+            $this->dbg_log("load_sequence_meta() - Parameters for load_sequence_meta() {$post_id} and {$seq_id}.");
             $belongs_to = array();
+            $processed_ids = array();
 
             /* Fetch all Sequence posts */
             $sequence_list = $this->get_all_sequences( 'any' );
 
-            $this->dbg_log("Loading Sequences (count: " . count($sequence_list) . ")");
+            $this->dbg_log("load_sequence_meta() - Loading Sequences (count: " . count($sequence_list) . ")");
 
             // Post ID specified so we need to look for any sequence related metadata for this post
 
@@ -1343,26 +1437,25 @@
                 $post_id = $post->ID;
             }
 
-            $this->dbg_log("Loading sequence ID(s) from DB");
+            $this->dbg_log("load_sequence_meta() - Loading sequence ID(s) from DB");
 
             $belongs_to = $this->get_sequences_for_post( $post_id );
-            // $belongs_to = get_post_meta( $post_id, "_post_sequences", true );
 
 	        // Check that all of the sequences listed for the post actually exist.
 	        // If not, clean up the $belongs_to array.
 	        if ( !empty( $belongs_to ) ) {
 
-		        $this->dbg_log("Belongs to: " .print_r( $belongs_to, true));
+		        $this->dbg_log("load_sequence_meta() - Belongs to: " .print_r( $belongs_to, true));
 
 		        foreach ( $belongs_to as $cId ) {
 
 			        if ( ! $this->sequence_exists( $cId ) ) {
 
-				        $this->dbg_log( "Sequence {$cId} does not exist. Remove it (post id: {$post_id})." );
+				        $this->dbg_log( "load_sequence_meta() - Sequence {$cId} does not exist. Remove it (post id: {$post_id})." );
 
 				        if ( ( $key = array_search( $cId, $belongs_to ) ) !== false ) {
 
-					        $this->dbg_log( "Sequence ID {$cId} being removed", DEBUG_SEQ_INFO );
+					        $this->dbg_log( "load_sequence_meta() - Sequence ID {$cId} being removed", DEBUG_SEQ_INFO );
 					        unset( $belongs_to[ $key ] );
 				        }
 			        }
@@ -1371,15 +1464,18 @@
 
             if ( !empty( $belongs_to ) ) { // get_post_meta( $post_id, "_post_sequences", true ) ) {
 
-                if ( is_array( $belongs_to ) && ( $seq_id != 0 ) && ( ! in_array( $seq_id, $belongs_to ) ) ) {
+                if ( is_array( $belongs_to ) && ( $seq_id != 0 ) &&
+                    ( ( ( false == $this->options->allowRepeatPosts ) && !in_array( $seq_id, $belongs_to ) ) ||
+                    ( true == $this->options->allowRepeatPosts ) && ( in_array( $seq_id, $belongs_to ) ) ) ) {
 
-                    $this->dbg_log("Adding the new sequence ID to the existing array of sequences");
-                    array_push( $belongs_to, $seq_id );
+                    $this->dbg_log("load_sequence_meta() - Adding the new sequence ID to the existing array of sequences");
+                    // array_push( $belongs_to, $seq_id );
+                    $belongs_to[] = $seq_id;
                 }
             }
             elseif ( $seq_id != 0 ) {
 
-                $this->dbg_log("This post has never belonged to a sequence. Adding it to one now");
+                $this->dbg_log("load_sequence_meta() - This post has never belonged to a sequence. Adding it to one now");
                 $belongs_to = array( $seq_id );
             }
             else {
@@ -1388,10 +1484,16 @@
             }
 
             // Make sure there's at least one row in the Metabox.
-            $this->dbg_log(" Ensure there's at least one entry in the table. Sequence ID: {$seq_id}");
-            array_push( $belongs_to, 0 );
 
-            // $this->dbg_log("Post belongs to # of sequence(s): " . count( $belongs_to ) . ", content: " . print_r( $belongs_to, true ) );
+            // array_push( $belongs_to, 0 );
+            if ( empty( $belongs_to ) ) {
+
+                $this->dbg_log("load_sequence_meta() - Ensure there's at least one entry in the table. Sequence ID: {$seq_id}");
+                $belongs_to[] = 0;
+            }
+
+
+            $this->dbg_log("load_sequence_meta() - Post belongs to # of sequence(s): " . count( $belongs_to ) . ", content: " . print_r( $belongs_to, true ) );
             ob_start();
             ?>
             <?php wp_nonce_field('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');?>
@@ -1399,46 +1501,62 @@
             <table style="width: 100%;" id="pmpro-seq-metatable">
                 <tbody><?php
 
+                $sequence_value_matrix = array_count_values( $belongs_to );
+
+                $this->dbg_log("load_sequence_meta() - The matrix of sequence values: ");
+                $this->dbg_log( $sequence_value_matrix);
+
                 foreach( $belongs_to as $active_id ) {
+
+                    if ( in_array( $active_id, $processed_ids ) ) {
+                        $this->dbg_log("load_sequence_meta() - Skipping {$active_id} since it's already added to the metabox");
+                        continue;
+                    }
 
                     // Figure out the correct delay type and load the value for this post if it exists.
                     if ( $active_id != 0 ) {
-                        $this->dbg_log("Loading options for {$active_id}");
-                        $this->get_options( $active_id );
+
+                        $this->dbg_log("load_sequence_meta() - Loading options and posts for {$active_id}");
+                        $this->init( $active_id );
+                        // $this->load_sequence_post(null, null, null, '=', null, true );
                     }
                     else {
+
                         $this->sequence_id = 0;
                         $this->options = $this->default_options();
                     }
 
-                    $this->dbg_log("Loading all posts for {$active_id}");
-                    $delays = null;
+                    $this->dbg_log("load_sequence_meta() - Loading all delay values for for {$post_id}");
+                    $d_posts = $this->get_delay_for_post( $post_id, false );
 
                     if ( $this->sequence_id != 0 ) {
 
-                        // Force reload of the posts in this sequence
-                        $this->load_sequence_post(null, null, null, '=', null, true );
+                        foreach( $d_posts as $delay ) {
 
-                        $delays = $this->get_delay_for_post( $post_id, false );
+                            if ( isset( $delay->delay ) && !empty( $delay->delay ) ) {
 
-                        foreach( $delays as $p ) {
+                                $this->dbg_log( "load_sequence_meta() - Delay Value: {$delay->delay}" );
+                                $delayVal = " value='{$delay->delay}' ";
 
-                            $this->dbg_log( "Delay Value: {$p->delay}" );
-                            $delayVal = " value='{$p->delay}' ";
+                                list( $label, $inputHTML ) = $this->set_delay_input( $delayVal, $active_id );
+                                echo $this->print_sequence_header( $active_id );
+                                echo $this->print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label );
 
-                            list( $label, $inputHTML ) = $this->set_delay_input( $delayVal, $active_id );
-                            echo $this->print_sequence_header( $active_id );
-                            echo $this->print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label );
+                            }
                         }
+
+                        // $delays = array();
                     }
 
-                    if ( empty( $delays ) ) {
+                    if ( empty( $d_posts ) ) {
 
                         $delayVal = "value=''";
                         list( $label, $inputHTML ) = $this->set_delay_input( $delayVal, $active_id );
                         echo $this->print_sequence_header( $active_id );
                         echo $this->print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label );
                     }
+
+                    $processed_ids[] = $active_id;
 
                     // $this->dbg_log(" Label: " . print_r( $label, true ) );
                 } // Foreach ?>
@@ -1456,7 +1574,7 @@
             return $html;
         }
 
-        private function set_delay_input( $delayVal, $active_id ) {
+        private function set_delay_input( $input_value, $active_id ) {
 
             switch ( $this->options->delayType ) {
 
@@ -1466,20 +1584,23 @@
                     $delayFormat = __( 'Date', "pmprosequence" );
                     $starts = date_i18n( "Y-m-d", current_time('timestamp') );
 
-                    if ( empty( $delayVal ) ) {
-                        $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' min='{$starts}' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'>";
+                    if ( empty( $input_value ) ) {
+                        // $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' min='{$starts}' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'>";
+                        $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' min='{$starts}' name='pmpro_seq-delay[]'>";
                     }
                     else {
-                        $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}'{$delayVal}>";
+                        // $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' name='pmpro_seq-delay[]' id='pmpro_seq-delay_{$active_id}' {$input_value}>";
+                        $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' name='pmpro_seq-delay[]' {$input_value}>";
                     }
 
                     break;
 
                 default:
 
-                    $this->dbg_log("Configured to track delays by Day count");
+                    $this->dbg_log("Configured to track delays by Day count: {$active_id}");
                     $delayFormat = __('Day count', "pmprosequence");
-                    $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-days' type='text' id='pmpro_seq-delay_{$active_id}' name='pmpro_seq-delay[]'{$delayVal}>";
+                    // $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-days' type='text' id='pmpro_seq-delay_{$active_id}' name='pmpro_seq-delay[]' {$input_value}>";
+                    $inputHTML = "<input class='pmpro-seq-delay-info pmpro-seq-days' type='text' name='pmpro_seq-delay[]' {$input_value}>";
 
             }
 
@@ -1502,12 +1623,12 @@
                     </select>
                 </td>
             </tr>
-            <tr class="delay-row-label<?php echo ( $active_id == 0 ? ' new-sequence-delay-label' : ' sequence-delay-label' ); ?>">
+            <tr class="delay-row-label <?php echo ( $active_id == 0 ? 'new-sequence-delay-label' : 'sequence-delay-label' ); ?>">
                 <td>
                     <label for="pmpro_seq-delay_<?php echo $active_id; ?>"> <?php echo $label; ?> </label>
                 </td>
             </tr>
-            <tr class="delay-row-input<?php echo ( $active_id == 0 ? ' new-sequence-delay' : ' sequence-delay' ); ?>">
+            <tr class="delay-row-input <?php echo ( $active_id == 0 ? 'new-sequence-delay' : 'sequence-delay' ); ?>">
                 <td>
                     <?php echo $inputHTML; ?>
                     <label for="remove-sequence_<?php echo $active_id; ?>" ><?php _e('Remove: ', 'pmprosequence'); ?></label>
@@ -2395,6 +2516,24 @@
             $this->dbg_log("get_sequences_for_post() - Attempting to load sequence list for post {$post_id}", DEBUG_SEQ_INFO );
             $sequence_ids = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
 
+            $sequence_count = array_count_values( $sequence_ids );
+
+            foreach( $sequence_count as $s_id => $count ) {
+
+                if ( $count > 1 ) {
+
+                    if ( delete_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $s_id ) ) {
+
+                        if ( !add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $s_id, true ) ) {
+
+                            $this->dbg_log("get_sequences_for_post() - Unable to clean up the sequence list for {$post_id}", DEBUG_SEQ_WARNING );
+                        }
+                    }
+                }
+            }
+
+            $sequence_ids = array_unique( $sequence_ids );
+
             $this->dbg_log("get_sequences_for_post() - Loaded " . count( $sequence_ids ) . " sequences that post # {$post_id} belongs to", DEBUG_SEQ_INFO );
             // $this->dbg_log($sequence_ids);
 
@@ -2404,24 +2543,41 @@
         public function set_sequences_for_post( $post_id, $sequence_ids ) {
 
             $this->dbg_log("set_sequences_for_post() - Adding sequence info to post # {$post_id}");
+
+            $retval = true;
+
+            $seq = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
             if ( is_array( $sequence_ids ) ) {
 
                 $this->dbg_log("set_sequences_for_post() - Received array of sequences to add to post # {$post_id}");
+                $this->dbg_log( $sequence_ids );
+
+                $sequence_ids = array_unique( $sequence_ids );
+
                 foreach( $sequence_ids as $id ) {
 
-                    return (add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $id, true ) or
-                        update_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $id ) );
+                    if ( ( false === $seq ) || ( !in_array( $id, $seq ) ) ) {
+
+                        $this->dbg_log( "set_sequences_for_post() - Not previously added. Now adding sequence ID meta ({$id}) for post # {$post_id}");
+                        $retval = $retval && add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $id );
+                    }
+                    else {
+                        $this->dbg_log("set_sequences_for_post() - Post # {$post_id} is already included in sequence {$id}");
+                    }
                 }
             }
             else {
 
                 $this->dbg_log("set_sequences_for_post() - Received sequence id ({$sequence_ids} to add for post # {$post_id}");
-                return ( add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $sequence_ids, true ) or
-                    update_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $sequence_ids ) );
+
+                if ( ( false === $seq ) || ( !in_array( $sequence_ids, $seq ) ) ) {
+
+                    $this->dbg_log( "set_sequences_for_post() - Not previously added. Now adding sequence ID meta ({$sequence_ids}) for post # {$post_id}");
+                    $retval = $retval && add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $sequence_ids );
+                }
             }
 
-            return false;
-
+            return $retval;
         }
 
         /**
@@ -3435,6 +3591,13 @@
 
 			$posts = $this->find_by_id( $post_id );
 
+            // $this->dbg_log("get_delay_for_post() - Found the following posts: ");
+            // $this->dbg_log( $posts );
+
+            if ( empty( $posts ) ) {
+                $posts = array();
+            }
+
             foreach( $posts as $k => $post ) {
 
                 // BUG: Would return "days since membership start" as the delay value, regardless of setting.
@@ -3447,7 +3610,7 @@
                 $this->dbg_log("get_delay_for_post(): Delay for post with id = {$post_id} is {$posts[$k]->delay}");
             }
 
-            return ( empty( $posts ) ? array() : $posts );
+            return $posts;
 		}
 
         /**
@@ -3808,15 +3971,17 @@
 
             $sequences = $this->get_sequences_for_post( $post_id );
 
+            // if ( !$this->allow_repetition() ) {
+
             $sequence_list = array_unique( $sequences );
 
             if ( count( $sequence_list ) < count( $sequences ) ) {
 
-            $this->dbg_log("has_post_access() - Saving the pruned array of sequences");
+                $this->dbg_log("has_post_access() - Saving the pruned array of sequences");
 
                 $this->set_sequences_for_post( $post_id, $sequence_list );
             }
-
+            // }
             if ( empty( $sequences ) ) {
 
                 return true;
@@ -4378,6 +4543,9 @@
                         $this->dbg_log( "remove_post_notified_flag() - Unable to remove post # {$post_id} in the notification settings for user with id {$user->user_id}", DEBUG_SEQ_WARNING );
                     }
                 }
+                else {
+                    $this->dbg_log("remove_post_notified_flag() - Could not find the post_id/delay combination: {$post_id}_{$delay}");
+                }
             }
         }
 
@@ -4526,15 +4694,16 @@
          *
          * @return array|mixed -- Array of sequence IDs that manage this post_id
          */
+         /*
         private function update_postSeqList( $post_id, $doSave = false ) {
 
             $seq_list = $this->get_sequences_for_post( $post_id );
             // $seq_list = get_post_meta( $post_id, "_post_sequences", true );
-            /*
-                        if ( empty( $seq_list ) && ( $post_id == $this->sequence_id ) ) {
-                            return array( $this->sequence_id );
-                        }
-            */
+            //
+            //            if ( empty( $seq_list ) && ( $post_id == $this->sequence_id ) ) {
+            //                return array( $this->sequence_id );
+            //            }
+
             if ( ! empty( $seq_list ) && is_array( $seq_list )) {
 
                 $this->dbg_log("Cleaning up the list of sequences ");
@@ -4557,7 +4726,7 @@
 
             return $seq_list;
         }
-
+        */
         /**
          * Check whether the specific user should receive a notice for the specific post
          *    FALSE if the $post->delay means the today is NOT the first time this user can access the post
@@ -5363,7 +5532,7 @@
 
             $errMsg = null;
 
-            $already_in = $this->get_sequences_for_post( $post_id );
+            // $already_in = $this->get_sequences_for_post( $post_id );
             // $already_in = get_post_meta( $post_id, "_post_sequences", true );
 
             $this->dbg_log( "post_save_action() - Saved received variable values...");
@@ -5376,8 +5545,12 @@
                     continue;
                 }
 
-                if ( !$this->init( $id ) ) {
-                    return;
+                if ( $id != $this->sequence_id ) {
+
+                    if ( !$this->get_options( $id ) ) {
+                        $this->dbg_log("post_save_action() - Unable to load settings for sequence with ID: {$id}");
+                        return;
+                    }
                 }
 
                 $user_can = apply_filters( 'pmpro-sequence-has-edit-privileges', $this->user_can_edit( $current_user->ID ) );
@@ -5846,7 +6019,7 @@
             // Remove the post (if the user is allowed to)
             if ( current_user_can( 'edit_posts' ) && ( ! is_null( $post_id ) ) && ( ! is_null( $sequence_id ) ) ) {
 
-                $this->dbg_log("Removing post # {$post_id} from sequence {$sequence_id}");
+                $this->dbg_log("Removing post # {$post_id} with delay {$delay} from sequence {$sequence_id}");
                 $this->remove_post( $post_id, $delay, true );
                 //$result = __('The post has been removed', 'pmprosequence');
                 $success = true;
@@ -5875,23 +6048,22 @@
          */
         function update_delay_post_meta_callback() {
 
-            $this->dbg_log("Update the delay input for the post/page meta");
+            $this->dbg_log("update_delay_post_meta_callback() - Update the delay input for the post/page meta");
 
             check_ajax_referer('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');
 
-            $this->dbg_log("Nonce Passed for postmeta AJAX call");
+            $this->dbg_log("update_delay_post_meta_callback() - Nonce Passed for postmeta AJAX call");
 
             $seq_id = isset( $_POST['pmpro_sequence_id'] ) ? intval( $_POST['pmpro_sequence_id'] ) : null;
             $post_id = isset( $_POST['pmpro_sequence_post_id']) ? intval( $_POST['pmpro_sequence_post_id'] ) : null;
 
-            $this->dbg_log("Sequence: {$seq_id}, Post: {$post_id}" );
+            $this->dbg_log("update_delay_post_meta_callback() - Sequence: {$seq_id}, Post: {$post_id}" );
 
             if ( ! $this->init( $seq_id ) ) {
                 wp_send_json_error( $this->get_error_msg() );
             }
 
             $html = $this->load_sequence_meta( $post_id, $seq_id );
-
 
             wp_send_json_success( $html );
         }
@@ -6462,6 +6634,8 @@
 
             $this->dbg_log("Running register_admin_scripts()");
 
+            $delay_config = $this->set_delay_config();
+
             wp_register_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
             wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array( 'jquery', 'select2' ), null, true);
 
@@ -6472,6 +6646,7 @@
             wp_localize_script('pmpro-sequence-admin', 'pmpro_sequence',
                 array(
                     'ajaxurl' => admin_url('admin-ajax.php'),
+                    'delay_config' => $delay_config,
                     'lang' => array(
                         'alert_not_saved' => __("Error: This sequence needs to be saved before you can send alerts", "pmprosequence"),
                         'save' => __('Update Sequence', 'pmprosequence'),
