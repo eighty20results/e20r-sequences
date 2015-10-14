@@ -44,12 +44,20 @@ See ./email/README.txt for information on templates for the email alerts.
 4. Add posts to sequence using the "Posts in this Sequences" meta box under the post content.
 
 == TODO ==
-1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
-2. Decide how and where to utilize the user notification reset
+* Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
+* Decide how and where to utilize the user notification reset
+* Not sending alerts for repeating post_ids with different delay values? - Fixed
+* Not changing the input format when changing between sequences that use "by date" and "by day number" as the delay value. - Fixed
+* Format for "start" value when processing a new sequence entry is possibly incorrect? - Fixed
+* Test dates as delay values in V3. - Verified
+* Test conversion to V3 format for posts/sequences when using dates as delay values
+* While configured for multiple delay values for a single post_id, adding the same post ID w/an existing delay value (same value) will cause two copies of the same post/delay combination in the list.
+* Can't load preview for sequence using dates as delay values (Needs to get a valid "how long have I been a member" value for "staff" who are admins and do not have explicit membership levels to access the sequence data). - Fixed
+* If no posts are available and the user attempts to display the sequence, the load_sequence_post() function goes into a infinite loop.
 
 == Known Issues ==
 
-1. Not sending alerts for repeating post_ids with different delay values?
+No known issues beyond the issues listed under TODO heading.
 
 == DEBUG ==
 
