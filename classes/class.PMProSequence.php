@@ -5713,7 +5713,6 @@
 
                             if (intval($_POST['hidden_pmpro_seq_wipesequence']) == 1) {
 
-                                // FIXME: Need to wipe (delete) the sequence data from all posts (including delays).
                                 // Wipe the list of posts in the sequence.
                                 $sposts = get_post_meta( $sequence_id, '_sequence_posts' );
 
