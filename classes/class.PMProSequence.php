@@ -209,15 +209,13 @@
                 $this->dbg_log("convert_posts_to_v3() - Successfully converted to v3 metadata format for all sequence member posts");
                 $this->current_metadata_versions[$this->sequence_id] = 3;
                 update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
+                // Reset sequence info.
+                $this->init( $old_sequence_id );
+
             }
             else {
                 $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence (%s)", "pmprosequence") , get_the_title( $this->sequence_id ) ) );
             }
-
-            // Reset sequence info.
-            $this->init( $old_sequence_id );
-
-            // wp_die();
         }
         /**
          * Return the default options for a sequence
@@ -542,7 +540,8 @@
                 }
 
             }
-            $member_days = is_admin() && ( $this->is_cron == false ) ? 9999 : $this->get_membership_days( $user_id );
+
+            $member_days = ( current_user_can('manage_options') || ( is_admin() && ( $this->is_cron == false ) ) ) ? 9999 : $this->get_membership_days( $user_id );
 
             $this->dbg_log("load_sequence_post() - User {$user_id} has been a member for {$member_days} days");
 
@@ -572,8 +571,9 @@
                     $p->current_post = false;
                     $p->type = $sPost->post_type;
 
+                    $this->dbg_log("load_sequence_post() - Configured delay value: {$p->delay}. Normalized delay: " . $this->normalize_delay( $p->delay ));
                     // Only add posts to list if the member is supposed to see them
-                    if ( $member_days >= $p->delay ) {
+                    if ( $member_days >= $this->normalize_delay( $p->delay ) ) {
 
                         $this->dbg_log("load_sequence_post() - Adding {$p->id} ({$p->title}) with delay {$p->delay} to list of available posts");
                         $p->is_future = false;
@@ -1793,7 +1793,7 @@
 	                        <?php if ($this->options->delayType == 'byDays'): ?>
 	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e('Days to delay', 'pmprosequence'); ?></label></th>
 	                        <?php elseif ( $this->options->delayType == 'byDate'): ?>
-	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e("Release on (YYYY-MM-DDD)", 'pmprosequence'); ?></label></th>
+	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", 'pmprosequence'); ?></label></th>
 	                        <?php else: ?>
 	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e('Not Defined', 'pmprosequence'); ?></label></th>
 	                        <?php endif; ?>
@@ -3012,10 +3012,12 @@
 
                 return true;
             }
-            $this->dbg_log("$sequence_id");
+
             $this->dbg_log("save_user_notice_settings() - Save V3 style user notification opt-in settings to usermeta for {$user_id} and sequence {$sequence_id}");
 
-            if ( !update_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices",  $settings ) ) {
+            update_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices",  $settings );
+
+            if ( false === ( $test = get_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices",  $settings ) ) ) {
 
                 $this->dbg_log("save_user_notice_settings() - Error saving V3 style user notification settings for user with ID {$user_id}", DEBUG_SEQ_WARNING );
                 return false;
@@ -3126,7 +3128,7 @@
 
                 // update_user_meta($current_user->ID, $meta_key, $optIn);
 
-                $noticeVal = isset( $optIn->send_notice ) ? $optIn->send_notice : 0;
+                $noticeVal = isset( $optIn->send_notices ) ? $optIn->send_notices : 0;
 
                 /* Add form information */
                 ob_start();
@@ -3558,6 +3560,14 @@
          */
         public function find_closest_post( $user_id = null ) {
 
+	        if ( is_null( $user_id ) ) {
+
+	            $this->dbg_log("find_closest_post() - No user ID specified by callee: " . $this->who_called_me());
+
+	            global $current_user;
+	            $user_id = $current_user->ID;
+	        }
+
 	        // Get the current day of the membership (as a whole day, not a float)
             $membership_day =  $this->get_membership_days( $user_id );
 
@@ -3623,7 +3633,7 @@
          */
         public function normalize_delay( $delay ) {
 
-            if ( $this->is_valid_date($delay) ) {
+            if ( $this->is_valid_date( $delay ) ) {
 
                 return $this->convert_date_to_days($delay);
             }
@@ -3646,14 +3656,29 @@
 
             $days = 0;
 
-            if ( null === $userId ) {
+            if ( null == $userId ) {
 
-                $userId = $this->pmpro_sequence_user_id;
+                if ( !empty ( $this->pmpro_sequence_user_id ) ) {
+
+                    $userId = $this->pmpro_sequence_user_id;
+                }
+                else {
+
+                    global $current_user;
+
+                    $userId = $current_user->ID;
+                }
             }
 
-            if ( null === $levelId ) {
+            if ( null == $levelId ) {
 
-                $levelId = $this->pmpro_sequence_user_level;
+                if ( !empty( $this->pmpro_sequence_user_level ) ) {
+
+                    $levelId = $this->pmpro_sequence_user_level;
+                }
+                else {
+                    $levelId = pmpro_getMembershipLevelForUser( $userId );
+                }
             }
 
             // Return immediately if the value we're given is a # of days (i.e. an integer)
@@ -3663,17 +3688,24 @@
 
             if ( $this->is_valid_date( $date ) )
             {
-                $startDate = pmpro_getMemberStartdate( $userId, $levelId); /* Needs userID & Level ID ... */
-                // $this->dbg_log("convert_date_to_days() - Given date: {$date} and startdate: {$startDate} for user {$userId} for level {$levelId}");
+                // $this->dbg_log("convert_date_to_days() - Using {$userId} and {$levelId} for the credentials");
+                $startDate = pmpro_getMemberStartdate( $userId, $levelId ); /* Needs userID & Level ID ... */
 
-                if (empty($startDate)) {
-                    $startDate = 0;
+                if ( empty( $startDate ) && ( current_user_can('manage_options'))) {
+
+                    $startDate = strtotime( "2013-01-01" );
                 }
+                elseif ( empty( $startDate ) ) {
+
+                    $startDate = strtotime( "tomorrow" );
+                }
+
+                $this->dbg_log("convert_date_to_days() - Given date: {$date} and startdate: {$startDate} for user {$userId} with level {$levelId}");
 
                 try {
 
                     // Use PHP v5.2 and v5.3 compatible function to calculate difference
-                    $compDate = strtotime( $date );
+                    $compDate = strtotime( "{$date} 00:00:00" );
                     $days = $this->seq_datediff( $startDate, $compDate ); // current_time('timestamp')
 
                 } catch (Exception $e) {
@@ -3707,18 +3739,23 @@
                 $startdate = pmpro_getMemberStartdate( $user_id, $level_id );
 
                 //check that there was a startdate at all
-                if( empty( $startdate ) ) {
+                if( empty( $startdate ) && current_user_can( 'manage_options' ) ) {
+
+                    $days = $this->seq_datediff( strtotime( '2013-01-01' ), current_time('timestamp') );
+                    $pmpro_member_days[$user_id][$level_id] = $days;
+                }
+                elseif ( empty( $startdate ) ) {
 
                     $pmpro_member_days[$user_id][$level_id] = 0;
                 }
                 else {
-
                     $now = current_time("timestamp");
 
                     // $days = round( abs( $now - $startdate ) / ( 60*60*24 ) ) + 1;
                     $days = $this->seq_datediff( $startdate, $now );
 
                     $pmpro_member_days[$user_id][$level_id] = $days;
+
                 }
             }
 
@@ -6082,7 +6119,22 @@
             // Fetch the ID of the sequence to add the post to
             $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null;
             $seq_post_id = isset( $_POST['pmpro_sequencepost'] ) && '' != $_POST['pmpro_sequencepost'] ? intval( $_REQUEST['pmpro_sequencepost'] ) : null;
-            $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? intval( $_POST['pmpro_sequencedelay'] ) : null ;
+
+            if ( isset( $_POST['pmpro_sequencedelay'] ) && ( 'byDate' == $this->options->delayType ) ) {
+
+                $this->dbg_log("add_post_callback() - Could be a date we've been given ({$_POST['pmpro_sequencedelay']}), so...");
+
+                if ( ( 'byDate' == $this->options->delayType ) && ( false != strtotime( $_POST['pmpro_sequencedelay']) ) ) {
+
+                    $this->dbg_log("add_post_callback() - Validated that Delay value is a date.");
+                    $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? sanitize_text_field( $_POST['pmpro_sequencedelay'] ) : null;
+                }
+            }
+            else {
+
+                $this->dbg_log("add_post_callback() - Validated that Delay value is probably a day nunmber.");
+                $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? intval( $_POST['pmpro_sequencedelay'] ) : null ;
+            }
 
             if ( $sequence_id != 0 ) {
 
@@ -6228,6 +6280,8 @@
 
             if ( isset( $_POST['hidden_pmpro_seq_wipesequence'] ) &&  ( 1 == intval( $_POST['hidden_pmpro_seq_wipesequence'] ) ) ) {
 
+                $this->dbg_log("save_settings() - Admin requested change of delay type configuration. Resetting the sequence!", DEBUG_SEQ_WARNING );
+
                 if ( $sequence_id == $this->sequence_id ) {
 
                     if ( !$this->delete_post_meta_for_sequence( $sequence_id ) ) {
@@ -6235,11 +6289,14 @@
                         $this->dbg_log( 'save_settings() - Unable to delete the posts in sequence # ' . $sequence_id, DEBUG_SEQ_CRITICAL );
                         $this->set_error_msg( __('Unable to wipe existing posts', 'pmprosequence') );
                     }
+                    else {
+                        $this->dbg_log( 'save_settings() - Reloading sequence info');
+                        $this->init( $sequence_id );
+                    }
                 }
                 else {
                     $this->dbg_log("save_settings() - the specified sequence id and the current sequence id were different!", DEBUG_SEQ_WARNING );
                 }
-
             }
 
             if (!$this->options) {
