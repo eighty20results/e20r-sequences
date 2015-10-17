@@ -3,7 +3,7 @@ Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.2 or later.
-Tested up to: 4.3
+Tested up to: 4.3.1
 Stable tag: 2.4.14
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
@@ -16,19 +16,22 @@ This plugin currently requires Paid Memberships Pro and started life as a comple
 
 Added a features that weren't included in pmpro_series, specifically the ability to:
 
-* Configure the sort order for the series/sequence
-* Show/hide upcoming series/sequence posts
-* Show/hide "You are on day XXX of your membership"
-* Show "delay time" as "days since membership started" or calendar date to end user.
-* Admin defined schedule (using WP-Cron) for new content alert emails to users.
-* User opt-in for receiving email alerts
-* Templated email alerts for new content
-* Pagination of sequence lists in sequence page
+* Multiple delay values for the same post ID (repeating alerts & posts/pages)
 * [sequence_list] shortcode for paginated sequence list
 * Widget containing summary (excerpt) of most recent post in a sequence [***] for the logged in user.
-* Allows 'preview' of upcoming posts in the sequence (Not sure if this is really necessary to have...)
+* Configure the sort order for the sequence
+* Show or hide upcoming posts in a ssequence from the end-user ("show" means all post titles for the sequence will be listed for the user with date/day of availability).
+* Show or hide "You are on day XXX of your membership" notice on sequence page.
+* Show "delay time" as "days since membership started" or "calendar date" to end-user.
+* Let admin decide whether to show "post available on" as a "day of membership" or date (relative to users membership).
+* Admin defined schedule (using WP-Cron) for new content alert emails to users.
+* User opt-in for receiving email alerts (User can disable/re-enable as desired).
+* Templated email alerts for new content
+* Pagination of sequence lists in sequence page
+* Allows 'preview' of upcoming posts in the sequence (Lets the admin/editor send alerts for "today" while letting the user read ahead if so desired - used in coaching programs, for instance).
 * A settings metabox to simplify configuration (rather than only use filters)
 * Filters to let the admin specify the types of posts/pages to include in a sequence, etc.
+* Convert and existing PMPro Series to a sequence (using filter)
 
 See ./email/README.txt for information on templates for the email alerts.
 
@@ -51,7 +54,7 @@ See ./email/README.txt for information on templates for the email alerts.
 * Format for "start" value when processing a new sequence entry is possibly incorrect? - Fixed
 * Test dates as delay values in V3. - Verified
 * Test conversion to V3 format for posts/sequences when using dates as delay values
-* While configured for multiple delay values for a single post_id, adding the same post ID w/an existing delay value (same value) will cause two copies of the same post/delay combination in the list.
+* While configured for multiple delay values for a single post_id, adding the same post ID w/an existing delay value (same value) will cause two copies of the same post/delay combination in the list (expected behavior: ignore it).
 * Can't load preview for sequence using dates as delay values (Needs to get a valid "how long have I been a member" value for "staff" who are admins and do not have explicit membership levels to access the sequence data). - Fixed
 * If no posts are available and the user attempts to display the sequence, the load_sequence_post() function goes into a infinite loop.
 
@@ -73,6 +76,35 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 3.0-beta-5 ==
+
+* Fix error handling in add post to sequence operation
+* Add class function to configure & time out error message in /wp-admin/
+* Fix $_POST variables in add_entry()
+* Clean up error & success functions for jQuery.ajax() call in add_entry()
+* Handle error messages returned from back-end
+* Correct warning for (future) Google Analytics ID variable in configuration
+* Rename (make consistent) filter for the type of posts that can be managed by this plugin
+* is_present() will loop through the $this->posts array looking for the post_id & delay value specified. Returns false if not found & the array key value if found.
+* Ensure the error <div> is present in the sequence metabox
+* Remove 'draft' as a valide default post status to list.
+* Clean up variable names in $_POST for the add operation
+* Return error message/warning to back-end if post_id/delay combination is present in system.
+* Refactor add_post_callback()
+
+== 3.0-beta-4 ==
+
+* Update the TODO section in README.txt
+* Clean up TODO items class.PMProSequence.php
+* Would loop indefinitely if there were no sequence posts and the sequence was attempted viewed from the front-end.
+* Allow users with admin privileges to have access to any sequence & posts.
+* Didn't always save the opt-in settings for the user(s).
+* Typo in opt-in setting.
+* Force user id when looking for closest post.
+* Didn't always allow administrators to see posts in sequence
+* Correctly sanitize date values as delays
+* Re-enable the wipe functionality when changing the type of sequence from day # based to date based (or vice versa)
 
 == 3.0-beta-3 ==
 

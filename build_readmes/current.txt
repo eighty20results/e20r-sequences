@@ -1,2 +1,13 @@
-Renamed "Add" button to "New Sequence"
-Would sometimes add an extra sequence/delay input field when the "Add" button was clicked in edit.php
+Fix error handling in add post to sequence operation
+Add class function to configure & time out error message in /wp-admin/
+Fix $_POST variables in add_entry()
+Clean up error & success functions for jQuery.ajax() call in add_entry()
+Handle error messages returned from back-end
+Correct warning for (future) Google Analytics ID variable in configuration
+Rename (make consistent) filter for the type of posts that can be managed by this plugin
+is_present() will loop through the $this->posts array looking for the post_id & delay value specified. Returns false if not found & the array key value if found.
+Ensure the error <div> is present in the sequence metabox
+Remove "draft" as a valide default post status to list.
+Clean up variable names in $_POST for the add operation
+Return error message/warning to back-end if post_id/delay combination is present in system.
+Refactor add_post_callback()
