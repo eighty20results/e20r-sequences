@@ -294,6 +294,20 @@ var sequenceSettings = {
             jQuery('#pmpro-seq-showdelayas-select').show(); // hide
         }
     },
+    set_error_message: function( $message ) {
+
+        var errCtl = jQuery('#pmpro-seq-error');
+
+        errCtl.text($message);
+        errCtl.show();
+
+        var timeout = window.setTimeout(function() {
+            console.log('Hiding the error status again');
+            errCtl.hide();
+        }, 15000);
+
+        console.log('Message: ' + $message);
+    },
     manageDelayLabels: function( $currentDelayType ) {
 
         console.log('In manageDelayLabels()');
@@ -330,6 +344,7 @@ var sequenceSettings = {
     send_alert: function() {
 
         var $sequence = jQuery('#post_ID').val();
+        var $class = this;
 
         console.log("send_alert: ", $sequence );
 
@@ -351,7 +366,7 @@ var sequenceSettings = {
                 error: function (data) {
                     if (data.message != null) {
                         alert(data.message);
-                        pmpro_seq_setErroMsg(data.message);
+                        $class.set_error_message( data.message );
                     }
                 }
             });
@@ -454,10 +469,10 @@ var postMeta = {
                 console.dir($data);
 
                 if ($data.data != '') {
-                    alert($data.data);
-                    pmpro_seq_setErroMsg($data.data);
-                }
 
+                    alert($data.data);
+                    $class.set_error_message( $data.data );
+                }
             },
             success: function($data){
 
@@ -495,8 +510,10 @@ var postMeta = {
         var saveBtn = jQuery('#pmpro_sequencesave');
         var $class = this;
 
-        if ('' == jQuery('#pmpro_sequence_post').val() || undefined != saveBtn.attr('disabled'))
+        if ('' == jQuery('#pmpro_sequence_post').val() || undefined != saveBtn.attr('disabled')) {
+
             return false; //already processing, ignore this request
+        }
 
         // Disable save button
         saveBtn.attr('disabled', 'disabled');
@@ -511,28 +528,42 @@ var postMeta = {
             data: {
                 action: 'pmpro_sequence_add_post',
                 pmpro_sequence_id: jQuery('#pmpro_sequence_id').val(),
-                pmpro_sequencepost: jQuery('#pmpro_sequencepost').val(),
-                pmpro_sequencedelay: jQuery('#pmpro_sequencedelay').val(),
+                pmpro_sequence_post: jQuery('#pmpro_sequencepost').val(),
+                pmpro_sequence_delay: jQuery('#pmpro_sequencedelay').val(),
                 pmpro_sequence_addpost_nonce: jQuery('#pmpro_sequence_addpost_nonce').val()
             },
-            error: function($data){
-                console.log("error() - Returned data: " + $data.success + " and " + $data.data);
-                console.dir($data);
+            error: function( $response, $errString, $errType ) {
+                console.log("error() - Returned data: " + $response + " and error:" + $errString + " and type: " + $errType );
+                console.dir( $response );
 
-                if ( $data.data ) {
-                    alert($data.data);
-                    pmpro_seq_setErroMsg($data.data);
+                if ( '' != $response.data ) {
+
+                    // alert($data.data);
+                    $class.set_error_message( $response.data );
                 }
             },
-            success: function($data){
-                console.log("success() - Returned data: " + $data.success);
-                console.dir($data);
+            success: function($returned, $success ){
 
-                if ($data.data) {
+                console.log("success() - Returned data: ", $returned.data );
+                console.log("success() - Returned status: ", $returned.success );
+
+                if ( ( $returned.success === true ) ) {
+
                     console.log('Entry added to sequence & refreshing metabox content');
-                    jQuery('#pmpro_sequence_posts').html($data.data);
+                    jQuery('#pmpro_sequence_posts').html($returned.data);
                 } else {
-                    console.log('No HTML returned???');
+
+                    if ( typeof $returned.data  === 'string' ) {
+
+                        console.log("Received a string as the error status");
+                        $class.set_error_message( $returned.data );
+                    }
+                    else {
+
+                        console.log("Received an object as the error status");
+                        $class.set_error_message( $returned.data[0].message );
+                    }
+
                 }
 
             },
@@ -732,6 +763,22 @@ var postMeta = {
         }
 
         return $html;
+    },
+    set_error_message: function( $message ) {
+
+        console.log("Setting error message: " + $message );
+
+        var errCtl = jQuery('#pmpro-seq-error');
+
+        errCtl.text($message);
+        errCtl.show();
+
+        var timeout = window.setTimeout(function() {
+            console.log('Hiding the error status again');
+            errCtl.hide();
+        }, 15000);
+
+        console.log('Message: ' + $message);
     },
     add_sequence_post_row: function( ) {
 
@@ -967,7 +1014,7 @@ jQuery(document).ready(function(){
 /**
  * Set the pmpro_seq_error element in the Sequence Posts meta box
  */
-
+/*
 function pmpro_seq_setErroMsg( $msg ) {
 
     console.log('Showing error message in meta box: ' + $msg);
@@ -984,3 +1031,4 @@ function pmpro_seq_setErroMsg( $msg ) {
 
     console.log('Message: ' + $msg);
 }
+*/
