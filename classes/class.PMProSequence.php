@@ -264,7 +264,7 @@
             $settings->subject = __('New Content ', 'pmprosequence');
             $settings->dateformat = __('m-d-Y', 'pmprosequence'); // Using American MM-DD-YYYY format.
             $settings->track_google_analytics = false; // Whether to use Google analytics to track message open operations or not
-            $settings->ga_tid; // The Google Analytics ID to use (TID)
+            $settings->ga_tid = null; // The Google Analytics ID to use (TID)
 
             $this->options = $settings; // Save as options for this sequence
 
@@ -461,7 +461,7 @@
             if ( is_null( $post_id ) ) {
                 $this->dbg_log("load_sequence_post() - No post ID specified so we'll load all posts");
                 $args = array(
-                    'post_type' => apply_filters( 'pmpro_sequencepost_types', array( 'post', 'page' ) ),
+                    'post_type' => apply_filters( 'pmpro-sequence-managed-post-types', array( 'post', 'page' ) ),
                     'post_status' => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
                     'posts_per_page' => -1,
                     'orderby' => $order_by,
@@ -480,7 +480,7 @@
 
                 $this->dbg_log("load_sequence_post() - Post ID specified so we'll only load for post {$post_id}");
                 $args = array(
-                    'post_type' => apply_filters( 'pmpro_sequencepost_types', array( 'post', 'page' ) ),
+                    'post_type' => apply_filters( 'pmpro-sequence-managed-post-types', array( 'post', 'page' ) ),
                     'post_status' => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
                     'posts_per_page' => -1,
                     'order_by' => $order_by,
@@ -776,6 +776,26 @@
             return array( $min, $max );
 
         }
+
+        public function is_present ( $post_id, $delay ) {
+
+            $this->dbg_log("is_present() - Checking whether post {$post_id} with delay {$delay} is saved in {$this->sequence_id}");
+
+            if ( empty($this->posts ) ) {
+                return false;
+            }
+
+            foreach( $this->posts as $k => $post ) {
+
+                if ( ( $post_id == $post->id ) && ( $delay == $post->delay ) ) {
+                    $this->dbg_log("is_present() - Post and delay combination WAS found!");
+                    return $k;
+                }
+            }
+
+            return false;
+        }
+
         /**
           * Save post specific metadata to indicate sequence & delay value(s) for the post.
           *
@@ -833,6 +853,13 @@
 
             $this->dbg_log("add_post_to_sequence() - Adding post {$post_id} to sequence {$sequence_id} using v3 meta format");
 
+            if ( $this->is_present( $post_id, $delay ) ) {
+
+                $this->dbg_log("add_post_to_sequence() - Post {$post_id} with delay {$delay} is already present in sequence {$sequence_id}");
+                $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', 'pmprosequence' ) );
+                return true;
+            }
+
             $posts = $this->find_by_id( $post_id );
 
             if ( !empty( $posts ) && ( !$this->allow_repetition() ) ) {
@@ -848,9 +875,11 @@
             }
 
             if ( is_admin() ) {
+
                 $member_days = -1;
             }
             else {
+
                 $member_days = $this->get_membership_days( $current_user->ID );
             }
 
@@ -1075,6 +1104,12 @@
                 $this->dbg_log('add_post(): No Post with ' . $post_id . ' found');
 
                 return false;
+            }
+
+            if ( $this->is_present( $post_id, $delay ) ) {
+
+                $this->dbg_log("add_post() - Post {$post_id} with delay {$delay} is already present in sequence {$this->sequence_id}");
+                return true;
             }
 
             // Refresh the post list for the sequence, ignore cache
@@ -1697,6 +1732,7 @@
 
 	        // Instantiate the settings & grab any existing settings if they exist.
 	     ?>
+	        <div id="pmpro-seq-error"></div>
 			<div id="pmpro_sequence_posts">
 			<?php
 				$box = $this->get_post_list_for_metabox();
@@ -1839,7 +1875,7 @@
 
 			is_null( $this->get_error_msg() ) ?
 				$this->dbg_log( "get_post_list_for_metabox() - No error found, should return success" ) :
-				$this->dbg_log( "get_post_list_for_metabox() - Errors:" . $this->display_error() );
+				$this->dbg_log( "get_post_list_for_metabox() - Errors:" . print_r( $this->get_error_msg(), true ));
 
 			return array(
 				'success' => ( is_null( $this->get_error_msg() ) ? true : false ),
@@ -3200,6 +3236,7 @@
             if ( ! empty( $msg ) ){
                 $this->dbg_log("Display error for Drip Feed operation(s)");
                 ?><div id="pmpro-seq-error" class="error"><?php settings_errors('pmpro_seq_errors'); ?></div><?php
+
             }
         }
 
@@ -4430,7 +4467,7 @@
             global $wpdb;
 
             $post_types = apply_filters("pmpro-sequence-managed-post-types", array("post", "page") );
-            $status = apply_filters( "pmpro-sequence-can-add-post-status", array('publish', 'draft', 'future', 'pending', 'private') );
+            $status = apply_filters( "pmpro-sequence-can-add-post-status", array('publish', 'future', 'pending', 'private') );
 
             $sql = "
 					SELECT ID, post_title, post_status
@@ -6109,41 +6146,53 @@
          *
          * Returns 'error' message (or nothing, if success) to calling JavaScript function
          */
-        function add_post_callback()
-        {
+        public function add_post_callback() {
+
             check_ajax_referer('pmpro-sequence-add-post', 'pmpro_sequence_addpost_nonce');
 
             global $current_user;
 
             // Fetch the ID of the sequence to add the post to
-            $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && '' != $_POST['pmpro_sequence_id'] ? intval($_POST['pmpro_sequence_id']) : null;
-            $seq_post_id = isset( $_POST['pmpro_sequencepost'] ) && '' != $_POST['pmpro_sequencepost'] ? intval( $_REQUEST['pmpro_sequencepost'] ) : null;
+            $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && !empty( $_POST['pmpro_sequence_id'] ) ? intval($_POST['pmpro_sequence_id']) : null;
+            $seq_post_id = isset( $_POST['pmpro_sequence_post'] ) && !empty( $_POST['pmpro_sequence_post'] ) ? intval( $_REQUEST['pmpro_sequence_post'] ) : null;
 
-            if ( isset( $_POST['pmpro_sequencedelay'] ) && ( 'byDate' == $this->options->delayType ) ) {
+            $this->dbg_log( "add_post_callback() - We received sequence ID: {$sequence_id}");
 
-                $this->dbg_log("add_post_callback() - Could be a date we've been given ({$_POST['pmpro_sequencedelay']}), so...");
-
-                if ( ( 'byDate' == $this->options->delayType ) && ( false != strtotime( $_POST['pmpro_sequencedelay']) ) ) {
-
-                    $this->dbg_log("add_post_callback() - Validated that Delay value is a date.");
-                    $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? sanitize_text_field( $_POST['pmpro_sequencedelay'] ) : null;
-                }
-            }
-            else {
-
-                $this->dbg_log("add_post_callback() - Validated that Delay value is probably a day nunmber.");
-                $delayVal = isset( $_POST['pmpro_sequencedelay'] ) ? intval( $_POST['pmpro_sequencedelay'] ) : null ;
-            }
-
-            if ( $sequence_id != 0 ) {
+            if ( !empty( $sequence_id ) ) {
 
                 // Initiate & configure the Sequence class
                 if ( ! $this->init( $sequence_id ) ) {
+
                     wp_send_json_error( $this->get_error_msg() );
+                }
+
+                if ( isset( $_POST['pmpro_sequence_delay'] ) && ( 'byDate' == $this->options->delayType ) ) {
+
+                    $this->dbg_log("add_post_callback() - Could be a date we've been given ({$_POST['pmpro_sequence_delay']}), so...");
+
+                    if ( ( 'byDate' == $this->options->delayType ) && ( false != strtotime( $_POST['pmpro_sequence_delay']) ) ) {
+
+                        $this->dbg_log("add_post_callback() - Validated that Delay value is a date.");
+                        $delayVal = isset( $_POST['pmpro_sequence_delay'] ) ? sanitize_text_field( $_POST['pmpro_sequence_delay'] ) : null;
+                    }
+                }
+                else {
+
+                    $this->dbg_log("add_post_callback() - Validated that Delay value is probably a day nunmber.");
+                    $delayVal = isset( $_POST['pmpro_sequence_delay'] ) ? intval( $_POST['pmpro_sequence_delay'] ) : null ;
                 }
 
                 $this->dbg_log( 'add_post_callback() - Checking whether delay value is correct' );
                 $delay = $this->validate_delay_value( $delayVal );
+
+                if ( $this->is_present( $seq_post_id, $delay ) ) {
+
+                    $this->dbg_log("add_post_callback() - Post {$seq_post_id} with delay {$delay} is already present in sequence {$sequence_id}");
+                    $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', 'pmprosequence' ) );
+
+                    wp_send_json_error( $this->get_error_msg() );
+                    return;
+                }
 
                 // Get the Delay to use for the post (depends on type of delay configured)
                 if ( $delay !== false ) {
@@ -6152,7 +6201,7 @@
 
                     if ( $user_can && ! is_null( $seq_post_id ) ) {
 
-                        $this->dbg_log( 'pmpro_sequence_add_post_callback() - Adding post ' . $seq_post_id . ' to sequence ' . $this->sequence_id );
+                        $this->dbg_log( 'add_post_callback() - Adding post ' . $seq_post_id . ' to sequence ' . $this->sequence_id );
 
                         if ( $this->add_post( $seq_post_id, $delay ) ) {
 
@@ -6208,7 +6257,10 @@
                     $this->dbg_log( 'pmpro_sequence_add_post_callback() - Returning success to javascript frontend' );
 
                     wp_send_json_success( $result['html'] );
-                } else {
+
+                }
+                else {
+
                     $this->dbg_log( 'pmpro_sequence_add_post_callback() - Returning error to javascript frontend' );
                     wp_send_json_error( $this->get_error_msg() );
                 }
