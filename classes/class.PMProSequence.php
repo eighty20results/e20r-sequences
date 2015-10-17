@@ -3005,6 +3005,9 @@
 
         public function save_user_notice_settings( $user_id, $settings, $sequence_id = null ) {
 
+            $this->dbg_log("save_user_notice_settings() - Attempting to save settings for {$user_id}");
+            $this->dbg_log( $settings );
+
             if ( is_array( $settings->sequence ) && isset( $settings->sequence[$sequence_id] ) ) {
 
                 $this->dbg_log("save_user_notice_settings() - Using old format for user notification settings. Need to update for v3.0", DEBUG_SEQ_INFO);
@@ -3074,30 +3077,37 @@
                 return null;
             }
 
-            if ( false ==
+            if ( false ===
                 ( $optIn = get_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices", true ) ) ) {
 
                 $this->dbg_log("load_user_notice_settings() - No V3 settings found. Attempting to load old setting style & then convert it.", DEBUG_SEQ_WARNING );
-                $optIn = get_user_meta( $user_id, $wpdb->prefix . "pmpro_sequence_notices", true );
+                $old_optIn = get_user_meta( $user_id, $wpdb->prefix . "pmpro_sequence_notices", true );
 
-                if ( false !== $optIn ) {
+                if ( false !== $old_optIn ) {
 
                     $this->dbg_log("load_user_notice_settings() - Found old-style notification settings for user {$user_id}. Attempting to convert", DEBUG_SEQ_WARNING );
 
-                    if ( $this->save_user_notice_settings( $user_id, $optIn, $sequence_id ) ) {
+                    if ( $this->save_user_notice_settings( $user_id, $old_optIn, $sequence_id ) ) {
 
-                        $this->dbg_log("load_user_notice_settings() - Recursively loading the settings we need." );
-                        $optIn = $this->load_user_notice_settings( $user_id, $sequence_id );
+                        $this->dbg_log("load_user_notice_settings() - re-loading the settings we need for {$user_id}." );
 
-                        $this->dbg_log("load_user_notice_settings() - Removing converted opt-in settings from the database" );
-                        delete_user_meta( $user_id, $wpdb->prefix . "pmpro_sequence_notices" );
+                        if ( false !== ( $optIn = $this->load_user_notice_settings( $user_id, $sequence_id ) ) ) {
+
+                            $this->dbg_log("load_user_notice_settings() - Removing converted opt-in settings from the database" );
+                            delete_user_meta( $user_id, $wpdb->prefix . "pmpro_sequence_notices" );
+                            return $optIn;
+                        }
+                        else {
+                            $this->dbg_log("load_user_notice_settings() - Unable to convert opt-in settings for user {$user_id}");
+                            return null;
+                        }
                     }
-                    else {
+                }
+                else {
 
-                        $this->dbg_log("load_user_notice_settings() - Could not convert old-style settings for user {$user_id} and sequence {$sequence_id}", DEBUG_SEQ_WARNING );
-                        $optIn = $this->create_user_notice_defaults();
-                        $optIn->id = $sequence_id;
-                    }
+                    $this->dbg_log("load_user_notice_settings() - No old-style settings for user {$user_id} and sequence {$sequence_id} found that can be converted", DEBUG_SEQ_WARNING );
+                    $optIn = $this->create_user_notice_defaults();
+                    $optIn->id = $sequence_id;
                 }
             }
 
@@ -3135,8 +3145,9 @@
 
             $this->dbg_log('view_user_notice_opt_in() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
 
-            if ($this->options->sendNotice == 1) {
+            if ( isset( $this->options->sendNotice ) && ( $this->options->sendNotice == 1 ) ) {
 
+                $this->dbg_log("view_user_notice_opt_in() - Allow user to opt out of email notices");
                 $optIn = $this->load_user_notice_settings( $current_user->ID, $this->sequence_id );
                 // $optIn = get_user_meta( $current_user->ID, $meta_key, true );
 
@@ -3172,7 +3183,7 @@
                 ob_start();
                 ?>
                 <div class="pmpro-seq-centered">
-                    <div class="pmpro-sequence-hidden pmpro_sequence_useroptin">
+                    <div class="pmpro_sequence_useroptin">
                         <div class="seq_spinner"></div>
                         <form class="pmpro-sequence" action="<?php echo admin_url('admin-ajax.php'); ?>" method="post">
                             <input type="hidden" name="hidden_pmpro_seq_useroptin" id="hidden_pmpro_seq_useroptin" value="<?php echo $noticeVal; ?>" >
@@ -3188,7 +3199,10 @@
                 </div>
 
                 <?php
-                $optinForm .= ob_get_clean();
+                $optinForm = ob_get_clean();
+            }
+            else {
+                $this->dbg_log("view_user_notice_opt_in() - Not configured to allow sending of notices. {$this->options->sendNotice}");
             }
 
             return $optinForm;
