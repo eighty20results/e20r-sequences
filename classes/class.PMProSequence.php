@@ -76,6 +76,7 @@
 
             if ( !$this->is_converted( $id ) ) {
 
+                $this->dbg_log("init() - Need to convert to version 3 format!");
                 $this->convert_posts_to_v3( $id );
             }
 
@@ -107,9 +108,10 @@
                 $this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
             }
 
+            $this->dbg_log("is_converted() - Check whether a v2 format even exists for {$sequence_id}");
             $is_pre_v3 = get_post_meta( $sequence_id, "_sequence_posts", true );
 
-            if ( isset( $this->current_metadata_versions[$sequence_id] ) && ( ( 3 == $this->current_metadata_versions[$sequence_id] )  || (  false === $is_pre_v3 ) ) ) {
+            if ( ( false == $is_pre_v3 ) || ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) ) {
 
                 // $this->dbg_log("is_converted() - Already converted from old metadata format to new format for sequence {$sequence_id}");
                 return true;
