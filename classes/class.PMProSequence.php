@@ -301,7 +301,7 @@
 	        $this->dbg_log('get_options(): Loading settings from DB for (' . $this->sequence_id . ') "' . get_the_title($this->sequence_id) . '"');
 
 	        $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', true);
-            $this->dbg_log("get_options() - Settings are now: " . print_r( $settings, true ) );
+            // $this->dbg_log("get_options() - Settings are now: " . print_r( $settings, true ) );
 
             // Fix: Offset error when creating a brand new sequence for the first time.
             if ( empty( $settings ) ) {
