@@ -38,6 +38,7 @@
 #pmpro_sequence_meta td { font-size: 0.8em !important; }
 .pmpro-seq-centered {
     margin-top: 30px;
+    margin-bottom: 20px;
     text-align: center;
 }
 form.pmpro-sequence br { display:none; }
