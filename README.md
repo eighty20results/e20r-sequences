@@ -106,21 +106,15 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0-beta-5
+###3.0-beta-6
 
-* Fix error handling in add post to sequence operation
-* Add class function to configure & time out error message in /wp-admin/
-* Fix $_POST variables in add_entry()
-* Clean up error & success functions for jQuery.ajax() call in add_entry()
-* Handle error messages returned from back-end
-* Correct warning for (future) Google Analytics ID variable in configuration
-* Rename (make consistent) filter for the type of posts that can be managed by this plugin
-* is_present() will loop through the $this->posts array looking for the post_id & delay value specified. Returns false if not found & the array key value if found.
-* Ensure the error <div> is present in the sequence metabox
-* Remove 'draft' as a valide default post status to list.
-* Clean up variable names in $_POST for the add operation
-* Return error message/warning to back-end if post_id/delay combination is present in system.
-* Refactor add_post_callback()
+* Primarily convert to V3 as part of plugin activation or if the user attempts to load the sequence.
+* Would sometimes get into a load/convert loop Flag conversion attempt as 'forced' if no posts are found with V3 format and the sequence is NOT previously converted.
+* Add padding to opt-in checkbox
+* Could loop indefinitely during conversion of user opt-in settings for certain users.
+* Would sometimes hide the opt-in check-box
+* Don't print settings to debug log.
+* New and empty sequences would incorrectly be flagged as needing conversion.
 
 ##Old releases
 ###.1
@@ -437,3 +431,19 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Didn't always allow administrators to see posts in sequence
 * Correctly sanitize date values as delays
 * Re-enable the wipe functionality when changing the type of sequence from day # based to date based (or vice versa)
+
+###3.0-beta-5
+
+* Fix error handling in add post to sequence operation
+* Add class function to configure & time out error message in /wp-admin/
+* Fix $_POST variables in add_entry()
+* Clean up error & success functions for jQuery.ajax() call in add_entry()
+* Handle error messages returned from back-end
+* Correct warning for (future) Google Analytics ID variable in configuration
+* Rename (make consistent) filter for the type of posts that can be managed by this plugin
+* is_present() will loop through the $this->posts array looking for the post_id & delay value specified. Returns false if not found & the array key value if found.
+* Ensure the error <div> is present in the sequence metabox
+* Remove 'draft' as a valide default post status to list.
+* Clean up variable names in $_POST for the add operation
+* Return error message/warning to back-end if post_id/delay combination is present in system.
+* Refactor add_post_callback()

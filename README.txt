@@ -57,11 +57,11 @@ See ./email/README.txt for information on templates for the email alerts.
 * While configured for multiple delay values for a single post_id, adding the same post ID w/an existing delay value (same value) will cause two copies of the same post/delay combination in the list (expected behavior: ignore it).
 * Can't load preview for sequence using dates as delay values (Needs to get a valid "how long have I been a member" value for "staff" who are admins and do not have explicit membership levels to access the sequence data). - Fixed
 * If no posts are available and the user attempts to display the sequence, the load_sequence_post() function goes into a infinite loop.
+* Format for "Posts in sequence" metabox doesn't handle responsive screens well
 
 == Known Issues ==
 
-No known issues beyond the issues listed under TODO heading.
-
+TBD
 == DEBUG ==
 
  To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
@@ -76,6 +76,16 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 3.0-beta-6 ==
+
+* Primarily convert to V3 as part of plugin activation or if the user attempts to load the sequence.
+* Would sometimes get into a load/convert loop Flag conversion attempt as 'forced' if no posts are found with V3 format and the sequence is NOT previously converted.
+* Add padding to opt-in checkbox
+* Could loop indefinitely during conversion of user opt-in settings for certain users.
+* Would sometimes hide the opt-in check-box
+* Don't print settings to debug log.
+* New and empty sequences would incorrectly be flagged as needing conversion.
 
 == 3.0-beta-5 ==
 
