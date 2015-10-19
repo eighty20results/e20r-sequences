@@ -1,15 +1,15 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PMPro Sequence\n"
-"POT-Creation-Date: 2015-08-15 20:10-0400\n"
-"PO-Revision-Date: 2015-08-15 20:25-0400\n"
+"POT-Creation-Date: 2015-10-19 07:51-0400\n"
+"PO-Revision-Date: 2015-10-19 08:33-0400\n"
 "Last-Translator: Thomas Sjolshagen <thomas@eighty20results.com>\n"
 "Language-Team: \n"
 "Language: nb_NO\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.4\n"
+"X-Generator: Poedit 1.8.5\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
@@ -18,701 +18,757 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 "X-Poedit-SearchPath-0: .\n"
 
-#: classes/class.PMProSequence.php:51
+#: classes/class.PMProSequence.php:59
 msgid "A Sequence with the specified ID does not exist on this system"
 msgstr "En sekvens med den ID’en finnes ikke"
 
-#: classes/class.PMProSequence.php:81
+#: classes/class.PMProSequence.php:97
 msgid "No sequence ID specified."
 msgstr "Ingen oppgitt sekvens ID "
 
-#: classes/class.PMProSequence.php:127
+#: classes/class.PMProSequence.php:162
+#, php-format
+msgid ""
+"Required action: Please de-activate and then activate the PMPro Sequences "
+"plugin (%d)"
+msgstr ""
+"Nødvendig handling: Deaktiver, så aktiver PMPro Sequences utvidelsen (%d)"
+
+#: classes/class.PMProSequence.php:210
+msgid "Cannot convert to V3 metadata format: No sequences were defined."
+msgstr ""
+"Kan ikke konvertere til V3 metadataformat: ingen sekvenser ble oppgitt."
+
+#: classes/class.PMProSequence.php:224
+#, php-format
+msgid "Unable to upgrade post metadata for sequence (%s)"
+msgstr "Kan ikke oppgradere metadata for sekvensen (%s)"
+
+#: classes/class.PMProSequence.php:271
 msgid "A summary of the post follows below:"
 msgstr "En oppsummering følger"
 
-#: classes/class.PMProSequence.php:130 classes/class.PMProSequence.php:4686
+#: classes/class.PMProSequence.php:274 classes/class.PMProSequence.php:6540
 msgid "New Content "
 msgstr "Ny artikkel"
 
-#: classes/class.PMProSequence.php:131 classes/class.PMProSequence.php:1479
-#: classes/class.PMProSequence.php:1492 classes/class.PMProSequence.php:4670
+#: classes/class.PMProSequence.php:275 classes/class.PMProSequence.php:2424
+#: classes/class.PMProSequence.php:2437 classes/class.PMProSequence.php:6524
 msgid "m-d-Y"
 msgstr "d-m-Y"
 
-#: classes/class.PMProSequence.php:340
+#: classes/class.PMProSequence.php:868 classes/class.PMProSequence.php:6214
+msgid "That post and delay combination is already included in this sequence"
+msgstr ""
+"Den artikkelen med den oppgitte forsinkelsesverdien er allerede inkludert i "
+"denne sekvensen"
+
+#: classes/class.PMProSequence.php:877
+#, php-format
+msgid ""
+"Warning: The '%s' sequence is not configured to allow multiple delay values "
+"for a single post!"
+msgstr ""
+"Advarsel: ‘%s’ sekvensen er ikke konfigurert for å tillate flere "
+"forsinkelsesverdier for en enkelt artikkel!"
+
+#: classes/class.PMProSequence.php:1097
 #, php-format
 msgid "Invalid delay value - %s"
 msgstr "Ugyldig format - %s"
 
-#: classes/class.PMProSequence.php:346
+#: classes/class.PMProSequence.php:1103
 msgid "Please enter a value for post and delay"
 msgstr "Vennligst legg in verdier for både artikkelen og tilgjenglighet"
 
-#: classes/class.PMProSequence.php:355
+#: classes/class.PMProSequence.php:1112
 msgid "A post with that id does not exist"
 msgstr "Fant ikke en artikkel med den spesifiserte id'en."
 
-#: classes/class.PMProSequence.php:550
+#: classes/class.PMProSequence.php:1404
 msgid "Drip Feed Settings"
 msgstr "Sekvenskonfigurasjon"
 
-#: classes/class.PMProSequence.php:687
-msgid "Managed by (drip content feed)"
-msgstr "Styrt av (sekvens)"
+#: classes/class.PMProSequence.php:1611 classes/class.PMProSequence.php:6682
+#: classes/class.PMProSequence.php:6683
+msgid "New Sequence"
+msgstr "Ny Sekvens"
 
-#: classes/class.PMProSequence.php:693
-msgid "Not managed"
-msgstr "Har ikke "
+#: classes/class.PMProSequence.php:1612
+msgid "Reset"
+msgstr "Tilbakestill"
 
-#: classes/class.PMProSequence.php:737
+#: classes/class.PMProSequence.php:1628
 msgid "Date"
 msgstr "Dato"
 
-#: classes/class.PMProSequence.php:752
+#: classes/class.PMProSequence.php:1645
 msgid "Day count"
 msgstr "Antall dager"
 
-#: classes/class.PMProSequence.php:757
+#: classes/class.PMProSequence.php:1651
 #, php-format
 msgid "Delay (Format: %s)"
 msgstr "Tilgjenglighetsverdi (Format: %s)"
 
-#: classes/class.PMProSequence.php:768
+#: classes/class.PMProSequence.php:1661
+msgid "Not managed"
+msgstr "Har ikke "
+
+#: classes/class.PMProSequence.php:1678
 msgid "Remove: "
 msgstr "Fjern"
 
-#: classes/class.PMProSequence.php:777
-msgid "Add"
-msgstr "Ny"
+#: classes/class.PMProSequence.php:1694
+msgid "Managed by (drip content feed)"
+msgstr "Styrt av (sekvens)"
 
-#: classes/class.PMProSequence.php:778
-msgid "Reset"
-msgstr "Tilbakestill"
-
-#: classes/class.PMProSequence.php:796
+#: classes/class.PMProSequence.php:1711
 msgid "Require Membership"
 msgstr "Medlemskap er påkrevet"
 
-#: classes/class.PMProSequence.php:801
+#: classes/class.PMProSequence.php:1716
 msgid "Settings for this Sequence"
 msgstr "Konfigurasjon for denne sekvensen"
 
-#: classes/class.PMProSequence.php:804
+#: classes/class.PMProSequence.php:1719
 msgid "Posts in this Sequence"
 msgstr "Artikler i sekvensen"
 
-#: classes/class.PMProSequence.php:854
+#: classes/class.PMProSequence.php:1776
 msgid "Order"
 msgstr "Rekkefølge"
 
-#: classes/class.PMProSequence.php:855
+#: classes/class.PMProSequence.php:1777
 msgid "Title"
 msgstr "Tittel"
 
-#: classes/class.PMProSequence.php:857 classes/class.PMProSequence.php:4957
+#: classes/class.PMProSequence.php:1779 classes/class.PMProSequence.php:6810
 msgid "Delay"
 msgstr "Forsinkelse"
 
-#: classes/class.PMProSequence.php:859
+#: classes/class.PMProSequence.php:1781
 msgid "Avail. On"
 msgstr "Tilgj. den"
 
-#: classes/class.PMProSequence.php:861 classes/class.PMProSequence.php:913
-#: classes/class.PMProSequence.php:4954
+#: classes/class.PMProSequence.php:1783 classes/class.PMProSequence.php:1843
+#: classes/class.PMProSequence.php:6807
 msgid "Not Defined"
 msgstr "Udefiniert"
 
-#: classes/class.PMProSequence.php:874
+#: classes/class.PMProSequence.php:1796
 msgid "No posts/pages found for this sequence"
 msgstr "Fant ingen artikler for denne sekvensen"
 
-#: classes/class.PMProSequence.php:886
-msgid "Post"
-msgstr "Artikkel"
-
-#: classes/class.PMProSequence.php:888 classes/class.PMProSequence.php:1053
-#: classes/class.PMProSequence.php:1105 classes/class.PMProSequence.php:1139
-#: classes/class.PMProSequence.php:1176 classes/class.PMProSequence.php:1248
-#: classes/class.PMProSequence.php:1279 classes/class.PMProSequence.php:1313
-#: classes/class.PMProSequence.php:1345 classes/class.PMProSequence.php:1378
-#: classes/class.PMProSequence.php:1421 classes/class.PMProSequence.php:1452
-#: classes/class.PMProSequence.php:1483
+#: classes/class.PMProSequence.php:1809 classes/class.PMProSequence.php:1817
+#: classes/class.PMProSequence.php:1998 classes/class.PMProSequence.php:2050
+#: classes/class.PMProSequence.php:2084 classes/class.PMProSequence.php:2121
+#: classes/class.PMProSequence.php:2193 classes/class.PMProSequence.php:2224
+#: classes/class.PMProSequence.php:2258 classes/class.PMProSequence.php:2290
+#: classes/class.PMProSequence.php:2323 classes/class.PMProSequence.php:2366
+#: classes/class.PMProSequence.php:2397 classes/class.PMProSequence.php:2428
 msgid "Edit"
 msgstr "Rediger"
 
-#: classes/class.PMProSequence.php:891
+#: classes/class.PMProSequence.php:1812
+msgid "Post"
+msgstr "Artikkel"
+
+#: classes/class.PMProSequence.php:1821
 msgid "Remove"
 msgstr "Slett"
 
-#: classes/class.PMProSequence.php:903
+#: classes/class.PMProSequence.php:1833
 msgid "Add/Edit Posts:"
 msgstr "Legg til/Rediger artikler"
 
-#: classes/class.PMProSequence.php:907
+#: classes/class.PMProSequence.php:1837
 msgid "Post/Page"
 msgstr "Artikkel"
 
-#: classes/class.PMProSequence.php:909 classes/class.PMProSequence.php:4958
+#: classes/class.PMProSequence.php:1839 classes/class.PMProSequence.php:6811
 msgid "Days to delay"
 msgstr "Forsinkelse i dager"
 
-#: classes/class.PMProSequence.php:911
-msgid "Release on (YYYY-MM-DDD)"
-msgstr "Tilgjenglig den (YYYY-MM-DD)"
+#: classes/class.PMProSequence.php:1841 classes/class.PMProSequence.php:6813
+msgid "Release on (YYYY-MM-DD)"
+msgstr "Tilgjengelig (YYYY-MM-DD)"
 
-#: classes/class.PMProSequence.php:932
+#: classes/class.PMProSequence.php:1862
 msgid "No posts found in the database!"
-msgstr "Ingen relevante artikler funnet i databasen"
+msgstr "Ingen innlegg funnet i databasen!"
 
-#: classes/class.PMProSequence.php:946 classes/class.PMProSequence.php:4946
+#: classes/class.PMProSequence.php:1876 classes/class.PMProSequence.php:6799
 msgid "Update Sequence"
 msgstr "Oppdater sekvensen"
 
-#: classes/class.PMProSequence.php:999
+#: classes/class.PMProSequence.php:1932
 msgid "Invalid drip-feed sequence specified"
 msgstr "Du har oppgitt feil sekvens"
 
-#: classes/class.PMProSequence.php:1023
+#: classes/class.PMProSequence.php:1956
 msgid "Hide unpublished / future posts for this sequence"
-msgstr "Ikke vis fremtidige sekvensartikler"
+msgstr "Skjule upubliserte / fremtidige innlegg for denne sekvensen"
 
-#: classes/class.PMProSequence.php:1027
+#: classes/class.PMProSequence.php:1960
 msgid "Hide all future posts"
-msgstr "Skjul alle fremtidige sekvensartikler"
+msgstr "Skjule alle fremtidige innlegg"
 
-#: classes/class.PMProSequence.php:1035
+#: classes/class.PMProSequence.php:1968
+msgid ""
+"Allow the admin to repeat the same post/page with different delay values"
+msgstr ""
+"Tillat gjentagelse av det samme innlegget med varierende verdier for "
+"forsinkelsen"
+
+#: classes/class.PMProSequence.php:1972
+msgid "Allow repeat posts/pages"
+msgstr "Tillate å gjenta innlegg"
+
+#: classes/class.PMProSequence.php:1980
 msgid ""
 "Let the user see a number of days worth of technically unavailable posts as "
 "a form of &quot;sneak-preview&quot;"
 msgstr ""
-"Gi brukeren tilgang til artikler som teknisk sett er utilgjenglig i.h.t "
-"konfigurasjonen. En form for &quot;forhåndstitt&quot;. "
+"Brukeren kan seinnlegg som er utilgjengelige i følge forsinkelsesverdien. En "
+"form for “snik-forhåndsvisning”."
 
-#: classes/class.PMProSequence.php:1038
+#: classes/class.PMProSequence.php:1983
 msgid "Allow \"preview\" of sequence"
 msgstr "Tillat “sniktitt” for sekvensen"
 
-#: classes/class.PMProSequence.php:1046
+#: classes/class.PMProSequence.php:1991
 msgid "Days of preview:"
-msgstr "Antall dager “sniktitt” å tillate"
+msgstr "Dager med forhåndsvisning:"
 
-#: classes/class.PMProSequence.php:1054
+#: classes/class.PMProSequence.php:1999
 msgid "Change the number of days to preview"
-msgstr "Endre antallet dager i forhåndstitten"
+msgstr "Endre antall dager å forhåndsvise"
 
-#: classes/class.PMProSequence.php:1074 classes/class.PMProSequence.php:1124
-#: classes/class.PMProSequence.php:1160 classes/class.PMProSequence.php:1195
-#: classes/class.PMProSequence.php:1264 classes/class.PMProSequence.php:1295
-#: classes/class.PMProSequence.php:1329 classes/class.PMProSequence.php:1363
-#: classes/class.PMProSequence.php:1396 classes/class.PMProSequence.php:1437
-#: classes/class.PMProSequence.php:1468 classes/class.PMProSequence.php:1501
+#: classes/class.PMProSequence.php:2019 classes/class.PMProSequence.php:2069
+#: classes/class.PMProSequence.php:2105 classes/class.PMProSequence.php:2140
+#: classes/class.PMProSequence.php:2209 classes/class.PMProSequence.php:2240
+#: classes/class.PMProSequence.php:2274 classes/class.PMProSequence.php:2308
+#: classes/class.PMProSequence.php:2341 classes/class.PMProSequence.php:2382
+#: classes/class.PMProSequence.php:2413 classes/class.PMProSequence.php:2446
 msgid "OK"
 msgstr "OK"
 
-#: classes/class.PMProSequence.php:1075 classes/class.PMProSequence.php:1125
-#: classes/class.PMProSequence.php:1161 classes/class.PMProSequence.php:1196
-#: classes/class.PMProSequence.php:1265 classes/class.PMProSequence.php:1296
-#: classes/class.PMProSequence.php:1330 classes/class.PMProSequence.php:1364
-#: classes/class.PMProSequence.php:1397 classes/class.PMProSequence.php:1438
-#: classes/class.PMProSequence.php:1469 classes/class.PMProSequence.php:1502
+#: classes/class.PMProSequence.php:2020 classes/class.PMProSequence.php:2070
+#: classes/class.PMProSequence.php:2106 classes/class.PMProSequence.php:2141
+#: classes/class.PMProSequence.php:2210 classes/class.PMProSequence.php:2241
+#: classes/class.PMProSequence.php:2275 classes/class.PMProSequence.php:2309
+#: classes/class.PMProSequence.php:2342 classes/class.PMProSequence.php:2383
+#: classes/class.PMProSequence.php:2414 classes/class.PMProSequence.php:2447
 msgid "Cancel"
 msgstr "Avbryt"
 
-#: classes/class.PMProSequence.php:1082
+#: classes/class.PMProSequence.php:2027
 msgid ""
 "Whether to show the &quot;You are on day NNN of your membership&quot; text"
 msgstr "Hvorvidt vi viser &quot;Du har vært medlem i NNN dager&quot; teksten"
 
-#: classes/class.PMProSequence.php:1086
+#: classes/class.PMProSequence.php:2031
 msgid "Show user membership length"
 msgstr "Vis lengden på medlemsskapet"
 
-#: classes/class.PMProSequence.php:1098
+#: classes/class.PMProSequence.php:2043
 msgid "Sort order:"
 msgstr "Sorteringsrekkefølge"
 
-#: classes/class.PMProSequence.php:1101 classes/class.PMProSequence.php:1117
+#: classes/class.PMProSequence.php:2046 classes/class.PMProSequence.php:2062
 msgid "Ascending"
 msgstr "Synkende"
 
-#: classes/class.PMProSequence.php:1101 classes/class.PMProSequence.php:1118
+#: classes/class.PMProSequence.php:2046 classes/class.PMProSequence.php:2063
 msgid "Descending"
 msgstr "Stigende"
 
-#: classes/class.PMProSequence.php:1106
+#: classes/class.PMProSequence.php:2051
 msgid "Edit the list sort order"
 msgstr "Endre sorteringsrekkefølgen for sekvenslista"
 
-#: classes/class.PMProSequence.php:1132
+#: classes/class.PMProSequence.php:2077
 msgid "Delay type:"
 msgstr "Type forsinkelse"
 
-#: classes/class.PMProSequence.php:1135 classes/class.PMProSequence.php:1153
+#: classes/class.PMProSequence.php:2080 classes/class.PMProSequence.php:2098
 msgid "A date"
 msgstr "På en dato"
 
-#: classes/class.PMProSequence.php:1135 classes/class.PMProSequence.php:1152
+#: classes/class.PMProSequence.php:2080 classes/class.PMProSequence.php:2097
 msgid "Days after sign-up"
 msgstr "Antall dager"
 
-#: classes/class.PMProSequence.php:1140
+#: classes/class.PMProSequence.php:2085
 msgid "Edit the delay type for this sequence"
 msgstr "Endre tilgjenglighetsverdi for denne sekvensen"
 
-#: classes/class.PMProSequence.php:1169
+#: classes/class.PMProSequence.php:2114
 msgid "Show availability as:"
 msgstr "Vis tilgjenglighetsverdien som:"
 
-#: classes/class.PMProSequence.php:1172 classes/class.PMProSequence.php:1189
+#: classes/class.PMProSequence.php:2117 classes/class.PMProSequence.php:2134
 msgid "Calendar date"
 msgstr "Dato"
 
-#: classes/class.PMProSequence.php:1172 classes/class.PMProSequence.php:1188
+#: classes/class.PMProSequence.php:2117 classes/class.PMProSequence.php:2133
 msgid "Day of membership"
-msgstr "Dag i medlemsskapet"
+msgstr "Dagen av medlemskap"
 
-#: classes/class.PMProSequence.php:1177
+#: classes/class.PMProSequence.php:2122
 msgid ""
 "How to indicate when the post will be available to the user. Select either "
 "\"Calendar date\" or \"day of membership\")"
 msgstr ""
-"Hvordan illustrere tidspunktet når artikkelen blir tilgjengelig til "
-"brukeren. Velg enten &quot;Dato&quot; eller &quot;Dag i medlemsskapet&quot;"
+"Hvordan å angi når innlegget blir tilgjengelig for brukeren. Velg enten "
+"“kalenderdato” eller “dager som medlem”)"
 
-#: classes/class.PMProSequence.php:1202
+#: classes/class.PMProSequence.php:2147
 msgid "New content alerts"
-msgstr "Notis om nye artikler"
+msgstr "Varsling on nytt innhold"
 
-#: classes/class.PMProSequence.php:1209
+#: classes/class.PMProSequence.php:2154
 msgid ""
 "Whether to send an alert/notice to members when new content for this "
 "sequence is available to them"
 msgstr ""
-"Hvorvidt vi sender ny notis når nye artikler er tilgjengelig for denne "
-"sekvensen"
+"Om å sende et varsel/varsel til medlemmer når nytt innhold for denne "
+"sekvensen er tilgjengelig for dem"
 
-#: classes/class.PMProSequence.php:1213
+#: classes/class.PMProSequence.php:2158
 msgid "Send email alerts"
-msgstr "Send epostene"
+msgstr "Sende e-postvarsler"
 
-#: classes/class.PMProSequence.php:1221
+#: classes/class.PMProSequence.php:2166
 msgid "Send alerts now"
-msgstr "Send email notisene"
+msgstr "Sende varsler nå"
 
-#: classes/class.PMProSequence.php:1227
+#: classes/class.PMProSequence.php:2172
 msgid "Send"
 msgstr "Send"
 
-#: classes/class.PMProSequence.php:1228
+#: classes/class.PMProSequence.php:2173
 #, php-format
 msgid "Manually trigger sending of alert notices for the %s sequence"
-msgstr "Manuelt sende ut epost om nye artikler for %s sekvensen"
+msgstr "Manuelt utløse sending av varsel for %s sekvensen"
 
-#: classes/class.PMProSequence.php:1235
+#: classes/class.PMProSequence.php:2180
 msgid "Alert settings:"
 msgstr "Notis konfigurasjon:"
 
-#: classes/class.PMProSequence.php:1241
+#: classes/class.PMProSequence.php:2186
 msgid "Email:"
 msgstr "Epost:"
 
-#: classes/class.PMProSequence.php:1249
+#: classes/class.PMProSequence.php:2194
 msgid "Enter the email address to use as the sender of the alert"
-msgstr "Epost addressen du vil bruke som avsender av email notisen"
+msgstr "Angi e-postadressen du bruker som avsender av varselet"
 
-#: classes/class.PMProSequence.php:1272
+#: classes/class.PMProSequence.php:2217
 msgid "Name:"
 msgstr "Navn:"
 
-#: classes/class.PMProSequence.php:1280
+#: classes/class.PMProSequence.php:2225
 msgid "Enter the name to use for the sender of the alert"
-msgstr "Navnet på avsenderen av denne notisen"
+msgstr "Angi navnet du vil bruke for avsenderen av varselet"
 
-#: classes/class.PMProSequence.php:1306
+#: classes/class.PMProSequence.php:2251
 msgid "Transmit:"
 msgstr "Send:"
 
-#: classes/class.PMProSequence.php:1309 classes/class.PMProSequence.php:1325
+#: classes/class.PMProSequence.php:2254 classes/class.PMProSequence.php:2270
 msgid "One alert per post"
-msgstr "En notis per artikkel"
+msgstr "Ett varsel per innlegg"
 
-#: classes/class.PMProSequence.php:1309
+#: classes/class.PMProSequence.php:2254
 msgid "Digest of posts"
-msgstr "Oppsummering av artikler"
+msgstr "Sammendrag av innlegg"
 
-#: classes/class.PMProSequence.php:1314
+#: classes/class.PMProSequence.php:2259
 msgid ""
 "Select the format of the alert notice when posting new content for this "
 "sequence"
 msgstr ""
-"Velg formatet for notisene når vi sender informasjon om nye artikler i denne "
+"Velg format for varselet når du sender informasjon om nye innlegg for denne "
 "sekvensen"
 
-#: classes/class.PMProSequence.php:1326
+#: classes/class.PMProSequence.php:2271
 msgid "Digest of post links"
-msgstr "Oppsummering av artikkel lenker"
+msgstr "Sammendrag av innlegg koblinger"
 
-#: classes/class.PMProSequence.php:1338
+#: classes/class.PMProSequence.php:2283
 msgid "Template:"
 msgstr "Mal:"
 
-#: classes/class.PMProSequence.php:1346
+#: classes/class.PMProSequence.php:2291
 msgid "Select the template to use when posting new content in this sequence"
-msgstr "Velg mal å bruke når vi sender notis om nye artikler"
+msgstr "Velg malen du vil bruke når du legger nytt innhold i denne sekvensen"
 
-#: classes/class.PMProSequence.php:1371
+#: classes/class.PMProSequence.php:2316
 msgid "When:"
-msgstr "Klokkeslett:"
+msgstr "Når:"
 
-#: classes/class.PMProSequence.php:1379
+#: classes/class.PMProSequence.php:2324
 msgid ""
 "Select when (tomorrow) to send new content posted alerts for this sequence"
 msgstr ""
-"Velg tidspunkt når notis om tilgjenglighet til nye artikler i sekvensen skal "
+"Velg tidspunktet for når varsler om tilgang til nye innlegg i sekvensen skal "
 "sendes"
 
-#: classes/class.PMProSequence.php:1404
+#: classes/class.PMProSequence.php:2349
 msgid "Timezone:"
 msgstr "Tidssone"
 
-#: classes/class.PMProSequence.php:1414
+#: classes/class.PMProSequence.php:2359
 msgid "Subject"
-msgstr "Tittel"
+msgstr "Emne"
 
-#: classes/class.PMProSequence.php:1417 classes/class.PMProSequence.php:1430
-#: classes/class.PMProSequence.php:1432
+#: classes/class.PMProSequence.php:2362 classes/class.PMProSequence.php:2375
+#: classes/class.PMProSequence.php:2377
 msgid "New Content"
-msgstr "Ny artikkel"
+msgstr "Nytt innhold"
 
-#: classes/class.PMProSequence.php:1422
+#: classes/class.PMProSequence.php:2367
 msgid "Update/Edit the Prefix for the subject of the new content alert"
-msgstr "Oppdater prefikset til tittelen for notiser om nye artikler"
+msgstr ""
+"Oppdatering/Rediger prefikset for emnet til nye varselet om nye innlegg"
 
-#: classes/class.PMProSequence.php:1445
+#: classes/class.PMProSequence.php:2390
 msgid "Intro:"
 msgstr "Intro:"
 
-#: classes/class.PMProSequence.php:1448 classes/class.PMProSequence.php:1461
-#: classes/class.PMProSequence.php:1463
+#: classes/class.PMProSequence.php:2393 classes/class.PMProSequence.php:2406
+#: classes/class.PMProSequence.php:2408
 msgid "A summary for the new content follows:"
-msgstr "En oppsummering av den nye artiklen:"
+msgstr "Et sammendrag for det nye innlegget:"
 
-#: classes/class.PMProSequence.php:1453
+#: classes/class.PMProSequence.php:2398
 msgid "Update/Edit the introductory paragraph for the new content excerpt"
-msgstr "Rediger beskrivelsen som brukes for oppsummeringen av den nye artiklen"
+msgstr "Oppdatere/redigere utdraget for nye innlegg"
 
-#: classes/class.PMProSequence.php:1476
+#: classes/class.PMProSequence.php:2421
 msgid "Date type:"
-msgstr "Datoformat"
+msgstr "Dato-type:"
 
-#: classes/class.PMProSequence.php:1484
+#: classes/class.PMProSequence.php:2429
 msgid ""
 "Update/Edit the format of the !!today!! placeholder (a valid PHP date() "
 "format)"
 msgstr ""
-"Endre på formatet brukt for !!today!! verdien (Bruker date() formatet til "
-"PHP)"
+"Oppdatere/endre formatet til innholdet i !!today!! verdien (gyldig PHP "
+"date() format)"
 
-#: classes/class.PMProSequence.php:1510 classes/class.PMProSequence.php:4948
+#: classes/class.PMProSequence.php:2455 classes/class.PMProSequence.php:6801
 msgid "Update Settings"
-msgstr "Rediger "
+msgstr "Oppdater innstillinger"
 
-#: classes/class.PMProSequence.php:1519
+#: classes/class.PMProSequence.php:2464
 msgid ""
 "Configure start parameters for sequence drip. The default is to start day 1 "
 "exactly 24 hours after membership started, using the servers timezone and "
 "recorded timestamp for the membership check-out."
 msgstr ""
-"Rediger starttidspunktet for sekvensen. Standarden er å starte den første "
-"dagen nøyaktig 24 timer etter at medlemskapet begynte, i den tidssonen "
-"serveren befinner seg i samt tidspunktet når betalingen var bekreftet for "
-"medlemsskapet."
+"Konfigurere starttidspunktet for sekvens dryppet. Standard er å starte dag "
+"nummer 1 24 timer etter at medlemskapet startet. Vi bruker tidspunktet når "
+"betalingen ble bekreftet for medlemmet, i den tidssonen maskinvaren befinner "
+"seg. "
 
-#: classes/class.PMProSequence.php:1521
+#: classes/class.PMProSequence.php:2466
 msgid "Sequence starts"
-msgstr "Sekvensen begynner"
+msgstr "Sekvensen starter"
 
-#: classes/class.PMProSequence.php:1581
+#: classes/class.PMProSequence.php:2528
 #, php-format
 msgid "You are on day %s of your membership"
 msgstr "Du har vært medlem i %s dager"
 
-#: classes/class.PMProSequence.php:1634
+#: classes/class.PMProSequence.php:2691
 #, php-format
 msgid ""
 "This content is only available to existing members at the specified time or "
 "day. (Required membership: <a href='%s'>%s</a>"
 msgstr ""
-"Dette innholdet er kun tilgjengelig for våre medlemmer på det oppgitte "
-"tidspunktet. (Medlemskaps: <a href='%s'>%s</a>)"
+"Dette innholdet er bare tilgjengelig for eksisterende medlemmer på den "
+"angitte datoen. ( Krever: <a href=‘%s’>%s</a>"
 
-#: classes/class.PMProSequence.php:1644
+#: classes/class.PMProSequence.php:2701
 #, php-format
 msgid "You will be able to access \"%s\" on day %s of your membership"
 msgstr "Du vil får tilgang til “%s” på dag nummer %s av medlemskapet ditt"
 
-#: classes/class.PMProSequence.php:1649
+#: classes/class.PMProSequence.php:2706
 #, php-format
 msgid "You will be able to  access \"%s\" on %s"
-msgstr "Du vil få tilgang til “%s” den %s"
+msgstr "Du vil kunne åpne “%s” på %s"
 
-#: classes/class.PMProSequence.php:1656
+#: classes/class.PMProSequence.php:2713
 #, php-format
 msgid "You will be able to access \"%s\" on %s"
-msgstr "Du vil få tilgang til “%s” den %s"
+msgstr "Du vil kunne åpne “%s” på %s"
 
-#: classes/class.PMProSequence.php:1672
+#: classes/class.PMProSequence.php:2729
 #, php-format
 msgid ""
 "This content is only available to existing members who are already logged "
 "in. ( Reqired level: <a href='%s'>%s</a>)"
 msgstr ""
-"Dette er kun tilgjengelig til eksisterende og påloggede medlemmer. (Krav til "
-"medlemsnivå: <a href='%s'>%s</a>)"
+"Dette innholdet er kun tilgjengelig for eksisterende medlemmer som allerede "
+"er logget inn (Nivå: <a href=‘%s’>%s</a>)"
 
-#: classes/class.PMProSequence.php:1676
+#: classes/class.PMProSequence.php:2733
 msgid ""
 "This content is only available to existing members who have logged in. ( For "
 "levels:  "
 msgstr ""
-"Dette er tilgjengelig til medlemmer som har logget seg på systemet. ( For "
-"medlemsnivå:"
+"Dette innholdet er kun tilgjengelig for eksisterende medlemmer som har "
+"logget inn (For nivåer:"
 
-#: classes/class.PMProSequence.php:1815
+#: classes/class.PMProSequence.php:2843
 msgid ""
 "There is <em>no content available</em> for you at this time. Please check "
 "back later."
 msgstr ""
-"Det er <em>ingen tilgjengelige artikler</em> for deg p&aring; dette "
-"tidspunktet."
+"Det er <em>ikke noe innhold tilgjengelig</em> for deg på dette tidspunktet. "
+"Vennligst forsøk igjen senere."
 
-#: classes/class.PMProSequence.php:1846 classes/class.PMProSequence.php:1860
+#: classes/class.PMProSequence.php:2879 classes/class.PMProSequence.php:2893
 msgid "Available Now"
-msgstr "Tilgjengelig"
+msgstr "Tilgjengelig nå!"
 
-#: classes/class.PMProSequence.php:1883 classes/class.PMProSequence.php:1900
+#: classes/class.PMProSequence.php:2917 classes/class.PMProSequence.php:2934
 #, php-format
 msgid "available on %s"
 msgstr "tilgjengelig den %s"
 
-#: classes/class.PMProSequence.php:1886 classes/class.PMProSequence.php:1903
+#: classes/class.PMProSequence.php:2920 classes/class.PMProSequence.php:2937
 msgid "day"
 msgstr "dag"
 
-#: classes/class.PMProSequence.php:2016
+#: classes/class.PMProSequence.php:3201
 msgid ""
 "Please email me an alert when any new content in this sequence becomes "
 "available"
 msgstr ""
-"Send meg en epost når en ny artikkel er tilgjengelig for denne sekvensen"
+"Vennligst send meg et varsel når nytt innhold i denne sekvensen blir "
+"tilgjengelig"
 
-#: classes/class.PMProSequence.php:2017
+#: classes/class.PMProSequence.php:3202
 msgid "Yes, please send me email alerts!"
-msgstr "Ja takk! Send meg email når en ny artikkel er tilgjengelig."
+msgstr "Ja takk! Send meg ett varsel når nytt innhold er tilgjengelig."
 
-#: classes/class.PMProSequence.php:2208
+#: classes/class.PMProSequence.php:3394
 msgid "-DRAFT"
 msgstr "-UTKAST"
 
-#: classes/class.PMProSequence.php:2212
+#: classes/class.PMProSequence.php:3398
 msgid "-SCHED"
 msgstr "-FREMTIDIG"
 
-#: classes/class.PMProSequence.php:2216
+#: classes/class.PMProSequence.php:3402
 msgid "-REVIEW"
 msgstr "-ETTERSYN"
 
-#: classes/class.PMProSequence.php:2220
+#: classes/class.PMProSequence.php:3406
 msgid "-PRIVT"
 msgstr "-PRIVAT"
 
-#: classes/class.PMProSequence.php:2255
-msgid "Link Navigation"
+#: classes/class.PMProSequence.php:3441
+msgid "Navigation"
 msgstr "Navigasjon"
 
-#: classes/class.PMProSequence.php:2262
+#: classes/class.PMProSequence.php:3448
 #, php-format
 msgid "%s Previous"
-msgstr "%s Forrige Side"
+msgstr "%s Forrige"
 
-#: classes/class.PMProSequence.php:2263
+#: classes/class.PMProSequence.php:3449
 #, php-format
 msgid "Next %s"
 msgstr "Neste %s"
 
-#: classes/class.PMProSequence.php:2266
+#: classes/class.PMProSequence.php:3452
 msgid "Page"
 msgstr "Side"
 
-#: classes/class.PMProSequence.php:2292
+#: classes/class.PMProSequence.php:3478
 msgid "Available posts"
-msgstr "Tilgjengelige"
+msgstr "Tilgjengelige innlegg"
 
-#: classes/class.PMProSequence.php:2377
+#: classes/class.PMProSequence.php:3562
 msgid "date: YYYY-MM-DD"
-msgstr "dato: YYYY-MM-DD"
+msgstr "dato: ÅÅÅÅ-MM-DD"
 
-#: classes/class.PMProSequence.php:2377
+#: classes/class.PMProSequence.php:3562
 msgid "number: Days since membership started"
-msgstr "nummmer: Antall dager siden du ble medlem"
+msgstr "nummer: Dager siden medlemskap startet"
 
-#: classes/class.PMProSequence.php:2380
+#: classes/class.PMProSequence.php:3565
 #, php-format
 msgid "Invalid delay specified ( %1$s ). Expected format is a %2$s"
-msgstr ""
-"Du benyttet et ugyldig format for tilgjenglighetsverdi (%1$s). Forventet "
-"format er %2$s"
+msgstr "Ugyldig forsinkelse angitt (%1$s). Forventet format er en %2$s"
 
-#: classes/class.PMProSequence.php:2395 classes/class.PMProSequence.php:4443
+#: classes/class.PMProSequence.php:3580 classes/class.PMProSequence.php:6254
 msgid "No delay has been specified"
-msgstr ""
-"Du har ikke spesifisert en tilgjenglighetsverdi for artikkelen du ønsker å "
-"legge til"
+msgstr "Ingen forsinkelse er angitt"
 
-#: classes/class.PMProSequence.php:3304
+#: classes/class.PMProSequence.php:4195
+msgid "Y-m-d"
+msgstr "d-m-Å"
+
+#: classes/class.PMProSequence.php:4906
 #, php-format
 msgid "Could not schedule new content alert for %s"
-msgstr ""
-"Kunne ikke oppdatere tidspunktet for informasjon om nye artikler for %s"
+msgstr "Kunne ikke oppdatere tidspunktet for varsel om nytt innlegg for %s"
 
-#: classes/class.PMProSequence.php:3409 classes/class.PMProSequence.php:3454
-msgid "A summary of the post(s) follows:"
-msgstr "En oppsummering av nye artikler følger:"
+#: classes/class.PMProSequence.php:5061
+msgid "A summary of the post:"
+msgstr "En oppsummering av innlegget:"
 
-#: classes/class.PMProSequence.php:3678
-msgid "Y-m-d"
-msgstr "d-m-Y"
+#: classes/class.PMProSequence.php:5108
+msgid "A summary of the post(s):"
+msgstr "En oppsummering av det innlegget (ene):"
 
-#: classes/class.PMProSequence.php:3914
+#: classes/class.PMProSequence.php:5625
 msgid "Error: No delay value(s) received"
-msgstr "Feil: Ingen tilgjenglighetsverdi mottatt"
+msgstr "Feil: Ingen forsinkelse verdi(er) mottatt"
 
-#: classes/class.PMProSequence.php:3939
+#: classes/class.PMProSequence.php:5657
 msgid "Incorrect privileges for this operation"
-msgstr "Har ikke rettighet til å fjerne artikkelen"
+msgstr "Feil tilgang til denne operasjonen"
 
-#: classes/class.PMProSequence.php:3952
+#: classes/class.PMProSequence.php:5670
 #, php-format
 msgid "You must specify a delay value for the '%s' sequence"
-msgstr "Vennligst spesifiser en en tilgjenglighetsverdi for \"%s\" sekvensen"
+msgstr "Du må angi en forsinkelsesverdi for ‘%s’ sekvensen"
 
-#: classes/class.PMProSequence.php:4063
-msgid "Unable to wipe existing posts"
-msgstr "Klarte ikke å slette eksisterende artikler fra sekvensen"
-
-#: classes/class.PMProSequence.php:4075
-#, php-format
-msgid "Save status returned was: %s"
-msgstr "Status for lagingsoperasjonen var: %s"
-
-#: classes/class.PMProSequence.php:4081
-msgid "No sequence ID found/specified"
-msgstr "Fant ikke sekvensen som du oppgav"
-
-#: classes/class.PMProSequence.php:4088
-#, php-format
-msgid "(exception) %s"
-msgstr "(Feil) %s"
-
-#: classes/class.PMProSequence.php:4126 classes/class.PMProSequence.php:4137
-#: classes/class.PMProSequence.php:4185
+#: classes/class.PMProSequence.php:5867 classes/class.PMProSequence.php:5883
+#: classes/class.PMProSequence.php:5944
 msgid "Unable to save your settings"
-msgstr "Klarte ikke å lagre oppsettet ditt"
+msgstr "Kan ikke lagre innstillingene"
 
-#: classes/class.PMProSequence.php:4190
+#: classes/class.PMProSequence.php:5949
 #, php-format
 msgid "Error: %s"
 msgstr "Feil: %s"
 
-#: classes/class.PMProSequence.php:4249
+#: classes/class.PMProSequence.php:6013
 msgid "Could not delete posts from this sequence"
-msgstr "Klarte ikke å slette artikkelene i denne sekvensen"
+msgstr "Kan ikke slette innlegg fra denne sekvensen"
 
-#: classes/class.PMProSequence.php:4259
+#: classes/class.PMProSequence.php:6023
 msgid "Unable to identify the Sequence"
-msgstr "Kunne ikke identifisere sekvensen"
+msgstr "Kunne ikke finne sekvensen"
 
-#: classes/class.PMProSequence.php:4263
+#: classes/class.PMProSequence.php:6027
 msgid "Unknown request"
 msgstr "Ukjent forespørsel"
 
-#: classes/class.PMProSequence.php:4307 classes/class.PMProSequence.php:4352
+#: classes/class.PMProSequence.php:6076 classes/class.PMProSequence.php:6125
 msgid "Incorrect privileges to remove posts from this sequence"
-msgstr ""
-"Har ikke tilstrekkelige privilegier til å fjerne artikkelen fra denne "
-"sekvensen."
+msgstr "Feil rettigheter til å fjerne innlegg fra denne sekvensen"
 
-#: classes/class.PMProSequence.php:4430
+#: classes/class.PMProSequence.php:6236
+msgid "Error adding post with ID: "
+msgstr "Generell feil ved tillegg av nytt innhold til denne sekvensen"
+
+#: classes/class.PMProSequence.php:6241
 msgid "Not permitted to modify the sequence"
-msgstr "Har ikke høye nok rettigheter til å endre på denne sekvensen"
+msgstr "Ikke tillatelse til å endre sekvensen"
 
-#: classes/class.PMProSequence.php:4439 classes/class.PMProSequence.php:4456
+#: classes/class.PMProSequence.php:6250 classes/class.PMProSequence.php:6267
 msgid "Did not specify a post/page to add"
-msgstr ""
-"Du har ikke spesifisert hvilken artikkel du ønsker å legge til i denne "
-"sekvensen"
+msgstr "Du har ikke spesifisert hvilket innlegg du ønsker å legge til"
 
-#: classes/class.PMProSequence.php:4461
+#: classes/class.PMProSequence.php:6272
 msgid "This sequence was not found on the server!"
-msgstr "Fant ikke denne sekvensen på serveren!"
+msgstr "Denne sekvensen ble ikke funnet på serveren!"
 
-#: classes/class.PMProSequence.php:4521
+#: classes/class.PMProSequence.php:6338
 msgid "No sequence provided"
-msgstr "Ingen sekvens oppgitt"
+msgstr "Ingen serie er angitt"
 
-#: classes/class.PMProSequence.php:4534
+#: classes/class.PMProSequence.php:6351
 msgid "User is not allowed to change settings"
-msgstr "Denne brukeren har ikke tillatelse til å endre på innstillinger"
+msgstr "Du har ikke lov til å endre innstillinger."
 
-#: classes/class.PMProSequence.php:4805
+#: classes/class.PMProSequence.php:6364
+msgid "Unable to wipe existing posts"
+msgstr "Klarte ikke å slette eksisterende innlegg fra sekvensen"
+
+#: classes/class.PMProSequence.php:6620
+msgid "The PMPro Sequence plugin requires the "
+msgstr "PMPro Sequences utvidelsen krever"
+
+#: classes/class.PMProSequence.php:6621
+msgid "Opens in a new window/tab."
+msgstr "Åpne lenke i nytt vindu / ny fane"
+
+#: classes/class.PMProSequence.php:6622
+msgid "Paid Memberships Pro</a> membership plugin.<br/><br/>"
+msgstr "Paid Memberships Pro</a> medlemskaps utvidelsen.<br><br>"
+
+#: classes/class.PMProSequence.php:6623
+msgid ""
+"Please install Paid Memberships Pro before attempting to activate this PMPro "
+"Sequence plugin.<br/><br/>"
+msgstr ""
+"Vennligst installer Paid Memberships Pro før du prøver å aktivere PMPro "
+"Sequences.<br><br>"
+
+#: classes/class.PMProSequence.php:6624
+msgid ""
+"Click the 'Back' button in your browser to return to the Plugin management "
+"page."
+msgstr ""
+"Klikk “Tilbake” i nettleseren for å gå tilbake til siden for administrasjon "
+"av utvidelser."
+
+#: classes/class.PMProSequence.php:6679
 msgid "Sequences"
 msgstr "Sekvenser"
 
-#: classes/class.PMProSequence.php:4806
+#: classes/class.PMProSequence.php:6680
 msgid "Sequence"
 msgstr "Sekvens"
 
-#: classes/class.PMProSequence.php:4808 classes/class.PMProSequence.php:4809
-msgid "New Sequence"
-msgstr "Ny Sekvens"
-
-#: classes/class.PMProSequence.php:4810 classes/class.PMProSequence.php:4811
+#: classes/class.PMProSequence.php:6684 classes/class.PMProSequence.php:6685
 msgid "Edit Sequence"
 msgstr "Rediger"
 
-#: classes/class.PMProSequence.php:4812
+#: classes/class.PMProSequence.php:6686
 msgid "Add New"
 msgstr "Legg til"
 
-#: classes/class.PMProSequence.php:4813
+#: classes/class.PMProSequence.php:6687
 msgid "View Sequence"
-msgstr "Vis Sekvensen"
+msgstr "Vis sekvens"
 
-#: classes/class.PMProSequence.php:4814
+#: classes/class.PMProSequence.php:6688
 msgid "View This Sequence"
 msgstr "Vis denne sekvensen"
 
-#: classes/class.PMProSequence.php:4815
+#: classes/class.PMProSequence.php:6689
 msgid "Search Sequences"
 msgstr "Søk i sekvensene"
 
-#: classes/class.PMProSequence.php:4816
+#: classes/class.PMProSequence.php:6690
 msgid "No Sequence Found"
 msgstr "Fant ikke sekvensen"
 
-#: classes/class.PMProSequence.php:4817
+#: classes/class.PMProSequence.php:6691
 msgid "No Sequence Found In Trash"
 msgstr "Fant ikke sekvensen i søpplebøtta"
 
-#: classes/class.PMProSequence.php:4945
+#: classes/class.PMProSequence.php:6798
 msgid "Error: This sequence needs to be saved before you can send alerts"
 msgstr "Feil: Du må lagre sekvensen før du kan sende notiser manuelt."
 
-#: classes/class.PMProSequence.php:4947
+#: classes/class.PMProSequence.php:6800
 msgid "Saving"
 msgstr "Lagrer"
 
-#: classes/class.PMProSequence.php:4949
+#: classes/class.PMProSequence.php:6802
 msgid ""
 "Changing the delay type will erase all existing posts or pages in the "
 "Sequence list. (Cancel if your are unsure)"
@@ -720,99 +776,103 @@ msgstr ""
 "Å endre forsinkelsestypen vil slette listen av artikler definert for "
 "sekvensen (ikke selve postene/sidene). Velg Avbryt dersom du er usikker)"
 
-#: classes/class.PMProSequence.php:4950
+#: classes/class.PMProSequence.php:6803
 msgid "Error saving sequence post [1]"
 msgstr "Feil ved lagring av sekvensartikkel [1]"
 
-#: classes/class.PMProSequence.php:4951
+#: classes/class.PMProSequence.php:6804
 msgid "Error saving sequence post [2]"
 msgstr "Feil ved lagring av sekvensartikkel [2]"
 
-#: classes/class.PMProSequence.php:4952
+#: classes/class.PMProSequence.php:6805
 msgid "Error deleting sequence post [1]"
 msgstr "Feil ved sletting av sekvensartikkel [1]"
 
-#: classes/class.PMProSequence.php:4953
+#: classes/class.PMProSequence.php:6806
 msgid "Error deleting sequence post [2]"
 msgstr "Feil ved sletting av sekvensartikkel [2]"
 
-#: classes/class.PMProSequence.php:4955
+#: classes/class.PMProSequence.php:6808
 msgid "Unknown error removing post from sequence"
 msgstr "Generell feil ved sletting av artikkelen fra denne sekvensen"
 
-#: classes/class.PMProSequence.php:4956
+#: classes/class.PMProSequence.php:6809
 msgid "Unknown error adding post to sequence"
 msgstr "Generell feil ved tillegg av ny artikkel til denne sekvensen"
 
-#: classes/class.PMProSequence.php:4959
+#: classes/class.PMProSequence.php:6812
 msgid "Avail. on"
 msgstr "Tilgjengelig"
 
-#: classes/class.PMProSequence.php:4960
-msgid "Release on (YYYY-MM-DD)"
-msgstr "Tilgjengelig (YYYY-MM-DD)"
-
-#: classes/class.PMProSequence.php:5147
+#: classes/class.PMProSequence.php:7023
 msgid "You must be logged in to edit PMPro Sequences"
 msgstr "Du må være logget inn for å kunne oppdatere en PMPro Sekvens"
+
+#: classes/class.PMProSequence.php:7048
+msgid "Send user alerts"
+msgstr "Sende brukervarsler"
+
+#: classes/class.PMProSequence.php:7048
+msgid "Send Notices"
+msgstr "Send varsler"
 
 #: classes/class.SeqRecentPostWidget.php:30
 msgid ""
 "Display a summary of the most recently available sequence post (or page) for "
 "the currently logged-in user."
 msgstr ""
-"Vis en oppsummering av den siste tilgjengelige artikkelen/siden for den "
-"påloggede brukeren"
+"Vise et sammendrag av den nyeste tilgjengelige sekvens innlegg (eller side) "
+"for den for tiden påloggede brukeren."
 
 #: classes/class.SeqRecentPostWidget.php:81
 msgid "Your most recently available content"
-msgstr "Nyeste tilgjengelige artikkel"
+msgstr "Mest nylig tilgjengelig innhold"
 
 #: classes/class.SeqRecentPostWidget.php:91
 msgid "Widget title"
-msgstr "Modul tittel"
+msgstr "Widget-tittel"
 
 #: classes/class.SeqRecentPostWidget.php:97
 msgid "Show Post/Page title"
-msgstr "Artikkel"
+msgstr "Vis innleggstittel"
 
 #: classes/class.SeqRecentPostWidget.php:100
 msgid "Default post/page title (if \"hidden\")"
-msgstr "Bruk som standard tittel for artikkelen/siden"
+msgstr "Bruk som standard tittel for innlegget/siden"
 
 #: classes/class.SeqRecentPostWidget.php:105
 msgid "Post title prefix"
-msgstr "Tittel prefiks"
+msgstr "Innlegg tittel prefiks"
 
 #: classes/class.SeqRecentPostWidget.php:109
 msgid "Max size of post/page excerpt (# of words)"
-msgstr "Maks antall ord å vise i oppsummeringen"
+msgstr "Maks størrelse for utdrag (antall ord)"
 
 #: classes/class.SeqRecentPostWidget.php:113
 msgid "Sequence to use"
-msgstr "Sekvenser"
+msgstr "Sekvens å bruke"
 
 #: classes/class.SeqRecentPostWidget.php:146
 msgid "No sequences defined"
-msgstr "Ingen sekvenser tilgjengelige"
+msgstr "Ingen sekvenser definert"
 
 #: classes/class.SeqRecentPostWidget.php:177
 msgid "No sequence specified for this widget!"
-msgstr "Fant ikke den spesifiserte sekvensen"
+msgstr "Ingen sekvens er angitt for denne widgeten!"
 
-#: classes/class.SeqRecentPostWidget.php:225
-msgid "Click to read"
-msgstr "Klikk for å lese"
-
-#: classes/class.SeqRecentPostWidget.php:236
+#: classes/class.SeqRecentPostWidget.php:194
 msgid ": No post(s) found!"
-msgstr "Fant ingen relevante artikler"
+msgstr "Ingen innlegg funnet!"
 
-#: classes/class.SeqRecentPostWidget.php:236
+#: classes/class.SeqRecentPostWidget.php:194
 msgid "No sequence specified"
 msgstr "Du må spesifisere sekvensen først"
 
-#: classes/class.SeqRecentPostWidget.php:248
+#: classes/class.SeqRecentPostWidget.php:223
+msgid "Click to read"
+msgstr "Klikk for å lese mer"
+
+#: classes/class.SeqRecentPostWidget.php:231
 msgid ""
 "Sorry, your current membership level does not give you access to this "
 "content."
@@ -820,10 +880,39 @@ msgstr ""
 "Beklager, ditt nåværende medlemsnivå gir deg ikke tilgang til dette "
 "innholdet."
 
-#: pmpro-sequences.php:283 pmpro-sequences.php:294
+#: pmpro-sequences.php:282 pmpro-sequences.php:293
 #, php-format
 msgid "Could not complete import for series %s"
 msgstr "Kunne ikke fullføre importen av %s fra PMPro Series"
+
+#: scheduled/crons.php:95
+msgid ""
+"Please de-activiate and activiate the PMPro Sequences plug-in to facilitate "
+"conversion to v3 meta data format."
+msgstr ""
+"Vennligst deaktiver og aktiver PMPro Sequences utvidelsen for a konvertere "
+"fra gammelt til nytt metadata format. "
+
+#~ msgid "Add"
+#~ msgstr "Ny"
+
+#~ msgid "Release on (YYYY-MM-DDD)"
+#~ msgstr "Tilgjenglig den (YYYY-MM-DD)"
+
+#~ msgid "Link Navigation"
+#~ msgstr "Navigasjon"
+
+#~ msgid "A summary of the post(s) follows:"
+#~ msgstr "En oppsummering av nye artikler følger:"
+
+#~ msgid "Save status returned was: %s"
+#~ msgstr "Status for lagingsoperasjonen var: %s"
+
+#~ msgid "No sequence ID found/specified"
+#~ msgstr "Fant ikke sekvensen som du oppgav"
+
+#~ msgid "(exception) %s"
+#~ msgstr "(Feil) %s"
 
 #~ msgid ""
 #~ "Sorry, your current membership level does not grant you access to this "
