@@ -115,6 +115,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Would sometimes hide the opt-in check-box
 * Don't print settings to debug log.
 * New and empty sequences would incorrectly be flagged as needing conversion.
+* Updated translations (Norwegian & English/US)
 
 ##Old releases
 ###.1
