@@ -74,12 +74,6 @@
 
             $this->current_metadata_versions = get_option( 'pmpro_sequence_metadata_version', array() );
 
-            if ( !$this->is_converted( $id ) ) {
-
-                $this->dbg_log("init() - Need to convert to version 3 format!");
-                $this->convert_posts_to_v3( $id );
-            }
-
             if ( !is_null( $id ) ) {
 
                 $this->sequence = get_post( $id );
@@ -88,6 +82,11 @@
                 // Set options for the sequence
                 $this->get_options( $id );
                 $this->load_sequence_post();
+
+                if ( empty( $this->posts ) && ( !$this->is_converted( $id ) ) ) {
+
+                    $this->dbg_log("init() - Need to convert sequence with ID {$id } to version 3 format!");
+                }
 
                 $this->dbg_log( 'init() -- Done.' );
 
@@ -111,9 +110,9 @@
             $this->dbg_log("is_converted() - Check whether a v2 format even exists for {$sequence_id}");
             $is_pre_v3 = get_post_meta( $sequence_id, "_sequence_posts", true );
 
-            if ( ( false == $is_pre_v3 ) || ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) ) {
+            if ( ( false === $is_pre_v3 ) || ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) ) {
 
-                // $this->dbg_log("is_converted() - Already converted from old metadata format to new format for sequence {$sequence_id}");
+                $this->dbg_log("is_converted() - Already converted from old metadata format to new format for sequence {$sequence_id}");
                 return true;
             }
 
@@ -164,7 +163,7 @@
             }
         }
 
-        public function convert_posts_to_v3( $sequence_id = null ) {
+        public function convert_posts_to_v3( $sequence_id = null, $force = false ) {
 
             if ( !is_null( $sequence_id ) ) {
 
@@ -175,7 +174,12 @@
                 }
 
                 $old_sequence_id = $this->sequence_id;
-                $this->get_options( $sequence_id );
+
+                if ( false === $force  ) {
+
+                    $this->get_options( $sequence_id );
+                    $this->load_sequence_post();
+                }
             }
 
             $is_pre_v3 = get_post_meta( $this->sequence_id, "_sequence_posts", true );
@@ -186,7 +190,7 @@
             if ( !empty( $this->sequence_id ) ) {
 
                 // $tmp = get_post_meta( $sequence_id, "_sequence_posts", true );
-                $posts = ( $is_pre_v3 ? $is_pre_v3 : array() ); // Fixed issue where empty sequences would generate error messages.
+                $posts = ( !empty( $is_pre_v3 ) ? $is_pre_v3 : array() ); // Fixed issue where empty sequences would generate error messages.
 
                 foreach( $posts as $sp ) {
 
@@ -212,13 +216,17 @@
                 $this->current_metadata_versions[$this->sequence_id] = 3;
                 update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
                 // Reset sequence info.
-                $this->init( $old_sequence_id );
+                $this->get_options( $old_sequence_id );
+                $this->load_sequence_post();
 
             }
             else {
                 $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence (%s)", "pmprosequence") , get_the_title( $this->sequence_id ) ) );
             }
+
+            return $retval;
         }
+
         /**
          * Return the default options for a sequence
          *  stdClass content:
@@ -538,9 +546,8 @@
                 if ( !$this->is_converted( $sequence_id ) ) {
 
                     $this->dbg_log("load_sequence_post() - Forcing conversion attempt for sequence # {$sequence_id}");
-                    $this->convert_posts_to_v3( $sequence_id );
+                    $this->convert_posts_to_v3( $sequence_id, true );
                 }
-
             }
 
             $member_days = ( current_user_can('manage_options') || ( is_admin() && ( $this->is_cron == false ) ) ) ? 9999 : $this->get_membership_days( $user_id );
@@ -6583,7 +6590,7 @@
             // Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
             foreach($seqs as $s) {
 
-                $this->init( $s->ID );
+                $this->get_options( $s->ID );
 
                 if ( $this->options->sendNotice == 1 ) {
 
