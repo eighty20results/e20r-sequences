@@ -106,16 +106,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0-beta-6
+###3.0-beta-7
 
-* Primarily convert to V3 as part of plugin activation or if the user attempts to load the sequence.
-* Would sometimes get into a load/convert loop Flag conversion attempt as 'forced' if no posts are found with V3 format and the sequence is NOT previously converted.
-* Add padding to opt-in checkbox
-* Could loop indefinitely during conversion of user opt-in settings for certain users.
-* Would sometimes hide the opt-in check-box
-* Don't print settings to debug log.
-* New and empty sequences would incorrectly be flagged as needing conversion.
-* Updated translations (Norwegian & English/US)
+* Wouldn't always honor the refresh value when loading the sequence
+* Refactor conversion for user's new-post notice settings
+* Clean up erroneous notification settings for user
+* Didn't save the 'Allow email notification' setting
 
 ##Old releases
 ###.1
@@ -448,3 +444,14 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Clean up variable names in $_POST for the add operation
 * Return error message/warning to back-end if post_id/delay combination is present in system.
 * Refactor add_post_callback()
+
+###3.0-beta-6
+
+* Primarily convert to V3 as part of plugin activation or if the user attempts to load the sequence.
+* Would sometimes get into a load/convert loop Flag conversion attempt as 'forced' if no posts are found with V3 format and the sequence is NOT previously converted.
+* Add padding to opt-in checkbox
+* Could loop indefinitely during conversion of user opt-in settings for certain users.
+* Would sometimes hide the opt-in check-box
+* Don't print settings to debug log.
+* New and empty sequences would incorrectly be flagged as needing conversion.
+* Updated translations (Norwegian & English/US)

@@ -71,6 +71,13 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 3.0-beta-7 ==
+
+* Wouldn't always honor the refresh value when loading the sequence
+* Refactor conversion for user's new-post notice settings
+* Clean up erroneous notification settings for user
+* Didn't save the 'Allow email notification' setting
+
 == 3.0-beta-6 ==
 
 * Primarily convert to V3 as part of plugin activation or if the user attempts to load the sequence.
