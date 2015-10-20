@@ -30,7 +30,7 @@ License:
 */
 
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '3.0-beta-1');
+define('PMPRO_SEQUENCE_VERSION', '3.0-beta-7');
 
 /* Set the max number of email alerts to send in one go to one user */
 define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
