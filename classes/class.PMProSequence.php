@@ -6830,7 +6830,7 @@
 	            $load_pmpro_sequence_script = true;
 
                 $this->dbg_log("Loading client side javascript and CSS");
-                wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), '1.0', true);
+                wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), PMPRO_SEQUENCE_VERSION, true);
 
                 wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
                 wp_enqueue_style( "pmpro-sequence" );
@@ -6855,7 +6855,7 @@
             $delay_config = $this->set_delay_config();
 
             wp_register_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
-            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array( 'jquery', 'select2' ), null, true);
+            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array( 'jquery', 'select2' ), PMPRO_SEQUENCE_VERSION, true);
 
             wp_register_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
             wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
@@ -6889,8 +6889,7 @@
             wp_enqueue_style( "pmpro-sequence" );
             wp_enqueue_style( "select2" );
 
-            wp_enqueue_script( 'select2' );
-            wp_enqueue_script( 'pmpro-sequence-admin' );
+            wp_enqueue_script( array( 'select2', 'pmpro-sequence-admin' ) );
         }
 
         /**
@@ -6913,7 +6912,7 @@
 	        $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
 
 	        $this->dbg_log("enqueue_user_scripts() - 'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
-            wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), '1.0', true);
+            wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), PMPRO_SEQUENCE_VERSION, true);
 
             wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
             wp_enqueue_style( "pmpro-sequence" );
