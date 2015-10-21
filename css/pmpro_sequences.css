@@ -171,7 +171,8 @@ input#pmpro_sequence_excerpt {
     height: 30px;
     border:1px solid #c5c5c5;
     display: inline-block;
-    width: 650px;
+    width: 80%;
+    min-width: 250px;
     text-align: center;
     margin: 0 auto;
     padding-top: 5px;
