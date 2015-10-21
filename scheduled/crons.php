@@ -123,7 +123,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				  ( $sequence->options->sendNotice == 1 ) ) ) {
 
 				// Set the opt-in timestamp if this is the first time we're processing alert settings for this user ID.
-				if ( empty( $notice_settings->last_notice_sent ) ) {
+				if ( empty( $notice_settings->last_notice_sent ) || ( $notice_settings->last_notice_sent == -1 )) {
 
 					$notice_settings->last_notice_sent = current_time('timestamp');
                 }
@@ -145,13 +145,14 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 				}
 
 				// $posts = $sequence->get_postDetails( $post->id );
+				$flag_value = "{$post->id}_" . $sequence->normalize_delay( $post->delay );
 
                 $sequence->dbg_log( 'cron() - Post: "' . get_the_title($post->id) . '"' .
                         ', post ID: ' . $post->id .
                         ', membership day: ' . $membership_day .
                         ', post delay: ' . $sequence->normalize_delay( $post->delay ).
                         ', user ID: ' . $s->user_id .
-                        ', already notified: ' . ( !is_array($notice_settings->posts) || ( in_array( "{$post->id}_{$post->delay}", $notice_settings->posts ) == false ) ? 'false' : 'true' ) .
+                        ', already notified: ' . ( !is_array($notice_settings->posts) || ( in_array( $flag_value, $notice_settings->posts ) == false ) ? 'false' : 'true' ) .
                          ', has access: ' . ( $sequence->has_post_access( $s->user_id, $post->id, true ) === true ? 'true' : 'false' ) );
 
                 $sequence->dbg_log("cron() - # of posts we've already notified for: " . count( $notice_settings->posts ));
@@ -159,12 +160,12 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
                 if  ( ( !empty( $post ) ) &&
                       ( $membership_day >= $sequence->normalize_delay( $post->delay ) ) &&
-                    ( !in_array( "{$post->id}_{$post->delay}", $notice_settings->posts ) ) ) {
+                    ( !in_array( $flag_value, $notice_settings->posts ) ) ) {
 
-                    $sequence->dbg_log( "cron() - Need to send alert to {$s->user_id} for '{$post->title}': {$post->id}_{$post->delay}" );
+                    $sequence->dbg_log( "cron() - Need to send alert to {$s->user_id} for '{$post->title}': {$flag_value}" );
 
                     // Does the post alert need to be sent (only if its delay makes it available _after_ the user opted in.
-                    if ( $sequence->is_after_opt_in( $s->user_id, $notice_settings->optin_at, $post ) ) {
+                    if ( $sequence->is_after_opt_in( $s->user_id, $notice_settings, $post ) ) {
 
                         $sequence->dbg_log( 'cron() - Preparing the email message' );
 
@@ -173,12 +174,13 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
 
                             $sequence->dbg_log( 'cron() - Email was successfully sent' );
                             // Update the sequence metadata that user has been notified
-							$notice_settings->posts[] = "{$post->id}_{$post->delay}";
+							$notice_settings->posts[] = $flag_value;
 
                             // Increment send count.
-                            $sendCount[ $s->user_id ] ++;
+                            $sendCount[ $s->user_id ]++;
 
                             $sequence->dbg_log("cron() - Sent email to user {$s->user_id} about post {$post->id} with delay {$post->delay} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}" );
+							$notice_settings->last_notice_sent = current_time('timestamp');
                         }
                         else {
 
@@ -191,7 +193,7 @@ if (! function_exists('pmpro_sequence_check_for_new_content')):
                         if (! in_array( "{$post->id}_{$post->delay}", $notice_settings->posts, true ) ) {
 
                             $sequence->dbg_log( "cron() - Adding this previously released (old) post to the notified list" );
-							$notice_settings->posts[] = "{$post->id}_{$post->delay}";
+							$notice_settings->posts[] = "{$post->id}_" . $sequence->normalize_delay( $post->delay );
                         }
                     }
                 }
