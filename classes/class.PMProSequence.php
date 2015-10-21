@@ -3159,7 +3159,7 @@
             $defaults->id = $this->sequence_id;
             $defaults->send_notices = ( $this->options->sendNotice == 1 ? true : false );
             $defaults->posts = array();
-            $defaults->optin_at = current_time( 'timestamp' );
+            $defaults->optin_at = ( $this->options->sendNotice == 1 ? current_time( 'timestamp' ) : -1 );
             $defaults->last_notice_sent = -1; // Never
 
             return $defaults;
@@ -3186,35 +3186,10 @@
 
                 $this->dbg_log("view_user_notice_opt_in() - Allow user to opt out of email notices");
                 $optIn = $this->load_user_notice_settings( $current_user->ID, $this->sequence_id );
-                // $optIn = get_user_meta( $current_user->ID, $meta_key, true );
 
                 $this->dbg_log('view_user_notice_opt_in() - Fetched Meta: ' . print_r( $optIn, true));
 
-                /* Determine the state of the users opt-in for new content notices */
-                if ( !isset($optIn->id ) || ( $optIn->id !== $this->sequence_id ) ) {
-
-                    $this->dbg_log('view_user_notice_opt_in() - No user specific settings found in general or for this sequence. Creating defaults');
-
-                    // Create new opt-in settings for this user
-                    $new = $this->create_user_notice_defaults();
-
-	                // $new->sequence[$this->sequence_id]->sendNotice = $this->options->sendNotice;
-
-                    $this->dbg_log('view_user_notice_opt_in() - Using default setting for user ' . $current_user->ID . ' and sequence ' . $this->sequence_id);
-
-                    $optIn = $new;
-                }
-
-                if ( !is_array( $optIn->posts ) ) {
-
-                    $optIn->posts = array();
-                }
-
-                $this->save_user_notice_settings( $current_user->ID, $optIn, $this->sequence_id );
-
-                // update_user_meta($current_user->ID, $meta_key, $optIn);
-
-                $noticeVal = isset( $optIn->send_notices ) ? $optIn->send_notices : 0;
+                $noticeVal = isset( $optIn->send_notices ) && ( $optIn->send_notices == 1 ) ? $optIn->send_notices : 0;
 
                 /* Add form information */
                 ob_start();
@@ -3228,7 +3203,7 @@
                             <input type="hidden" name="hidden_pmpro_seq_uid" id="hidden_pmpro_seq_uid" value="<?php echo $current_user->ID; ?>" >
                             <?php wp_nonce_field('pmpro-sequence-user-optin', 'pmpro_sequence_optin_nonce'); ?>
                             <span>
-                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : ''); ?> " />
+                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
                                 <label for="pmpro-seq-useroptin"><?php _e('Yes, please send me email alerts!', 'pmprosequence'); ?></label>
                             </span>
                         </form>
@@ -6123,26 +6098,37 @@
                 }
 
                 // $usrSettings->sequence[$seqId]->sendNotice = ( isset( $_POST['hidden_pmpro_seq_useroptin'] ) ?
-                $usrSettings->send_notice = ( isset( $_POST['hidden_pmpro_seq_useroptin'] ) ?
+                $usrSettings->send_notices = ( isset( $_POST['hidden_pmpro_seq_useroptin'] ) ?
                     intval($_POST['hidden_pmpro_seq_useroptin']) : $this->options->sendNotice );
 
                 // If the user opted in to receiving alerts, set the opt-in timestamp to the current time.
                 // If they opted out, set the opt-in timestamp to -1
 
-                if ($usrSettings->send_notice == 1) {
+                if ($usrSettings->send_notices == 1) {
+
+                    // Fix the alert settings so the user doesn't receive old alerts.
+
+                    $member_days = $this->get_membership_days( $user_id );
+                    $post_list =$this->load_sequence_post( null, $member_days, null, '<=', null, true );
+
+                    $usrSettings = $this->fix_user_alert_settings( $usrSettings, $post_list, $member_days );
+
                     // Set the timestamp when the user opted in.
                     $usrSettings->last_notice_sent = current_time( 'timestamp' );
+                    $usrSettings->optin_at = current_time( 'timestamp' );
+
                 }
                 else {
                     $usrSettings->last_notice_sent = -1; // Opted out.
+                    $usrSettings->optin_at = -1;
                 }
 
 
                 // Add an empty array to store posts that the user has already been notified about
-                if ( empty( $usrSettings->posts ) ) {
+/*                if ( empty( $usrSettings->posts ) ) {
                     $usrSettings->posts = array();
-                    }
-
+                }
+*/
                 /* Save the user options we just defined */
                 if ( $user_id == $current_user->ID ) {
 
