@@ -112,7 +112,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###3.0-beta-10
 
-* Add static function to fetch all sequence IDs that a post_id is associated with - PMProSequence::sequences_for_post()
+* Add all_sequences() static function
+* Add post_details() static function
+* Update change log & version numbers
+* Allow calling PMProSequence::sequences_for_post() to return array of sequence IDs for the post_id specified
+* Add static function to fetch all sequence IDs that a post_id is associated with
+
 
 ##Old releases
 ###.1
