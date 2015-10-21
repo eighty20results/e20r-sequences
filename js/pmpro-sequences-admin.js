@@ -904,50 +904,59 @@ var postMeta = {
 
         delay_label_row.find('label[for^="pmpro_seq-delay"]').replaceWith($label);
         delay_row.find('input.pmpro-seq-delay-info.pmpro-seq-days').replaceWith($input);
-/*
-        jQuery.ajax({
-            url: pmpro_sequence.ajaxurl,
-            type:'POST',
-            timeout:10000,
-            dataType: 'JSON',
-            data: {
-                action: 'pmpro_sequence_update_post_meta',
-                pmpro_sequence_id: sequence_id,
-                pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val(),
-                pmpro_sequence_post_id: jQuery('#post_ID').val()
-            },
-            error: function($data){
-                console.log("error() - Returned data: " + $data.success + " and " + $data.data);
-                console.dir($data);
 
-                if ( $data.data ) {
-                    alert($data.data);
-                }
-            },
-            success: function($data){
-                console.log("success() - Returned data: " + $data.success);
+        // $class.show_controls();
+        $class.manage_meta_rows();
+        $class.bind_controls();
+        jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', false );
+        jQuery( '#pmpro-seq-new-meta-reset' ).attr( 'disabled', false );
 
-                if ($data.data) {
+        $class.spinner.hide();
 
-                    console.log('Entry added to sequence & refreshing metabox content');
-                    jQuery('#pmpro_seq-configure-sequence').html($data.data);
-                    console.log("Loaded sequence meta info.");
-                } else {
-                    console.log('No HTML returned???');
-                }
+        /*
+                jQuery.ajax({
+                    url: pmpro_sequence.ajaxurl,
+                    type:'POST',
+                    timeout:10000,
+                    dataType: 'JSON',
+                    data: {
+                        action: 'pmpro_sequence_update_post_meta',
+                        pmpro_sequence_id: sequence_id,
+                        pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val(),
+                        pmpro_sequence_post_id: jQuery('#post_ID').val()
+                    },
+                    error: function($data){
+                        console.log("error() - Returned data: " + $data.success + " and " + $data.data);
+                        console.dir($data);
 
-            },
-            complete: function($data) {
+                        if ( $data.data ) {
+                            alert($data.data);
+                        }
+                    },
+                    success: function($data){
+                        console.log("success() - Returned data: " + $data.success);
 
-                $class.spinner.hide();
-                console.log("Ajax function complete...");
-                $class.show_controls();
-                $class.manage_meta_rows();
-                $class.bind_controls();
-                jQuery( '#pmpro-seq-new').hide();
-            }
-        });
-        */
+                        if ($data.data) {
+
+                            console.log('Entry added to sequence & refreshing metabox content');
+                            jQuery('#pmpro_seq-configure-sequence').html($data.data);
+                            console.log("Loaded sequence meta info.");
+                        } else {
+                            console.log('No HTML returned???');
+                        }
+
+                    },
+                    complete: function($data) {
+
+                        $class.spinner.hide();
+                        console.log("Ajax function complete...");
+                        $class.show_controls();
+                        $class.manage_meta_rows();
+                        $class.bind_controls();
+                        jQuery( '#pmpro-seq-new').hide();
+                    }
+                });
+                */
     },
     _set_labels: function() {
 
