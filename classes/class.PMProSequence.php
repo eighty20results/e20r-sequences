@@ -1498,6 +1498,12 @@
             echo $metabox;
         }
 
+        static public function all_sequences( $statuses = 'publish' ) {
+
+            $seq = new PMProSequence();
+            return $seq->get_all_sequences( $statuses );
+        }
+
         /**
          * Returns a list of all defined drip-sequences
          *
