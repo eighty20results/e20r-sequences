@@ -1114,6 +1114,14 @@
             return $retval;
         }
         */
+
+        static public function post_details( $sequence_id, $post_id ) {
+
+            $seq = new PMProSequence();
+            $seq->get_options( $sequence_id );
+
+            return $seq->find_by_id( $post_id );
+        }
         /**
          * Test whether a post belongs to a sequence & return a stdClass containing Sequence specific meta for the post ID
          *
