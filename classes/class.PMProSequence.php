@@ -2590,7 +2590,9 @@
 
         static public function sequences_for_post( $post_id ) {
 
-            return self::get_sequences_for_post( $post_id );
+            $cSequence = new PMProSequence();
+
+            return $cSequence->get_sequences_for_post( $post_id );
         }
 
         public function get_sequences_for_post( $post_id ) {
