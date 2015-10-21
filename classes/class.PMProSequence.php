@@ -2588,6 +2588,11 @@
             return $content;
         }
 
+        static public function sequences_for_post( $post_id ) {
+
+            return self::get_sequences_for_post( $post_id );
+        }
+
         public function get_sequences_for_post( $post_id ) {
 
             $this->dbg_log("get_sequences_for_post() - Check whether we've still got old post_sequences data stored. " . $this->who_called_me() );
