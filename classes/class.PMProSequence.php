@@ -1711,9 +1711,9 @@
 
         private function print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label ) {
             ob_start(); ?>
-            <tr class="select-row-input<?php echo ( $active_id == 0 ? ' new-sequence-select' : ' sequence-select' ); ?>">
+            <tr class="select-row-input sequence-select<?php // echo ( $active_id == 0 ? ' new-sequence-select' : ' sequence-select' ); ?>">
                 <td class="sequence-list-dropdown">
-                    <select class="<?php echo ( $active_id == 0 ? 'new-sequence-select' : 'pmpro_seq-memberof-sequences'); ?>" name="pmpro_seq-sequences[]">
+                    <select class="pmpro_seq-memberof-sequences<?php // echo ( $active_id == 0 ? 'new-sequence-select' : 'pmpro_seq-memberof-sequences'); ?>" name="pmpro_seq-sequences[]">
                         <option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected' : '' ); ?>><?php _e("Not managed", "pmprosequence"); ?></option><?php
                         // Loop through all of the sequences & create an option list
                         foreach ( $sequence_list as $sequence ) {
@@ -1723,12 +1723,12 @@
                     </select>
                 </td>
             </tr>
-            <tr class="delay-row-label <?php echo ( $active_id == 0 ? 'new-sequence-delay-label' : 'sequence-delay-label' ); ?>">
+            <tr class="delay-row-label sequence-delay-label<?php // echo ( $active_id == 0 ? 'new-sequence-delay-label' : 'sequence-delay-label' ); ?>">
                 <td>
                     <label for="pmpro_seq-delay_<?php echo $active_id; ?>"> <?php echo $label; ?> </label>
                 </td>
             </tr>
-            <tr class="delay-row-input <?php echo ( $active_id == 0 ? 'new-sequence-delay' : 'sequence-delay' ); ?>">
+            <tr class="delay-row-input sequence-delay<?php //echo ( $active_id == 0 ? 'new-sequence-delay' : 'sequence-delay' ); ?>">
                 <td>
                     <?php echo $inputHTML; ?>
                     <label for="remove-sequence_<?php echo $active_id; ?>" ><?php _e('Remove: ', 'pmprosequence'); ?></label>
@@ -1745,7 +1745,7 @@
 
             ob_start(); ?>
             <fieldset>
-                    <tr class="select-row-label<?php echo ( $active_id == 0 ? ' new-sequence-select-label' : ' sequence-select-label' ); ?>">
+                    <tr class="select-row-label sequence-select-label<?php // echo ( $active_id == 0 ? ' new-sequence-select-label' : ' sequence-select-label' ); ?>">
                         <td>
                             <label for="pmpro_seq-memberof-sequences"><?php _e("Managed by (drip content feed)", "pmprosequence"); ?></label>
                         </td>
@@ -6531,8 +6531,8 @@
         {
 
             $settings = $this->options;
-            $this->dbg_log('Saving settings for Sequence w/ID: ' . $sequence_id);
-            $this->dbg_log($_POST);
+            $this->dbg_log('save_settings() - Saving settings for Sequence w/ID: ' . $sequence_id);
+            // $this->dbg_log($_POST);
 
             // Check that the function was called correctly. If not, just return
             if(empty($sequence_id)) {
@@ -6944,18 +6944,19 @@
 	        global $load_pmpro_sequence_script;
             global $post;
 
-            if ( ! isset( $post->content ) ) {
+            if ( !isset( $post->post_content ) ) {
 
                 return;
             }
 
-            $this->dbg_log("Running register_user_scripts()");
+            $this->dbg_log("register_user_scripts() - Loading user script(s) & styles");
 
-            $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
+            $found_links = has_shortcode( $post->post_content, 'sequence_links');
+            $found_optin = has_shortcode( $post->post_content, 'sequence_alert');
 
-            $this->dbg_log("'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
+            $this->dbg_log("register_user_scripts() - 'sequence_links' or 'sequence_alert' shortcode present? " . ( $found_links || $found_optin ? 'Yes' : 'No') );
 
-            if ( ( true == $foundShortcode ) || ( $this->get_post_type() == 'pmpro_sequence' ) ) {
+            if ( ( true === $found_links ) || ( true === $found_optin ) || ( $this->get_post_type() == 'pmpro_sequence' ) ) {
 
 	            $load_pmpro_sequence_script = true;
 
@@ -6973,7 +6974,7 @@
             }
 	        else {
                 $load_pmpro_sequence_script = false;
-                $this->dbg_log("Didn't find the expected shortcode... Not loading client side javascript and CSS");
+                $this->dbg_log("register_user_scripts() - Didn't find the expected shortcode... Not loading client side javascript and CSS");
             }
 
         }
@@ -7095,7 +7096,7 @@
 
             // Generates paginated list of links to sequence members
             add_shortcode( 'sequence_links', array( &$this, 'sequence_links_shortcode' ) );
-            add_shortcode( 'sequence_opt_in', array( &$this, 'sequence_optin_shortcode' ) );
+            add_shortcode( 'sequence_alert', array( &$this, 'sequence_optin_shortcode' ) );
         }
 
       /**
@@ -7106,16 +7107,30 @@
         */
         public function sequence_optin_shortcode( $attributes ) {
 
-            $sequence = null;
+            $this->dbg_log("sequence_optin_shortcode() - Loading user alert opt-in");
+            $sequence_id = null;
 
             extract( shortcode_atts( array(
-                'sequence' => 0,
+                'sequence_id' => 0,
             ), $attributes ) );
 
-            if ( !$this->init( $sequence ) ) {
-                return $this->get_error_msg();
+            $this->dbg_log("sequence_optin_shortcode() - shortcode specified sequence id: {$sequence_id}");
+
+            if ( !empty( $sequence_id ) ) {
+
+                if ( !$this->init( $sequence_id ) ) {
+
+                    return $this->get_error_msg();
+                }
+
+                return $this->view_user_notice_opt_in();
             }
-            return $this->view_user_notice_opt_in();
+            else {
+
+                $this->dbg_log("sequence_optin_shortcode() - ERROR: No sequence ID specified!", DEBUG_SEQ_WARNING );
+            }
+
+            return null;
         }
 
         /**
@@ -7282,7 +7297,7 @@
 //            add_action("init", array(&$this, "register_admin_scripts") );
 
             // Add CSS & Javascript
-            add_action("wp_enqueue_scripts", array(&$this, 'register_user_scripts'));
+            add_action("wp_enqueue_scripts", array( &$this, 'register_user_scripts' ));
             add_action("wp_footer", array( &$this, 'enqueue_user_scripts') );
 
             add_action("admin_enqueue_scripts", array(&$this, 'enqueue_admin_scripts'));
