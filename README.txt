@@ -71,6 +71,13 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 3.0-beta-9 ==
+
+* Didn't always display the delay input box in the post editor metabox.
+* Make opt-in checkbox responsive
+* Didn't always display the delay input box in the post editor metabox.
+* Update change log & version numbers
+
 == 3.0-beta-8 ==
 
 * Didn't always set the optin_at timestamp correctly in the default user alert settings
