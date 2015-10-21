@@ -84,12 +84,16 @@ See ./email/README.txt for information on templates for the email alerts.
 | pmpro-sequence-after-widget | Insert stuff after the widget gets rendered | $instance['after_widget'] |
 | pmpro-sequence-import-pmpro-series | Whether to automatically try to import PMPro Series CPT entries to this plugin. Accepts a number of different return values: The string 'all' or boolean true will import all defined series. An array of Post IDs, i.e. array( 2000, 4000 ), will treat the numbers as the post id for the Series. A single number (array or otherwise) will be treated as a Post ID to import.  | __return_false() |
 
-##TODO
+##Roadmap (possible features)
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
 2. Link has_access() to WP role() and membership plugin.
 3. Define own startdate value rather than rely on PMPro.
 
 ##Known Issues
+
+* If you started with this plugin on one of the V2.x versions, you *must* deactivate and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
+* The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
+* Format for "Posts in sequence" metabox doesn't handle responsive screens well - Fix Pending
 
 ###DEBUG
  To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
@@ -106,12 +110,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0-beta-9
+###3.0-beta-10
 
-* Didn't always display the delay input box in the post editor metabox.
-* Make opt-in checkbox responsive
-* Didn't always display the delay input box in the post editor metabox.
-* Update change log & version numbers
+* Add static function to fetch all sequence IDs that a post_id is associated with - PMProSequence::sequences_for_post()
 
 ##Old releases
 ###.1
@@ -489,3 +490,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Add function to fix user alert settings
 * Add function ro remove old user alert settings
 * Fix is_after_opt_in() to support new user alert setting format
+
+###3.0-beta-9
+
+* Didn't always display the delay input box in the post editor metabox.
+* Make opt-in checkbox responsive
+* Didn't always display the delay input box in the post editor metabox.
+* Update change log & version numbers

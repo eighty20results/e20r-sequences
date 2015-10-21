@@ -51,10 +51,9 @@ See ./email/README.txt for information on templates for the email alerts.
 * Decide how and where to utilize the user notification reset
 
 == Known Issues ==
-* Test dates as delay values in V3. - Tested & Verified
-* Test conversion to V3 format for posts/sequences when using dates as delay values - Tested & Verified
-* If no posts are available and the user attempts to display the sequence, the load_sequence_post() function goes into a infinite loop. - Fixed(?)
-* Format for "Posts in sequence" metabox doesn't handle responsive screens well
+* If you started with this plugin on one of the V2.x versions, you *must* deactivate and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
+* The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
+* Format for "Posts in sequence" metabox doesn't handle responsive screens well - Fix Pending
 
 == DEBUG ==
 
@@ -70,6 +69,10 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 3.0-beta-10 ==
+
+* Add static function to fetch all sequence IDs that a post_id is associated with - PMProSequence::sequences_for_post()
 
 == 3.0-beta-9 ==
 

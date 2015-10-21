@@ -1,4 +1,1 @@
-Didn't always display the delay input box in the post editor metabox.
-Make opt-in checkbox responsive
-Didn't always display the delay input box in the post editor metabox.
-Update change log & version numbers
+Add static function to fetch all sequence IDs that a post_id is associated with - PMProSequence::sequences_for_post()
