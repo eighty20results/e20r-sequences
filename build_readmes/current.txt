@@ -1,4 +1,24 @@
-Wouldn't always honor the refresh value when loading the sequence
-Refactor conversion for user's new-post notice settings
-Clean up erroneous notification settings for user
-Didn't save the "Allow email notification" setting
+Didn't always set the optin_at timestamp correctly in the default user alert settings
+Removed redundant option management
+Don't show a checkmark if the user has opted-out of receiving alert notices/emails
+Fixed typo in send_notices variable for the opt-in callback
+Prevent user from being overwhelmed by old alert messages when opting back in
+Didn't always handle situations where the alert notice timestamp for a user was reset
+Use post->id and the normalized delay value for the notified flag in user alert settings
+Allowed saving of user alert settings when there was no sequence ID specified
+Force load (refresh cache) of sequence members on start of convert_alert_setting()
+Fix fix_user_alert_settings() so it correctly identified valid & invalid alert notices.
+Refactor load of metadata version matrix
+Add check of validity of post cache
+Use cached data to locate specific post ID in find_by_id (faster loop rather than DB lookup)
+Add debug for load_sequence_post() variables
+Refactor load_sequence_post()
+Improve search for delay values (correctly identify date or numeric format)
+Load options rather than posts & options in load_sequence_meta()
+Refactor get_sequences_for_post()
+Remove impossible option load in sort_posts_by_delay()
+Refactor function order in class
+Use normalized delay values in convert_alert_setting()
+Add function to fix user alert settings
+Add function ro remove old user alert settings
+Fix is_after_opt_in() to support new user alert setting format
