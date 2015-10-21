@@ -471,9 +471,12 @@
             $found = array();
 
             if ( !is_null( $this->pmpro_sequence_user_id )  && ( $this->pmpro_sequence_user_id != $current_user->ID ) ) {
+
+                $this->dbg_log("load_sequence_post() - Using user id from pmpro_sequence_user_id: {$this->pmpro_sequence_user_id}");
                 $user_id = $this->pmpro_sequence_user_id;
             }
             else {
+                $this->dbg_log("load_sequence_post() - Using user id current_user");
                 $user_id = $current_user->ID;
             }
 
@@ -524,7 +527,8 @@
 
             if ( is_null( $post_id ) ) {
 
-                $this->dbg_log("load_sequence_post() - No post ID specified so we'll load all posts");
+                $this->dbg_log("load_sequence_post() - No post ID specified. Loading posts....");
+
                 $args = array(
                     'post_type' => apply_filters( 'pmpro-sequence-managed-post-types', array( 'post', 'page' ) ),
                     'post_status' => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
@@ -543,7 +547,8 @@
             }
             else {
 
-                $this->dbg_log("load_sequence_post() - Post ID specified so we'll only load for post {$post_id}");
+                $this->dbg_log("load_sequence_post() - Post ID specified so we'll only search for post #{$post_id}");
+
                 $args = array(
                     'post_type' => apply_filters( 'pmpro-sequence-managed-post-types', array( 'post', 'page' ) ),
                     'post_status' => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
@@ -3065,10 +3070,20 @@
 
         public function save_user_notice_settings( $user_id, $settings, $sequence_id = null ) {
 
-            $this->dbg_log("save_user_notice_settings() - Attempting to save settings for {$user_id}");
-            $this->dbg_log( $settings );
+            $this->dbg_log("save_user_notice_settings() - Attempting to save settings for {$user_id} and sequence {$sequence_id}");
+            // $this->dbg_log( $settings );
 
-            // $old_sequenceId = $this->sequence_id;
+            if ( is_null( $sequence_id ) && ( empty( $this->sequence_id ) ) ) {
+
+                $this->dbg_log("save_user_notice_settings() - No sequence ID specified. Exiting!", DEBUG_SEQ_WARNING );
+                return false;
+            }
+
+            if ( is_null( $sequence_id ) && ( $this->sequence_id != 0 ) ) {
+
+                $this->dbg_log("save_user_notice_settings() - No sequence ID specified. Using {$this->sequence_id} ");
+                $sequence_id = $this->sequence_id;
+            }
 
             $this->dbg_log("save_user_notice_settings() - Save V3 style user notification opt-in settings to usermeta for {$user_id} and sequence {$sequence_id}");
 
@@ -3078,7 +3093,7 @@
 
             if ( empty($test) ) {
 
-                $this->dbg_log("save_user_notice_settings() - Error saving V3 style user notification settings for user with ID {$user_id}", DEBUG_SEQ_WARNING );
+                $this->dbg_log("save_user_notice_settings() - Error saving V3 style user notification settings for ({$sequence_id}) user ID: {$user_id}", DEBUG_SEQ_WARNING );
                 return false;
             }
 
@@ -4604,31 +4619,71 @@
                 }
             }
 
+            $compare = $this->load_sequence_post( null, $member_days, null, '<=', null, true );
             $v3 = $this->fix_user_alert_settings( $v3, $compare, $member_days );
+
             return $v3;
         }
 
-        private function fix_user_alert_settings( $v3, $compare, $member_days ) {
+        private function fix_user_alert_settings( $v3, $post_list, $member_days ) {
 
             $this->dbg_log("fix_user_alert_settings() - Checking whether to convert the post notification flags for {$v3->id}");
-            $this->dbg_log("fix_user_alert_settings() - Comparison: " . count( $compare ) . " vs alerts: " . count( $v3->posts ) );
 
-            if ( ( count( $v3->posts ) < count( $compare ) ) || ( false === strpos( $v3->posts[0], '_' ) ) )  {
+            $need_to_fix = false;
 
-                $this->dbg_log("fix_user_alert_settings() - The number of posts with a delay value less than {$member_days} is: " . count( $v3->posts ));
+            foreach( $v3->posts as $id ) {
 
-                foreach( $compare as $p ) {
+                if ( false === strpos( $id, '_' ) ) {
 
-                    $flag_value = "{$p->id}_" . $this->normalize_delay( $p->delay );
+                    $this->dbg_log("fix_user_alert_settings() - Should to fix Post/Delay id {$id}");
+                    $need_to_fix = true;
+                }
+            }
 
-                    if ( !in_array( $flag_value, $v3->posts) ) {
+            if ( count( $v3->posts ) < count( $post_list ) )  {
 
-                        $this->dbg_log("fix_user_alert_settings() - Adding as 'already alerted': {$flag_value}");
+                $this->dbg_log("fix_user_alert_settings() - Not enough alert IDs (" . count( $v3->posts ) . ") as compared to the posts in the sequence (". count( $post_list ). ")");
+                $need_to_fix = true;
+            }
+
+            if ( true === $need_to_fix ) {
+
+                $this->dbg_log("fix_user_alert_settings() - The number of posts with a delay value less than {$member_days} is: " . count( $post_list ));
+
+                if ( !empty( $v3->posts ) ) {
+
+                    foreach( $post_list as $p ) {
+
+                        $flag_value = "{$p->id}_" . $this->normalize_delay( $p->delay );
+
+                        foreach( $v3->posts as $k => $id ) {
+
+                            // Do we have a post ID as the identifier (and not a postID_delay flag)
+                            if ( $p->id == $id ) {
+
+                                $this->dbg_log("fix_user_alert_settings() - Replacing: {$p->id} -> {$flag_value}");
+                                $v3->posts[$k] = $flag_value;
+                            }
+                            elseif ( !in_array( $flag_value, $v3->posts) ) {
+
+                                $this->dbg_log("fix_user_alert_settings() - Should be in array, but isn't. Adding as 'already alerted': {$flag_value}");
+                                $v3->posts[] = $flag_value;
+                            }
+                        }
+                    }
+                }
+                elseif ( empty($v3->posts ) && !empty( $post_list ) ) {
+
+                    foreach( $post_list as $p ) {
+
+                        $flag_value = "{$p->id}_" . $this->normalize_delay( $p->delay );
+
+                        $this->dbg_log("fix_user_alert_settings() - Should be in array, but isn't. Adding as 'already alerted': {$flag_value}");
                         $v3->posts[] = $flag_value;
                     }
-                 }
+                }
 
-                 $v3->last_notice_sent = current_time('timestamp');
+                $v3->last_notice_sent = current_time('timestamp');
             }
 
             return $v3;
@@ -4647,7 +4702,7 @@
 
             $sequence_list = new WP_Query( $query );
 
-            $this->dbg_log( "convert_user_notification() - Found " . count($sequence_list) . " sequences to process for alert conversion" );
+            $this->dbg_log( "convert_user_notifications() - Found " . count($sequence_list) . " sequences to process for alert conversion" );
 
             while ( $sequence_list->have_posts() ) {
 
@@ -4655,19 +4710,19 @@
                 $sequence_id = get_the_ID();
 
                 $this->get_options( $sequence_id );
-                // $this->load_sequence_post();
 
                 $users = $this->get_users_of_sequence();
 
                 foreach ( $users as $user ) {
 
+                    $this->pmpro_sequence_user_id = $user->user_id;
                     $userSettings = get_user_meta( $user->user_id, "pmpro_sequence_id_{$sequence_id}_notices", true);
 
                     // No V3 formatted settings found. Will convert from V2 (if available)
                     if ( empty( $userSettings ) || ( !isset( $userSettings->send_notices ) ) ) {
 
-                        $this->dbg_log("convert_user_notification() - Converting notification settings for user with ID: {$user->user_id}" );
-                        $this->dbg_log("convert_user_notification() - Loading V2 meta: {$wpdb->prefix}pmpro_sequence_notices for user ID: {$user->user_id}");
+                        $this->dbg_log("convert_user_notifications() - Converting notification settings for user with ID: {$user->user_id}" );
+                        $this->dbg_log("convert_user_notifications() - Loading V2 meta: {$wpdb->prefix}pmpro_sequence_notices for user ID: {$user->user_id}");
 
                         $v2 = get_user_meta( $user->user_id, "{$wpdb->prefix}pmpro_sequence_notices", true );
 
@@ -4675,10 +4730,10 @@
 
                         if ( !empty( $v2 ) ) {
 
-                            $this->dbg_log("convert_user_notification() - V2 settings found. They are: ");
+                            $this->dbg_log("convert_user_notifications() - V2 settings found. They are: ");
                             $this->dbg_log( $v2 );
 
-                            $this->dbg_log("convert_user_notification() - Found old-style notification settings for user {$user->user_id}. Attempting to convert", DEBUG_SEQ_WARNING );
+                            $this->dbg_log("convert_user_notifications() - Found old-style notification settings for user {$user->user_id}. Attempting to convert", DEBUG_SEQ_WARNING );
 
                             // Loop through the old-style array of sequence IDs
                             $count = 1;
@@ -4693,7 +4748,7 @@
                                 if ( isset( $userSettings->send_notices ) ) {
 
                                     $this->save_user_notice_settings( $user->user_id, $userSettings, $sId );
-                                    $this->dbg_log("convert_user_notification() - Removing converted opt-in settings from the database" );
+                                    $this->dbg_log("convert_user_notifications() - Removing converted opt-in settings from the database" );
                                     delete_user_meta( $user->user_id, $wpdb->prefix . "pmpro_sequence_notices" );
                                 }
                             }
@@ -4707,30 +4762,7 @@
 
                         $this->dbg_log("convert_user_notifications() - V3 Alert settings for user {$user->user_id}");
                         $this->dbg_log( $userSettings );
-/*
-                        if ( ( is_array( $userSettings->sequence ) && isset( $userSettings->sequence[$this->sequence_id] ) ) ) {
 
-                            $this->dbg_log("convert_user_notification() - Notification settings exist for user {$user->user_id} and sequence {$this->sequence_id} has not been converted to new format");
-
-                            $notified = $userSettings->posts;
-
-                            foreach( $notified as $key => $post_id ) {
-
-                                $this->dbg_log("convert_user_notification() - Load post data for {$key}/{$post_id} in sequence {$this->sequence_id}");
-
-                                $post = $this->find_by_id( $post_id );
-
-                                if (( false !== $post ) && ( false == strpos( $post_id, '_' ) ) ) {
-
-                                    // $data = $this->posts[$pKey];
-                                    $this->dbg_log("convert_user_notification() - Changing notifiedPosts data from {$post_id} to '{$post->id}_{$post->delay}'");
-                                    $userSettings->posts[$key] = "{$post->id}_{$post->delay}";
-                                }
-                                else {
-                                    $this->dbg_log("convert_user_notification() - Couldn't find sequence details for post {$post->id}");
-                                }
-                            }
-*/
                         $userSettings->completed = true;
                         $this->dbg_log( "convert_user_notification() - Saving new notification settings for user with ID: {$user->user_id}" );
 
@@ -4738,21 +4770,18 @@
 
                             $this->dbg_log("convert_user_notification() - Unable to save new notification settings for user with ID {$user->user_id}", DEBUG_SEQ_WARNING );
                         }
-/*
-                            // update_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $userSettings );
-                        }
-*/
                     }
                     else {
                         $this->dbg_log("convert_user_notification() - No alert settings to convert for {$user->user_id}");
                         $this->dbg_log("convert_user_notification() - Checking existing V3 settings...");
 
                         $member_days = $this->get_membership_days( $user->user_id );
+
                         $old = $this->posts;
 
-                        $compare = $this->load_sequence_post( $sId, $member_days, null, '<=', null, true );
+                        $compare = $this->load_sequence_post( $sequence_id, $member_days, null, '<=', null, true );
                         $userSettings = $this->fix_user_alert_settings( $userSettings, $compare, $member_days );
-                        $this->save_user_notice_settings( $user->user_id, $userSettings, $sId );
+                        $this->save_user_notice_settings( $user->user_id, $userSettings, $sequence_id );
 
                         $this->posts = $old;
                     }
