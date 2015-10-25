@@ -3224,8 +3224,8 @@
                             <input type="hidden" name="hidden_pmpro_seq_uid" id="hidden_pmpro_seq_uid" value="<?php echo $current_user->ID; ?>" >
                             <?php wp_nonce_field('pmpro-sequence-user-optin', 'pmpro_sequence_optin_nonce'); ?>
                             <span>
-                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
-                                <label for="pmpro-seq-useroptin"><?php _e('Yes, please send me email alerts!', 'pmprosequence'); ?></label>
+                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
+                                <label for="pmpro-seq-useroptin"><?php _e('Yes, please send me email reminders!', 'pmprosequence'); ?></label>
                             </span>
                         </form>
                     </div>
