@@ -435,20 +435,35 @@
 
             $this->dbg_log("find_by_id() - Locating post {$post_id}.");
 
-            $posts = array();
+            $found = array();
 
-            if ( false === $this->is_cache_valid() ) {
+            $valid_cache = $this->is_cache_valid();
+            if ( false ===  $valid_cache) {
 
-                $this->dbg_log("find_by_id() - Cache is invalid. Using load_sequence_post to grab the array of posts.");
-                $this->load_sequence_post();
+                $this->dbg_log("find_by_id() - Cache is invalid. Using load_sequence_post to grab the post(s) by ID: {$post_id}.");
+                $posts = $this->load_sequence_post( null, null, $post_id );
+
+                if ( empty( $posts ) ) {
+
+                    $this->dbg_log("find_by_id() - Couldn't find post based on post ID of {$post_id}. Now loading all posts in sequence");
+                    $posts = $this->load_sequence_post();
+                }
+                else {
+                    $this->dbg_log("find_by_id() - Returned " . count( $posts ) . " posts from load_sequnce_post() function");
+                }
+            }
+            else {
+
+                $this->dbg_log("find_by_id() - Have valid cache. Using cached post list to locate post with ID {$post_id}");
+                $posts = $this->posts;
             }
 
-            foreach( $this->posts as $post ) {
+            foreach( $posts as $p ) {
 
-                if ( $post->id == $post_id ) {
+                if ( $p->id == $post_id ) {
 
-                    $this->dbg_log("find_by_id() - Found post # {$post_id}, delay: {$post->delay}");
-                    $posts[] = $post;
+                    $this->dbg_log("find_by_id() - Found post # {$post_id}, delay: {$p->delay}");
+                    $found[] = $p;
                 }
             }
 
@@ -476,7 +491,7 @@
                 $user_id = $this->pmpro_sequence_user_id;
             }
             else {
-                $this->dbg_log("load_sequence_post() - Using user id current_user");
+                $this->dbg_log("load_sequence_post() - Using user id (from current_user): {$current_user->ID}");
                 $user_id = $current_user->ID;
             }
 
@@ -551,7 +566,7 @@
 
                 $args = array(
                     'post_type' => apply_filters( 'pmpro-sequence-managed-post-types', array( 'post', 'page' ) ),
-                    'post_status' => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
+                    'post_status' => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'draft', 'private' ) ),
                     'posts_per_page' => -1,
                     'order_by' => $order_by,
                     'p' => $post_id,
@@ -613,6 +628,8 @@
             wp_reset_postdata();
 
             foreach( $post_list as $k => $sPost ) {
+
+                $this->dbg_log("load_sequence_post() - Loading metadata for post #: {$sPost->ID}");
 
                 $id = $sPost->ID;
 
@@ -1375,7 +1392,7 @@
 
 					$delays = get_post_meta( $post->id, "_pmpro_sequence_{$this->sequence_id}_post_delay" );
 
-                    $this->dbg_log("remove_post() - Delay metav_alues: ");
+                    $this->dbg_log("remove_post() - Delay meta_values: ");
                     $this->dbg_log( $delays );
 
 					if ( 1 == count( $delays ) ) {
@@ -1412,7 +1429,9 @@
 					    return false;
 					}
 
-                    $this->dbg_log("remove_post() - Removing entry #{$i} from posts array");
+                    $this->dbg_log("remove_post() - Removing entry #{$i} from posts array: ");
+                    $this->dbg_log($this->posts[$i]);
+
 					unset( $this->posts[ $i ] );
 				}
 				/* elseif ( ( $post_id == $post->id ) && ( $delay != $post->delay ) ) {
@@ -1587,7 +1606,7 @@
                     $belongs_to[] = $seq_id;
                 }
             }
-            elseif ( $seq_id != 0 ) {
+            elseif ( empty( $belongs_to ) && ( $seq_id != 0 ) ) {
 
                 $this->dbg_log("load_sequence_meta() - This post has never belonged to a sequence. Adding it to one now");
                 $belongs_to = array( $seq_id );
@@ -6348,7 +6367,7 @@
                 $this->set_error_msg( __( 'Incorrect privileges to remove posts from this sequence', 'pmprosequence' ) );
             }
 
-            $result = $this->load_sequence_meta( $post_id );
+            $result = $this->load_sequence_meta( $post_id, $sequence_id );
 
             if ( ! empty( $result ) && is_null( $this->get_error_msg() ) && ( $success ) ) {
 
