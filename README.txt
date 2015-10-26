@@ -70,6 +70,18 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 3.0-beta-11 ==
+
+* Update version number and change log
+* find_by_id() would sometimes load unneeded posts (and not honor cache)
+* When loading a specific post_id for the sequence, don't ignore drafts (May cause duplication in DB)
+* Fix typo in debug output for remove_post()
+* Log the specific post being removed from the post list in remove_post()
+* Only overwrite belongs_to array if the array is empty first
+* Include sequence ID when loading the sequence specific meta data for $post_id in rm_sequence_from_post() callback function
+* Update translations
+* Update text in email opt-in checkbox
+
 == 3.0-beta-10 ==
 
 * Add all_sequences() static function
@@ -82,7 +94,6 @@ Or you can email support@eighty20results.zendesk.com
 
 * Didn't always display the delay input box in the post editor metabox.
 * Make opt-in checkbox responsive
-* Didn't always display the delay input box in the post editor metabox.
 * Update change log & version numbers
 
 == 3.0-beta-8 ==
