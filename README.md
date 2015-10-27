@@ -88,6 +88,7 @@ See ./email/README.txt for information on templates for the email alerts.
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
 2. Link has_access() to WP role() and membership plugin.
 3. Define own startdate value rather than rely on PMPro.
+4. Must rename plug-in to conform with Wordpress.org naming requirements.
 
 ##Known Issues
 
@@ -110,17 +111,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0-beta-11
+###3.0-beta-12
 
-* Update version number and change log
-* find_by_id() would sometimes load unneeded posts (and not honor cache)
-* When loading a specific post_id for the sequence, don't ignore drafts (May cause duplication in DB)
-* Fix typo in debug output for remove_post()
-* Log the specific post being removed from the post list in remove_post()
-* Only overwrite belongs_to array if the array is empty first
-* Include sequence ID when loading the sequence specific meta data for $post_id in rm_sequence_from_post() callback function
-* Update translations
-* Update text in email opt-in checkbox
+* Load Font Awesome fonts as part of script/style load.
+* Update path to Font Awesome fonts (CDN)
 
 ##Old releases
 ###.1
@@ -513,3 +507,15 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Update change log & version numbers
 * Allow calling PMProSequence::sequences_for_post() to return array of sequence IDs for the post_id specified
 * Add static function to fetch all sequence IDs that a post_id is associated with
+
+###3.0-beta-11
+
+* Update version number and change log
+* find_by_id() would sometimes load unneeded posts (and not honor cache)
+* When loading a specific post_id for the sequence, don't ignore drafts (May cause duplication in DB)
+* Fix typo in debug output for remove_post()
+* Log the specific post being removed from the post list in remove_post()
+* Only overwrite belongs_to array if the array is empty first
+* Include sequence ID when loading the sequence specific meta data for $post_id in rm_sequence_from_post() callback function
+* Update translations
+* Update text in email opt-in checkbox

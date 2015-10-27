@@ -70,6 +70,11 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 3.0-beta-12 ==
+
+* Load Font Awesome fonts as part of script/style load.
+* Update path to Font Awesome fonts (CDN)
+
 == 3.0-beta-11 ==
 
 * Update version number and change log
