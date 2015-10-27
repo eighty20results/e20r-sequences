@@ -1536,10 +1536,12 @@
                 'post_status' => $statuses,
             );
 
+            /* Fetch all Sequence posts - NOTE: Using WP_Query and not the sequence specific get_posts() function! */
+            $all_posts = get_posts( $query );
+
             wp_reset_query();
 
-            /* Fetch all Sequence posts - NOTE: Using WP_Query and not the sequence specific get_posts() function! */
-            return get_posts( $query );
+            return $all_posts;
         }
 
         /**
