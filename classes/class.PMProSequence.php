@@ -542,7 +542,7 @@
 
             if ( ( $status == 'default') && ( !is_null( $post_id ) ) ) {
 
-                apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'draft', 'private' ) );
+                $statuses = apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'draft', 'private' ) );
             }
             elseif ( $status == 'default' ) {
 
