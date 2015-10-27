@@ -6967,7 +6967,7 @@
             <style>
                 @font-face {
                     font-family: FontAwesome;
-                    src: url(https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css);
+                    src: url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css);
                 }
 
                 #menu-posts-pmpro_sequence .menu-top  div.wp-menu-image:before {
