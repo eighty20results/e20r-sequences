@@ -470,7 +470,7 @@
             return $posts;
         }
 
-        public function load_sequence_post( $sequence_id = null, $delay = null, $post_id = null, $comparison = '=', $pagesize = null, $force = false ) {
+        public function load_sequence_post( $sequence_id = null, $delay = null, $post_id = null, $comparison = '=', $pagesize = null, $force = false, $status = 'default' ) {
 
             $this->dbg_log("load_sequence_post() - Sequence ID var: " . ( empty($sequence_id) ? 'Not defined' : $sequence_id ) );
             $this->dbg_log("load_sequence_post() - Delay var: " . ( empty($delay) ? 'Not defined' : $delay ) );
@@ -540,13 +540,26 @@
             $order_by = $this->options->delayType == 'byDays' ? 'meta_value_num' : 'meta_value';
             $order = $this->options->sortOrder == SORT_DESC ? 'DESC' : 'ASC';
 
+            if ( ( $status == 'default') && ( !is_null( $post_id ) ) ) {
+
+                apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'draft', 'private' ) );
+            }
+            elseif ( $status == 'default' ) {
+
+                $statuses = apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) );
+            }
+            else {
+
+                $statuses = apply_filters( 'pmpro-sequence-allowed-post-statuses', $status );
+            }
+
             if ( is_null( $post_id ) ) {
 
                 $this->dbg_log("load_sequence_post() - No post ID specified. Loading posts....");
 
                 $args = array(
                     'post_type' => apply_filters( 'pmpro-sequence-managed-post-types', array( 'post', 'page' ) ),
-                    'post_status' => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
+                    'post_status' => $statuses,
                     'posts_per_page' => -1,
                     'orderby' => $order_by,
                     'order' => $order,
@@ -566,7 +579,7 @@
 
                 $args = array(
                     'post_type' => apply_filters( 'pmpro-sequence-managed-post-types', array( 'post', 'page' ) ),
-                    'post_status' => apply_filters( 'pmpro-sequence-allowed-post-statuses', array( 'publish', 'future', 'draft', 'private' ) ),
+                    'post_status' => $statuses,
                     'posts_per_page' => -1,
                     'order_by' => $order_by,
                     'p' => $post_id,
@@ -1855,7 +1868,7 @@
 			// global $wpdb;
 
 			//show posts
-			$this->load_sequence_post();
+			$this->load_sequence_post( null, null, null, '=', null, false, 'any' );
 			$all_posts = $this->get_posts_from_db();
 
             // $this->sort_by_delay();
@@ -1868,7 +1881,7 @@
 			<?php // if(!empty($this->get_error_msg() )) { ?>
 				<?php // $this->display_error(); ?>
 			<?php //} ?>
-			<table id="pmpro_sequencetable" class="pmpro_sequence_postscroll wp-list-table widefat fixed">
+			<table id="pmpro_sequencetable" class="pmpro_sequence_postscroll wp-list-table widefat">
 			<thead>
 				<th><?php _e('Order', 'pmprosequence' ); ?></label></th>
 				<th width="50%"><?php _e('Title', 'pmprosequence'); ?></th>
@@ -1899,7 +1912,7 @@
 				?>
 					<tr>
 						<td class="pmpro_sequence_tblNumber"><?php echo $count; ?>.</td>
-						<td class="pmpro_sequence_tblPostname"><?php echo get_the_title($post->id) . " (ID: {$post->id})"; ?></td>
+						<td class="pmpro_sequence_tblPostname"><?php echo ( get_post_status( $post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", "pmprosequence" ) ) : null ) . get_the_title($post->id) . " " . sprintf( __("(ID: %d)", "pmprosequence" ), $post->id); ?></td>
 						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay; ?></td>
 						<td><?php
                             if ( true == $this->options->allowRepeatPosts ) { ?>
