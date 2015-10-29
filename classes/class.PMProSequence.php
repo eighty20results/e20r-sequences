@@ -438,6 +438,7 @@
             $found = array();
 
             $valid_cache = $this->is_cache_valid();
+
             if ( false ===  $valid_cache) {
 
                 $this->dbg_log("find_by_id() - Cache is invalid. Using load_sequence_post to grab the post(s) by ID: {$post_id}.");
@@ -467,7 +468,7 @@
                 }
             }
 
-            return $posts;
+            return $found;
         }
 
         public function load_sequence_post( $sequence_id = null, $delay = null, $post_id = null, $comparison = '=', $pagesize = null, $force = false, $status = 'default' ) {
