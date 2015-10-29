@@ -111,10 +111,14 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0-beta-12
+###3.0-beta-13
 
-* Load Font Awesome fonts as part of script/style load.
-* Update path to Font Awesome fonts (CDN)
+* Would sometimes return all posts in the sequence while  deleting one post.
+* Fix undefined variable warning in load_sequence_post()
+* Didn't include sequence members (posts) in DRAFT state when displaying list of sequences in metabox(es)
+* Can specify post_status values to include in load_sequence_post() (array() or string)
+* Prefix any post in draft status with 'DRAFT' (or translated equivalent) in metabox list of posts for sequence
+* Run wp_reset_query() before returning all sequences in get_all_sequences().
 
 ##Old releases
 ###.1
@@ -519,3 +523,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Include sequence ID when loading the sequence specific meta data for $post_id in rm_sequence_from_post() callback function
 * Update translations
 * Update text in email opt-in checkbox
+
+###3.0-beta-12
+
+* Load Font Awesome fonts as part of script/style load.
+* Update path to Font Awesome fonts (CDN)
