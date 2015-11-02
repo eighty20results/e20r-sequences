@@ -459,15 +459,17 @@
                 $posts = $this->posts;
             }
 
-            foreach( $posts as $p ) {
+            if ( !empty( $posts ) ) {
 
-                if ( $p->id == $post_id ) {
+                foreach( $posts as $p ) {
 
-                    $this->dbg_log("find_by_id() - Found post # {$post_id}, delay: {$p->delay}");
-                    $found[] = $p;
+                    if ( $p->id == $post_id ) {
+
+                        $this->dbg_log("find_by_id() - Found post # {$post_id}, delay: {$p->delay}");
+                        $found[] = $p;
+                    }
                 }
             }
-
             return $found;
         }
 
