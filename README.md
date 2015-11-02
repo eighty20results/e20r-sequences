@@ -111,14 +111,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0-beta-13
+###3.0.1
 
-* Would sometimes return all posts in the sequence while  deleting one post.
-* Fix undefined variable warning in load_sequence_post()
-* Didn't include sequence members (posts) in DRAFT state when displaying list of sequences in metabox(es)
-* Can specify post_status values to include in load_sequence_post() (array() or string)
-* Prefix any post in draft status with 'DRAFT' (or translated equivalent) in metabox list of posts for sequence
-* Run wp_reset_query() before returning all sequences in get_all_sequences().
+* Would sometimes issue warning in find_by_id()
+* Updated to direct user to dashboard
+* v3.0.1
 
 ##Old releases
 ###.1
@@ -528,3 +525,13 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 * Load Font Awesome fonts as part of script/style load.
 * Update path to Font Awesome fonts (CDN)
+
+###3.0-beta-13
+
+* Would sometimes return all posts in the sequence while  deleting one post.
+* Fix undefined variable warning in load_sequence_post()
+* Didn't include sequence members (posts) in DRAFT state when displaying list of sequences in metabox(es)
+* Can specify post_status values to include in load_sequence_post() (array() or string)
+* Prefix any post in draft status with 'DRAFT' (or translated equivalent) in metabox list of posts for sequence
+* Run wp_reset_query() before returning all sequences in get_all_sequences().
+

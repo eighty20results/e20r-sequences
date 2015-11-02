@@ -70,6 +70,12 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 3.0.1 ==
+
+* Would sometimes issue warning in find_by_id()
+* Updated to direct user to dashboard
+* v3.0.1
+
 == 3.0-beta-13 ==
 
 * Would sometimes return all posts in the sequence while  deleting one post.
