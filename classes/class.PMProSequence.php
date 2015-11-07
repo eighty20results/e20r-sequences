@@ -436,6 +436,7 @@
             $this->dbg_log("find_by_id() - Locating post {$post_id}.");
 
             $found = array();
+            $posts = array();
 
             $valid_cache = $this->is_cache_valid();
 
@@ -459,17 +460,19 @@
                 $posts = $this->posts;
             }
 
-            if ( !empty( $posts ) ) {
+            if ( empty( $posts )) {
+                return null;
+            }
 
-                foreach( $posts as $p ) {
+            foreach( $posts as $p ) {
 
-                    if ( $p->id == $post_id ) {
+                if ( $p->id == $post_id ) {
 
-                        $this->dbg_log("find_by_id() - Found post # {$post_id}, delay: {$p->delay}");
-                        $found[] = $p;
-                    }
+                    $this->dbg_log("find_by_id() - Including post # {$post_id}, delay: {$p->delay}");
+                    $found[] = $p;
                 }
             }
+
             return $found;
         }
 
@@ -4160,7 +4163,7 @@
                 return true; //user has one of the all access levels
             }
 
-            if ( is_admin() && ( false == $this->is_cron ) ) {
+            if ( is_admin() && ( false == $this->is_cron ) && !((defined('DOING_AJAX') && DOING_AJAX)) ) {
                 $this->dbg_log("has_post_access() - User is in admin panel. Allow access to the post");
                 return true;
             }
@@ -5244,9 +5247,11 @@
             $emails = array();
             $post_links = '';
             $excerpt = '';
+            $ga_tracking = '';
 
 
             // Add data/img entry for google analytics.
+/*
             if ( isset( $this->options->track_google_analytics ) &&
                 ( true === $this->options->track_google_analytics ) ) {
 
@@ -5269,7 +5274,7 @@
                     $ga_tracking = '<img src="' . $url . '" >';
                 }
             }
-
+*/
             if ( PMPRO_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
 
                 $post_link_prefix = "<ul>\n";
@@ -5304,7 +5309,7 @@
 
                     if ( !empty( $post->post_excerpt ) ) {
 
-                        $this->dbg_log("Adding the post excerpt to email notice");
+                        $this->dbg_log("send_notice() - Adding the post excerpt to email notice");
 
                         if ( empty( $this->options->excerpt_intro ) ) {
                             $this->options->excerpt_intro = __('A summary of the post:', 'pmprosequence');
@@ -5318,7 +5323,7 @@
 
                     if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
 
-                        $this->dbg_log('ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
+                        $this->dbg_log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
                         return false;
                     }
 
@@ -5365,7 +5370,7 @@
 
                 if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
 
-                    $this->dbg_log('ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
+                    $this->dbg_log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
                     return false;
                 }
 
