@@ -168,15 +168,13 @@ input#pmpro_sequence_excerpt {
     width: 170px;
 }
 .pmpro_sequence_useroptin {
-    height: 30px;
     border:1px solid #c5c5c5;
     display: inline-block;
-    width: 80%;
+    width: 100%;
     min-width: 250px;
     text-align: center;
     margin: 0 auto;
     padding-top: 5px;
-    /* vertical-align: baseline; */
 }
 #pmpro-seq-hr {
     width: 90%;
