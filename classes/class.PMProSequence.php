@@ -93,7 +93,7 @@
             }
 
             if (( $id == null ) && ( $this->sequence_id == 0 ) ) {
-                throw new Exception( __('No sequence ID specified.', 'pmprosequence') );
+                throw new Exception( __('No sequence ID specified.', "pmprosequence") );
             }
 
             return false;
@@ -268,11 +268,11 @@
             $settings->noticeSendAs = PMPRO_SEQ_SEND_AS_SINGLE; // Send the alert notice as one notice per message.
             $settings->noticeTime = '00:00'; // At Midnight (server TZ)
             $settings->noticeTimestamp = current_time('timestamp'); // The current time (in UTC)
-            $settings->excerpt_intro = __('A summary of the post follows below:', 'pmprosequence');
+            $settings->excerpt_intro = __('A summary of the post follows below:', "pmprosequence");
             $settings->replyto = pmpro_getOption("from_email");
             $settings->fromname = pmpro_getOption("from_name");
-            $settings->subject = __('New Content ', 'pmprosequence');
-            $settings->dateformat = __('m-d-Y', 'pmprosequence'); // Using American MM-DD-YYYY format.
+            $settings->subject = __('New Content ', "pmprosequence");
+            $settings->dateformat = __('m-d-Y', "pmprosequence"); // Using American MM-DD-YYYY format.
             $settings->track_google_analytics = false; // Whether to use Google analytics to track message open operations or not
             $settings->ga_tid = null; // The Google Analytics ID to use (TID)
 
@@ -955,7 +955,7 @@
             if ( $this->is_present( $post_id, $delay ) ) {
 
                 $this->dbg_log("add_post_to_sequence() - Post {$post_id} with delay {$delay} is already present in sequence {$sequence_id}");
-                $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', 'pmprosequence' ) );
+                $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', "pmprosequence" ) );
                 return true;
             }
 
@@ -1192,13 +1192,13 @@
 	        if (! $this->is_valid_delay($delay) )
 	        {
 	            $this->dbg_log('add_post(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
-	            $this->set_error_msg( sprintf(__('Invalid delay value - %s', 'pmprosequence'), ( empty($delay) ? 'blank' : $delay ) ) );
+	            $this->set_error_msg( sprintf(__('Invalid delay value - %s', "pmprosequence"), ( empty($delay) ? 'blank' : $delay ) ) );
 	            return false;
 	        }
 
 			if(empty($post_id) || !isset($delay))
 			{
-				$this->set_error_msg( __("Please enter a value for post and delay", 'pmprosequence') );
+				$this->set_error_msg( __("Please enter a value for post and delay", "pmprosequence") );
 	            $this->dbg_log('add_post(): No Post ID or delay specified');
 				return false;
 			}
@@ -1207,7 +1207,7 @@
 
 			if ( $post = get_post($post_id) === null ) {
 
-                $this->set_error_msg( __("A post with that id does not exist", 'pmprosequence') );
+                $this->set_error_msg( __("A post with that id does not exist", "pmprosequence") );
                 $this->dbg_log('add_post(): No Post with ' . $post_id . ' found');
 
                 return false;
@@ -1304,13 +1304,13 @@
 	        if (! $this->is_valid_delay($delay) )
 	        {
 	            $this->dbg_log('updatePost(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
-	            $this->set_error_msg( sprintf(__('Invalid delay value - %s', 'pmprosequence'), ( empty($delay) ? 'blank' : $delay ) ) );
+	            $this->set_error_msg( sprintf(__('Invalid delay value - %s', "pmprosequence"), ( empty($delay) ? 'blank' : $delay ) ) );
 	            return false;
 	        }
 
 			if(empty($post_id) || !isset($delay))
 			{
-				$this->set_error_msg( __("Please enter a value for post and delay", 'pmprosequence') );
+				$this->set_error_msg( __("Please enter a value for post and delay", "pmprosequence") );
 	            $this->dbg_log('updatePost(): No Post ID or delay specified');
 				return false;
 			}
@@ -1319,7 +1319,7 @@
 
 			if ( $post = get_post($post_id) === null ) {
 
-                $this->set_error_msg( __("A post with that id does not exist", 'pmprosequence') );
+                $this->set_error_msg( __("A post with that id does not exist", "pmprosequence") );
                 $this->dbg_log('updatePost(): No Post with ' . $post_id . ' found');
 
                 return false;
@@ -1501,7 +1501,7 @@
             foreach( $this->managed_types as $type ) {
 
                 if ( $type !== 'pmpro_sequence' ) {
-                    add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', 'pmprosequence' ), array( &$this, 'render_post_edit_metabox' ), $type, 'side', 'high' );
+                    add_meta_box( 'pmpro-seq-post-meta', __( 'Drip Feed Settings', "pmprosequence" ), array( &$this, 'render_post_edit_metabox' ), $type, 'side', 'high' );
                 }
             }
         }
@@ -1777,16 +1777,17 @@
                     </select>
                 </td>
             </tr>
-            <tr class="delay-row-label sequence-delay-label<?php // echo ( $active_id == 0 ? 'new-sequence-delay-label' : 'sequence-delay-label' ); ?>">
+            <tr class="delay-row-label sequence-delay-label">
                 <td>
                     <label for="pmpro_seq-delay_<?php echo $active_id; ?>"> <?php echo $label; ?> </label>
                 </td>
             </tr>
-            <tr class="delay-row-input sequence-delay<?php //echo ( $active_id == 0 ? 'new-sequence-delay' : 'sequence-delay' ); ?>">
+            <tr class="delay-row-input sequence-delay">
                 <td>
                     <?php echo $inputHTML; ?>
-                    <label for="remove-sequence_<?php echo $active_id; ?>" ><?php _e('Remove: ', 'pmprosequence'); ?></label>
+                    <label for="remove-sequence_<?php echo $active_id; ?>" ><?php _e('Remove: ', "pmprosequence"); ?></label>
                     <input type="checkbox" name="remove-sequence" class="pmpro_seq-remove-seq" value="<?php echo $active_id; ?>">
+                    <button class="button-secondary pmpro-sequence-remove-alert"><?php _e("Clear alerts", "pmprosequence");?></button>
                 </td>
             </tr>
             </fieldset>
@@ -1818,15 +1819,15 @@
 	    public function define_metaboxes() {
 
 			//PMPro box
-			add_meta_box('pmpro_page_meta', __('Require Membership', 'pmprosequence'), 'pmpro_page_meta', 'pmpro_sequence', 'side');
+			add_meta_box('pmpro_page_meta', __('Require Membership', "pmprosequence"), 'pmpro_page_meta', 'pmpro_sequence', 'side');
 
             $this->dbg_log("Loading post meta boxes");
 
 			// sequence settings box (for posts & pages)
-	        add_meta_box('pmpros-sequence-settings', __('Settings for this Sequence', 'pmprosequence'), array( &$this, 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
+	        add_meta_box('pmpros-sequence-settings', __('Settings for this Sequence', "pmprosequence"), array( &$this, 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
 
 			//sequence meta box
-			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', 'pmprosequence'), array(&$this, "sequence_settings_metabox"), 'pmpro_sequence', 'normal', 'high');
+			add_meta_box('pmpro_sequence_meta', __('Posts in this Sequence', "pmprosequence"), array(&$this, "sequence_settings_metabox"), 'pmpro_sequence', 'normal', 'high');
 	    }
 
         /**
@@ -1889,14 +1890,14 @@
 			<?php //} ?>
 			<table id="pmpro_sequencetable" class="pmpro_sequence_postscroll wp-list-table widefat">
 			<thead>
-				<th><?php _e('Order', 'pmprosequence' ); ?></label></th>
-				<th width="50%"><?php _e('Title', 'pmprosequence'); ?></th>
+				<th><?php _e('Order', "pmprosequence" ); ?></label></th>
+				<th width="50%"><?php _e('Title', "pmprosequence"); ?></th>
 				<?php if ($this->options->delayType == 'byDays'): ?>
-	                <th id="pmpro_sequence_delaylabel"><?php _e('Delay', 'pmprosequence'); ?></th>
+	                <th id="pmpro_sequence_delaylabel"><?php _e('Delay', "pmprosequence"); ?></th>
 	            <?php elseif ( $this->options->delayType == 'byDate'): ?>
-	                <th id="pmpro_sequence_delaylabel"><?php _e('Avail. On', 'pmprosequence'); ?></th>
+	                <th id="pmpro_sequence_delaylabel"><?php _e('Avail. On', "pmprosequence"); ?></th>
 	            <?php else: ?>
-	                <th id="pmpro_sequence_delaylabel"><?php _e('Not Defined', 'pmprosequence'); ?></th>
+	                <th id="pmpro_sequence_delaylabel"><?php _e('Not Defined', "pmprosequence"); ?></th>
 	            <?php endif; ?>
 				<th></th>
 				<th></th>
@@ -1909,7 +1910,7 @@
 			if ( empty($this->posts ) ) {
 	            $this->dbg_log('get_post_list_for_metabox() - No Posts found?');
 
-				$this->set_error_msg( __('No posts/pages found for this sequence', 'pmprosequence') );
+				$this->set_error_msg( __('No posts/pages found for this sequence', "pmprosequence") );
 			?>
 			<?php
 			}
@@ -1922,19 +1923,19 @@
 						<td class="pmpro_sequence_tblNumber"><?php echo $post->delay; ?></td>
 						<td><?php
                             if ( true == $this->options->allowRepeatPosts ) { ?>
-                            <a href="javascript:pmpro_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Edit','pmprosequence'); ?></a><?php
+                            <a href="javascript:pmpro_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Edit',"pmprosequence"); ?></a><?php
                             }
                             else { ?>
-                            <a href="javascript:pmpro_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Post','pmprosequence'); ?></a><?php
+                            <a href="javascript:pmpro_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Post',"pmprosequence"); ?></a><?php
                             } ?>
                         </td>
 						<td><?php
                             if ( false == $this->options->allowRepeatPosts ) { ?>
-							<a href="javascript:pmpro_sequence_editEntry( <?php echo "{$post->id}, {$post->delay}" ;?> ); void(0);"><?php _e('Edit', 'pmprosequence'); ?></a><?php
+							<a href="javascript:pmpro_sequence_editEntry( <?php echo "{$post->id}, {$post->delay}" ;?> ); void(0);"><?php _e('Edit', "pmprosequence"); ?></a><?php
                             } ?>
 						</td>
 						<td>
-							<a href="javascript:pmpro_sequence_removeEntry( <?php echo "{$post->id}, {$post->delay}" ?> ); void(0);"><?php _e('Remove', 'pmprosequence'); ?></a>
+							<a href="javascript:pmpro_sequence_removeEntry( <?php echo "{$post->id}, {$post->delay}" ?> ); void(0);"><?php _e('Remove', "pmprosequence"); ?></a>
 						</td>
 					</tr>
 				<?php
@@ -1946,17 +1947,17 @@
 			</table>
 
 			<div id="postcustomstuff">
-				<p><strong><?php _e('Add/Edit Posts:', 'pmprosequence'); ?></strong></p>
+				<p><strong><?php _e('Add/Edit Posts:', "pmprosequence"); ?></strong></p>
 				<table id="newmeta">
 					<thead>
 						<tr>
-							<th><?php _e('Post/Page', 'pmprosequence'); ?></th>
+							<th><?php _e('Post/Page', "pmprosequence"); ?></th>
 	                        <?php if ($this->options->delayType == 'byDays'): ?>
-	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e('Days to delay', 'pmprosequence'); ?></label></th>
+	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e('Days to delay', "pmprosequence"); ?></label></th>
 	                        <?php elseif ( $this->options->delayType == 'byDate'): ?>
-	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", 'pmprosequence'); ?></label></th>
+	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", "pmprosequence"); ?></label></th>
 	                        <?php else: ?>
-	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e('Not Defined', 'pmprosequence'); ?></label></th>
+	                            <th id="pmpro_sequence_delayentrylabel"><label for="pmpro_sequencedelay"><?php _e('Not Defined', "pmprosequence"); ?></label></th>
 	                        <?php endif; ?>
 							<th></th>
 						</tr>
@@ -1974,7 +1975,7 @@
                                     }
 								}
 								else {
-									$this->set_error_msg( __( 'No posts found in the database!', 'pmprosequence' ) );
+									$this->set_error_msg( __( 'No posts found in the database!', "pmprosequence" ) );
 									$this->dbg_log('get_post_list_for_metabox() - Error during database search for relevant posts');
 								}
 							?>
@@ -1988,7 +1989,7 @@
 								<?php wp_nonce_field('pmpro-sequence-add-post', 'pmpro_sequence_addpost_nonce'); ?>
 								<?php wp_nonce_field('pmpro-sequence-rm-post', 'pmpro_sequence_rmpost_nonce'); ?>
 							</td>
-							<td><a class="button" id="pmpro_sequencesave" onclick="javascript:pmpro_sequence_addEntry(); return false;"><?php _e('Update Sequence', 'pmprosequence'); ?></a></td>
+							<td><a class="button" id="pmpro_sequencesave" onclick="javascript:pmpro_sequence_addEntry(); return false;"><?php _e('Update Sequence', "pmprosequence"); ?></a></td>
 						</tr>
 					</tbody>
 				</table>
@@ -2038,7 +2039,7 @@
             }
              else {
 	            $this->dbg_log('Not a valid Sequence ID, cannot load options');
-                $this->set_error_msg( __('Invalid drip-feed sequence specified', 'pmprosequence') );
+                $this->set_error_msg( __('Invalid drip-feed sequence specified', "pmprosequence") );
 	            return;
 	        }
 
@@ -2060,11 +2061,11 @@
                          <div class="pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row pmpro-sequence-settings clear-after">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <input type="checkbox" value="1" id="pmpro_sequence_hidden" name="pmpro_sequence_hidden" title="<?php _e('Hide unpublished / future posts for this sequence', 'pmprosequence'); ?>" <?php checked( $this->options->hidden, 1); ?> />
+                                    <input type="checkbox" value="1" id="pmpro_sequence_hidden" name="pmpro_sequence_hidden" title="<?php _e('Hide unpublished / future posts for this sequence', "pmprosequence"); ?>" <?php checked( $this->options->hidden, 1); ?> />
                                     <input type="hidden" name="hidden_pmpro_seq_future" id="hidden_pmpro_seq_future" value="<?php echo esc_attr($this->options->hidden); ?>" >
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <label class="selectit pmpro-sequence-setting-col-2"><?php _e('Hide all future posts', 'pmprosequence'); ?></label>
+                                    <label class="selectit pmpro-sequence-setting-col-2"><?php _e('Hide all future posts', "pmprosequence"); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3"></div>
                             </div>
@@ -2072,11 +2073,11 @@
                         <div class="pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row pmpro-sequence-settings clear-after">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <input type="checkbox" value="1" id="pmpro_sequence_allowRepeatPosts" name="pmpro_sequence_allowRepeatPosts" title="<?php _e('Allow the admin to repeat the same post/page with different delay values', 'pmprosequence'); ?>" <?php checked( $this->options->allowRepeatPosts, 1); ?> />
+                                    <input type="checkbox" value="1" id="pmpro_sequence_allowRepeatPosts" name="pmpro_sequence_allowRepeatPosts" title="<?php _e('Allow the admin to repeat the same post/page with different delay values', "pmprosequence"); ?>" <?php checked( $this->options->allowRepeatPosts, 1); ?> />
                                     <input type="hidden" name="hidden_pmpro_seq_allowRepeatPosts" id="hidden_pmpro_seq_allowRepeatPosts" value="<?php echo esc_attr($this->options->allowRepeatPosts); ?>" >
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <label class="selectit"><?php _e('Allow repeat posts/pages', 'pmprosequence'); ?></label>
+                                    <label class="selectit"><?php _e('Allow repeat posts/pages', "pmprosequence"); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3"></div>
                             </div>
@@ -2084,10 +2085,10 @@
                         <div class="pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row pmpro-sequence-settings clear-after">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <input type="checkbox" value="1" id="pmpro_sequence_offsetchk" name="pmpro_sequence_offsetchk" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', 'pmprosequence'); ?>" <?php echo ( $this->options->previewOffset != 0 ? ' checked="checked"' : ''); ?> />
+                                    <input type="checkbox" value="1" id="pmpro_sequence_offsetchk" name="pmpro_sequence_offsetchk" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', "pmprosequence"); ?>" <?php echo ( $this->options->previewOffset != 0 ? ' checked="checked"' : ''); ?> />
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <label class="selectit"><?php _e('Allow "preview" of sequence', 'pmprosequence'); ?></label>
+                                    <label class="selectit"><?php _e('Allow "preview" of sequence', "pmprosequence"); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3"></div>
                             </div>
@@ -2095,15 +2096,15 @@
                         <div class="pmpro-sequence-offset pmpro-sequence-hidden pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-settings pmpro-sequence-offset">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-offset"><?php _e('Days of preview:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-offset"><?php _e('Days of preview:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <span id="pmpro-seq-offset-status" class="pmpro-sequence-status"><?php echo ( $this->options->previewOffset == 0 ? 'None' : $this->options->previewOffset ); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-offset" class="pmpro-seq-edit">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Change the number of days to preview', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Change the number of days to preview', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2123,19 +2124,19 @@
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-settings pmpro-sequence-offset pmpro-sequence-full-row">
                                 <p class="pmpro-seq-offset">
-                                    <a href="#" id="ok-pmpro-seq-offset" class="save-pmproseq-offset button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-offset" class="cancel-pmproseq-offset button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-offset" class="save-pmproseq-offset button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-offset" class="cancel-pmproseq-offset button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div>
                         </div>
                         <div class="pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-settings">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <input type="checkbox"  value="1" id="pmpro_sequence_lengthvisible" name="pmpro_sequence_lengthvisible" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text', 'pmprosequence'); ?>" <?php checked( $this->options->lengthVisible, 1); ?> />
+                                    <input type="checkbox"  value="1" id="pmpro_sequence_lengthvisible" name="pmpro_sequence_lengthvisible" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text', "pmprosequence"); ?>" <?php checked( $this->options->lengthVisible, 1); ?> />
                                     <input type="hidden" name="hidden_pmpro_seq_lengthvisible" id="hidden_pmpro_seq_lengthvisible" value="<?php echo esc_attr($this->options->lengthVisible); ?>" >
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <label class="selectit"><?php _e("Show user membership length", 'pmprosequence'); ?></label>
+                                    <label class="selectit"><?php _e("Show user membership length", "pmprosequence"); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3"></div>
                             </div>
@@ -2147,15 +2148,15 @@
                         <div class="pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-sortorder pmpro-sequence-settings">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-sort"><?php _e('Sort order:', 'pmprosequence'); ?></label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-sort"><?php _e('Sort order:', "pmprosequence"); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <span id="pmpro-seq-sort-status" class="pmpro-sequence-status"><?php echo ( $this->options->sortOrder == SORT_ASC ? __('Ascending', 'pmprosequence') : __('Descending', 'pmprosequence') ); ?></span>
+                                    <span id="pmpro-seq-sort-status" class="pmpro-sequence-status"><?php echo ( $this->options->sortOrder == SORT_ASC ? __('Ascending', "pmprosequence") : __('Descending', "pmprosequence") ); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-sort" class="pmpro-seq-edit pmpro-sequence-setting-col-3">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Edit the list sort order', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Edit the list sort order', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2166,30 +2167,30 @@
                                     <input type="hidden" name="hidden_pmpro_seq_sortorder" id="hidden_pmpro_seq_sortorder" value="<?php echo ($this->options->sortOrder == SORT_ASC ? SORT_ASC : SORT_DESC); ?>" >
                                     <label for="pmpro_sequence_sortorder"></label>
                                     <select name="pmpro_sequence_sortorder" id="pmpro_sequence_sortorder">
-                                        <option value="<?php echo esc_attr(SORT_ASC); ?>" <?php selected( intval($this->options->sortOrder), SORT_ASC); ?> > <?php _e('Ascending', 'pmprosequence'); ?></option>
-                                        <option value="<?php echo esc_attr(SORT_DESC); ?>" <?php selected( intval($this->options->sortOrder), SORT_DESC); ?> ><?php _e('Descending', 'pmprosequence'); ?></option>
+                                        <option value="<?php echo esc_attr(SORT_ASC); ?>" <?php selected( intval($this->options->sortOrder), SORT_ASC); ?> > <?php _e('Ascending', "pmprosequence"); ?></option>
+                                        <option value="<?php echo esc_attr(SORT_DESC); ?>" <?php selected( intval($this->options->sortOrder), SORT_DESC); ?> ><?php _e('Descending', "pmprosequence"); ?></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-settings pmpro-sequence-sortorder pmpro-sequence-full-row">
                                 <p class="pmpro-seq-btns">
-                                    <a href="#" id="ok-pmpro-seq-sort" class="save-pmproseq-sortorder button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-sort" class="cancel-pmproseq-sortorder button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-sort" class="save-pmproseq-sortorder button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-sort" class="cancel-pmproseq-sortorder button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div><!-- end of row -->
                         </div>
                         <div class="pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-delaytype pmpro-sequence-settings">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-delay"><?php _e('Delay type:', 'pmprosequence'); ?></label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-delay"><?php _e('Delay type:', "pmprosequence"); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <span id="pmpro-seq-delay-status" class="pmpro-sequence-status"><?php echo ($this->options->delayType == 'byDate' ? __('A date', 'pmprosequence') : __('Days after sign-up', 'pmprosequence') ); ?></span>
+                                    <span id="pmpro-seq-delay-status" class="pmpro-sequence-status"><?php echo ($this->options->delayType == 'byDate' ? __('A date', "pmprosequence") : __('Days after sign-up', "pmprosequence") ); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-delay" class="pmpro-seq-edit">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Edit the delay type for this sequence', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Edit the delay type for this sequence', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2201,16 +2202,16 @@
                                     <label for="pmpro_sequence_delaytype"></label>
                                     <!-- onchange="pmpro_sequence_delayTypeChange(<?php echo esc_attr( $this->sequence_id ); ?>); return false;" -->
                                     <select name="pmpro_sequence_delaytype" id="pmpro_sequence_delaytype">
-                                        <option value="byDays" <?php selected( $this->options->delayType, 'byDays'); ?> ><?php _e('Days after sign-up', 'pmprosequence'); ?></option>
-                                        <option value="byDate" <?php selected( $this->options->delayType, 'byDate'); ?> ><?php _e('A date', 'pmprosequence'); ?></option>
+                                        <option value="byDays" <?php selected( $this->options->delayType, 'byDays'); ?> ><?php _e('Days after sign-up', "pmprosequence"); ?></option>
+                                        <option value="byDate" <?php selected( $this->options->delayType, 'byDate'); ?> ><?php _e('A date', "pmprosequence"); ?></option>
                                     </select>
                                 </div>
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-seq-delaytype pmpro-sequence-settings pmpro-sequence-full-row">
                                 <div id="pmpro-seq-delay-btns">
                                     <p class="pmpro-seq-btns">
-                                        <a href="#" id="ok-pmpro-seq-delay" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                        <a href="#" id="cancel-pmpro-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                        <a href="#" id="ok-pmpro-seq-delay" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                        <a href="#" id="cancel-pmpro-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                     </p>
                                 </div>
                             </div>
@@ -2218,15 +2219,15 @@
                         <div class="pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-seq-showdelayas pmpro-sequence-settings">
                             <div class="pmpro-sequence-setting-col-1">
-                                <label class="pmpro-sequence-label" for="pmpro-seq-showdelayas"><?php _e("Show availability as:", 'pmprosequence'); ?></label>
+                                <label class="pmpro-sequence-label" for="pmpro-seq-showdelayas"><?php _e("Show availability as:", "pmprosequence"); ?></label>
                             </div>
                             <div class="pmpro-sequence-setting-col-2">
-                                <span id="pmpro-seq-showdelayas-status" class="pmpro-sequence-status"><?php echo ($this->options->showDelayAs == PMPRO_SEQ_AS_DATE ? __('Calendar date', 'pmprosequence') : __('Day of membership', 'pmprosequence') ); ?></span>
+                                <span id="pmpro-seq-showdelayas-status" class="pmpro-sequence-status"><?php echo ($this->options->showDelayAs == PMPRO_SEQ_AS_DATE ? __('Calendar date', "pmprosequence") : __('Day of membership', "pmprosequence") ); ?></span>
                             </div>
                             <div class="pmpro-sequence-setting-col-3">
                                 <a href="#" id="pmpro-seq-edit-showdelayas" class="pmpro-seq-edit pmpro-sequence-setting-col-3">
-                                    <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                    <span class="screen-reader-text"><?php _e('How to indicate when the post will be available to the user. Select either "Calendar date" or "day of membership")', 'pmprosequence'); ?></span>
+                                    <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                    <span class="screen-reader-text"><?php _e('How to indicate when the post will be available to the user. Select either "Calendar date" or "day of membership")', "pmprosequence"); ?></span>
                                 </a>
                             </div>
                         </div>
@@ -2237,32 +2238,32 @@
                                 <input type="hidden" name="hidden_pmpro_seq_showdelayas" id="hidden_pmpro_seq_showdelayas" value="<?php echo ($this->options->showDelayAs == PMPRO_SEQ_AS_DATE ? PMPRO_SEQ_AS_DATE : PMPRO_SEQ_AS_DAYNO ); ?>" >
                                 <label for="pmpro_sequence_showdelayas"></label>
                                 <select name="pmpro_sequence_showdelayas" id="pmpro_sequence_showdelayas">
-                                    <option value="<?php echo PMPRO_SEQ_AS_DAYNO; ?>" <?php selected( $this->options->showDelayAs, PMPRO_SEQ_AS_DAYNO); ?> ><?php _e('Day of membership', 'pmprosequence'); ?></option>
-                                    <option value="<?php echo PMPRO_SEQ_AS_DATE; ?>" <?php selected( $this->options->showDelayAs, PMPRO_SEQ_AS_DATE); ?> ><?php _e('Calendar date', 'pmprosequence'); ?></option>
+                                    <option value="<?php echo PMPRO_SEQ_AS_DAYNO; ?>" <?php selected( $this->options->showDelayAs, PMPRO_SEQ_AS_DAYNO); ?> ><?php _e('Day of membership', "pmprosequence"); ?></option>
+                                    <option value="<?php echo PMPRO_SEQ_AS_DATE; ?>" <?php selected( $this->options->showDelayAs, PMPRO_SEQ_AS_DATE); ?> ><?php _e('Calendar date', "pmprosequence"); ?></option>
                                 </select>
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-seq-showdelayas pmpro-sequence-settings pmpro-sequence-full-row">
                                 <div id="pmpro-seq-delay-btns">
                                     <p class="pmpro-seq-btns">
-                                        <a href="#" id="ok-pmpro-seq-delay" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                        <a href="#" id="cancel-pmpro-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                        <a href="#" id="ok-pmpro-seq-delay" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                        <a href="#" id="cancel-pmpro-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                     </p>
                                 </div>
                             </div>
                         </div>
                         <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-full-row">
-                            <div class="pmpro-seq-alert-hl"><?php _e('New content alerts', 'pmprosequence'); ?></div>
+                            <div class="pmpro-seq-alert-hl"><?php _e('New content alerts', "pmprosequence"); ?></div>
                             <hr style="width: 100%;" />
                         </div><!-- end of row -->
                         <!--Email alerts -->
                         <div class="pmpro-sequence-settings-display clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-alerts pmpro-sequence-settings">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', 'pmprosequence'); ?>" id="pmpro_sequence_sendnotice" name="pmpro_sequence_sendnotice" <?php checked($this->options->sendNotice, 1); ?> />
+                                    <input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', "pmprosequence"); ?>" id="pmpro_sequence_sendnotice" name="pmpro_sequence_sendnotice" <?php checked($this->options->sendNotice, 1); ?> />
                                     <input type="hidden" name="hidden_pmpro_seq_sendnotice" id="hidden_pmpro_seq_sendnotice" value="<?php echo esc_attr($this->options->sendNotice); ?>" >
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Send email alerts', 'pmprosequence'); ?></label>
+                                    <label class="selectit" for="pmpro_sequence_sendnotice"><?php _e('Send email alerts', "pmprosequence"); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">&nbsp;</div>
                             </div>
@@ -2270,35 +2271,35 @@
                         <!-- Send now -->
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after <?php echo ( $new_post ? 'pmpro-sequence-hidden' : null ); ?>">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-sendnowbtn pmpro-sequence-settings">
-                                <div class="pmpro-sequence-setting-col-1"><label for="pmpro_seq_send"><?php _e('Send alerts now', 'pmprosequence'); ?></label></div>
+                                <div class="pmpro-sequence-setting-col-1"><label for="pmpro_seq_send"><?php _e('Send alerts now', "pmprosequence"); ?></label></div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <?php wp_nonce_field('pmpro-sequence-sendalert', 'pmpro_sequence_sendalert_nonce'); ?>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" class="pmpro-seq-settings-send pmpro-seq-edit" id="pmpro_seq_send">
-                                        <span aria-hidden="true"><?php _e('Send', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php echo sprintf( __( 'Manually trigger sending of alert notices for the %s sequence', 'pmprosequence'), get_the_title( $this->sequence_id) ); ?></span>
+                                        <span aria-hidden="true"><?php _e('Send', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php echo sprintf( __( 'Manually trigger sending of alert notices for the %s sequence', "pmprosequence"), get_the_title( $this->sequence_id) ); ?></span>
                                     </a>
                                 </div>
                             </div><!-- end of row -->
                         </div>
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-full-row">
-                                <p class="pmpro-seq-email-hl"><?php _e("Alert settings:", 'pmprosequence'); ?></p>
+                                <p class="pmpro-seq-email-hl"><?php _e("Alert settings:", "pmprosequence"); ?></p>
                             </div>
                         </div>
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-replyto pmpro-sequence-settings">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-replyto"><?php _e('Email:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-replyto"><?php _e('Email:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <span id="pmpro-seq-replyto-status" class="pmpro-sequence-status"><?php echo ( $this->options->replyto != '' ? esc_attr($this->options->replyto) : pmpro_getOption("from_email") ); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-replyto" class="pmpro-seq-edit">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Enter the email address to use as the sender of the alert', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Enter the email address to use as the sender of the alert', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2313,23 +2314,23 @@
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-email pmpro-sequence-settings pmpro-sequence-full-row">
                                 <p class="pmpro-seq-btns">
-                                    <a href="#" id="ok-pmpro-seq-email" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-email" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div><!-- end of row -->
                         </div>
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-fromname pmpro-sequence-settings">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-fromname"><?php _e('Name:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-fromname"><?php _e('Name:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <span id="pmpro-seq-fromname-status" class="pmpro-sequence-status"><?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : pmpro_getOption("from_name") ); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-fromname" class="pmpro-seq-edit pmpro-sequence-setting-col-3">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Enter the name to use for the sender of the alert', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Enter the name to use for the sender of the alert', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2344,8 +2345,8 @@
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-settings pmpro-sequence-full-row">
                                 <p class="pmpro-seq-btns">
-                                    <a href="#" id="ok-pmpro-seq-email" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-email" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div><!-- end of row -->
                         </div>
@@ -2355,15 +2356,15 @@
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-sendas pmpro-sequence-settings">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-sendas"><?php _e('Transmit:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-sendas"><?php _e('Transmit:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <span id="pmpro-seq-sendas-status" class="pmpro-sequence-status pmpro-sequence-setting-col-2"><?php echo ( $this->options->noticeSendAs = 10 ? _e('One alert per post', 'pmprosequence') : _e('Digest of posts', 'pmprosequence')); ?></span>
+                                    <span id="pmpro-seq-sendas-status" class="pmpro-sequence-status pmpro-sequence-setting-col-2"><?php echo ( $this->options->noticeSendAs = 10 ? _e('One alert per post', "pmprosequence") : _e('Digest of posts', "pmprosequence")); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-sendas" class="pmpro-seq-edit pmpro-sequence-setting-col-3">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Select the format of the alert notice when posting new content for this sequence', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Select the format of the alert notice when posting new content for this sequence', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2374,12 +2375,12 @@
                                     <input type="hidden" name="hidden_pmpro_seq_sendas" id="hidden_pmpro_seq_sendas" value="<?php echo esc_attr($this->options->noticeSendAs); ?>" >
                                     <label for="pmpro_sequence_sendas"></label>
                                     <select name="pmpro_sequence_sendas" id="pmpro_sequence_sendas">
-                                        <option value="<?php echo PMPRO_SEQ_SEND_AS_SINGLE; ?>" <?php selected( $this->options->noticeSendAs, PMPRO_SEQ_SEND_AS_SINGLE ); ?> ><?php _e('One alert per post', 'pmprosequence'); ?></option>
-                                        <option value="<?php echo PMPRO_SEQ_SEND_AS_LIST; ?>" <?php selected( $this->options->noticeSendAs, PMPRO_SEQ_SEND_AS_LIST ); ?> ><?php _e('Digest of post links', 'pmprosequence'); ?></option>
+                                        <option value="<?php echo PMPRO_SEQ_SEND_AS_SINGLE; ?>" <?php selected( $this->options->noticeSendAs, PMPRO_SEQ_SEND_AS_SINGLE ); ?> ><?php _e('One alert per post', "pmprosequence"); ?></option>
+                                        <option value="<?php echo PMPRO_SEQ_SEND_AS_LIST; ?>" <?php selected( $this->options->noticeSendAs, PMPRO_SEQ_SEND_AS_LIST ); ?> ><?php _e('Digest of post links', "pmprosequence"); ?></option>
                                     </select>
                                     <p class="pmpro-seq-btns">
-                                        <a href="#" id="ok-pmpro-seq-sendas" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                        <a href="#" id="cancel-pmpro-seq-sendas" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                        <a href="#" id="ok-pmpro-seq-sendas" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                        <a href="#" id="cancel-pmpro-seq-sendas" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                     </p>
                                 </div>
                             </div>
@@ -2387,15 +2388,15 @@
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-template pmpro-sequence-settings">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-template"><?php _e('Template:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-template"><?php _e('Template:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <span id="pmpro-seq-template-status" class="pmpro-sequence-status"><?php echo esc_attr( $this->options->noticeTemplate ); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-template" class="pmpro-seq-edit">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Select the template to use when posting new content in this sequence', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Select the template to use when posting new content in this sequence', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2412,23 +2413,23 @@
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro_sequence_fromname pmpro-sequence-settings pmpro-sequence-full-row">
                                 <p class="pmpro-seq-btns">
-                                    <a href="#" id="ok-pmpro-seq-template" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-template" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-template" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-template" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div> <!-- end of row -->
                         </div>
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row pmpro-sequence-settings clear-after pmpro-sequence-noticetime pmpro-sequence-email">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-noticetime"><?php _e('When:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-noticetime"><?php _e('When:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <span id="pmpro-seq-noticetime-status" class="pmpro-sequence-status"><?php echo esc_attr($this->options->noticeTime); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-noticetime" class="pmpro-seq-edit">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2445,15 +2446,15 @@
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-noticetime pmpro-sequence-settings pmpro-sequence-full-row">
                                 <p class="pmpro-seq-btns">
-                                    <a href="#" id="ok-pmpro-seq-noticetime" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-noticetime" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-noticetime" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-noticetime" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div>
                         </div> <!-- end of setting -->
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row pmpro-sequence-settings clear-after pmpro-sequence-timezone-setting">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-noticetime"><?php _e('Timezone:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-noticetime"><?php _e('Timezone:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
                                     <span class="pmpro-sequence-status" id="pmpro-seq-noticetimetz-status"><?php echo get_option('timezone_string'); ?></span>
@@ -2466,7 +2467,7 @@
                                     <label class="pmpro-sequence-label" for="pmpro-seq-subject"><?php _e("Subject", "pmprosequence"); ?></label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <span id="pmpro-seq-subject-status" class="pmpro-sequence-status"><?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', 'pmprosequence') ); ?></span>
+                                    <span id="pmpro-seq-subject-status" class="pmpro-sequence-status"><?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', "pmprosequence") ); ?></span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-subject" class="pmpro-seq-edit">
@@ -2479,30 +2480,30 @@
                         <div class="pmpro-sequence-settings-input pmpro-sequence-hidden pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-subject pmpro-sequence-settings pmpro-sequence-full-row">
                                 <div id="pmpro-seq-subject-input">
-                                    <input type="hidden" name="hidden_pmpro_seq_subject" id="hidden_pmpro_seq_subject" value="<?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', 'pmprosequence') ); ?>" />
+                                    <input type="hidden" name="hidden_pmpro_seq_subject" id="hidden_pmpro_seq_subject" value="<?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', "pmprosequence") ); ?>" />
                                     <label for="pmpro_sequence_subject"></label>
-                                    <input type="text" name="pmpro_sequence_subject" id="pmpro_sequence_subject" value="<?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', 'pmprosequence') ); ?>"/>
+                                    <input type="text" name="pmpro_sequence_subject" id="pmpro_sequence_subject" value="<?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', "pmprosequence") ); ?>"/>
                                 </div>
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-subject pmpro-sequence-settings pmpro-sequence-full-row">
                                 <p class="pmpro-seq-btns">
-                                    <a href="#" id="ok-pmpro-seq-subject" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-subject" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-subject" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-subject" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div>
                         </div><!-- end of setting -->
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row pmpro-sequence-settings pmpro-sequence-excerpt">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-excerpt"><?php _e('Intro:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-excerpt"><?php _e('Intro:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <span id="pmpro-seq-excerpt-status" class="pmpro-sequence-status">"<?php echo ( $this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', 'pmprosequence') ); ?>"</span>
+                                    <span id="pmpro-seq-excerpt-status" class="pmpro-sequence-status">"<?php echo ( $this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', "pmprosequence") ); ?>"</span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-excerpt" class="pmpro-seq-edit">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Update/Edit the introductory paragraph for the new content excerpt', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Update/Edit the introductory paragraph for the new content excerpt', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2510,30 +2511,30 @@
                         <div class="pmpro-sequence-settings-input pmpro-sequence-hidden pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-excerpt pmpro-sequence-settings pmpro-sequence-full-row">
                                 <div id="pmpro-seq-excerpt-input">
-                                    <input type="hidden" name="hidden_pmpro_seq_excerpt" id="hidden_pmpro_seq_excerpt" value="<?php echo ($this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', 'pmprosequence') ); ?>" />
+                                    <input type="hidden" name="hidden_pmpro_seq_excerpt" id="hidden_pmpro_seq_excerpt" value="<?php echo ($this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', "pmprosequence") ); ?>" />
                                     <label for="pmpro_sequence_excerpt"></label>
-                                    <input type="text" name="pmpro_sequence_excerpt" id="pmpro_sequence_excerpt" value="<?php echo ($this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', 'pmprosequence') ); ?>"/>
+                                    <input type="text" name="pmpro_sequence_excerpt" id="pmpro_sequence_excerpt" value="<?php echo ($this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', "pmprosequence") ); ?>"/>
                                 </div>
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-excerpt pmpro-sequence-settings pmpro-sequence-full-row">
                                 <p class="pmpro-seq-btns">
-                                    <a href="#" id="ok-pmpro-seq-excerpt" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-excerpt" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-excerpt" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-excerpt" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div>
                         </div> <!-- end of setting -->
                         <div class="pmpro-sequence-settings-display pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row pmpro-sequence-settings pmpro-sequence-dateformat">
                                 <div class="pmpro-sequence-setting-col-1">
-                                    <label class="pmpro-sequence-label" for="pmpro-seq-dateformat"><?php _e('Date type:', 'pmprosequence'); ?> </label>
+                                    <label class="pmpro-sequence-label" for="pmpro-seq-dateformat"><?php _e('Date type:', "pmprosequence"); ?> </label>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-2">
-                                    <span id="pmpro-seq-dateformat-status" class="pmpro-sequence-status">"<?php echo ( trim($this->options->dateformat) == false ? __('m-d-Y', 'pmprosequence') : esc_attr($this->options->dateformat) ); ?>"</span>
+                                    <span id="pmpro-seq-dateformat-status" class="pmpro-sequence-status">"<?php echo ( trim($this->options->dateformat) == false ? __('m-d-Y', "pmprosequence") : esc_attr($this->options->dateformat) ); ?>"</span>
                                 </div>
                                 <div class="pmpro-sequence-setting-col-3">
                                     <a href="#" id="pmpro-seq-edit-dateformat" class="pmpro-seq-edit">
-                                        <span aria-hidden="true"><?php _e('Edit', 'pmprosequence'); ?></span>
-                                        <span class="screen-reader-text"><?php _e('Update/Edit the format of the !!today!! placeholder (a valid PHP date() format)', 'pmprosequence'); ?></span>
+                                        <span aria-hidden="true"><?php _e('Edit', "pmprosequence"); ?></span>
+                                        <span class="screen-reader-text"><?php _e('Update/Edit the format of the !!today!! placeholder (a valid PHP date() format)', "pmprosequence"); ?></span>
                                     </a>
                                 </div>
                             </div>
@@ -2541,7 +2542,7 @@
                         <div class="pmpro-sequence-settings-input pmpro-sequence-hidden pmpro-sequence-email clear-after">
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-dateformat pmpro-sequence-settings pmpro-sequence-full-row">
                                 <div id="pmpro-seq-dateformat-select">
-                                    <input type="hidden" name="hidden_pmpro_seq_dateformat" id="hidden_pmpro_seq_dateformat" value="<?php echo ( trim($this->options->dateformat) == false ? __('m-d-Y', 'pmprosequence') : esc_attr($this->options->dateformat) ); ?>" />
+                                    <input type="hidden" name="hidden_pmpro_seq_dateformat" id="hidden_pmpro_seq_dateformat" value="<?php echo ( trim($this->options->dateformat) == false ? __('m-d-Y', "pmprosequence") : esc_attr($this->options->dateformat) ); ?>" />
                                     <label for="pmpro_pmpro_sequence_dateformat"></label>
                                     <select name="pmpro_sequence_dateformat" id="pmpro_sequence_dateformat">
                                         <?php echo $this->list_date_formats(); ?>
@@ -2550,8 +2551,8 @@
                             </div>
                             <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-dateformat pmpro-sequence-settings pmpro-sequence-full-row">
                                 <p class="pmpro-seq-btns">
-                                    <a href="#" id="ok-pmpro-seq-dateformat" class="save-pmproseq button"><?php _e('OK', 'pmprosequence'); ?></a>
-                                    <a href="#" id="cancel-pmpro-seq-dateformat" class="cancel-pmproseq button-cancel"><?php _e('Cancel', 'pmprosequence'); ?></a>
+                                    <a href="#" id="ok-pmpro-seq-dateformat" class="save-pmproseq button"><?php _e('OK', "pmprosequence"); ?></a>
+                                    <a href="#" id="cancel-pmpro-seq-dateformat" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "pmprosequence"); ?></a>
                                 </p>
                             </div>
                         </div> <!-- end of setting -->
@@ -2559,7 +2560,7 @@
                             <hr style="width: 100%;" />
                         </div> --><!-- end of row -->
 <!--                         <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-full-row">
-                            <a class="button button-primary button-large" class="pmpro-seq-settings-save" id="pmpro_settings_save" onclick="pmpro_sequence_saveSettings(<?php echo $this->sequence_id;?>) ; return false;"><?php _e('Update Settings', 'pmprosequence'); ?></a>
+                            <a class="button button-primary button-large" class="pmpro-seq-settings-save" id="pmpro_settings_save" onclick="pmpro_sequence_saveSettings(<?php echo $this->sequence_id;?>) ; return false;"><?php _e('Update Settings', "pmprosequence"); ?></a>
                             <?php wp_nonce_field('pmpro-sequence-save-settings', 'pmpro_sequence_settings_nonce'); ?>
                             <div class="seq_spinner"></div>
                         </div>--><!-- end of row -->
@@ -2568,9 +2569,9 @@
                 <!-- TODO: Enable and implement
 	                <tr id="pmpro_sequenceseq_start_0" style="display: none;">
 	                    <td>
-	                        <input id='pmpro_sequence_enablestartwhen' type="checkbox" value="1" title="<?php _e('Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out.', 'pmprosequence'); ?>" name="pmpro_sequence_enablestartwhen" <?php echo ($this->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
+	                        <input id='pmpro_sequence_enablestartwhen' type="checkbox" value="1" title="<?php _e('Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out.', "pmprosequence"); ?>" name="pmpro_sequence_enablestartwhen" <?php echo ($this->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
 	                    </td>
-	                    <td><label class="selectit"><?php _e('Sequence starts', 'pmprosequence'); ?></label></td>
+	                    <td><label class="selectit"><?php _e('Sequence starts', "pmprosequence"); ?></label></td>
 	                </tr>
 	                <tr id="pmpro_sequence_seq_start_1" style="display: none; height: 1px;">
 	                    <td colspan="2">
@@ -2799,7 +2800,7 @@
                     if ( false !== $insequence ) {
 
                         //user has one of the sequence levels, find out which one and tell him how many days left
-                        $text = sprintf("%s<br/>", sprintf( __("This content is only available to existing members at the specified time or day. (Required membership: <a href='%s'>%s</a>", 'pmprosequence'), get_permalink($ps), get_the_title($ps)) );
+                        $text = sprintf("%s<br/>", sprintf( __("This content is only available to existing members at the specified time or day. (Required membership: <a href='%s'>%s</a>", "pmprosequence"), get_permalink($ps), get_the_title($ps)) );
 
                         switch ( $this->options->delayType ) {
 
@@ -2809,19 +2810,19 @@
 
                                     case PMPRO_SEQ_AS_DAYNO:
 
-                                        $text .= sprintf( __( 'You will be able to access "%s" on day %s of your membership', 'pmprosequence' ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
+                                        $text .= sprintf( __( 'You will be able to access "%s" on day %s of your membership', "pmprosequence" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
                                         break;
 
                                     case PMPRO_SEQ_AS_DATE:
 
-                                        $text .= sprintf( __( 'You will be able to  access "%s" on %s', 'pmprosequence' ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
+                                        $text .= sprintf( __( 'You will be able to  access "%s" on %s', "pmprosequence" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
                                         break;
                                 }
 
                                 break;
 
                             case 'byDate':
-                                $text .= sprintf( __('You will be able to access "%s" on %s', 'pmprosequence'), get_the_title($post_id), $delay );
+                                $text .= sprintf( __('You will be able to access "%s" on %s', "pmprosequence"), get_the_title($post_id), $delay );
                                 break;
 
                             default:
@@ -2837,11 +2838,11 @@
 	                        $tmp = $post_sequences;
 	                        $seqId = array_pop( $tmp );
 
-                            $text = sprintf("%s<br/>", sprintf( __( "This content is only available to existing members who are already logged in. ( Reqired level: <a href='%s'>%s</a>)", 'pmprosequence' ), get_permalink( $seqId ), get_the_title( $seqId ) ) );
+                            $text = sprintf("%s<br/>", sprintf( __( "This content is only available to existing members who are already logged in. ( Reqired level: <a href='%s'>%s</a>)", "pmprosequence" ), get_permalink( $seqId ), get_the_title( $seqId ) ) );
                         }
                         else {
 
-                            $text = sprintf( "<p>%s</p>", __( 'This content is only available to existing members who have logged in. ( For levels:  ', 'pmprosequence' ) );
+                            $text = sprintf( "<p>%s</p>", __( 'This content is only available to existing members who have logged in. ( For levels:  ', "pmprosequence" ) );
                             $seq_links = array();
 
                             foreach ( $post_sequences as $sequence_id ) {
@@ -2987,7 +2988,7 @@
 
                                     if ( $button ) {
                                         ?>
-                                    <a class="pmpro_btn pmpro_btn-primary" href="<?php echo $p->permalink; ?>"> <?php _e( "Available Now", 'pmprosequence' ); ?></a><?php
+                                    <a class="pmpro_btn pmpro_btn-primary" href="<?php echo $p->permalink; ?>"> <?php _e( "Available Now", "pmprosequence" ); ?></a><?php
                                     } ?>
                                 </td>
                             </tr> <?php
@@ -3001,7 +3002,7 @@
                                 <td<?php echo( $button ? ' class="pmpro-seq-availnow-btn">' : '>' );
                                 if ( $button ) {
                                     ?>
-                                <a class="pmpro_btn pmpro_btn-primary" href="<?php echo $p->permalink; ?>"> <?php _e( "Available Now", 'pmprosequence' ); ?></a><?php
+                                <a class="pmpro_btn pmpro_btn-primary" href="<?php echo $p->permalink; ?>"> <?php _e( "Available Now", "pmprosequence" ); ?></a><?php
                                 } ?>
                                 </td>
                             </tr>
@@ -3025,10 +3026,10 @@
                                             <?php echo $p->title; ?>
                                         </span>
                                         <span class="pmpro_sequence_item-unavailable">
-                                            <?php echo sprintf( __( 'available on %s', 'pmprosequence' ),
+                                            <?php echo sprintf( __( 'available on %s', "pmprosequence" ),
                                                 ( $this->options->delayType == 'byDays' &&
                                                     $this->options->showDelayAs == PMPRO_SEQ_AS_DAYNO ) ?
-                                                    __( 'day', 'pmprosequence' ) : '' ); ?>
+                                                    __( 'day', "pmprosequence" ) : '' ); ?>
                                             <?php echo $this->display_proper_delay( $p->delay ); ?>
                                         </span>
                                 </td>
@@ -3042,10 +3043,10 @@
                                 <td>
                                     <span class="pmpro_sequence_item-title"><?php echo $p->post_title; ?></span>
                                         <span class="pmpro_sequence_item-unavailable">
-                                            <?php echo sprintf( __( 'available on %s', 'pmprosequence' ),
+                                            <?php echo sprintf( __( 'available on %s', "pmprosequence" ),
                                                 ( $this->options->delayType == 'byDays' &&
                                                     $this->options->showDelayAs == PMPRO_SEQ_AS_DAYNO ) ?
-                                                    __( 'day', 'pmprosequence' ) : '' ); ?>
+                                                    __( 'day', "pmprosequence" ) : '' ); ?>
                                             <?php echo $this->display_proper_delay( $p->delay ); ?>
                                         </span>
                                 </td>
@@ -3162,6 +3163,12 @@
             return true;
         }
 
+        /**
+          * Load all email alert settings for the specified user
+          * @param $user_id - User's ID
+          * @param null $sequence_id - The ID of the sequence
+          * @return mixed|null|stdClass - The settings object
+          */
         public function load_user_notice_settings( $user_id, $sequence_id = null ) {
 
             global $wpdb;
@@ -3212,6 +3219,10 @@
             return $optIn;
         }
 
+        /**
+          * Generates a stdClass() object containing the default user notice (alert) settings
+          * @return stdClass
+          */
         private function create_user_notice_defaults() {
 
             $this->dbg_log("create_user_notice_defaults() - Loading default opt-in settings" );
@@ -3264,8 +3275,8 @@
                             <input type="hidden" name="hidden_pmpro_seq_uid" id="hidden_pmpro_seq_uid" value="<?php echo $current_user->ID; ?>" >
                             <?php wp_nonce_field('pmpro-sequence-user-optin', 'pmpro_sequence_optin_nonce'); ?>
                             <span>
-                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', 'pmprosequence'); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
-                                <label for="pmpro-seq-useroptin"><?php _e('Yes, please send me email reminders!', 'pmprosequence'); ?></label>
+                                <input type="checkbox" value="1" id="pmpro_sequence_useroptin" name="pmpro_sequence_useroptin" onclick="javascript:pmpro_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', "pmprosequence"); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
+                                <label for="pmpro-seq-useroptin"><?php _e('Yes, please send me email reminders!', "pmprosequence"); ?></label>
                             </span>
                         </form>
                     </div>
@@ -3457,19 +3468,19 @@
             switch ($post_state)
             {
                 case 'draft':
-                    $txtState = __('-DRAFT', 'pmprosequence');
+                    $txtState = __('-DRAFT', "pmprosequence");
                     break;
 
                 case 'future':
-                    $txtState = __('-SCHED', 'pmprosequence');
+                    $txtState = __('-SCHED', "pmprosequence");
                     break;
 
                 case 'pending':
-                    $txtState = __('-REVIEW', 'pmprosequence');
+                    $txtState = __('-REVIEW', "pmprosequence");
                     break;
 
                 case 'private':
-                    $txtState = __('-PRIVT', 'pmprosequence');
+                    $txtState = __('-PRIVT', "pmprosequence");
                     break;
 
                 default:
@@ -3504,18 +3515,18 @@
 
                 ?>
                 <nav class="navigation paging-navigation" role="navigation">
-                    <h4 class="screen-reader-text"><?php _e( 'Navigation', 'pmprosequence' ); ?></h4>
+                    <h4 class="screen-reader-text"><?php _e( 'Navigation', "pmprosequence" ); ?></h4>
                     <?php echo paginate_links( array(
                         'base'          => $base,
                         'format'        => $format,
                         'total'         => $total,
                         'current'       => $paged,
                         'mid_size'      => 2,
-                        'prev_text'     => sprintf( __( '%s Previous', 'pmprosequence'), $prev_arrow),
-                        'next_text'     => sprintf( __( 'Next %s', 'pmprosequence'), $next_arrow),
+                        'prev_text'     => sprintf( __( '%s Previous', "pmprosequence"), $prev_arrow),
+                        'next_text'     => sprintf( __( 'Next %s', "pmprosequence"), $next_arrow),
                         'prev_next'     => true,
                         'type'          => 'list',
-                        'before_page_number' => '<span class="screen-reader-text">' . __('Page', 'pmprosequence') . '</span>',
+                        'before_page_number' => '<span class="screen-reader-text">' . __('Page', "pmprosequence") . '</span>',
                     )); ?>
                 </nav>
                 <?php
@@ -3625,10 +3636,10 @@
                 } else {
                     // Ignore this post & return error message to display for the user/admin
                     // NOTE: Format of date is not translatable
-                    $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __( 'date: YYYY-MM-DD', 'pmprosequence' ) : __( 'number: Days since membership started', 'pmprosequence' );
+                    $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __( 'date: YYYY-MM-DD', "pmprosequence" ) : __( 'number: Days since membership started', "pmprosequence" );
 
                     $this->dbg_log( 'validate_delay_value(): Invalid delay value specified, not adding the post. Delay is: ' . $delay );
-                    $this->set_error_msg( sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', 'pmprosequence' ), $delay, $expectedDelay ) );
+                    $this->set_error_msg( sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', "pmprosequence" ), $delay, $expectedDelay ) );
 
                     $delay = false;
                 }
@@ -3643,7 +3654,7 @@
 
                 if ( empty( $delay ) ) {
 
-                    $this->set_error_msg( __( 'No delay has been specified', 'pmprosequence' ) );
+                    $this->set_error_msg( __( 'No delay has been specified', "pmprosequence" ) );
                 }
             }
 
@@ -4262,7 +4273,7 @@
 
                                         $timestamp = ( current_time( 'timestamp' ) + $previewAdd + ( $offset * 60*60*24 ) );
 
-                                        $today = date( __( 'Y-m-d', 'pmprosequence' ), $timestamp );
+                                        $today = date( __( 'Y-m-d', "pmprosequence" ), $timestamp );
 
                                         if ( $post->delay <= $today ) {
 
@@ -4281,6 +4292,7 @@
             $this->dbg_log("has_post_access() - NO access granted to post {$post_id} for user {$user_id}");
             return false;
         }
+
         /**
           *  Check whether to permit a given Post ID to have multiple entries and as a result delay values.
           *
@@ -4365,6 +4377,7 @@
             return $retval;
         }
         */
+
         /**
          * Validates that the value received follows a valid "delay" format for the post/page sequence
          *
@@ -4416,7 +4429,7 @@
             return true;
         }
 
-/**
+        /**
          * Sort the two post objects (order them) according to the defined sortOrder
          *
          * @return int | bool - The usort() return value
@@ -4848,12 +4861,51 @@
             }
             return false;
         }
+
+/*
+        public function reset_alert_notice_for_user( $sequence_id, $post_id, $delay ) {
+
+            $identifier = "{$post_id}_{$delay}";
+
+            $users = get_users( array(
+                'meta_key' => "pmpro_sequence_id_{$sequence_id}_notices",
+                )
+            );
+
+            $this->dbg_log("reset_alert_notice_for_user() - Found " . count( $users ) . " users with settings for sequence {$sequence_id}");
+
+            // Loop through the user list and update their notice settings (remove the entry and clean up the array).
+            foreach($users as $user ) {
+
+                $user_settings = get_user_meta( $user->ID, "pmpro_sequence_id_{$sequence_id}_notices", true );
+
+                if ( FALSE !== $user_settings ) {
+                    $this->dbg_log("reset_alert_notice_for_user() - User {$user->ID} has " . count( $user_settings->posts ) . " post notifications stored. Searching for {$identifier}...");
+                    $key = array_search( $identifier, $user_settings->posts );
+
+                    if ( FALSE !== $key ) {
+                        $this->dbg_log("reset_alert_notice_for_user() - {$identifier} found in list of alerted notices. Resetting.");
+                        unset( $user_settings->posts[$key] );
+                    }
+
+                    $user_settings->posts = array_values( $user_settings->posts );
+
+                    $this->dbg_log("reset_alert_notice_for_user() - User {$user->ID} now has " . count( $user_settings->posts ) . " post notifications stored for sequence # {$sequence_id}");
+                    $this->save_user_notice_settings( $user->ID, $user_settings, $sequence_id );
+
+                } else {
+                    $this->dbg_log("reset_alert_notice_for_user() - WARNING: No settings found for user {$user->ID} and sequence {$sequence_id}!");
+                }
+            }
+        }
+*/
         /**
          * Function will remove the flag indicating that the user has been notified already for this post.
          * Searches through all active User IDs with the same level as the Sequence requires.
          *
          * @param $post_id - The ID of the post to search through the active member list for
          *
+         * @returns bool|array() - The list of user IDs where the remove operation failed, or true for success.
          * @access private
          */
         private function remove_post_notified_flag( $post_id, $delay ) {
@@ -4861,6 +4913,8 @@
             global $wpdb;
 
             $this->dbg_log('remove_post_notified_flag() - Preparing SQL. Using sequence ID: ' . $this->sequence_id);
+
+            $error_users = array();
 
             // Find all users that are active members of this sequence.
             $users = $this->get_users_of_sequence();
@@ -4890,12 +4944,19 @@
                     }
                     else {
                         $this->dbg_log( "remove_post_notified_flag() - Unable to remove post # {$post_id} in the notification settings for user with id {$user->user_id}", DEBUG_SEQ_WARNING );
+                        $error_users[] = $user->user_id;
                     }
                 }
                 else {
-                    $this->dbg_log("remove_post_notified_flag() - Could not find the post_id/delay combination: {$post_id}_{$delay}");
+                    $this->dbg_log("remove_post_notified_flag() - Could not find the post_id/delay combination: {$post_id}_{$delay} for user {$user->user_id}");
                 }
             }
+
+            if ( !empty( $error_users ) ) {
+                return $error_users;
+            }
+
+            return true;
         }
 
         /**
@@ -5155,7 +5216,7 @@
                             array( $this->sequence_id )
                         )) {
 
-                        $this->set_error_msg( printf( __('Could not schedule new content alert for %s', 'pmprosequence'), $this->options->noticeTime) );
+                        $this->set_error_msg( printf( __('Could not schedule new content alert for %s', "pmprosequence"), $this->options->noticeTime) );
                         $this->dbg_log("update_user_notice_cron() - Did not schedule the new cron job at ". $this->options->noticeTime . " for this sequence (# " . $this->sequence_id . ')');
                         return false;
                     }
@@ -5233,6 +5294,7 @@
 
             // Make sure the email class is loaded.
             if ( ! class_exists( 'PMProEmail' ) ) {
+                $this->dbg_log("send_notice() - PMProEmail class is missing??");
                 return;
             }
 
@@ -5249,6 +5311,8 @@
             $excerpt = '';
             $ga_tracking = '';
 
+            $this->dbg_log("send_notice() - Preparing to send " . count( $post_ids ) . " post alerts for user {$user_id} regarding sequence {$seq_id}");
+            $this->dbg_log($templ);
 
             // Add data/img entry for google analytics.
 /*
@@ -5312,7 +5376,7 @@
                         $this->dbg_log("send_notice() - Adding the post excerpt to email notice");
 
                         if ( empty( $this->options->excerpt_intro ) ) {
-                            $this->options->excerpt_intro = __('A summary of the post:', 'pmprosequence');
+                            $this->options->excerpt_intro = __('A summary of the post:', "pmprosequence");
                         }
 
                         $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
@@ -5331,7 +5395,7 @@
                     $post_links .= '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>';
 
                     $emails[$idx]->data = array(
-                        "name" => $user->first_name, // Options are: display_name, first_name, last_name, nickname
+                        "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
                         "sitename" => get_option("blogname"),
                         "post_link" => $post_link_prefix . $post_links . $post_link_postfix,
                         "today" => date($this->options->dateformat, current_time('timestamp')),
@@ -5345,6 +5409,7 @@
                 }
             }
 
+            $this->dbg_log("send_notice() - Have prepared " . count($emails) . " email notices for user {$user_id}");
             if ( empty($emails) ) {
 
                 $email->from = $this->options->replyto; // = pmpro_getOption('from_email');
@@ -5359,7 +5424,7 @@
                     $this->dbg_log("Adding the post excerpt to email notice");
 
                     if ( empty( $this->options->excerpt_intro ) ) {
-                        $this->options->excerpt_intro = __('A summary of the post(s):', 'pmprosequence');
+                        $this->options->excerpt_intro = __('A summary of the post(s):', "pmprosequence");
                     }
 
                     $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
@@ -5395,7 +5460,7 @@
                 // Send everything as individual email messages.
                 foreach ( $emails as $email ) {
 
-                    // $this->dbg_log('dEmail() - Array contains: ' . print_r($email->data, true));
+                    $this->dbg_log('send_notice() - Array contains: ' . print_r($email->data, true));
                     $email->sendEmail();
                 }
             }
@@ -5430,6 +5495,7 @@
                 $template_path = null;
             }
 
+            $this->dbg_log("email_template_path() - Using path: {$template_path}");
             return $template_path;
         }
 
@@ -5499,6 +5565,9 @@
             if ( isset( $phpmailer->ptitle ) ) {
                 $phpmailer->Body = apply_filters( 'pmpro-sequence-alert-message-title', str_replace( "!!ptitle!!", $phpmailer->ptitle, $phpmailer->Body ) );
             }
+
+            $this->dbg_log("email_body() - Content of email object: ");
+            $this->dbg_log($phpmailer);
         }
 
         /**
@@ -5626,7 +5695,7 @@
 
                         $timestamp = ( current_time( 'timestamp' ) + $previewAdd + ( $offset * 60*60*24 ) );
 
-                        $today = date( __( 'Y-m-d', 'pmprosequence' ), $timestamp );
+                        $today = date( __( 'Y-m-d', "pmprosequence" ), $timestamp );
 
                         // foreach( $delay_arr as $delay ) {
 
@@ -5908,7 +5977,7 @@
 
                 if (! $user_can ) {
 
-                    $this->set_error_msg( __( 'Incorrect privileges for this operation', 'pmprosequence' ) );
+                    $this->set_error_msg( __( 'Incorrect privileges for this operation', "pmprosequence" ) );
                     $this->dbg_log("post_save_action() - User lacks privileges to edit", DEBUG_SEQ_WARNING);
                     return;
                 }
@@ -5921,7 +5990,7 @@
                 elseif ( empty( $delays[$key] ) ) {
 
                     $this->dbg_log("post_save_action() - Not a valid delay value...: " . $delays[$key], DEBUG_SEQ_CRITICAL);
-                    $this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", 'pmprosequence'), get_the_title( $id ) ) );
+                    $this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", "pmprosequence"), get_the_title( $id ) ) );
                 }
                 else {
 
@@ -6035,7 +6104,7 @@
                                     if ( !$this->delete_post_meta_for_sequence( $sequence_id ) ) {
 
                                         $this->dbg_log( 'settings_callback() - Unable to delete the posts in sequence # ' . $sequence_id, DEBUG_SEQ_CRITICAL );
-                                        $this->set_error_msg( __('Unable to wipe existing posts', 'pmprosequence') );
+                                        $this->set_error_msg( __('Unable to wipe existing posts', "pmprosequence") );
                                         $status = false;
                                     }
                                     else
@@ -6047,20 +6116,20 @@
                         }
                     }
                     else {
-                        $this->set_error_msg( printf( __('Save status returned was: %s', 'pmprosequence'), $status ) );
+                        $this->set_error_msg( printf( __('Save status returned was: %s', "pmprosequence"), $status ) );
                     }
 
                     $response = $this->get_post_list_for_metabox();
                 }
                 else {
-                    $this->set_error_msg( __( 'No sequence ID found/specified', 'pmprosequence' ) );
+                    $this->set_error_msg( __( 'No sequence ID found/specified', "pmprosequence" ) );
                     $status = false;
                 }
 
             } catch (Exception $e) {
 
                 $status = false;
-                $this->set_error_msg( printf( __('(exception) %s', 'pmprosequence'), $e->getMessage()) );
+                $this->set_error_msg( printf( __('(exception) %s', "pmprosequence"), $e->getMessage()) );
                 $this->dbg_log(print_r($this->get_error_msg(), true), DEBUG_SEQ_CRITICAL);
             }
 
@@ -6096,10 +6165,57 @@
             return $retval;
         }
 
+        public function remove_post_alert_callback() {
+
+            $this->dbg_log("remove_post_alert_callback() - Attempting to remove the alerts for a post");
+            check_ajax_referer('pmpro-sequence-post-meta', 'pmpro_sequence_postmeta_nonce');
+
+            // Fetch the ID of the sequence to add the post to
+            $sequence_id = isset( $_POST['pmpro_sequence_id'] ) && !empty( $_POST['pmpro_sequence_id'] ) ? intval($_POST['pmpro_sequence_id']) : null;
+            $post_id = isset( $_POST['pmpro_sequence_post'] ) && !empty( $_POST['pmpro_sequence_post'] ) ? intval( $_POST['pmpro_sequence_post'] ) : null;
+
+            if ( isset( $_POST['pmpro_sequence_post_delay'] ) && !empty( $_POST['pmpro_sequence_post_delay'] ) ) {
+
+                $date = preg_replace("([^0-9/])", "", $_POST['pmpro_sequence_post_delay']);
+
+                if ( ( $date == $_POST['pmpro_sequence_post_delay'] ) || ( is_null($date)) ) {
+
+                    $delay = intval( $_POST['pmpro_sequence_post_delay'] );
+
+                } else {
+
+                    $delay = sanitize_text_field( $_POST['pmpro_sequence_post_delay']);
+                }
+            }
+
+            $this->dbg_log( "remove_post_alert_callback() - We received sequence ID: {$sequence_id} and post ID: {$post_id}");
+
+            if ( !is_null( $sequence_id ) && !is_null($post_id) && is_admin() ) {
+
+                $this->dbg_log("remove_post_alert_callback() - Loading settings for sequence {$sequence_id} ");
+                $this->get_options( $sequence_id );
+
+                $this->dbg_log("remove_post_alert_callback() - Requesting removal of alert notices for post {$post_id} with delay {$delay} in sequence {$sequence_id} ");
+                $result = $this->remove_post_notified_flag( $post_id, $delay );
+
+                if ( is_array( $result ) ) {
+
+                    $list = join(', ', $result);
+                    wp_send_json_error( $list );
+
+                } else {
+
+                    wp_send_json_success();
+                }
+            }
+
+            wp_send_json_error( 'Missing data in AJAX call' );
+        }
+
         /**
          * Callback for saving the sequence alert optin/optout for the current user
          */
-        function optin_callback()
+        public function optin_callback()
         {
             global $current_user, $wpdb;
 
@@ -6118,7 +6234,7 @@
 
                     $this->dbg_log( 'No sequence number specified. Ignoring settings for user', DEBUG_SEQ_WARNING );
 
-                    wp_send_json_error( __('Unable to save your settings', 'pmprosequence') );
+                    wp_send_json_error( __('Unable to save your settings', "pmprosequence") );
                 }
 
                 if ( isset($_POST['hidden_pmpro_seq_uid'])) {
@@ -6134,7 +6250,7 @@
                 else {
                     $this->dbg_log( 'No user ID specified. Ignoring settings!', DEBUG_SEQ_WARNING );
 
-                    wp_send_json_error( __('Unable to save your settings', 'pmprosequence') );
+                    wp_send_json_error( __('Unable to save your settings', "pmprosequence") );
                 }
 
                 if ( !$this->init( $seqId ) ) {
@@ -6206,12 +6322,12 @@
                 else {
 
                     $this->dbg_log('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID, DEBUG_SEQ_CRITICAL);
-                    $this->set_error_msg( __( 'Unable to save your settings', 'pmprosequence' ) );
+                    $this->set_error_msg( __( 'Unable to save your settings', "pmprosequence" ) );
                     $status = false;
                 }
             }
             catch (Exception $e) {
-                $this->set_error_msg( sprintf( __('Error: %s', 'pmprosequence' ), $e->getMessage() ) );
+                $this->set_error_msg( sprintf( __('Error: %s', "pmprosequence" ), $e->getMessage() ) );
                 $status = false;
                 $this->dbg_log('optin_save() - Exception error: ' . $e->getMessage(), DEBUG_SEQ_CRITICAL);
             }
@@ -6228,7 +6344,7 @@
          *
          * Triggers the cron hook to achieve it.
          */
-        function sendalert_callback() {
+        public function sendalert_callback() {
 
             $this->dbg_log('sendalert() - Processing the request to send alerts manually');
 
@@ -6251,7 +6367,7 @@
         /**
          * Catches ajax POSTs from dashboard/edit for CPT (clear existing sequence members)
          */
-        function sequence_clear_callback() {
+        public function sequence_clear_callback() {
 
             // Validate that the ajax referrer is secure
             check_ajax_referer('pmpro-sequence-save-settings', 'pmpro_sequence_settings_nonce');
@@ -6275,7 +6391,7 @@
                     if ( !$this->delete_post_meta_for_sequence($sequence_id) )
                     {
                         $this->dbg_log('Unable to delete the posts in sequence # ' . $sequence_id, DEBUG_SEQ_CRITICAL);
-                        $this->set_error_msg( __('Could not delete posts from this sequence', 'pmprosequence'));
+                        $this->set_error_msg( __('Could not delete posts from this sequence', "pmprosequence"));
 
                     }
                     else {
@@ -6285,11 +6401,11 @@
                 }
                 else
                 {
-                    $this->set_error_msg( __('Unable to identify the Sequence', 'pmprosequence') );
+                    $this->set_error_msg( __('Unable to identify the Sequence', "pmprosequence") );
                 }
             }
             else {
-                $this->set_error_msg( __('Unknown request', 'pmprosequence') );
+                $this->set_error_msg( __('Unknown request', "pmprosequence") );
             }
 
             // Return the status to the calling web page
@@ -6307,7 +6423,7 @@
          *
          * Returns 'error' message (or nothing, if success) to calling JavaScript function
          */
-        function rm_post_callback() {
+        public function rm_post_callback() {
 
             check_ajax_referer('pmpro-sequence-rm-post', 'pmpro_sequence_rmpost_nonce');
 
@@ -6331,14 +6447,14 @@
 
                 $this->remove_post( $seq_post_id, $delay );
 
-                //$result = __('The post has been removed', 'pmprosequence');
+                //$result = __('The post has been removed', "pmprosequence");
                 $success = true;
 
             }
             else {
 
                 $success = false;
-                $this->set_error_msg( __( 'Incorrect privileges to remove posts from this sequence', 'pmprosequence'));
+                $this->set_error_msg( __( 'Incorrect privileges to remove posts from this sequence', "pmprosequence"));
             }
 
             // Return the content for the new listbox (sans the deleted item)
@@ -6357,7 +6473,7 @@
          * Removes the sequence from managing this $post_id.
          * Returns the table of sequences the post_id belongs to back to the post/page editor using JSON.
          */
-        function rm_sequence_from_post_callback() {
+        public function rm_sequence_from_post_callback() {
 
             /** @noinspection PhpUnusedLocalVariableInspection */
             $success = false;
@@ -6382,12 +6498,12 @@
 
                 $this->dbg_log("Removing post # {$post_id} with delay {$delay} from sequence {$sequence_id}");
                 $this->remove_post( $post_id, $delay, true );
-                //$result = __('The post has been removed', 'pmprosequence');
+                //$result = __('The post has been removed', "pmprosequence");
                 $success = true;
             } else {
 
                 $success = false;
-                $this->set_error_msg( __( 'Incorrect privileges to remove posts from this sequence', 'pmprosequence' ) );
+                $this->set_error_msg( __( 'Incorrect privileges to remove posts from this sequence', "pmprosequence" ) );
             }
 
             $result = $this->load_sequence_meta( $post_id, $sequence_id );
@@ -6407,7 +6523,7 @@
          *
          * @throws Exception
          */
-        function update_delay_post_meta_callback() {
+        public function update_delay_post_meta_callback() {
 
             $this->dbg_log("update_delay_post_meta_callback() - Update the delay input for the post/page meta");
 
@@ -6476,7 +6592,7 @@
                 if ( $this->is_present( $seq_post_id, $delay ) ) {
 
                     $this->dbg_log("add_post_callback() - Post {$seq_post_id} with delay {$delay} is already present in sequence {$sequence_id}");
-                    $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', 'pmprosequence' ) );
+                    $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', "pmprosequence" ) );
 
                     wp_send_json_error( $this->get_error_msg() );
                     return;
@@ -6503,7 +6619,7 @@
 
                     } else {
                         $success = false;
-                        $this->set_error_msg( __( 'Not permitted to modify the sequence', 'pmprosequence' ) );
+                        $this->set_error_msg( __( 'Not permitted to modify the sequence', "pmprosequence" ) );
                     }
 
                 } else {
@@ -6512,11 +6628,11 @@
 
                     if ( empty( $seq_post_id ) && ( $this->get_error_msg() == null ) ) {
 
-                        $this->set_error_msg( sprintf( __( 'Did not specify a post/page to add', 'pmprosequence' ) ) );
+                        $this->set_error_msg( sprintf( __( 'Did not specify a post/page to add', "pmprosequence" ) ) );
                     }
                     elseif ( ( $delay !== 0 ) && empty( $delay ) ) {
 
-                        $this->set_error_msg( __( 'No delay has been specified', 'pmprosequence' ) );
+                        $this->set_error_msg( __( 'No delay has been specified', "pmprosequence" ) );
                     }
 
                     $delay       = null;
@@ -6529,12 +6645,12 @@
                 if ( empty( $seq_post_id ) && ( $this->get_error_msg() == null ) ) {
 
                     $success = false;
-                    $this->set_error_msg( sprintf( __( 'Did not specify a post/page to add', 'pmprosequence' ) ) );
+                    $this->set_error_msg( sprintf( __( 'Did not specify a post/page to add', "pmprosequence" ) ) );
                 }
                 elseif ( empty( $sequence_id ) && ( $this->get_error_msg() == null ) ) {
 
                     $success = false;
-                    $this->set_error_msg( sprintf( __( 'This sequence was not found on the server!', 'pmprosequence' ) ) );
+                    $this->set_error_msg( sprintf( __( 'This sequence was not found on the server!', "pmprosequence" ) ) );
                 }
 
                 $result = $this->get_post_list_for_metabox();
@@ -6600,7 +6716,7 @@
             // Check that the function was called correctly. If not, just return
             if(empty($sequence_id)) {
                 $this->dbg_log('save_settings(): No sequence ID supplied...');
-                $this->set_error_msg( __('No sequence provided', 'pmprosequence'));
+                $this->set_error_msg( __('No sequence provided', "pmprosequence"));
                 return false;
             }
 
@@ -6613,7 +6729,7 @@
             // Verify that we're allowed to update the sequence data
             if ( !current_user_can( 'edit_post', $sequence_id ) ) {
                 $this->dbg_log('save_settings(): User is not allowed to edit this post type', DEBUG_SEQ_CRITICAL);
-                $this->set_error_msg( __('User is not allowed to change settings', 'pmprosequence'));
+                $this->set_error_msg( __('User is not allowed to change settings', "pmprosequence"));
                 return false;
             }
 
@@ -6626,7 +6742,7 @@
                     if ( !$this->delete_post_meta_for_sequence( $sequence_id ) ) {
 
                         $this->dbg_log( 'save_settings() - Unable to delete the posts in sequence # ' . $sequence_id, DEBUG_SEQ_CRITICAL );
-                        $this->set_error_msg( __('Unable to wipe existing posts', 'pmprosequence') );
+                        $this->set_error_msg( __('Unable to wipe existing posts', "pmprosequence") );
                     }
                     else {
                         $this->dbg_log( 'save_settings() - Reloading sequence info');
@@ -6786,7 +6902,7 @@
                 $this->dbg_log('save_settings(): POST value for settings->dateformat: ' . esc_attr($_POST['hidden_pmpro_seq_dateformat']) );
             }
             else
-                $this->options->dateformat = __('m-d-Y', 'pmprosequence'); // Default is MM-DD-YYYY (if translation supports it)
+                $this->options->dateformat = __('m-d-Y', "pmprosequence"); // Default is MM-DD-YYYY (if translation supports it)
 
             if ( isset($_POST['hidden_pmpro_seq_replyto']) )
             {
@@ -6802,7 +6918,7 @@
                 $this->dbg_log('save_settings(): POST value for settings->subject: ' . esc_attr($_POST['hidden_pmpro_seq_subject']) );
             }
             else
-                $this->options->subject = __('New Content ', 'pmprosequence');
+                $this->options->subject = __('New Content ', "pmprosequence");
 
             // $sequence->options = $settings;
             if ( $this->options->sendNotice == 1 ) {
@@ -6940,19 +7056,19 @@
             $defaultSlug = get_option( 'pmpro_sequence_slug', 'sequence' );
 
             $labels =  array(
-                'name' => __( 'Sequences', 'pmprosequence'  ),
-                'singular_name' => __( 'Sequence', 'pmprosequence' ),
+                'name' => __( 'Sequences', "pmprosequence"  ),
+                'singular_name' => __( 'Sequence', "pmprosequence" ),
                 'slug' => 'pmpro_sequence',
-                'add_new' => __( 'New Sequence', 'pmprosequence' ),
-                'add_new_item' => __( 'New Sequence', 'pmprosequence' ),
-                'edit' => __( 'Edit Sequence', 'pmprosequence' ),
-                'edit_item' => __( 'Edit Sequence', 'pmprosequence'),
-                'new_item' => __( 'Add New', 'pmprosequence' ),
-                'view' => __( 'View Sequence', 'pmprosequence' ),
-                'view_item' => __( 'View This Sequence', 'pmprosequence' ),
-                'search_items' => __( 'Search Sequences', 'pmprosequence' ),
-                'not_found' => __( 'No Sequence Found', 'pmprosequence' ),
-                'not_found_in_trash' => __( 'No Sequence Found In Trash', 'pmprosequence' )
+                'add_new' => __( 'New Sequence', "pmprosequence" ),
+                'add_new_item' => __( 'New Sequence', "pmprosequence" ),
+                'edit' => __( 'Edit Sequence', "pmprosequence" ),
+                'edit_item' => __( 'Edit Sequence', "pmprosequence"),
+                'new_item' => __( 'Add New', "pmprosequence" ),
+                'view' => __( 'View Sequence', "pmprosequence" ),
+                'view_item' => __( 'View This Sequence', "pmprosequence" ),
+                'search_items' => __( 'Search Sequences', "pmprosequence" ),
+                'not_found' => __( 'No Sequence Found', "pmprosequence" ),
+                'not_found_in_trash' => __( 'No Sequence Found In Trash', "pmprosequence" )
             );
 
             $error = register_post_type('pmpro_sequence',
@@ -7062,21 +7178,21 @@
                     'delay_config' => $delay_config,
                     'lang' => array(
                         'alert_not_saved' => __("Error: This sequence needs to be saved before you can send alerts", "pmprosequence"),
-                        'save' => __('Update Sequence', 'pmprosequence'),
-                        'saving' => __('Saving', 'pmprosequence'),
-                        'saveSettings' => __('Update Settings', 'pmprosequence'),
-                        'delay_change_confirmation' => __('Changing the delay type will erase all existing posts or pages in the Sequence list. (Cancel if your are unsure)', 'pmprosequence'),
-                        'saving_error_1' => __('Error saving sequence post [1]', 'pmprosequence'),
-                        'saving_error_2' => __('Error saving sequence post [2]', 'pmprosequence'),
-                        'remove_error_1' => __('Error deleting sequence post [1]', 'pmprosequence'),
-                        'remove_error_2' => __('Error deleting sequence post [2]', 'pmprosequence'),
-                        'undefined' => __('Not Defined', 'pmprosequence'),
-                        'unknownerrorrm' => __('Unknown error removing post from sequence', 'pmprosequence'),
-                        'unknownerroradd' => __('Unknown error adding post to sequence', 'pmprosequence'),
-                        'daysLabel' => __('Delay', 'pmprosequence'),
-                        'daysText' => __('Days to delay', 'pmprosequence'),
-                        'dateLabel' => __('Avail. on', 'pmprosequence'),
-                        'dateText' => __('Release on (YYYY-MM-DD)', 'pmprosequence'),
+                        'save' => __('Update Sequence', "pmprosequence"),
+                        'saving' => __('Saving', "pmprosequence"),
+                        'saveSettings' => __('Update Settings', "pmprosequence"),
+                        'delay_change_confirmation' => __('Changing the delay type will erase all existing posts or pages in the Sequence list. (Cancel if your are unsure)', "pmprosequence"),
+                        'saving_error_1' => __('Error saving sequence post [1]', "pmprosequence"),
+                        'saving_error_2' => __('Error saving sequence post [2]', "pmprosequence"),
+                        'remove_error_1' => __('Error deleting sequence post [1]', "pmprosequence"),
+                        'remove_error_2' => __('Error deleting sequence post [2]', "pmprosequence"),
+                        'undefined' => __('Not Defined', "pmprosequence"),
+                        'unknownerrorrm' => __('Unknown error removing post from sequence', "pmprosequence"),
+                        'unknownerroradd' => __('Unknown error adding post to sequence', "pmprosequence"),
+                        'daysLabel' => __('Delay', "pmprosequence"),
+                        'daysText' => __('Days to delay', "pmprosequence"),
+                        'dateLabel' => __('Avail. on', "pmprosequence"),
+                        'dateText' => __('Release on (YYYY-MM-DD)', "pmprosequence"),
                     )
                 )
             );
@@ -7299,7 +7415,7 @@
             $this->dbg_log('Unprivileged ajax call attempted', DEBUG_SEQ_CRITICAL);
 
             wp_send_json_error( array(
-                'message' => __('You must be logged in to edit PMPro Sequences', 'pmprosequence')
+                'message' => __('You must be logged in to edit PMPro Sequences', "pmprosequence")
             ) );
         }
 
@@ -7338,7 +7454,7 @@
         {
 
             // Load filters
-            // add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
+            add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
             add_filter('pmpro_sequencepost_types', array(&$this, 'included_cpts'));
 
             add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 9, 4);
@@ -7386,6 +7502,7 @@
             add_action('wp_ajax_pmpro_sequence_update_post_meta', array(&$this, 'update_delay_post_meta_callback'));
             add_action('wp_ajax_pmpro_rm_sequence_from_post', array(&$this, 'rm_sequence_from_post_callback'));
             add_action("wp_ajax_pmpro_sequence_rm_post", array(&$this, "rm_post_callback"));
+            add_action("wp_ajax_e20r_remove_alert", array(&$this, "remove_post_alert_callback"));
             add_action('wp_ajax_pmpro_sequence_clear', array(&$this, 'sequence_clear_callback'));
             add_action('wp_ajax_pmpro_send_notices', array(&$this, 'sendalert_callback'));
             add_action('wp_ajax_pmpro_sequence_save_user_optin', array(&$this, 'optin_callback'));
