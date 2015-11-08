@@ -70,6 +70,14 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 3.0.2 ==
+
+* Would sometimes trigger warning message while searching for a specific post ID
+* Only grant blanket access to post in sequence if admin is logged in on dashboard and we're not in an ajax operation
+* Comment out incomplete Google Analytics tracking support
+* Add debug output for send_notice() to help troubleshoot.
+* Make opt-in form full-width
+
 == 3.0.1 ==
 
 * Would sometimes issue warning in find_by_id()

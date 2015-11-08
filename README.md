@@ -111,11 +111,13 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0.1
+###3.0.2
 
-* Would sometimes issue warning in find_by_id()
-* Updated to direct user to dashboard
-* v3.0.1
+* Would sometimes trigger warning message while searching for a specific post ID
+* Only grant blanket access to post in sequence if admin is logged in on dashboard and we're not in an ajax operation
+* Comment out incomplete Google Analytics tracking support
+* Add debug output for send_notice() to help troubleshoot.
+* Make opt-in form full-width
 
 ##Old releases
 ###.1
@@ -534,4 +536,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Can specify post_status values to include in load_sequence_post() (array() or string)
 * Prefix any post in draft status with 'DRAFT' (or translated equivalent) in metabox list of posts for sequence
 * Run wp_reset_query() before returning all sequences in get_all_sequences().
+
+###3.0.1
+
+* Would sometimes issue warning in find_by_id()
+* Updated to direct user to dashboard
+* v3.0.1
 
