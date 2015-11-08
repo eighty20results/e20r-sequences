@@ -392,14 +392,14 @@ var postMeta = {
         $class.sequence_list = jQuery( 'select.pmpro_seq-memberof-sequences');
 
         jQuery('select.new-sequence-select, .pmpro_seq-memberof-sequences').each(function() {
-            jQuery(this).unbind().on( 'change', function () {
+            jQuery(this).unbind('change').on( 'change', function () {
 
                 console.log("User changed the content of the select box.")
                 $class.meta_select_changed( this );
             });
         });
 
-        jQuery("#pmpro-seq-new-meta").unbind().on( "click", function() {
+        jQuery("#pmpro-seq-new-meta").unbind('click').on( "click", function() {
 
             $class.manage_meta_rows();
             console.log("Add new table row for metabox");
@@ -412,7 +412,7 @@ var postMeta = {
             $class.manage_meta_rows();
         });
 
-        jQuery('.delay-row-input input:checkbox').unbind().on( 'click', function() {
+        jQuery('.delay-row-input input:checkbox').unbind('click').on( 'click', function() {
 
             console.log("The 'remove' checkbox was clicked...");
             var $checkbox = this;
@@ -443,7 +443,58 @@ var postMeta = {
             }
         });
 
+        jQuery('.delay-row-input.sequence-delay button.pmpro-sequence-remove-alert').unbind('click').on('click', function() {
+            console.log("The 'clear alerts' button was clicked");
+
+            var button = this;
+
+            if ( !( button instanceof jQuery ) ) {
+                button = jQuery( button );
+            }
+
+            var delay_input = button.closest('td').find('.pmpro-seq-delay-info').val();
+            var sequence_id = button.closest('td').find('input.pmpro_seq-remove-seq').val();
+            var post_id = jQuery('#post_ID').val();
+
+            if ( !post_id ) {
+
+                alert("Warning: Post has not been saved yet, so there are no alerts to clear");
+                return;
+            }
+
+            $class.clear_post_notice_alerts( sequence_id, post_id, delay_input );
+        });
+
         $class.show_controls();
+    },
+    clear_post_notice_alerts: function( sequence_id, post_id, delay ) {
+
+        event.preventDefault();
+
+        var data = {
+            'action': 'e20r_remove_alert',
+            'pmpro_sequence_postmeta_nonce': jQuery('#pmpro_sequence_postmeta_nonce').val(),
+            'pmpro_sequence_id': sequence_id,
+            'pmpro_sequence_post': post_id,
+            'pmpro_sequence_post_delay': delay
+        };
+
+        jQuery.ajax({
+            url: pmpro_sequence.ajaxurl,
+            type: 'POST',
+            timeout: 5000,
+            dataType: 'JSON',
+            data: data,
+            error: function( $response ) {
+
+                alert("Unable to clear settings for the following user IDs:\n\n" + $response.data );
+                return false;
+            },
+            success: function( $response ) {
+                alert("Alert notification setting cleared for sequence number " + sequence_id );
+                return;
+            }
+        });
     },
     remove_entry: function( post_id, delay ) {
 
@@ -462,7 +513,7 @@ var postMeta = {
                 pmpro_sequence_id: jQuery('#pmpro_sequence_id').val(),
                 pmpro_seq_post: post_id,
                 pmpro_seq_delay: delay,
-                pmpro_sequence_rmpost_nonce: jQuery('#pmpro_sequence_rmpost_nonce').val()
+                pmpro_sequence_rmpost_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val()
             },
             error: function($data){
 
