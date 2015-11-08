@@ -111,13 +111,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0.2
+###3.0.3
 
-* Would sometimes trigger warning message while searching for a specific post ID
-* Only grant blanket access to post in sequence if admin is logged in on dashboard and we're not in an ajax operation
-* Comment out incomplete Google Analytics tracking support
-* Add debug output for send_notice() to help troubleshoot.
-* Make opt-in form full-width
+* On the edit.php page, add a 'Clear alerts' button for a specific post/sequence/delay combination
+* Allow admin to clear notification flags for a specific post/delay/sequence id from the posts edit page
+* Make language tag consistent
 
 ##Old releases
 ###.1
@@ -543,3 +541,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Updated to direct user to dashboard
 * v3.0.1
 
+###3.0.2
+
+* Would sometimes trigger warning message while searching for a specific post ID
+* Only grant blanket access to post in sequence if admin is logged in on dashboard and we're not in an ajax operation
+* Comment out incomplete Google Analytics tracking support
+* Add debug output for send_notice() to help troubleshoot.
+* Make opt-in form full-width

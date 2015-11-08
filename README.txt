@@ -70,6 +70,12 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 3.0.3 ==
+
+* On the edit.php page, add a 'Clear alerts' button for a specific post/sequence/delay combination
+* Allow admin to clear notification flags for a specific post/delay/sequence id from the posts edit page
+* Make language tag consistent
+
 == 3.0.2 ==
 
 * Would sometimes trigger warning message while searching for a specific post ID
