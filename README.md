@@ -70,7 +70,7 @@ See ./email/README.txt for information on templates for the email alerts.
 | pmpro-sequence-cpt-slug | Set the Custom Post Type Slug | 'sequence' |
 | pmpro-sequence-cpt-archive-slug | Set the archive slug for the Custom Post Type | 'sequence' |
 | pmpro-sequence-not-found-msg | HTML error message for when a sequence isn't available/found | <p class="error" style="text-align: center;">The specified PMPro Sequence was not found. <br/>Please report this error to the webmaster.</p> |
-| pmpro-seq-recentpost-widget-nopostfound | Set ID for the <h3> element if a post isn't found | pmpro-seq-widget-recentpost-nopostfound-title | 
+| pmpro-seq-recentpost-widget-nopostfound | Set ID for the h3 element if a post isn't found | pmpro-seq-widget-recentpost-nopostfound-title | 
 | pmpro-seq-widget-recentpost-nopostfound-body | Set the class for the error message if no post is found | empty |
 | pmpro-seq-recent-post-widget-title-id | Set the element ID for the widget title | pmpro-seq-widget-recentpost-title |
 | pmpro-seq-widget-postlink-class | Set a class for the link to the post in the widget | empty |
