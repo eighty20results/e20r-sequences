@@ -1,8 +1,8 @@
 {
   "name" : "PMPro Sequences",
   "slug" : "pmpro-sequences",
-  "download_url" : "https://eighty20results.com/protected-content/pmpro-sequences/pmpro-sequences-3.0.3.zip",
-  "version" : "3.0.3",
+  "download_url" : "https://eighty20results.com/protected-content/pmpro-sequences/pmpro-sequences-3.0.4.zip",
+  "version" : "3.0.4",
   "tested": "4.3.1",
   "requires": "4.0",
   "author" : "Thomas Sjolshagen <thomas@eighty20results.com>",
