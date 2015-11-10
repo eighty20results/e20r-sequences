@@ -4034,6 +4034,10 @@
         public function has_membership_access_filter( $hasaccess, $post, $user, $levels) {
 
             //See if the user has access to the specific post
+            if ( !$this->is_managed($post->ID)) {
+                $this->dbg_log("has_membership_access_filter() - Post {$post->ID} is not managed by a sequence. Returning original access value: {$hasaccess}");
+                return $hasaccess;
+            }
 
             if ( $hasaccess ) {
 
@@ -4047,6 +4051,12 @@
             }
 
             return apply_filters( 'pmpro-sequence-has-access-filter', $hasaccess, $post, $user, $levels );
+        }
+
+        public function is_managed( $post_id ) {
+
+            $this->dbg_log("is_managed() - Check whether post ID {$post_id} is managed by a sequence");
+            return ( empty( get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' ) ) ? false : true );
         }
 
         public function has_sequence_access( $user_id, $sequence_id = null ) {
