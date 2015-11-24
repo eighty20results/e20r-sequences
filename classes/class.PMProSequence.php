@@ -4055,9 +4055,12 @@
 
         public function is_managed( $post_id ) {
 
-            $this->dbg_log("is_managed() - Check whether post ID {$post_id} is managed by a sequence");
+            $this->dbg_log("is_managed() - Check whether post ID {$post_id} is managed by a sequence: " . $this->who_called_me());
+
             $is_sequence = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
-            return ( empty($is_sequence) ? false : true );
+            $retval = empty($is_sequence) ? false : true;
+
+            return $retval;
         }
 
         public function has_sequence_access( $user_id, $sequence_id = null ) {
