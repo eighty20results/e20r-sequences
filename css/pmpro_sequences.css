@@ -124,24 +124,24 @@ div#pmpro-seq-error {
     font-size: 24px;
     padding-bottom: 10px;
     color: #9C0000;
-    font-variant: small-caps;
-    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+/*    font-variant: small-caps; */
+/*    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif; */
 }
 #pmpro-seq-post-body-text {
-    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+/*    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif; */
     font-size: 10pt;
     color: #004CFF;
     line-height: 110%;
 }
 #pmpro-seq-post-link {
-    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif;
+/*    font-family: "Lucida Grande", Verdana, Arial, "Bitstream Vera Sans", sans-serif; */
     font-size: 10pt;
     color: #9C0000;
     font-weight: bold;
     margin-top: 15px;
     margin-bottom: 15px;
     margin-left: 10px;
-    font-variant: small-caps;
+/*    font-variant: small-caps; */
     line-height: 130%;
     text-decoration: underline;
 }
@@ -238,7 +238,7 @@ table#newmeta td { vertical-align: middle !important; }
 ----------------------------------------------- */
 /* The containing box with a nice white background */
 .paging-navigation {
-    font-family: sans-serif;
+/*    font-family: sans-serif; */
     padding: 1em;
     background: #fff;
     background: hsl(0, 0%, 100%);
@@ -356,7 +356,7 @@ a:hover.page-numbers {
     font-size: 180%;
     color: #9C0000;
     font-weight: bold;
-    font-variant: small-caps;
+/*    font-variant: small-caps; */
     line-height: 130%;
 }
 div.pmpro-sequence-settings-row {
