@@ -20,7 +20,9 @@
 
 */
 
-	class PMProSequence
+    namespace E20R\Sequences;
+
+	class Sequence
 	{
 	    public $options;
 	    public $sequence_id = 0;
@@ -2556,10 +2558,10 @@
                                 </p>
                             </div>
                         </div> <!-- end of setting -->
-<!--                        <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-full-row">
+<!--                        <div class="e20r-sequences-settings-row clear-after pmpro-sequence-full-row">
                             <hr style="width: 100%;" />
                         </div> --><!-- end of row -->
-<!--                         <div class="pmpro-sequences-settings-row clear-after pmpro-sequence-full-row">
+<!--                         <div class="e20r-sequences-settings-row clear-after pmpro-sequence-full-row">
                             <a class="button button-primary button-large" class="pmpro-seq-settings-save" id="pmpro_settings_save" onclick="pmpro_sequence_saveSettings(<?php echo $this->sequence_id;?>) ; return false;"><?php _e('Update Settings', "pmprosequence"); ?></a>
                             <?php wp_nonce_field('pmpro-sequence-save-settings', 'pmpro_sequence_settings_nonce'); ?>
                             <div class="seq_spinner"></div>
@@ -5794,7 +5796,7 @@
         public function dbg_log( $msg, $lvl = DEBUG_SEQ_INFO ) {
 
             $uplDir = wp_upload_dir();
-            $plugin = "/pmpro-sequences/";
+            $plugin = "/e20r-sequences/";
 
             $dbgRoot = $uplDir['basedir'] . "${plugin}";
             // $dbgRoot = "${plugin}/";
@@ -7154,9 +7156,9 @@
 	            $load_pmpro_sequence_script = true;
 
                 $this->dbg_log("Loading client side javascript and CSS");
-                wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), PMPRO_SEQUENCE_VERSION, true);
+                wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences.js', array('jquery'), PMPRO_SEQUENCE_VERSION, true);
 
-                wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
+                wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
                 wp_enqueue_style( "pmpro-sequence" );
 
                 wp_localize_script('pmpro-sequence-user', 'pmpro_sequence',
@@ -7181,10 +7183,10 @@
             wp_enqueue_style( 'fontawesome', 'https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css', false, '4.4.0' );
 
             wp_register_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
-            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences-admin.js', array( 'jquery', 'select2' ), PMPRO_SEQUENCE_VERSION, true);
+            wp_register_script('pmpro-sequence-admin', PMPRO_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences-admin.js', array( 'jquery', 'select2' ), PMPRO_SEQUENCE_VERSION, true);
 
             wp_register_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
-            wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
+            wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
 
             /* Localize ajax script */
             wp_localize_script('pmpro-sequence-admin', 'pmpro_sequence',
@@ -7238,9 +7240,9 @@
 	        $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
 
 	        $this->dbg_log("enqueue_user_scripts() - 'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
-            wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/pmpro-sequences.js', array('jquery'), PMPRO_SEQUENCE_VERSION, true);
+            wp_register_script('pmpro-sequence-user', PMPRO_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences.js', array('jquery'), PMPRO_SEQUENCE_VERSION, true);
 
-            wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/pmpro_sequences.css' );
+            wp_register_style( 'pmpro-sequence', PMPRO_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
             wp_enqueue_style( "pmpro-sequence" );
 
             wp_localize_script('pmpro-sequence-user', 'pmpro_sequence',

@@ -3,7 +3,7 @@
 Plugin Name: Eighty / 20 Results Sequences for Paid Memberships Pro
 Plugin URI: http://www.eighty20results.com/pmpro-sequences/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 3.0.4
+Version: 3.1.0
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
@@ -29,8 +29,11 @@ License:
 
 */
 
+/* Define namespaces */
+use E20R\Sequences as Sequences;
+
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '3.0.4');
+define('PMPRO_SEQUENCE_VERSION', '3.1.0');
 
 /* Set the max number of email alerts to send in one go to one user */
 define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
@@ -66,15 +69,15 @@ require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-
 /**
  *    Include the class for PMProSequences
  */
-if (!class_exists('PMProSequence')):
+if (!class_exists("\\E20R\\Sequences\\Sequence")):
 
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.PMProSequence.php");
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/scheduled/crons.php");
+    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class-sequence.php");
+    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-tools-cron.php");
 
 endif;
 
-if (!class_exists('SeqRecentPostWidget')):
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.SeqRecentPostWidget.php");
+if (!class_exists("\\E20R\\Sequences\\Tools\\Widgets\\PostWidget")):
+    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-postwidget.php");
 endif;
 
 /** A debug function */
@@ -177,12 +180,12 @@ if (!function_exists("pmpro_getMemberStartdate")):
 */
 endif;
 
-if (!function_exists('pmpro_sequence_import_all_PMProSeries')):
+if (!function_exists('e20r_sequences_import_all_PMProSeries')):
 
     /**
      * Import PMPro Series as specified by the pmpro-sequence-import-pmpro-series filter
      */
-    function pmpro_sequence_import_all_PMProSeries()
+    function e20r_sequences_import_all_PMProSeries()
     {
 
         $importStatus = apply_filters('pmpro-sequence-import-pmpro-series', __return_false());
@@ -272,13 +275,13 @@ if (!function_exists('pmpro_sequence_import_all_PMProSeries')):
 
                 $post_list = get_post_meta($series->ID, '_series_posts', true);
 
-                $seq = new PMProSequence($seq_id);
+                $seq = new Sequences\Sequence($seq_id);
                 $seq->init($seq_id);
 
                 foreach ($post_list as $seq_member) {
 
                     if (!$seq->addPost($seq_member->id, $seq_member->delay)) {
-                        return new WP_Error('sequence_import',
+                        return new \WP_Error('sequence_import',
                             sprintf(__('Could not complete import for series %s', 'pmprosequence'), $series->post_title), $seq->getError());
                     }
                 } // End of foreach
@@ -289,7 +292,7 @@ if (!function_exists('pmpro_sequence_import_all_PMProSeries')):
                 // update_post_meta( $seq_id, "_sequence_posts", $post_list );
             } else {
 
-                return new WP_Error('db_query_error',
+                return new \WP_Error('db_query_error',
                     sprintf(__('Could not complete import for series %s', 'pmprosequence'), $series->post_title), $wpdb->last_error);
 
             }
@@ -361,7 +364,7 @@ function in_object_r($key = null, $value = null, $object, $strict = false)
 
 try {
 
-    $sequence = new PMProSequence();
+    $sequence = new Sequences\Sequence();
     $sequence->load_actions();
 } catch (Exception $e) {
     error_log("PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage());
@@ -371,7 +374,7 @@ register_activation_hook(__FILE__, array(&$sequence, 'activation'));
 register_deactivation_hook(__FILE__, array(&$sequence, 'deactivation'));
 
 $plugin_updates = PucFactory::buildUpdateChecker(
-    'https://eighty20results.com/protected-content/pmpro-sequences/metadata.json',
+    'https://eighty20results.com/protected-content/e20r-sequences/metadata.json',
     __FILE__,
-    'pmpro-sequences'
+    'e20r-sequences'
 );

@@ -1,10 +1,10 @@
-#PMPro Sequences
+#Eighty/20 Results - Sequences
 
 Contributors: strangerstudios, eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
-Requires PHP 5.2 or later.
-Tested up to: 4.3.1
+Requires PHP 5.3 or later.
+Tested up to: 4.4
 Stable tag: 3.0.4
 
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
@@ -42,7 +42,7 @@ See ./email/README.txt for information on templates for the email alerts.
 
 ##Installation
 
-1. Upload the `pmpro-sequences` directory to the `/wp-content/plugins/` directory of your site.
+1. Upload the `e20r-sequences` directory to the `/wp-content/plugins/` directory of your site.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Navigate to the Sequences menu in the WordPress dashboard to create a new sequence.
 4. Add posts to sequence using the "Posts in this Sequences" meta box under the post content.
@@ -238,10 +238,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fix: Typo in return value when finding most recent post for certain members.
 * Fix: Incorrect handling of post_type variable while saving settings.
 * Fix: Would let user activate plugin even if Paid Memberships Pro was not present on system
-* Fix: noConflict() mode for pmpro-sequences.js
+* Fix: noConflict() mode for e20r-sequences.js
 * Fix: Sequence would not be updated if user specified a delay value of 0 for a post/page
 * Fix: Paid Memberships Pro phpmailer action would sometimes trigger error for email messages not related to PMPro Sequence
-* Nit: Remove commented out code from pmpro-sequences-admin.js
+* Nit: Remove commented out code from e20r-sequences-admin.js
 * Nit: Remove inline php for disabled settings
 
 ###2.1.6

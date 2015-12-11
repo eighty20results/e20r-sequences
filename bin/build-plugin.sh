@@ -2,7 +2,7 @@
 # Build script for PMPRO Sequences plugin
 #
 include=(classes email scheduled css images js languages pmpro-sequences.php README.txt)
-short_name="pmpro-sequences"
+short_name="e20r-sequences"
 plugin_path="${short_name}"
 version=$(egrep "^Version:" ../${short_name}.php | awk '{print $2}')
 metadata="../metadata.json"

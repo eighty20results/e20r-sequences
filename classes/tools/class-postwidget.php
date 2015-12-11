@@ -19,7 +19,12 @@
 
 */
 
-class SeqRecentPostWidget extends WP_Widget {
+namespace E20R\Sequences\Tools\Widgets;
+
+use E20R\Sequences as Sequences;
+use E20R\Sequences\Tools\Widgets as Widget;
+
+class PostWidget extends WP_Widget {
 
 	public function __construct() {
 		parent::__construct(
@@ -136,7 +141,7 @@ class SeqRecentPostWidget extends WP_Widget {
 
 		global $id;
 
-		$sequences = new WP_Query( array(
+		$sequences = new \WP_Query( array(
 			"post_type" => "pmpro_sequence",
 		) );
 
@@ -165,7 +170,7 @@ class SeqRecentPostWidget extends WP_Widget {
 		global $post, $current_user;
 
 		if ($sequence_id != 0) {
-			$sequence = new PMProSequence( $sequence_id );
+			$sequence = new Sequences\Sequence( $sequence_id );
             $sequence->init($sequence_id);
 		}
 		else {
