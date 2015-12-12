@@ -369,6 +369,8 @@ function in_object_r($key = null, $value = null, $object, $strict = false)
 try {
 
     $sequence = new E20R\Sequences\Sequence();
+    $cron = new E20R\Sequences\Tools\Cron\Job();
+
     $sequence->load_actions();
 
 } catch (Exception $e) {

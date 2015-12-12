@@ -66,7 +66,18 @@ use E20R\Sequences as Sequences;
 
             $this->managed_types = apply_filters("e20r-sequence-managed-post-types", array("post", "page") );
             $this->current_metadata_versions = get_option( 'pmpro_sequence_metadata_version', array() );
+
+            add_filter( "get_sequence_class_instance", [ $this, 'get_instance' ] );
 		}
+
+        /**
+          * @return Sequences\Sequence $this - Current instance of the class
+          * @since 4.0.0
+          */
+        public function get_instance() {
+
+            return $this;
+        }
 
         /**
          * Initialize the sequence and load its posts
@@ -1157,7 +1168,7 @@ use E20R\Sequences as Sequences;
 
         static public function post_details( $sequence_id, $post_id ) {
 
-            $seq = new Sequences\Sequence();
+            $seq = apply_filters('get_sequence_class_instance', null);
             $seq->get_options( $sequence_id );
 
             return $seq->find_by_id( $post_id );
@@ -1520,7 +1531,7 @@ use E20R\Sequences as Sequences;
 
             global $post;
 
-            $seq = new Sequences\Sequence();
+            $seq = apply_filters('get_sequence_class_instance', null);
 
             $this->dbg_log("render_post_edit_metabox() - Page Metabox being loaded");
 
@@ -1542,7 +1553,7 @@ use E20R\Sequences as Sequences;
 
         static public function all_sequences( $statuses = 'publish' ) {
 
-            $seq = new Sequences\Sequence();
+            $seq = apply_filters('get_sequence_class_instance', null);
             return $seq->get_all_sequences( $statuses );
         }
 
@@ -2649,7 +2660,7 @@ use E20R\Sequences as Sequences;
 
         static public function sequences_for_post( $post_id ) {
 
-            $cSequence = new PMProSequence();
+            $cSequence = apply_filters('get_sequence_class_instance', null);
 
             return $cSequence->get_sequences_for_post( $post_id );
         }
@@ -5202,6 +5213,7 @@ use E20R\Sequences as Sequences;
         private function update_user_notice_cron() {
 
             /* TODO: Does not support Daylight Savings Time (DST) transitions well! - Update check hook in init? */
+
             $prevScheduled = false;
             try {
 
@@ -7032,7 +7044,7 @@ use E20R\Sequences as Sequences;
 
             /* Convert old metadata format to new (v3) format */
 
-            $sequence = new Sequences\Sequence();
+            $sequence = apply_filters('get_sequence_class_instance', null);
             $sequences = $sequence->get_all_sequences();
 
             $sequence->dbg_log("activation() - Found " . count( $sequences ) . " to convert");

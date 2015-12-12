@@ -169,7 +169,7 @@ class PostWidget extends \WP_Widget {
 		global $post, $current_user;
 
 		if ($sequence_id != 0) {
-			$sequence = new Sequences\Sequence( $sequence_id );
+			$sequence = apply_filters('get_sequence_class_instance', null);
             $sequence->init($sequence_id);
 		}
 		else {
