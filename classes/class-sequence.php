@@ -651,7 +651,7 @@ use E20R\Sequences as Sequences;
                 }
             }
 
-            $is_admin = current_user_can('manage_options');
+            $is_admin = user_can( $user_id, 'manage_options');
 
             $member_days = ( $is_admin || ( is_admin() && ( $this->is_cron == false ) ) ) ? 9999 : $this->get_membership_days( $user_id );
 
@@ -6387,12 +6387,11 @@ use E20R\Sequences as Sequences;
                 $sequence_id = intval($_POST['e20r_sequence_id']);
                 $this->dbg_log('sendalert() - Will send alerts for sequence #' . $sequence_id);
 
-                $sequence = apply_filters('get_sequence_class_instance', null);
+//                $sequence = apply_filters('get_sequence_class_instance', null);
+//                $sequence->sequence_id = $sequence_id;
+//                $sequence->get_options( $sequence_id );
 
-                $sequence->sequence_id = $sequence_id;
-                $sequence->get_options( $sequence_id );
-
-                do_action( 'e20r_sequence_cron_hook', $sequence->sequence_id);
+                do_action( 'e20r_sequence_cron_hook', array( $sequence_id ));
 
                 $this->dbg_log('sendalert() - Completed action for sequence');
             }
@@ -7461,12 +7460,11 @@ use E20R\Sequences as Sequences;
 
             $this->dbg_log( 'send_user_alert_notices() - Will send alerts for sequence #' . $sequence_id );
 
-            $sequence = apply_filters('get_sequence_class_instance', null);
+//            $sequence = apply_filters('get_sequence_class_instance', null);
+//            $sequence->sequence_id = $sequence_id;
+//            $sequence->get_options( $sequence_id );
 
-            $sequence->sequence_id = $sequence_id;
-            $sequence->get_options( $sequence_id );
-
-            do_action( 'e20r_sequence_cron_hook', $sequence->sequence_id );
+            do_action( 'e20r_sequence_cron_hook', array( $sequence_id ));
 
             $this->dbg_log( 'send_user_alert_notices() - Completed action for sequence #' . $sequence_id );
             wp_redirect('/wp-admin/edit.php?post_type=pmpro_sequence');
