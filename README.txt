@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 3.1.0
+Stable tag: 4.0.0
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -69,6 +69,30 @@ Please post it in the issues section of GitHub and we'll fix it as soon as we ca
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.0.0 ==
+
+* Fix: Namespace declaration for Sequences class(es)
+* Fix: Move namespace declaration to Sequence class
+* Fix: PHPDoc for some of the classes (apply namespace)
+* Fix: Namespaces for Sequence class
+* Fix: Set global namespace for standard PHP classes (DateTime, DateTimezone, stdClass, WP_Query, etc)
+* Fix: Loading Fontawesome from local resource for Sequence icon(s)
+* Enh: Use wp_enqueue_* rather than wp_register_* functions
+* Fix: Use namespace in register_widget()
+* Update namespace for WP_Widget parent class
+* Add FontAwesome as local resource
+* Add fonts directory to build script
+* Replace pmpro_ and pmpro- instances with e20r_ and e20r- instances respectively
+* Rename all instances of pmpro-sequence to e20r-sequence
+* Rename plugin to e20r-sequences Use namespaces for classes
+* Move all classes under PLUGIN_DIR/classes and PLUGIN_DIR/classes/tools
+* Create Tools\Cron class & move worker function to its own class & namespace
+* Rename widget class to PostWidget
+* Rename the sequences controller class to Sequence
+* Remove sequence icon images (using fontawesome instead)
+* Rename all pmpro_ files to e20r_
+* Update README & .json files
 
 == 3.0.4 ==
 

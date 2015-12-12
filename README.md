@@ -51,38 +51,38 @@ See ./email/README.txt for information on templates for the email alerts.
 
 | Filter | Description | Default value |
 |--------------|:------------:|-------------:|
-| pmpro-sequence-managed-post-types | The post types the sequence plugin can mange. This is how to add CPTs, for instance | array( "post", "page" ) |
-| pmpro-sequence-allowed-post-statuses | The post has to have one of these statuses in order for the user to be granted access to the post (and it shows up in the post list) | array( 'publish', 'future', 'private' ) |
-| pmpro-sequence-found-closest-post | The post ID that is the closest to the day of membership for the currently logged in user | Result from PMProSequence::get_closestPost() function |
-| pmpro-sequence-list-title | The HTML formatted title to use when displaying the list of sequences on the front-end | Output from PMProSequence::setShortcodeTitle() - HTML formatted $title |
-| pmpro-sequence-closest-post-indicator-image | URL to the image to use to indicate which of the posts in the post list is the most recently available post for the current user | URL to __PLUGIN_DIR__/images/most-recent.png|
-| pmpro-sequence-list-pagination-code | The Pagination code for the Sequence List being rendered | Result from PMProSequence::post_paging_nav() function |
-| pmpro-sequence-list-html | The HTML (as a table) for a paginated list of posts (PMPro Sequence posts) | $html - the HTML that will render to show the paginated list (self-contained <div> |
-| pmpro-sequence-email-alert-template-path | The path to the email alert template(s) | $path = PMPRO_SEQUENCE_PLUGIN_DIR . "/email/" - the file system path to the templates | 
-| pmpro-sequence-has-access-filter | A plug-in specific version of the pmpro_has_membership_access_filter filter | $hasAccess (bool), (WP_Post) $post, (WP_User) $user, (array) $levels |
-| pmpro-sequence-add-startdate-offset | Offset the apparent startdate for a user when calculating access rights for a specific sequence. | (int) $sequence_id |
-| pmpro-sequence-check-valid-date | Check whether the supplied string is a valid date. Return true if so. | Return value from PMProSequence::isValidDate( $delay ) |
-| pmpro-sequence-can-add-post-status | Post statuses (i.e. the status of the post) that can be added to a sequence. It may (still) not display unless the 'pmpro-sequence-allowed-post-statuses' filter also matches | array( 'publish', 'future', 'pending', 'private') |
-| pmpro-sequence-has-edit-privileges | Used to indicate whether the user is permitted to do something - like edit the sequence member list, settings, etc | true/false from PMProSequence::userCanEdit() function |
-| pmpro-sequence-alert-message-excerpt-intro | Sets the text to use in place of the !!excerpt_intro!! placeholder in the "new content alert" message | PMProSequence->options->excerpt_intro |
-| pmpro-sequence-alert-message-title | The in-message post title ( replacing the !!ptitle!! placeholder) for the "new content alert" email message. | post_title for the post id being processed |
-| pmpro-sequence-cpt-labels | Override the Custom Post Type labels | array() of label definitions |
-| pmpro-sequence-cpt-slug | Set the Custom Post Type Slug | 'sequence' |
-| pmpro-sequence-cpt-archive-slug | Set the archive slug for the Custom Post Type | 'sequence' |
-| pmpro-sequence-not-found-msg | HTML error message for when a sequence isn't available/found | <p class="error" style="text-align: center;">The specified PMPro Sequence was not found. <br/>Please report this error to the webmaster.</p> |
-| pmpro-seq-recentpost-widget-nopostfound | Set ID for the h3 element if a post isn't found | pmpro-seq-widget-recentpost-nopostfound-title | 
-| pmpro-seq-widget-recentpost-nopostfound-body | Set the class for the error message if no post is found | empty |
-| pmpro-seq-recent-post-widget-title-id | Set the element ID for the widget title | pmpro-seq-widget-recentpost-title |
-| pmpro-seq-widget-postlink-class | Set a class for the link to the post in the widget | empty |
+| e20r-sequence-managed-post-types | The post types the sequence plugin can mange. This is how to add CPTs, for instance | array( "post", "page" ) |
+| e20r-sequence-allowed-post-statuses | The post has to have one of these statuses in order for the user to be granted access to the post (and it shows up in the post list) | array( 'publish', 'future', 'private' ) |
+| e20r-sequence-found-closest-post | The post ID that is the closest to the day of membership for the currently logged in user | Result from E20R\Sequences\Sequence::get_closestPost() function |
+| e20r-sequence-list-title | The HTML formatted title to use when displaying the list of sequences on the front-end | Output from E20R\Sequences\Sequence::setShortcodeTitle() - HTML formatted $title |
+| e20r-sequence-closest-post-indicator-image | URL to the image to use to indicate which of the posts in the post list is the most recently available post for the current user | URL to __PLUGIN_DIR__/images/most-recent.png|
+| e20r-sequence-list-pagination-code | The Pagination code for the Sequence List being rendered | Result from E20R\Sequences\Sequence::post_paging_nav() function |
+| e20r-sequence-list-html | The HTML (as a table) for a paginated list of posts (E20R Sequence posts) | $html - the HTML that will render to show the paginated list (self-contained <div> |
+| e20r-sequence-email-alert-template-path | The path to the email alert template(s) | $path = E20R_SEQUENCE_PLUGIN_DIR . "/email/" - the file system path to the templates | 
+| e20r-sequence-has-access-filter | A plug-in specific version of the pmpro_has_membership_access_filter filter | $hasAccess (bool), (WP_Post) $post, (WP_User) $user, (array) $levels |
+| e20r-sequence-add-startdate-offset | Offset the apparent startdate for a user when calculating access rights for a specific sequence. | (int) $sequence_id |
+| e20r-sequence-check-valid-date | Check whether the supplied string is a valid date. Return true if so. | Return value from E20R\Sequences\Sequence::isValidDate( $delay ) |
+| e20r-sequence-can-add-post-status | Post statuses (i.e. the status of the post) that can be added to a sequence. It may (still) not display unless the 'e20r-sequence-allowed-post-statuses' filter also matches | array( 'publish', 'future', 'pending', 'private') |
+| e20r-sequence-has-edit-privileges | Used to indicate whether the user is permitted to do something - like edit the sequence member list, settings, etc | true/false from E20R\Sequences\Sequence::userCanEdit() function |
+| e20r-sequence-alert-message-excerpt-intro | Sets the text to use in place of the !!excerpt_intro!! placeholder in the "new content alert" message | PMProSequence->options->excerpt_intro |
+| e20r-sequence-alert-message-title | The in-message post title ( replacing the !!ptitle!! placeholder) for the "new content alert" email message. | post_title for the post id being processed |
+| e20r-sequence-cpt-labels | Override the Custom Post Type labels | array() of label definitions |
+| e20r-sequence-cpt-slug | Set the Custom Post Type Slug | 'sequence' |
+| e20r-sequence-cpt-archive-slug | Set the archive slug for the Custom Post Type | 'sequence' |
+| e20r-sequence-not-found-msg | HTML error message for when a sequence isn't available/found | <p class="error" style="text-align: center;">The specified E20R Sequence was not found. <br/>Please report this error to the webmaster.</p> |
+| e20r-seq-recentpost-widget-nopostfound | Set ID for the h3 element if a post isn't found | e20r-seq-widget-recentpost-nopostfound-title | 
+| e20r-seq-widget-recentpost-nopostfound-body | Set the class for the error message if no post is found | empty |
+| e20r-seq-recent-post-widget-title-id | Set the element ID for the widget title | e20r-seq-widget-recentpost-title |
+| e20r-seq-widget-postlink-class | Set a class for the link to the post in the widget | empty |
 | widget_title | Set the title for the Widget | $instance['title'] |
-| pmpro-sequence-widget-prefix | Set prefix for the widget | $instance['prefix'] |
-| pmpro-sequence-widget-default-post-title | Set the default title for the member post | $instance['default_post_title'] |
-| pmpro-sequence-widget-before-widget-title | Insert text before the widget title | $instance['before_title'] |
-| pmpro-sequence-widget-after-widget-title | Insert text after the widget title | $instance['after_title' |
-| pmpro-sequence-widget-seqid | Override the widget specified sequence ID (post ID for the Sequence CPT) | $instance['sequence_id'] |
-| pmpro-sequence-before-widget | Insert stuff before the widget gets rendered | $instance['before_widget'] |
-| pmpro-sequence-after-widget | Insert stuff after the widget gets rendered | $instance['after_widget'] |
-| pmpro-sequence-import-pmpro-series | Whether to automatically try to import PMPro Series CPT entries to this plugin. Accepts a number of different return values: The string 'all' or boolean true will import all defined series. An array of Post IDs, i.e. array( 2000, 4000 ), will treat the numbers as the post id for the Series. A single number (array or otherwise) will be treated as a Post ID to import.  | __return_false() |
+| e20r-sequence-widget-prefix | Set prefix for the widget | $instance['prefix'] |
+| e20r-sequence-widget-default-post-title | Set the default title for the member post | $instance['default_post_title'] |
+| e20r-sequence-widget-before-widget-title | Insert text before the widget title | $instance['before_title'] |
+| e20r-sequence-widget-after-widget-title | Insert text after the widget title | $instance['after_title' |
+| e20r-sequence-widget-seqid | Override the widget specified sequence ID (post ID for the Sequence CPT) | $instance['sequence_id'] |
+| e20r-sequence-before-widget | Insert stuff before the widget gets rendered | $instance['before_widget'] |
+| e20r-sequence-after-widget | Insert stuff after the widget gets rendered | $instance['after_widget'] |
+| e20r-sequence-import-pmpro-series | Whether to automatically try to import PMPro Series CPT entries to this plugin. Accepts a number of different return values: The string 'all' or boolean true will import all defined series. An array of Post IDs, i.e. array( 2000, 4000 ), will treat the numbers as the post id for the Series. A single number (array or otherwise) will be treated as a Post ID to import.  | __return_false() |
 
 ##Roadmap (possible features)
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
@@ -98,7 +98,7 @@ See ./email/README.txt for information on templates for the email alerts.
 
 ###DEBUG
  To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
- A fair bit (understatement) of data which will get dumped into uploads/pmpro-sequences/sequence_debug_log.txt
+ A fair bit (understatement) of data which will get dumped into uploads/e20r-sequences/sequence_debug_log.txt
  (located the under the plugin directory).
 
 ##Frequently Asked Questions
@@ -106,22 +106,34 @@ TBD
 
 ###I found a bug in the plugin.
 
-Please report it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/pmpro-sequence/issues
+Please report it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/e20r-sequence/issues
 You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###3.0.4
+###4.0.0
 
-* Conditional return triggered fatal error in certain situations
-* Use absolute URL for fontawesome
-* Respect theme settings for fonts/text in widgets
-* Respect theme settings for fonts/text in other text
-* Fix error if is_managed() is called while PHP is outputting data
-* Stop forcing access check for posts that aren't managed by any sequences.
-* Fix formatting problem
-* Initial update of version number to 3.0.4
-* Update template file for vpt_reminder.html
+* Fix: Namespace declaration for Sequences class(es)
+* Fix: Move namespace declaration to Sequence class
+* Fix: PHPDoc for some of the classes (apply namespace)
+* Fix: Namespaces for Sequence class
+* Fix: Set global namespace for standard PHP classes (DateTime, DateTimezone, stdClass, WP_Query, etc)
+* Fix: Loading Fontawesome from local resource for Sequence icon(s)
+* Enh: Use wp_enqueue_* rather than wp_register_* functions
+* Fix: Use namespace in register_widget()
+* Update namespace for WP_Widget parent class
+* Add FontAwesome as local resource
+* Add fonts directory to build script
+* Replace pmpro_ and pmpro- instances with e20r_ and e20r- instances respectively
+* Rename all instances of pmpro-sequence to e20r-sequence
+* Rename plugin to e20r-sequences Use namespaces for classes
+* Move all classes under PLUGIN_DIR/classes and PLUGIN_DIR/classes/tools
+* Create Tools\Cron class & move worker function to its own class & namespace
+* Rename widget class to PostWidget
+* Rename the sequences controller class to Sequence
+* Remove sequence icon images (using fontawesome instead)
+* Rename all pmpro_ files to e20r_
+* Update README & .json files
 
 ##Old releases
 ###.1
@@ -561,3 +573,14 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Allow admin to clear notification flags for a specific post/delay/sequence id from the posts edit page
 * Make language tag consistent
 
+###3.0.4
+
+* Conditional return triggered fatal error in certain situations
+* Use absolute URL for fontawesome
+* Respect theme settings for fonts/text in widgets
+* Respect theme settings for fonts/text in other text
+* Fix error if is_managed() is called while PHP is outputting data
+* Stop forcing access check for posts that aren't managed by any sequences.
+* Fix formatting problem
+* Initial update of version number to 3.0.4
+* Update template file for vpt_reminder.html
