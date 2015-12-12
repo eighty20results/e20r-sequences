@@ -1,5 +1,5 @@
 <?php
-namespace E20R\Sequences;
+use E20R\Sequences as Sequences;
 
 /*
 Plugin Name: Eighty / 20 Results Sequences for Paid Memberships Pro
@@ -32,7 +32,7 @@ License:
 */
 
 /* Define namespaces */
-define(__NAMESPACE__ . '\NS', __NAMESPACE . '\\');
+define(__NAMESPACE__ . '\NS', __NAMESPACE__ . '\\');
 
 // use NS as Sequence;
 
@@ -368,7 +368,7 @@ function in_object_r($key = null, $value = null, $object, $strict = false)
 
 try {
 
-    $sequence = new \E20R\Sequences\Sequence();
+    $sequence = new E20R\Sequences\Sequence();
     $sequence->load_actions();
 
 } catch (Exception $e) {
