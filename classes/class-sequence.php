@@ -1,5 +1,8 @@
 <?php
-use E20R\Sequences;
+namespace E20R\Sequences;
+
+use E20R\Sequences as Sequences;
+
 /*
   License:
 
@@ -47,7 +50,7 @@ use E20R\Sequences;
          * Constructor for the Sequence
          *
          * @param null $id -- The ID of the sequence to initialize
-         * @throws Exception - If the sequence doesn't exist.
+         * @throws \Exception - If the sequence doesn't exist.
          */
         function __construct($id = null) {
 
@@ -70,7 +73,7 @@ use E20R\Sequences;
          *
          * @param null $id -- (optional) ID of the sequence we'd like to start/init.
          * @return bool|int -- ID of sequence if it successfully gets loaded
-         * @throws Exception -- Sequence to load/init wasn't identified (specified).
+         * @throws \Exception -- Sequence to load/init wasn't identified (specified).
          */
         public function init( $id = null ) {
 
@@ -619,7 +622,7 @@ use E20R\Sequences;
                 );
             }
 
-            // $this->dbg_log("load_sequence_post() - Args for WP_Query(): ");
+            // $this->dbg_log("load_sequence_post() - Args for \WP_Query(): ");
             // $this->dbg_log($args);
 
             $posts = new \WP_Query( $args );
@@ -778,7 +781,7 @@ use E20R\Sequences;
                         }
                     }
 
-                    $this->dbg_log("load_sequence_post() - Returning the WP_Query result to process for pagination.");
+                    $this->dbg_log("load_sequence_post() - Returning the \\WP_Query result to process for pagination.");
                     return array( $paged_list, $posts->max_num_pages );
                 }
 
@@ -1154,7 +1157,7 @@ use E20R\Sequences;
 
         static public function post_details( $sequence_id, $post_id ) {
 
-            $seq = new \E20R\Sequences\Sequence();
+            $seq = new Sequences\Sequence();
             $seq->get_options( $sequence_id );
 
             return $seq->find_by_id( $post_id );
@@ -1517,7 +1520,7 @@ use E20R\Sequences;
 
             global $post;
 
-            $seq = new \E20R\Sequences\Sequence();
+            $seq = new Sequences\Sequence();
 
             $this->dbg_log("render_post_edit_metabox() - Page Metabox being loaded");
 
@@ -1539,7 +1542,7 @@ use E20R\Sequences;
 
         static public function all_sequences( $statuses = 'publish' ) {
 
-            $seq = new \E20R\Sequences\Sequence();
+            $seq = new Sequences\Sequence();
             return $seq->get_all_sequences( $statuses );
         }
 
@@ -1556,7 +1559,7 @@ use E20R\Sequences;
                 'post_status' => $statuses,
             );
 
-            /* Fetch all Sequence posts - NOTE: Using WP_Query and not the sequence specific get_posts() function! */
+            /* Fetch all Sequence posts - NOTE: Using \WP_Query and not the sequence specific get_posts() function! */
             $all_posts = get_posts( $query );
 
             wp_reset_query();
@@ -2913,7 +2916,7 @@ use E20R\Sequences;
                 $pagesize = 30;
             }
 
-            $this->dbg_log( "create_sequence_list() - Loading posts with pagination enabled. Expecint WP_Query result" );
+            $this->dbg_log( "create_sequence_list() - Loading posts with pagination enabled. Expecing \\WP_Query result" );
             list( $seqList, $max_num_pages ) = $this->load_sequence_post( null, null, null, '=', $pagesize, true );
 
             // $sequence_posts = $this->posts;
@@ -3916,7 +3919,7 @@ use E20R\Sequences;
             $seconds = 0;
             $serverTZ = get_option( 'timezone_string' );
 
-            $now = new DateTime( 'now', new DateTimeZone( 'UTC' ) );
+            $now = new \DateTime( 'now', new \DateTimeZone( 'UTC' ) );
 
             if ( $days > 1) {
                 $dayStr = "{$days} days";
@@ -3927,7 +3930,7 @@ use E20R\Sequences;
 
             $now->modify( $dayStr );
 
-            $now->setTimezone( new DateTimeZone( $serverTZ ) );
+            $now->setTimezone( new \DateTimeZone( $serverTZ ) );
             $seconds = $now->format( 'U' );
 
             $this->dbg_log("calculateOffsetSecs() - Offset Days: {$days} = When (in seconds): {$seconds}", E20R_DEBUG_SEQ_INFO );
@@ -3958,8 +3961,8 @@ use E20R\Sequences;
             }
 
             // Create two DateTime objects
-            $dStart = new DateTime( date( 'Y-m-d', $startdate ), new DateTimeZone( $tz ) );
-            $dEnd   = new DateTime( date( 'Y-m-d', $enddate ), new DateTimeZone( $tz ) );
+            $dStart = new \DateTime( date( 'Y-m-d', $startdate ), new \DateTimeZone( $tz ) );
+            $dEnd   = new \DateTime( date( 'Y-m-d', $enddate ), new \DateTimeZone( $tz ) );
 
             if ( version_compare( PHP_VERSION, E20R_SEQ_REQUIRED_PHP_VERSION, '>=' ) ) {
 
@@ -4764,7 +4767,7 @@ use E20R\Sequences;
                 'posts_per_page' => -1
             );
 
-            $sequence_list = new WP_Query( $query );
+            $sequence_list = new \WP_Query( $query );
 
             $this->dbg_log( "convert_user_notifications() - Found " . count($sequence_list) . " sequences to process for alert conversion" );
 
@@ -6282,7 +6285,7 @@ use E20R\Sequences;
 /*
                     // Create new opt-in settings for this user
                     if ( empty($usrSettings->sequence) )
-                        $new = new stdClass();
+                        $new = new \stdClass();
                     else // Saves existing settings
                         $new = $usrSettings;
 */
@@ -6702,10 +6705,10 @@ use E20R\Sequences;
             $starting = date('Y-m-d H:i:s', current_time( 'timestamp' ) );
 
             $this->dbg_log("Start time for default Notice settings will be today at midnight: {$starting}");
-            $noticeSettings = new stdClass();
+            $noticeSettings = new \stdClass();
             $noticeSettings->sequence = array();
 
-            $noticeSettings->sequence[ $sequence_id ] = new stdClass();
+            $noticeSettings->sequence[ $sequence_id ] = new \stdClass();
             $noticeSettings->sequence[ $sequence_id ]->sendNotice = 1;
             $noticeSettings->sequence[ $sequence_id ]->optinTS = strtotime( $starting );
             $noticeSettings->sequence[ $sequence_id ]->notifiedPosts = array();
@@ -7013,7 +7016,7 @@ use E20R\Sequences;
         {
             if ( ! function_exists( 'pmpro_getOption' ) ) {
 
-                $errorMessage = __( "The PMPro Sequence plugin requires the ", "e20rsequence" );
+                $errorMessage = __( "The Eighty / 20 Results Sequence plugin requires the ", "e20rsequence" );
                 $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='" . __("Opens in a new window/tab.", "e20rsequence" ) . "'>";
                 $errorMessage .= __( "Paid Memberships Pro</a> membership plugin.<br/><br/>", "e20rsequence" );
                 $errorMessage .= __( "Please install Paid Memberships Pro before attempting to activate this PMPro Sequence plugin.<br/><br/>", "e20rsequence");
@@ -7021,15 +7024,15 @@ use E20R\Sequences;
                 wp_die($errorMessage);
             }
 
-            \E20R\Sequences\Sequence::create_custom_post_type();
+            Sequences\Sequence::create_custom_post_type();
             flush_rewrite_rules();
 
             /* Search for existing pmpro_series posts & import */
-            e20r_sequence_import_all_PMProSeries();
+            e20r_sequences_import_all_PMProSeries();
 
             /* Convert old metadata format to new (v3) format */
 
-            $sequence = new \E20R\Sequences\Sequence();
+            $sequence = new Sequences\Sequence();
             $sequences = $sequence->get_all_sequences();
 
             $sequence->dbg_log("activation() - Found " . count( $sequences ) . " to convert");
@@ -7107,7 +7110,7 @@ use E20R\Sequences;
             if (! is_wp_error($error) )
                 return true;
             else {
-                PMProSequence::dbg_log('Error creating post type: ' . $error->get_error_message(), E20R_DEBUG_SEQ_CRITICAL);
+                Sequences\Sequence::dbg_log('Error creating post type: ' . $error->get_error_message(), E20R_DEBUG_SEQ_CRITICAL);
                 wp_die($error->get_error_message());
                 return false;
             }
@@ -7116,15 +7119,15 @@ use E20R\Sequences;
         /**
          * Configure & display the icon for the Sequence Post type (in the Dashboard)
          */
-        function post_type_icon() {
+        public function post_type_icon() {
             ?>
             <style>
-                @font-face {
+/*                @font-face {
                     font-family: FontAwesome;
-                    /* src: url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css); */
+                    src: url(https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.4.0/css/font-awesome.min.css);
                 }
-
-                #menu-posts-e20r_sequence .menu-top  div.wp-menu-image:before {
+*/
+                #adminmenu .menu-top.menu-icon-pmpro_sequence div.wp-menu-image:before {
                     font-family:  FontAwesome !important;
                     content: '\f160';
                 }
@@ -7179,13 +7182,13 @@ use E20R\Sequences;
 
             $delay_config = $this->set_delay_config();
 
-            wp_enqueue_style( 'fontawesome', 'https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css', false, '4.4.0' );
+            wp_enqueue_style( 'fontawesome', E20R_SEQUENCE_PLUGIN_URL . '/css/font-awesome.min.css', false, '4.5.0' );
 
-            wp_register_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
-            wp_register_script('e20r-sequence-admin', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences-admin.js', array( 'jquery', 'select2' ), E20R_SEQUENCE_VERSION, true);
+            wp_enqueue_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
+            wp_enqueue_script('e20r-sequence-admin', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences-admin.js', array( 'jquery', 'select2' ), E20R_SEQUENCE_VERSION, true);
 
-            wp_register_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
-            wp_register_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
+            wp_enqueue_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
+            wp_enqueue_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
 
             /* Localize ajax script */
             wp_localize_script('e20r-sequence-admin', 'e20r_sequence',
@@ -7282,7 +7285,7 @@ use E20R\Sequences;
 
             // Add widget to display a summary for the most recent post/page
             // in the sequence for the logged in user.
-            register_widget( 'SeqRecentPostWidget' );
+            register_widget( '\\E20R\\Sequences\\Tools\\Widgets\\PostWidget' );
         }
 
         /**
