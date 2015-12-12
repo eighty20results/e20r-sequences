@@ -47,23 +47,27 @@ class Job {
 	/**
 	 * Cron job - defined per sequence, unless the sequence ID is empty, then we'll run through all sequences
 	 *
-	 * @param int $sequenceId - The Sequence ID (if supplied)
+	 * @param int $sequence_id - The Sequence ID (if supplied)
 	 *
 	 * @throws Exception
 	 *
 	 * @since 3.1.0
 	 */
-	public static function check_for_new_content( $sequence_id = 0 ) {
+	public static function check_for_new_content( $sequence_id = null ) {
 
 		global $wpdb;
 		$all_sequences = false; // Default: Assume only one sequence is being processed.
 
+        $sequence = apply_filters('get_sequence_class_instance', null);
+
+        $sequence->dbg_log("cron() - Sequence {$sequence->sequence_id} is ready to process messages...");
+
 		// Prepare SQL to get all sequences and users associated in the system who _may_ need to be notified
-		if ( empty($sequenceId) || ($sequenceId == 0)) {
+		if ( is_null( $sequence->sequence_id ) && (empty($sequence_id) || ($sequence_id == 0))) {
 
 			// dbgOut('cron() - No Sequence ID specified. Processing for all sequences');
 			$all_sequences = true;
-
+            $sequence->dbg_log("cron() - Loading and processing all sequences");
 			$sql = "
 					SELECT usrs.*, pgs.page_id AS seq_id
 					FROM {$wpdb->pmpro_memberships_users} AS usrs
@@ -78,6 +82,7 @@ class Job {
 		else {
 
 			// dbgOut('cron() - Sequence ID specified in function argument. Processing for sequence: ' . $sequenceId);
+            $sequence->dbg_log("cron() - Loading and processing specific sequence: {$sequence->sequence_id}");
 
 			$sql = $wpdb->prepare(
 					"
@@ -89,13 +94,14 @@ class Job {
 							ON ( posts.ID = pgs.page_id AND posts.post_type = 'pmpro_sequence')
 					WHERE (usrs.status = 'active') AND (pgs.page_id = %d)
 				",
-					$sequenceId
+					$sequence->sequence_id
 			);
 		}
 
 		// Get the data from the database
 		$sequences = $wpdb->get_results($sql);
 
+        $sequence->dbg_log("cron() - Found " . count($sequences) . " records to process for {$sequence->sequence_id}");
 		// Track user send-count (just in case we'll need it to ensure there's not too many mails being sent to one user.
 		$sendCount[] = array();
 
@@ -103,11 +109,10 @@ class Job {
 		foreach ( $sequences as $s )
 		{
 			// Grab a sequence object
-			$sequence = apply_filters('get_sequence_class_instance', null);
 			$sequence->is_cron = true;
 
 			// Set the user ID we're processing for:
-			$sequence->pmpro_sequence_user_id = $s->user_id;
+			$sequence->e20r_sequence_user_id = $s->user_id;
 
 			// Load sequence data
 			if ( !$sequence->get_options( $s->seq_id ) ) {
@@ -125,8 +130,8 @@ class Job {
 			}
 
 			// Get user specific settings regarding sequence alerts.
-			$sequence->dbg_log("cron() - Loading alert settings for user {$s->user_id} and sequence {$sequenceId}");
-			$notice_settings = $sequence->load_user_notice_settings( $s->user_id, $sequenceId );
+			$sequence->dbg_log("cron() - Loading alert settings for user {$s->user_id} and sequence {$sequence->sequence_id}");
+			$notice_settings = $sequence->load_user_notice_settings( $s->user_id, $sequence->sequence_id );
 			$sequence->dbg_log( $notice_settings );
 
 			// Check if this user wants new content notices/alerts
@@ -215,7 +220,7 @@ class Job {
 				}
 
 				// Save user specific notification settings (including array of posts we've already notified them of)
-				$sequence->save_user_notice_settings( $s->user_id, $notice_settings, $sequenceId );
+				$sequence->save_user_notice_settings( $s->user_id, $notice_settings, $sequence->sequence_id );
 				$sequence->dbg_log('cron() - Updated user meta for the notices');
 
 			} // End if

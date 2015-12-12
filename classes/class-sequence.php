@@ -3164,9 +3164,9 @@ use E20R\Sequences as Sequences;
 
             $this->dbg_log("save_user_notice_settings() - Save V3 style user notification opt-in settings to usermeta for {$user_id} and sequence {$sequence_id}");
 
-            update_user_meta( $user_id, "e20r_sequence_id_{$sequence_id}_notices", $settings );
+            update_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices", $settings );
 
-            $test = get_user_meta( $user_id, "e20r_sequence_id_{$sequence_id}_notices",  true );
+            $test = get_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices",  true );
 
             if ( empty($test) ) {
 
@@ -3196,7 +3196,7 @@ use E20R\Sequences as Sequences;
                 return null;
             }
 
-            $optIn = get_user_meta( $user_id, "e20r_sequence_id_{$sequence_id}_notices", true);
+            $optIn = get_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices", true);
 
             $this->dbg_log("load_user_notice_settings() - V3 user alert settings configured: " . ( isset($optIn->send_notices) ? 'Yes' : 'No') );
 
@@ -3241,7 +3241,7 @@ use E20R\Sequences as Sequences;
         private function create_user_notice_defaults() {
 
             $this->dbg_log("create_user_notice_defaults() - Loading default opt-in settings" );
-            $defaults = new stdClass();
+            $defaults = new \stdClass();
 
             $defaults->id = $this->sequence_id;
             $defaults->send_notices = ( $this->options->sendNotice == 1 ? true : false );
@@ -6387,7 +6387,12 @@ use E20R\Sequences as Sequences;
                 $sequence_id = intval($_POST['e20r_sequence_id']);
                 $this->dbg_log('sendalert() - Will send alerts for sequence #' . $sequence_id);
 
-                do_action( 'e20r_sequence_cron_hook', $sequence_id);
+                $sequence = apply_filters('get_sequence_class_instance', null);
+
+                $sequence->sequence_id = $sequence_id;
+                $sequence->get_options( $sequence_id );
+
+                do_action( 'e20r_sequence_cron_hook', $sequence->sequence_id);
 
                 $this->dbg_log('sendalert() - Completed action for sequence');
             }
@@ -7452,11 +7457,16 @@ use E20R\Sequences as Sequences;
 
         public function send_user_alert_notices() {
 
-            $sequence_id = intval($_REQUEST['post']);
+            $sequence_id = intval($_REQUEST['e20r_sequence_id']);
 
             $this->dbg_log( 'send_user_alert_notices() - Will send alerts for sequence #' . $sequence_id );
 
-            do_action( 'e20r_sequence_cron_hook', $sequence_id );
+            $sequence = apply_filters('get_sequence_class_instance', null);
+
+            $sequence->sequence_id = $sequence_id;
+            $sequence->get_options( $sequence_id );
+
+            do_action( 'e20r_sequence_cron_hook', $sequence->sequence_id );
 
             $this->dbg_log( 'send_user_alert_notices() - Completed action for sequence #' . $sequence_id );
             wp_redirect('/wp-admin/edit.php?post_type=pmpro_sequence');
