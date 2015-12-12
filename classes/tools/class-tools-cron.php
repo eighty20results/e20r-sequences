@@ -31,12 +31,114 @@ if (class_exists("\\E20R\\Sequences\\Tools\\Cron\\Job")) {
 class Job
 {
 
-    protected $sequence = null;
-
+    /**
+     * Job constructor.
+     */
     function __construct()
     {
         add_filter("get_cron_class_instance", [$this, 'get_instance']);
         add_action('e20r_sequence_cron_hook', array(apply_filters("get_cron_class_instance", null), 'check_for_new_content'), 10, 1);
+    }
+
+    static public function schedule_default() {
+
+        wp_schedule_event( current_time( 'timestamp' ), 'daily', "e20r_sequence_cron_hook" );
+    }
+
+    /**
+     * Update the when we're supposed to run the New Content Notice cron job for this sequence.
+     *
+     * @access public
+     */
+    static public function update_user_notice_cron() {
+
+        /* TODO: Does not support Daylight Savings Time (DST) transitions well! - Update check hook in init? */
+
+        $sequence = apply_filters('get_sequence_class_instance', null);
+
+        $prevScheduled = false;
+        try {
+
+            // Check if the job is previously scheduled. If not, we're using the default cron schedule.
+            if (false !== ($timestamp = wp_next_scheduled( 'e20r_sequence_cron_hook', array($sequence->sequence_id) ) )) {
+
+                // Clear old cronjob for this sequence
+                $sequence->dbg_log('Current cron job for sequence # ' . $sequence->sequence_id . ' scheduled for ' . $timestamp);
+                $prevScheduled = true;
+
+                // wp_clear_scheduled_hook($timestamp, 'e20r_sequence_cron_hook', array( $this->sequence_id ));
+            }
+
+            $sequence->dbg_log('update_user_notice_cron() - Next scheduled at (timestamp): ' . print_r(wp_next_scheduled('e20r_sequence_cron_hook', array($sequence->sequence_id)), true));
+
+            // Set time (what time) to run this cron job the first time.
+            $sequence->dbg_log('update_user_notice_cron() - Alerts for sequence #' . $sequence->sequence_id . ' at ' . date('Y-m-d H:i:s', $sequence->options->noticeTimestamp) . ' UTC');
+
+            if  ( ($prevScheduled) &&
+                ($sequence->options->noticeTimestamp != $timestamp) ) {
+
+                $sequence->dbg_log('update_user_notice_cron() - Admin changed when the job is supposed to run. Deleting old cron job for sequence w/ID: ' . $sequence->sequence_id);
+                wp_clear_scheduled_hook( 'e20r_sequence_cron_hook', array($sequence->sequence_id) );
+
+                // Schedule a new event for the specified time
+                if ( false === wp_schedule_event(
+                        $sequence->options->noticeTimestamp,
+                        'daily',
+                        'e20r_sequence_cron_hook',
+                        array( $sequence->sequence_id )
+                    )) {
+
+                    $sequence->set_error_msg( printf( __('Could not schedule new content alert for %s', "e20rsequence"), $sequence->options->noticeTime) );
+                    $sequence->dbg_log("update_user_notice_cron() - Did not schedule the new cron job at ". $sequence->options->noticeTime . " for this sequence (# " . $sequence->sequence_id . ')');
+                    return false;
+                }
+            }
+            elseif (! $prevScheduled)
+                wp_schedule_event($sequence->options->noticeTimestamp, 'daily', 'e20r_sequence_cron_hook', array($sequence->sequence_id));
+            else
+                $sequence->dbg_log("update_user_notice_cron() - Timestamp didn't change so leave the schedule as-is");
+
+            // Validate that the event was scheduled as expected.
+            $ts = wp_next_scheduled( 'e20r_sequence_cron_hook', array($sequence->sequence_id) );
+
+            $sequence->dbg_log('update_user_notice_cron() - According to WP, the job is scheduled for: ' . date('d-m-Y H:i:s', $ts) . ' UTC and we asked for ' . date('d-m-Y H:i:s', $sequence->options->noticeTimestamp) . ' UTC');
+
+            if ($ts != $sequence->options->noticeTimestamp)
+                $sequence->dbg_log("update_user_notice_cron() - Timestamp for actual cron entry doesn't match the one in the options...");
+        }
+        catch (\Exception $e) {
+            // echo 'Error: ' . $e->getMessage();
+            $sequence->dbg_log('Error updating cron job(s): ' . $e->getMessage());
+
+            if ( is_null($sequence->get_error_msg()) )
+                $sequence->set_error_msg("Exception in update_user_notice_cron(): " . $e->getMessage());
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Disable the WPcron job for the specified sequence
+     *
+     * @param int $sequence_id - The ID of the sequence to stop the daily schedule for
+     */
+    static public function stop_sending_user_notices( $sequence_id = null ) {
+
+        $sequence = apply_filters('get_sequence_class_instance', null);
+        $sequence->dbg_log("Cron\\Job::stop_sending_user_notices() - Removing alert notice hook for sequence # " . $sequence_id );
+
+        if ( is_null( $sequence_id ) )
+        {
+            wp_clear_scheduled_hook( 'e20r_sequence_cron_hook' );
+            wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook' );
+
+        } else {
+            wp_clear_scheduled_hook( 'e20r_sequence_cron_hook', array( $sequence_id ) );
+            wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook', array( $sequence_id ) );
+
+        }
     }
 
     /**
@@ -44,7 +146,7 @@ class Job
      *
      * @param int $sequence_id - The Sequence ID (if supplied)
      *
-     * @throws Exception
+     * @throws \Exception
      *
      * @since 3.1.0
      */
@@ -242,6 +344,11 @@ class Job
         $sequence->dbg_log("cron() - Completed execution of cron job for {$received_id}");
     }
 
+    /**
+     * Return the Cron\Job class instance (when using singleton pattern)
+     *
+     * @return Cron\Job $this
+     */
     public function get_instance()
     {
 
