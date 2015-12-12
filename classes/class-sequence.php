@@ -2,6 +2,7 @@
 namespace E20R\Sequences;
 
 use E20R\Sequences as Sequences;
+use E20R\Sequences\Tools\Cron as Cron;
 
 /*
   License:
@@ -5205,77 +5206,6 @@ use E20R\Sequences as Sequences;
             }
         }
 
-        /**
-         * Update the when we're supposed to run the New Content Notice cron job for this sequence.
-         *
-         * @access public
-         */
-        private function update_user_notice_cron() {
-
-            /* TODO: Does not support Daylight Savings Time (DST) transitions well! - Update check hook in init? */
-
-            $prevScheduled = false;
-            try {
-
-                // Check if the job is previously scheduled. If not, we're using the default cron schedule.
-                if (false !== ($timestamp = wp_next_scheduled( 'e20r_sequence_cron_hook', array($this->sequence_id) ) )) {
-
-                    // Clear old cronjob for this sequence
-                    $this->dbg_log('Current cron job for sequence # ' . $this->sequence_id . ' scheduled for ' . $timestamp);
-                    $prevScheduled = true;
-
-                    // wp_clear_scheduled_hook($timestamp, 'e20r_sequence_cron_hook', array( $this->sequence_id ));
-                }
-
-                $this->dbg_log('update_user_notice_cron() - Next scheduled at (timestamp): ' . print_r(wp_next_scheduled('e20r_sequence_cron_hook', array($this->sequence_id)), true));
-
-                // Set time (what time) to run this cron job the first time.
-                $this->dbg_log('update_user_notice_cron() - Alerts for sequence #' . $this->sequence_id . ' at ' . date('Y-m-d H:i:s', $this->options->noticeTimestamp) . ' UTC');
-
-                if  ( ($prevScheduled) &&
-                    ($this->options->noticeTimestamp != $timestamp) ) {
-
-                    $this->dbg_log('update_user_notice_cron() - Admin changed when the job is supposed to run. Deleting old cron job for sequence w/ID: ' . $this->sequence_id);
-                    wp_clear_scheduled_hook( 'e20r_sequence_cron_hook', array($this->sequence_id) );
-
-                    // Schedule a new event for the specified time
-                    if ( false === wp_schedule_event(
-                            $this->options->noticeTimestamp,
-                            'daily',
-                            'e20r_sequence_cron_hook',
-                            array( $this->sequence_id )
-                        )) {
-
-                        $this->set_error_msg( printf( __('Could not schedule new content alert for %s', "e20rsequence"), $this->options->noticeTime) );
-                        $this->dbg_log("update_user_notice_cron() - Did not schedule the new cron job at ". $this->options->noticeTime . " for this sequence (# " . $this->sequence_id . ')');
-                        return false;
-                    }
-                }
-                elseif (! $prevScheduled)
-                    wp_schedule_event($this->options->noticeTimestamp, 'daily', 'e20r_sequence_cron_hook', array($this->sequence_id));
-                else
-                    $this->dbg_log("update_user_notice_cron() - Timestamp didn't change so leave the schedule as-is");
-
-                // Validate that the event was scheduled as expected.
-                $ts = wp_next_scheduled( 'e20r_sequence_cron_hook', array($this->sequence_id) );
-
-                $this->dbg_log('update_user_notice_cron() - According to WP, the job is scheduled for: ' . date('d-m-Y H:i:s', $ts) . ' UTC and we asked for ' . date('d-m-Y H:i:s', $this->options->noticeTimestamp) . ' UTC');
-
-                if ($ts != $this->options->noticeTimestamp)
-                    $this->dbg_log("update_user_notice_cron() - Timestamp for actual cron entry doesn't match the one in the options...");
-            }
-            catch (Exception $e) {
-                // echo 'Error: ' . $e->getMessage();
-                $this->dbg_log('Error updating cron job(s): ' . $e->getMessage());
-
-                if ( is_null($this->get_error_msg()) )
-                    $this->set_error_msg("Exception in update_user_notice_cron(): " . $e->getMessage());
-
-                return false;
-            }
-
-            return true;
-        }
 /*
         public function loadListTemplate() {
 
@@ -6876,7 +6806,7 @@ use E20R\Sequences as Sequences;
 
                 if ( $this->options->sendNotice == 0 ) {
 
-                    $this->stop_sending_user_notices();
+                    Cron\Job::stop_sending_user_notices( $this->sequence_id );
                 }
 
                 $this->dbg_log('save_settings(): POST value for settings->sendNotice: ' . intval($_POST['e20r_sequence_sendnotice']) );
@@ -6959,8 +6889,10 @@ use E20R\Sequences as Sequences;
 
                 $this->dbg_log( 'save_settings(): Updating the cron job for sequence ' . $this->sequence_id );
 
-                if (! $this->update_user_notice_cron() )
+                if (!Cron\Jobs::update_user_notice_cron())
+                {
                     $this->dbg_log('save_settings() - Error configuring cron() system for sequence ' . $this->sequence_id, E20R_DEBUG_SEQ_CRITICAL);
+                }
             }
 
             // $this->dbg_log('save_settings() - Settings are now: ' . print_r($settings, true));
@@ -6975,13 +6907,15 @@ use E20R\Sequences as Sequences;
         /**
          * Disable the WPcron job for the current sequence
          */
+/*
         public function stop_sending_user_notices() {
 
             $this->dbg_log("stop_sending_user_notices() - Removing alert notice hook for sequence # " . $this->sequence_id );
 
             wp_clear_scheduled_hook( 'e20r_sequence_cron_hook', array( $this->sequence_id ) );
+            wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook', array( $this->sequence_id ) );
         }
-
+*/
         /**
          * Deactivate the plugin and clear our stuff.
          */
@@ -7015,13 +6949,14 @@ use E20R\Sequences as Sequences;
                     // save meta for the sequence.
                     $this->save_sequence_meta();
 
-                    wp_clear_scheduled_hook( 'e20r_sequence_cron_hook', array( $s->ID ) );
+                    Cron\Job::stop_sending_user_notices( $s->ID );
+
                     $this->dbg_log('Deactivated email alert(s) for sequence ' . $s->ID);
                 }
             }
 
             /* Unregister the default Cron job for new content alert(s) */
-            wp_clear_scheduled_hook( 'e20r_sequence_cron_hook' );
+            Cron\Job::stop_sending_user_notices();
         }
 
         /**
@@ -7032,10 +6967,10 @@ use E20R\Sequences as Sequences;
         {
             if ( ! function_exists( 'pmpro_getOption' ) ) {
 
-                $errorMessage = __( "The Eighty / 20 Results Sequence plugin requires the ", "e20rsequence" );
+                $errorMessage = __( "The Eighty/20 Results Sequence plugin requires the ", "e20rsequence" );
                 $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='" . __("Opens in a new window/tab.", "e20rsequence" ) . "'>";
                 $errorMessage .= __( "Paid Memberships Pro</a> membership plugin.<br/><br/>", "e20rsequence" );
-                $errorMessage .= __( "Please install Paid Memberships Pro before attempting to activate this PMPro Sequence plugin.<br/><br/>", "e20rsequence");
+                $errorMessage .= __( "Please install Paid Memberships Pro before attempting to activate this Eighty/20 Results Sequence plugin.<br/><br/>", "e20rsequence");
                 $errorMessage .= __( "Click the 'Back' button in your browser to return to the Plugin management page.", "e20rsequence" );
                 wp_die($errorMessage);
             }
@@ -7045,6 +6980,7 @@ use E20R\Sequences as Sequences;
 
             /* Search for existing pmpro_series posts & import */
             e20r_sequences_import_all_PMProSeries();
+            e20r_sequences_import_all_PMProSequence();
 
             /* Convert old metadata format to new (v3) format */
 
@@ -7065,7 +7001,7 @@ use E20R\Sequences as Sequences;
             }
 
             /* Register the default cron job to send out new content alerts */
-            wp_schedule_event( current_time( 'timestamp' ), 'daily', "e20r_sequence_cron_hook" );
+            Cron\Job::schedule_default();
 
             $this->convert_user_notifications();
         }
