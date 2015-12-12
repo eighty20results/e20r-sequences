@@ -1,6 +1,7 @@
 <?php
+namespace E20R\Sequences\Tools\Widgets;
 /**
-  * License:
+    License:
 
 	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
 
@@ -17,9 +18,7 @@
 	along with this program; if not, write to the Free Software
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
-*/
-
-namespace E20R\Sequences\Tools\Widgets;
+**/
 
 use E20R\Sequences as Sequences;
 use E20R\Sequences\Tools\Widgets as Widget;
@@ -32,7 +31,7 @@ class PostWidget extends WP_Widget {
 			'Sequence: Currently available Post/Page',
 			array(
 				'description' =>
-					__('Display a summary of the most recently available sequence post (or page) for the currently logged-in user.', 'pmprosequence')
+					__('Display a summary of the most recently available sequence post (or page) for the currently logged-in user.', "e20rsequence")
 			)
 		);
 	}
@@ -46,17 +45,17 @@ class PostWidget extends WP_Widget {
 		extract($args);
 
 		$title = apply_filters( 'widget_title', $instance['title'] );
-		$seqPrefix = apply_filters( 'pmpro-sequence-widget-prefix', ( isset( $instance['prefix'] ) ? $instance['prefix'] : null ) ) ;
-		$sequence_id = apply_filters( 'pmpro-sequence-widget-seqid', ( isset( $instance['sequence_id'] ) ? $instance['sequence_id'] : null ) );
+		$seqPrefix = apply_filters( 'e20r-sequence-widget-prefix', ( isset( $instance['prefix'] ) ? $instance['prefix'] : null ) ) ;
+		$sequence_id = apply_filters( 'e20r-sequence-widget-seqid', ( isset( $instance['sequence_id'] ) ? $instance['sequence_id'] : null ) );
 
-        $defaultTitle = apply_filters('pmpro-sequence-widget-default-post-title', ( isset( $instance['default_post_title'] ) ? $instance['default_post_title'] : null ) ) ;
-        $before_title = apply_filters('pmpro-sequence-widget-before-widget-title', ( isset( $instance['before_title'] ) ? $instance['before_title'] : null ) );
-        $after_title = apply_filters('pmpro-sequence-widget-after-widget-title', ( isset( $instance['after_title'] ) ? $instance['after_title'] : null ) );
+        $defaultTitle = apply_filters('e20r-sequence-widget-default-post-title', ( isset( $instance['default_post_title'] ) ? $instance['default_post_title'] : null ) ) ;
+        $before_title = apply_filters('e20r-sequence-widget-before-widget-title', ( isset( $instance['before_title'] ) ? $instance['before_title'] : null ) );
+        $after_title = apply_filters('e20r-sequence-widget-after-widget-title', ( isset( $instance['after_title'] ) ? $instance['after_title'] : null ) );
 
 		$wordcount = $instance['wordcount'];
 		$show_title = ($instance['show_title'] == 1 ) ? true : false;
-        $before_widget = apply_filters( 'pmpro-sequence-before-widget', ( isset( $instance['before_widget'] ) ? $instance['before_widget'] : null )  );
-        $after_widget = apply_filters( 'pmpro-sequence-after-widget', ( isset( $instance['after_widget'] ) ? $instance['after_widget'] : null )  );
+        $before_widget = apply_filters( 'e20r-sequence-before-widget', ( isset( $instance['before_widget'] ) ? $instance['before_widget'] : null )  );
+        $after_widget = apply_filters( 'e20r-sequence-after-widget', ( isset( $instance['after_widget'] ) ? $instance['after_widget'] : null )  );
 
         echo $before_widget;
 
@@ -83,7 +82,7 @@ class PostWidget extends WP_Widget {
 		}
 		else {
 			// dbg_log("Widget config: No config found");
-			$default_title = __('Your most recently available content', 'pmprosequence');
+			$default_title = __('Your most recently available content', "e20rsequence");
 			$title = null;
 			$show_title = 0;
 			$sequence_id = 0;
@@ -93,29 +92,29 @@ class PostWidget extends WP_Widget {
 
 		?>
 		<p>
-			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Widget title', 'pmprosequence'); ?></label>
+			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Widget title', "e20rsequence"); ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('title');?>" name="<?php echo $this->get_field_name('title')?>" type="text" value="<?php echo $title; ?>" />
 		</p>
 
 		<p>
 			<input class="widefat" id="<?php echo $this->get_field_id('show_title');?>" name="<?php echo $this->get_field_name('show_title')?>" type="checkbox" value="1" <?php checked($show_title, 1); ?> />
-			<label for="<?php echo $this->get_field_id('show_title'); ?>"><?php _e('Show Post/Page title', 'pmprosequence'); ?></label>
+			<label for="<?php echo $this->get_field_id('show_title'); ?>"><?php _e('Show Post/Page title', "e20rsequence"); ?></label>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id('default_post_title'); ?>"><?php _e('Default post/page title (if "hidden")', 'pmprosequence'); ?></label>
+			<label for="<?php echo $this->get_field_id('default_post_title'); ?>"><?php _e('Default post/page title (if "hidden")', "e20rsequence"); ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('default_post_title');?>" name="<?php echo $this->get_field_name('default_post_title')?>" type="text" value="<?php echo $default_title; ?>" />
 		</p>
 
 		<p>
-			<label for="<?php echo $this->get_field_id('prefix'); ?>"><?php _e('Post title prefix', 'pmprosequence'); ?></label>
+			<label for="<?php echo $this->get_field_id('prefix'); ?>"><?php _e('Post title prefix', "e20rsequence"); ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('prefix');?>" name="<?php echo $this->get_field_name('prefix')?>" type="text" value="<?php echo $seqPrefix; ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id('wordcount'); ?>"><?php _e('Max size of post/page excerpt (# of words)', 'pmprosequence'); ?></label>
+			<label for="<?php echo $this->get_field_id('wordcount'); ?>"><?php _e('Max size of post/page excerpt (# of words)', "e20rsequence"); ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('wordcount');?>" name="<?php echo $this->get_field_name('wordcount')?>" type="text" value="<?php echo $excerpt_wordcount; ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id('sequence_id'); ?>"><?php _e('Sequence to use', 'pmprosequence'); ?></label>
+			<label for="<?php echo $this->get_field_id('sequence_id'); ?>"><?php _e('Sequence to use', "e20rsequence"); ?></label>
 			<select id="<?php echo $this->get_field_id('sequence_id'); ?>" name="<?php echo $this->get_field_name('sequence_id')?>">
 				<?php echo $this->sequenceOptions( $sequence_id ); ?>
 			</select>
@@ -148,7 +147,7 @@ class PostWidget extends WP_Widget {
 		ob_start();
 		if ( $sequences->found_posts == 0 ) {
 			?>
-			<option value="0" selected="selected"><?php _e('No sequences defined', 'pmprosequence'); ?></option><?php
+			<option value="0" selected="selected"><?php _e('No sequences defined', "e20rsequence"); ?></option><?php
 		}
 		else {
 			?><option value="0" <?php echo ( $sequence_id != 0 ? '' : 'selected="selected"' ); ?>></option><?php
@@ -177,9 +176,9 @@ class PostWidget extends WP_Widget {
 			?>
 
 			<li class="widget widget-text">
-				<h3 id="pmpro-seq-post-notfound">Error</h3>
+				<h3 id="e20r-seq-post-notfound">Error</h3>
 				<div class="text-widget">
-					<?php _e("No sequence specified for this widget!", 'pmprosequence'); ?>
+					<?php _e("No sequence specified for this widget!", "e20rsequence"); ?>
 				</div>
 			</li>
 
@@ -193,47 +192,47 @@ class PostWidget extends WP_Widget {
 			$seqPost = $sequence->find_closest_post( $current_user->ID );
 
 			if ( empty( $seqPost ) ) { ?>
-				<span id="pmpro-seq-post-notfound">
-				<h3 id="<?php echo apply_filters('pmpro-seq-recentpost-widget-nopostfound', 'pmpro-seq-widget-recentpost-nopostfound-title'); ?>" class="widget-title">Configuration Error</h3>
-					<div id="pmpro-seq-post-body" class="text-widget <?php echo apply_filters( 'pmpro-seq-widget-recentpost-nopostfound-body', ''); ?>">
-						<?php echo ( $sequence_id != 0 ? get_the_title( $sequence_id ) . __(': No post(s) found!', 'pmprosequence') : __('No sequence specified', 'pmprosequence') ); ?>
+				<span id="e20r-seq-post-notfound">
+				<h3 id="<?php echo apply_filters('e20r-seq-recentpost-widget-nopostfound', 'e20r-seq-widget-recentpost-nopostfound-title'); ?>" class="widget-title">Configuration Error</h3>
+					<div id="e20r-seq-post-body" class="text-widget <?php echo apply_filters( 'e20r-seq-widget-recentpost-nopostfound-body', ''); ?>">
+						<?php echo ( $sequence_id != 0 ? get_the_title( $sequence_id ) . __(': No post(s) found!', "e20rsequence") : __('No sequence specified', "e20rsequence") ); ?>
 					</div>
 				</span><?php
 			}
 			elseif ( $sequence->has_post_access( $current_user->ID, $seqPost->id, false ) ) {
 
-				add_image_size( 'pmpro_seq_recentpost_widget_size', 85, 45, false );
+				add_image_size( 'e20r_seq_recentpost_widget_size', 85, 45, false );
 
 				// $sequence->dbg_log("Widget - Posts: " . print_r($seq_post, true));
 
-				$image = ( has_post_thumbnail( $seqPost->id ) ? get_the_post_thumbnail( $seqPost->id, 'pmpro_seq_recentpost_widget_size' ) : '<div class="noThumb"></div>' );
+				$image = ( has_post_thumbnail( $seqPost->id ) ? get_the_post_thumbnail( $seqPost->id, 'e20r_seq_recentpost_widget_size' ) : '<div class="noThumb"></div>' );
 
 				if ($show_title) { ?>
-				<h3 id="<?php echo apply_filters('pmpro-seq-recent-post-widget-title-id', 'pmpro-seq-widget-recentpost-title'); ?>" class="widget-title">
+				<h3 id="<?php echo apply_filters('e20r-seq-recent-post-widget-title-id', 'e20r-seq-widget-recentpost-title'); ?>" class="widget-title">
 					<span class="widget-inner"><?php echo ( $seqPrefix != '' ? $seqPrefix . ' ' : ' ' ) . $seqPost->title; ?></span>
 				</h3><?php
 				}
 				else { ?>
 
-				<h3 id="<?php echo apply_filters('pmpro-seq-recent-post-widget-title-id', 'pmpro-seq-widget-recentpost-title'); ?>" class="widget-title"><?php echo $defaultTitle; ?></h3><?php
+				<h3 id="<?php echo apply_filters('e20r-seq-recent-post-widget-title-id', 'e20r-seq-widget-recentpost-title'); ?>" class="widget-title"><?php echo $defaultTitle; ?></h3><?php
 
 				} ?>
-				<div id="pmpro-seq-post-body" class="text-widget">
-					<!-- <p class="pmpro-seq-when">Available on <?php $this->print_available_date( $sequence, $seqPost->id ); ?></p> -->
-					<div id="pmpro-seq-post-body-text"><?php
+				<div id="e20r-seq-post-body" class="text-widget">
+					<!-- <p class="e20r-seq-when">Available on <?php $this->print_available_date( $sequence, $seqPost->id ); ?></p> -->
+					<div id="e20r-seq-post-body-text"><?php
 						echo $image;
 						echo $this->limit_excerpt_words( get_the_excerpt( $seqPost->id ), $excerpt_length ); ?>
 					</div>
-					<div id="pmpro-seq-post-link" <?php echo apply_filters('pmpro-seq-widget-postlink-class', ''); ?>>
-						<a href="<?php echo $seqPost->permalink; ?>" title="<?php echo $seqPost->title; ?>"><?php _e('Click to read', 'pmprosequence'); ?></a>
+					<div id="e20r-seq-post-link" <?php echo apply_filters('e20r-seq-widget-postlink-class', ''); ?>>
+						<a href="<?php echo $seqPost->permalink; ?>" title="<?php echo $seqPost->title; ?>"><?php _e('Click to read', "e20rsequence"); ?></a>
 					</div>
 				</div> <?php
 			}
 			else { ?>
-				<span id="pmpro-seq-post-notfound">
+				<span id="e20r-seq-post-notfound">
 					<h3 class="widget-title">Membership Level Error</h3>
-					<div id="pmpro-seq-post-body" class="text-widget">
-						<?php _e( "Sorry, your current membership level does not give you access to this content.", 'pmprosequence' ); ?>
+					<div id="e20r-seq-post-body" class="text-widget">
+						<?php _e( "Sorry, your current membership level does not give you access to this content.", "e20rsequence" ); ?>
 					</div>
 				</span><?php
 			}
@@ -252,7 +251,7 @@ class PostWidget extends WP_Widget {
 		return implode( " ", $words);
 	}
 
-	private function print_available_date( PMProSequence $seq, $postId ) {
+	private function print_available_date( Sequences\Sequence $seq, $postId ) {
 
 		$seqPost = $seq->get_post_details( $postId );
 		$max_delay = 0;
@@ -270,7 +269,7 @@ class PostWidget extends WP_Widget {
 
 		$post = $seqPost[0];
 
-		if ( ( $seq->options->delayType == 'byDays' ) && ( $seq->options->showDelayAs == PMPRO_SEQ_AS_DAYNO ) ) {
+		if ( ( $seq->options->delayType == 'byDays' ) && ( $seq->options->showDelayAs == E20R_SEQ_AS_DAYNO ) ) {
 			echo 'day ' . $seq->display_proper_delay( $post->delay ) . ' of membership';
 		}
 		else {

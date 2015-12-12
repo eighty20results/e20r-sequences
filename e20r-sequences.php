@@ -1,13 +1,15 @@
 <?php
+namespace E20R\Sequences;
+
 /*
 Plugin Name: Eighty / 20 Results Sequences for Paid Memberships Pro
 Plugin URI: http://www.eighty20results.com/pmpro-sequences/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 3.1.0
+Version: 4.0.0
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
-Text Domain: pmprosequence
+Text Domain: e20rsequence
 Domain Path: /languages
 License:
 
@@ -30,54 +32,56 @@ License:
 */
 
 /* Define namespaces */
-use E20R\Sequences as Sequences;
+define(__NAMESPACE__ . '\NS', __NAMESPACE . '\\');
+
+// use NS as Sequence;
 
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '3.1.0');
+define('E20R_SEQUENCE_VERSION', '4.0.0');
 
 /* Set the max number of email alerts to send in one go to one user */
-define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
+define('E20R_SEQUENCE_MAX_EMAILS', 3);
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
-define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.3');
+define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.3');
 
 /* Set the path to the PMPRO Sequence plugin */
-define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('PMPRO_SEQUENCE_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('E20R_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('E20R_SEQUENCE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-define('PMPRO_SEQ_AS_DAYNO', 1);
-define('PMPRO_SEQ_AS_DATE', 2);
+define('E20R_SEQ_AS_DAYNO', 1);
+define('E20R_SEQ_AS_DATE', 2);
 
-define('PMPRO_SEQ_SEND_AS_SINGLE', 10);
-define('PMPRO_SEQ_SEND_AS_LIST', 20);
+define('E20R_SEQ_SEND_AS_SINGLE', 10);
+define('E20R_SEQ_SEND_AS_LIST', 20);
 
-define('DEBUG_SEQ_INFO', 10);
-define('DEBUG_SEQ_WARNING', 100);
-define('DEBUG_SEQ_CRITICAL', 1000);
+define('E20R_DEBUG_SEQ_INFO', 10);
+define('E20R_DEBUG_SEQ_WARNING', 100);
+define('E20R_DEBUG_SEQ_CRITICAL', 1000);
 
 define('MAX_LOG_SIZE', 3 * 1024 * 1024);
 
 /* Enable / Disable DEBUG logging to separate file */
-define('PMPRO_SEQUENCE_DEBUG', true);
-define('DEBUG_SEQ_LOG_LEVEL', DEBUG_SEQ_INFO);
+define('E20R_SEQUENCE_DEBUG', true);
+define('E20R_DEBUG_SEQ_LOG_LEVEL', E20R_DEBUG_SEQ_INFO);
 
 /**
  * Include the class for the update checker
  */
-require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php");
+require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php");
 
 /**
  *    Include the class for PMProSequences
  */
 if (!class_exists("\\E20R\\Sequences\\Sequence")):
 
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class-sequence.php");
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-tools-cron.php");
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/class-sequence.php");
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-tools-cron.php");
 
 endif;
 
 if (!class_exists("\\E20R\\Sequences\\Tools\\Widgets\\PostWidget")):
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-postwidget.php");
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-postwidget.php");
 endif;
 
 /** A debug function */
@@ -106,7 +110,7 @@ if (!function_exists("pmpro_getMemberStartdate")):
 
         global $pmpro_startdates;    //for cache
 
-        if (empty($pmpro_startdates[$user_id][$level_id])) {
+        if (empty($e20r_startdates[$user_id][$level_id])) {
 
             global $wpdb;
 
@@ -282,7 +286,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
 
                     if (!$seq->addPost($seq_member->id, $seq_member->delay)) {
                         return new \WP_Error('sequence_import',
-                            sprintf(__('Could not complete import for series %s', 'pmprosequence'), $series->post_title), $seq->getError());
+                            sprintf(__('Could not complete import for series %s', "e20rsequence"), $series->post_title), $seq->getError());
                     }
                 } // End of foreach
 
@@ -293,7 +297,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
             } else {
 
                 return new \WP_Error('db_query_error',
-                    sprintf(__('Could not complete import for series %s', 'pmprosequence'), $series->post_title), $wpdb->last_error);
+                    sprintf(__('Could not complete import for series %s', "e20rsequence"), $series->post_title), $wpdb->last_error);
 
             }
         } // End of foreach (DB result)
@@ -364,8 +368,9 @@ function in_object_r($key = null, $value = null, $object, $strict = false)
 
 try {
 
-    $sequence = new Sequences\Sequence();
+    $sequence = new \E20R\Sequences\Sequence();
     $sequence->load_actions();
+
 } catch (Exception $e) {
     error_log("PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage());
 }

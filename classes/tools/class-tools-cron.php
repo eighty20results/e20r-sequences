@@ -1,4 +1,5 @@
 <?php
+namespace E20R\Sequences\Tools\Cron;
 
 /*
   License:
@@ -19,7 +20,6 @@
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-namespace E20R\Sequences\Tools\Cron;
 
 use E20R\Sequences\Tools\Cron as Cron;
 use E20R\Sequences as Sequences;
@@ -40,7 +40,7 @@ class Job {
 
 	static function init() {
 
-		add_action('pmpro_sequence_cron_hook', array( 'E20R\Sequences\Tools\Cron', 'checkForNewContent'), 10, 1);
+		add_action('e20r_sequence_cron_hook', array( "new [\\E20R\\Sequences\\Tools\\Cron]", 'checkForNewContent'), 10, 1);
 	}
 
 	/**
@@ -112,7 +112,7 @@ class Job {
 			if ( !$this->sequence->get_options( $s->seq_id ) ) {
 
 				$this->sequence->dbg_log("cron() - Sequence {$s->seq_id} is not converted to V3 metadata format. Exiting!");
-				$this->sequence->set_error_msg( __( "Please de-activiate and activiate the PMPro Sequences plug-in to facilitate conversion to v3 meta data format.", "pmprosequences" ) );
+				$this->sequence->set_error_msg( __( "Please de-activiate and activiate the Eighty / 20 Results - Sequences plug-in to facilitate conversion to v3 meta data format.", "e20rsequence" ) );
 				continue;
 			}
 
@@ -196,7 +196,7 @@ class Job {
 						}
 						else {
 
-							$this->sequence->dbg_log( "cron() - Error sending email message!", DEBUG_SEQ_CRITICAL );
+							$this->sequence->dbg_log( "cron() - Error sending email message!", E20R_DEBUG_SEQ_CRITICAL );
 						}
 					}
 					else {
@@ -210,7 +210,7 @@ class Job {
 					}
 				}
 				else {
-					$this->sequence->dbg_log("cron() - Will NOT notify user {$s->user_id} about the availability of post {$post->id}", DEBUG_SEQ_WARNING);
+					$this->sequence->dbg_log("cron() - Will NOT notify user {$s->user_id} about the availability of post {$post->id}", E20R_DEBUG_SEQ_WARNING);
 				}
 
 				// Save user specific notification settings (including array of posts we've already notified them of)
@@ -221,7 +221,7 @@ class Job {
 			else {
 
 				// Move on to the next one since this one isn't configured to send notices
-				$this->sequence->dbg_log( 'cron() - Sequence ' . $s->seq_id . ' is not configured for sending alerts. Skipping...', DEBUG_SEQ_WARNING );
+				$this->sequence->dbg_log( 'cron() - Sequence ' . $s->seq_id . ' is not configured for sending alerts. Skipping...', E20R_DEBUG_SEQ_WARNING );
 			} // End of sendNotice test
 		} // End of data processing loop
 	}
