@@ -23,7 +23,7 @@ namespace E20R\Sequences\Tools\Widgets;
 use E20R\Sequences as Sequences;
 use E20R\Sequences\Tools\Widgets as Widget;
 
-class PostWidget extends WP_Widget {
+class PostWidget extends \WP_Widget {
 
 	public function __construct() {
 		parent::__construct(
