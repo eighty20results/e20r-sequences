@@ -42,7 +42,17 @@ class Job
 
     static public function schedule_default() {
 
-        wp_schedule_event( current_time( 'timestamp' ), 'daily', "e20r_sequence_cron_hook" );
+        $existing = wp_get_schedule("e20r_sequence_cron_hook");
+        $old = wp_get_schedule("pmpro_sequence_cron_hook");
+
+        if ( false !== $existing ) {
+            wp_clear_scheduled_hook('e20r_sequence_cron_hook');
+            wp_schedule_event( current_time( 'timestamp' ), 'daily', "e20r_sequence_cron_hook" );
+        }
+
+        if (( false !== $old ) && (!class_exists("PMProSequence")) ) {
+            wp_clear_scheduled_hook('pmpro_sequence_cron_hook');
+        }
     }
 
     /**
@@ -132,11 +142,17 @@ class Job
         if ( is_null( $sequence_id ) )
         {
             wp_clear_scheduled_hook( 'e20r_sequence_cron_hook' );
-            wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook' );
+            if (!class_exists("PMProSequence"))
+            {
+                wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook' );
+            }
 
         } else {
             wp_clear_scheduled_hook( 'e20r_sequence_cron_hook', array( $sequence_id ) );
-            wp_clear_scheduled_hook( 'pmpro_sequence_cron_hook', array( $sequence_id ) );
+
+            if (!class_exists("PMProSequence")) {
+                wp_clear_scheduled_hook('pmpro_sequence_cron_hook', array($sequence_id));
+            }
 
         }
     }
