@@ -177,39 +177,16 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.0.1
-
-* Fix: Namespace for Tools/Cron
-* Fix: Use singleton model for sequence object
-* Fix: Renamed Job() class to Cron() for autoloader purposes Refactor file
-* Fix: Renamed class to simplify autoload
-* Fix: Behave different if the user isn't logged in
-* Fix: Only remove old pmpro sequences cron jobs if PMPro Sequences is no longer loaded/active
-* Fix: Didn't correctly identify the privilege level of the user
-* Fix: Transmit sequence to process in do_action for cron hook when manually requesting notices to be sent
-* Fix: Properly identify the sequence to process alert notices for (when specified)
-* Fix: Manual send of post notices (with argument).
-* Fix/Enh: e20r_available_on shortcode now only needs 'when' attribute. Can be a date, or days since the currently logged in user's start of membership
-* Enh: Move all cron job management to E20R\\Sequences\\Tools\\Cron\\Job class
-* Enh: Adding debug info
-* Enh: Add call to import/convert existing PMPro Sequences metadata as needed.
-* Enh: Refactor cron management and move to Cron\\Job class
-* Enh: Use singleton pattern with hook for instance
-* Enh: Refactor class-tools-cron.php
-* Enh: Refactored class-sequence.php file
-* Enh: Update README.* files
-* Enh: Add PMPro Sequences conversion function (incomplete)
-* Enh: Update version number (4.0.1)
-* Enh: Add Shortcode namespace
-* Enh: Skip unneeded code traversal in convert_date_to_days when receiving a day number as our argument
-* Enh: Add e20r_available_on shortcode - Let admin wrap content/text that won't be visible to the user until the specified day of membership, or date.
-* Enh: Initial commit for available_on shortcode class
-* Enh: Renamed Job() class to Cron() and renamed the source file for autoloader simplicity
-* Enh: Moved PostWidget class definition into widgets directory for autoloader/namespace reasons.
-* Enh: Add autoloader support for classes
-* Enh: Remove static load of classes
-
-
+###4.0.2
+* Set namespace for main plugin file
+* Define namespaces used by main plugin file
+* Fix autoloader
+* Use renamed Controller() class for Sequence
+* Escape global namespace entities
+* Renamed class & class file Fix namespace issues
+* Fixed typo in Namespace alias
+* Fixed Namespace issues
+* Fixed PHP Warning message while processing cron jobs
 
 ##Old releases
 ###.1
@@ -683,3 +660,34 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Remove sequence icon images (using fontawesome instead)
 * Rename all pmpro_ files to e20r_
 * Update README & .json files
+
+###4.0.1
+* Fix: Namespace for Tools/Cron
+* Fix: Use singleton model for sequence object
+* Fix: Renamed Job() class to Cron() for autoloader purposes Refactor file
+* Fix: Renamed class to simplify autoload
+* Fix: Behave different if the user isn't logged in
+* Fix: Only remove old pmpro sequences cron jobs if PMPro Sequences is no longer loaded/active
+* Fix: Didn't correctly identify the privilege level of the user
+* Fix: Transmit sequence to process in do_action for cron hook when manually requesting notices to be sent
+* Fix: Properly identify the sequence to process alert notices for (when specified)
+* Fix: Manual send of post notices (with argument).
+* Fix/Enh: e20r_available_on shortcode now only needs 'when' attribute. Can be a date, or days since the currently logged in user's start of membership
+* Enh: Move all cron job management to E20R\\Sequences\\Tools\\Cron\\Job class
+* Enh: Adding debug info
+* Enh: Add call to import/convert existing PMPro Sequences metadata as needed.
+* Enh: Refactor cron management and move to Cron\\Job class
+* Enh: Use singleton pattern with hook for instance
+* Enh: Refactor class-tools-cron.php
+* Enh: Refactored class-sequence.php file
+* Enh: Update README.* files
+* Enh: Add PMPro Sequences conversion function (incomplete)
+* Enh: Update version number (4.0.1)
+* Enh: Add Shortcode namespace
+* Enh: Skip unneeded code traversal in convert_date_to_days when receiving a day number as our argument
+* Enh: Add e20r_available_on shortcode - Let admin wrap content/text that won't be visible to the user until the specified day of membership, or date.
+* Enh: Initial commit for available_on shortcode class
+* Enh: Renamed Job() class to Cron() and renamed the source file for autoloader simplicity
+* Enh: Moved PostWidget class definition into widgets directory for autoloader/namespace reasons.
+* Enh: Add autoloader support for classes
+* Enh: Remove static load of classes
