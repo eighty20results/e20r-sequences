@@ -8,7 +8,7 @@
 
 namespace E20R\Sequences\Shortcodes;
 
-class availableOn_shortcode
+class available_on
 {
 
     private static $_this;
@@ -49,36 +49,42 @@ class availableOn_shortcode
          *  'delay' => number of days | date a valid format (per strtotime).
          */
 
-        $type = 'days';
+        global $current_user;
         $delay = 0;
 
-        global $current_user;
-
         $sequence_obj = apply_filters('get_sequence_class_instance', null);
+        $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - Processing attributes.");
 
         $attributes = shortcode_atts(array(
-            'type' => 'days',
-            'delay' => 0,
+            'when' => 0,
         ), $attr);
 
+        /*
         if (!in_array($attributes['type'], array('days', 'date'))) {
-            wp_die(__('%s is not a valid type attribute for the e20r_available_on shortcode', 'e20rsequence'), $type);
+            $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - User didn't specify the correct type attribute in the shortcode definition. Used: {$attributes['type']}");
+            wp_die( sprintf(__('%s is not a valid type attribute for the e20r_available_on shortcode', 'e20rsequence'), $type));
+        }
+        */
+
+        if (false === strtotime( $attributes['when'])) {
+
+            $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - User didn't specify a recognizable format for the 'when' attribute");
+            wp_die( sprintf(__('%s is not a recognizable format for the when attribute in the e20r_available_on shortcode', 'e20rsequence'), $attributes['when']));
         }
 
-        if (('date' == $attributes['type']) && (!$sequence_obj->is_valid_date($attributes['delay']))) {
-            wp_die(__('%s is not a valid date format for the delay attribute in the e20r_available_on shortcode', 'e20rsequence'), $attributes['delay']);
-        }
 
         // Converts to "days since startdate" for the current user, if provided a date
         // Otherwise assuming that the number is the number of days requested.
-        $delay = $sequence_obj->convert_date_to_days($attributes['delay']);
+        $delay = $sequence_obj->convert_date_to_days($attributes['when']);
         $days_since_start = $sequence_obj->get_membership_days($current_user->ID);
 
         if ($delay <= $days_since_start) {
 
+            $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - We need to display the content for the shortcode.");
             return do_shortcode($content);
         }
 
+        $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - We can't display the content within the shortcode block");
         return apply_filters('e20r-sequence-shortcode-text-unavailable', null);
     }
 
