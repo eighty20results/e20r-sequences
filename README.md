@@ -12,13 +12,16 @@ Create "Sequence" which are groups of posts/pages where the content is revealed 
 ##Description
 
 This plugin currently requires Paid Memberships Pro and started life as a complete rip-off of the pmpro_series
- plugin from strangerstudios. I needed a drip-content plugin that supported different delay type options, paginated
- lists of series posts, a way to let a user see an excerpt of
+ plugin from Stranger Studios. I needed a drip-content plugin that supported different delay type options, paginated
+ lists of series posts, a way include an excerpt of the current edition post (in the drip feed) in a Widget, etc.
 
-Added a features that weren't included in PMPro Series, specifically the ability to:
+I've added a few features that weren't included in PMPro Series, specifically the ability to:
 
 * Multiple delay values for the same post ID (repeating alerts & posts/pages)
+* Post/page metabox to assign one or more sequence(s) and delay value(s) to a post while editing it
+* Sequence configuration via Metabox on sequence editor page
 * [sequence_list] shortcode for paginated sequence list
+* [e20r_available_on] shortcode to prevent visibility of content between [e20r_available_on] and [/e20r_available_on] until a specific date, or until a certain number of days after the users membership started.
 * Widget containing summary (excerpt) of most recent post in a sequence [***] for the logged in user.
 * Configure the sort order for the sequence
 * Show or hide upcoming posts in a ssequence from the end-user ("show" means all post titles for the sequence will be listed for the user with date/day of availability).
@@ -26,7 +29,7 @@ Added a features that weren't included in PMPro Series, specifically the ability
 * Show "delay time" as "days since membership started" or "calendar date" to end-user.
 * Let admin decide whether to show "post available on" as a "day of membership" or date (relative to users membership).
 * Admin defined schedule (using WP-Cron) for new content alert emails to users.
-* User opt-in for receiving email alerts (User can disable/re-enable as desired).
+* User opt-in for receiving email alerts (User can disable/re-enable as desired if admin adds [sequence_alert] shortcode to a page/post).
 * Templated email alerts for new content
 * Pagination of sequence lists in sequence page
 * Allows 'preview' of upcoming posts in the sequence (Lets the admin/editor send alerts for "today" while letting the user read ahead if so desired - used in coaching programs, for instance).
@@ -83,23 +86,86 @@ See ./email/README.txt for information on templates for the email alerts.
 | e20r-sequence-before-widget | Insert stuff before the widget gets rendered | $instance['before_widget'] |
 | e20r-sequence-after-widget | Insert stuff after the widget gets rendered | $instance['after_widget'] |
 | e20r-sequence-import-pmpro-series | Whether to automatically try to import PMPro Series CPT entries to this plugin. Accepts a number of different return values: The string 'all' or boolean true will import all defined series. An array of Post IDs, i.e. array( 2000, 4000 ), will treat the numbers as the post id for the Series. A single number (array or otherwise) will be treated as a Post ID to import.  | __return_false() |
+| e20r-sequence-shortcode-text-unavailable| The text to display if the current user should not be permitted to see the content protected by the e20r_available_on shortcode | null |
 
 ##Roadmap (possible features)
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
 2. Link has_access() to WP role() and membership plugin.
 3. Define own startdate value rather than rely on PMPro.
-4. Must rename plug-in to conform with Wordpress.org naming requirements.
+4. Must rename plug-in to conform with Wordpress.org naming requirements - Done
 
 ##Known Issues
 
-* If you started with this plugin on one of the V2.x versions, you *must* deactivate and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
+* If you started with this plugin on one of the V2.x versions, you *must* deactivate, and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
 * The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
 * Format for "Posts in sequence" metabox doesn't handle responsive screens well - Fix Pending
 
 ###DEBUG
  To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
- A fair bit (understatement) of data which will get dumped into uploads/e20r-sequences/sequence_debug_log.txt
+ A fair bit (understatement) of data which will get dumped into uploads/e20r-sequences/debug_log.txt
  (located the under the plugin directory).
+
+## Shortcode attributes
+
+###[sequence_links]
+
+This shortcode can be placed on any page or post. It will load a paginated list of links to the available posts or 
+pages that are managed by the specified sequence. This list will respect the "what-to-show" settings in the back-end 
+definiton for the sequence.
+
+The following attributes may be used, unless they have the "Required" keyword next to it. Then you _have_ to set it.
+
+* id - The ID (page ID or Post ID) of the sequence to list links for. (Required)
+* pagesize - The number of links to list per page in the paginated list. Default: 30
+* title = Override the title for the list of links (i.e. what you've named the sequence in the back-end). Default: N/A
+* button = Whether to display a button for the user to click in order to access the page/post. Default: 'false'                   
+* highlight = Whether to highlight the most recent/current post or page in the list of links. Default: 'false'                  
+* scrollbox = Whether to wrap the list in a scrollable <div> box. Default: 'false'                  
+
+Example 1:
+`[sequence_links id="4" pagesize="20" title="My Sequence Links" button="true" highlight="true" scrollbox="true"]`
+
+###[sequence_alert]
+
+This shortcode can be placed on any page or post and will load a checkbox allowing the logged-in user to opt in, or 
+out of receiving email alerts about new content. 
+
+The following attribute is required:
+
+* sequence_id - The ID of the sequence (post ID) to associate this opt-in with.
+
+Example 1:
+
+`[sequence_alert sequence_id="4"]`
+
+
+###[e20r_available_on]
+
+This shortcode is designed to prevent visibility of the content between [e20r_available_on] and [/e20r_available_on] 
+until the specified "when" attribute value has been exceeded by the currently logged in user. If the "when" value is 
+specified as a number of days (i.e. purely numeric value like: 1, 100, 10, etc), users who are not logged in to your 
+site will not see the content between the shortcode blocks at all. If the "when" value is specified in a valid date 
+format, as defined by the PHP strtotime() function, any viewer of your site will be given access to the content between 
+the shortcode blocks unless you're using some other means to prevent access.
+
+NOTE: This shortcode does *NOT* require a sequence to exist in order to function.
+
+The following attribute can be used with the shortcode:
+* when - A valid date format, or the number of days since the start date for membership level of the currently logged in user
+
+Example 1:
+
+`[e20r_available_on when="01-01-2016"]
+This content will be visible on January 1st, 2016. It does not matter whether the viewer is a member or not. They will see
+this content on/after January 1st, 2016.
+[/e20r_available_on]`
+
+Example 2:
+
+`[e20r_available_on when="10"]
+This content will be visible 10 or more days after the start date of the current membership level for the logged in user.
+If they are not members of your site, they will *not* see this content
+[/e20r_available_on]`
 
 ##Frequently Asked Questions
 TBD
@@ -111,29 +177,39 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.0.0
+###4.0.1
 
-* Fix: Namespace declaration for Sequences class(es)
-* Fix: Move namespace declaration to Sequence class
-* Fix: PHPDoc for some of the classes (apply namespace)
-* Fix: Namespaces for Sequence class
-* Fix: Set global namespace for standard PHP classes (DateTime, DateTimezone, stdClass, WP_Query, etc)
-* Fix: Loading Fontawesome from local resource for Sequence icon(s)
-* Enh: Use wp_enqueue_* rather than wp_register_* functions
-* Fix: Use namespace in register_widget()
-* Update namespace for WP_Widget parent class
-* Add FontAwesome as local resource
-* Add fonts directory to build script
-* Replace pmpro_ and pmpro- instances with e20r_ and e20r- instances respectively
-* Rename all instances of pmpro-sequence to e20r-sequence
-* Rename plugin to e20r-sequences Use namespaces for classes
-* Move all classes under PLUGIN_DIR/classes and PLUGIN_DIR/classes/tools
-* Create Tools\Cron class & move worker function to its own class & namespace
-* Rename widget class to PostWidget
-* Rename the sequences controller class to Sequence
-* Remove sequence icon images (using fontawesome instead)
-* Rename all pmpro_ files to e20r_
-* Update README & .json files
+* Fix: Namespace for Tools/Cron
+* Fix: Use singleton model for sequence object
+* Fix: Renamed Job() class to Cron() for autoloader purposes Refactor file
+* Fix: Renamed class to simplify autoload
+* Fix: Behave different if the user isn't logged in
+* Fix: Only remove old pmpro sequences cron jobs if PMPro Sequences is no longer loaded/active
+* Fix: Didn't correctly identify the privilege level of the user
+* Fix: Transmit sequence to process in do_action for cron hook when manually requesting notices to be sent
+* Fix: Properly identify the sequence to process alert notices for (when specified)
+* Fix: Manual send of post notices (with argument).
+* Fix/Enh: e20r_available_on shortcode now only needs 'when' attribute. Can be a date, or days since the currently logged in user's start of membership
+* Enh: Move all cron job management to E20R\\Sequences\\Tools\\Cron\\Job class
+* Enh: Adding debug info
+* Enh: Add call to import/convert existing PMPro Sequences metadata as needed.
+* Enh: Refactor cron management and move to Cron\\Job class
+* Enh: Use singleton pattern with hook for instance
+* Enh: Refactor class-tools-cron.php
+* Enh: Refactored class-sequence.php file
+* Enh: Update README.* files
+* Enh: Add PMPro Sequences conversion function (incomplete)
+* Enh: Update version number (4.0.1)
+* Enh: Add Shortcode namespace
+* Enh: Skip unneeded code traversal in convert_date_to_days when receiving a day number as our argument
+* Enh: Add e20r_available_on shortcode - Let admin wrap content/text that won't be visible to the user until the specified day of membership, or date.
+* Enh: Initial commit for available_on shortcode class
+* Enh: Renamed Job() class to Cron() and renamed the source file for autoloader simplicity
+* Enh: Moved PostWidget class definition into widgets directory for autoloader/namespace reasons.
+* Enh: Add autoloader support for classes
+* Enh: Remove static load of classes
+
+
 
 ##Old releases
 ###.1
@@ -584,3 +660,26 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fix formatting problem
 * Initial update of version number to 3.0.4
 * Update template file for vpt_reminder.html
+
+###4.0.0
+* Fix: Namespace declaration for Sequences class(es)
+* Fix: Move namespace declaration to Sequence class
+* Fix: PHPDoc for some of the classes (apply namespace)
+* Fix: Namespaces for Sequence class
+* Fix: Set global namespace for standard PHP classes (DateTime, DateTimezone, stdClass, WP_Query, etc)
+* Fix: Loading Fontawesome from local resource for Sequence icon(s)
+* Enh: Use wp_enqueue_* rather than wp_register_* functions
+* Fix: Use namespace in register_widget()
+* Update namespace for WP_Widget parent class
+* Add FontAwesome as local resource
+* Add fonts directory to build script
+* Replace pmpro_ and pmpro- instances with e20r_ and e20r- instances respectively
+* Rename all instances of pmpro-sequence to e20r-sequence
+* Rename plugin to e20r-sequences Use namespaces for classes
+* Move all classes under PLUGIN_DIR/classes and PLUGIN_DIR/classes/tools
+* Create Tools\Cron class & move worker function to its own class & namespace
+* Rename widget class to PostWidget
+* Rename the sequences controller class to Sequence
+* Remove sequence icon images (using fontawesome instead)
+* Rename all pmpro_ files to e20r_
+* Update README & .json files
