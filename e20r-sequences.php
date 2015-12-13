@@ -73,16 +73,17 @@ require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-c
 /**
  *    Include the class for PMProSequences
  */
-if (!class_exists("\\E20R\\Sequences\\Sequence")):
+/* if (!class_exists("\\E20R\\Sequences\\Sequence")):
 
     require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/class-sequence.php");
-    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-tools-cron.php");
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-cron.php");
 
 endif;
 
 if (!class_exists("\\E20R\\Sequences\\Tools\\Widgets\\PostWidget")):
-    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-postwidget.php");
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/widgets/class-postwidget.php");
 endif;
+*/
 
 /** A debug function */
 
@@ -279,7 +280,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
 
                 $post_list = get_post_meta($series->ID, '_series_posts', true);
 
-                $seq = new Sequences\Sequence($seq_id);
+                $seq = apply_filters('get_sequence_class_instance', null);
                 $seq->init($seq_id);
 
                 foreach ($post_list as $seq_member) {
@@ -308,7 +309,8 @@ if (!function_exists('e20r_sequences_import_all_PMProSequence')):
     /**
      * Convert PMPro Sequences metadata
      */
-    function e20r_sequences_import_all_PMProSequence() {
+    function e20r_sequences_import_all_PMProSequence()
+    {
         // TODO: Implement e20r_sequences_import_all_PMProSequence(): Convert pmpro_sequence metadata to e20r_sequence
         $sequence = apply_filters('get_sequence_class_instance', null);
 
@@ -319,6 +321,38 @@ if (!function_exists('e20r_sequences_import_all_PMProSequence')):
         }
     }
 endif;
+
+if (!function_exists('e20r_sequence_loader')) {
+    function e20r_sequence_loader($class_name)
+    {
+
+        if (false === strpos($class_name, 'Sequences')) {
+            return;
+        }
+
+        $parts = explode('\\', $class_name);
+
+        $base_path = plugin_dir_path(__FILE__) . "classes";
+        $name = strtolower($parts[(count($parts) - 1)]);
+
+        $types = array('shortcodes', 'tools', 'widgets');
+
+        foreach ($types as $type) {
+
+            if ("sequence" === $name) {
+                $dir = "{$base_path}/";
+            } else {
+                $dir = "{$base_path}/{$type}/";
+            }
+
+            if (file_exists("{$dir}/class-{$name}.php")) {
+
+                //error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php is loading");
+                require_once("{$dir}/class-{$name}.php");
+            }
+        }
+    }
+}
 /**
  * Recursively iterate through an array (of, possibly, arrays) to find the needle in the haystack
  *
@@ -383,8 +417,10 @@ function in_object_r($key = null, $value = null, $object, $strict = false)
 
 try {
 
+    spl_autoload_register('e20r_sequence_loader');
+
     $sequence = new E20R\Sequences\Sequence();
-    $cron = new E20R\Sequences\Tools\Cron\Job();
+    $cron = new E20R\Sequences\Tools\Cron();
 
     $sequence->load_actions();
 
