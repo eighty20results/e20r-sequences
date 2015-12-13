@@ -1,11 +1,10 @@
 <?php
-use E20R\Sequences as Sequences;
-
+namespace E20R\Sequences\Main;
 /*
 Plugin Name: Eighty / 20 Results Sequences for Paid Memberships Pro
 Plugin URI: http://www.eighty20results.com/pmpro-sequences/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 4.0.1
+Version: 4.0.2
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
@@ -32,6 +31,10 @@ License:
 */
 
 /* Define namespaces */
+use E20R\Sequences\Main as Main;
+use E20R\Sequences\Sequence as Sequence;
+use E20R\Sequences\Tools as Tools;
+
 define(__NAMESPACE__ . '\NS', __NAMESPACE__ . '\\');
 
 // use NS as Sequence;
@@ -75,7 +78,7 @@ require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-c
  */
 /* if (!class_exists("\\E20R\\Sequences\\Sequence")):
 
-    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/class-sequence.php");
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/class-controller.php");
     require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-cron.php");
 
 endif;
@@ -326,7 +329,7 @@ if (!function_exists('e20r_sequence_loader')) {
     function e20r_sequence_loader($class_name)
     {
 
-        if (false === strpos($class_name, 'Sequences')) {
+        if (false === stripos($class_name, 'sequence')) {
             return;
         }
 
@@ -339,7 +342,7 @@ if (!function_exists('e20r_sequence_loader')) {
 
         foreach ($types as $type) {
 
-            if ("sequence" === $name) {
+            if ( false !== stripos($name, "controller")) {
                 $dir = "{$base_path}/";
             } else {
                 $dir = "{$base_path}/{$type}/";
@@ -417,21 +420,21 @@ function in_object_r($key = null, $value = null, $object, $strict = false)
 
 try {
 
-    spl_autoload_register('e20r_sequence_loader');
+    spl_autoload_register("E20R\\Sequences\\Main\\e20r_sequence_loader");
 
-    $sequence = new E20R\Sequences\Sequence();
-    $cron = new E20R\Sequences\Tools\Cron();
+    $sequence = new Sequence\Controller();
+    $cron = new Tools\Cron();
 
     $sequence->load_actions();
 
-} catch (Exception $e) {
+} catch (\Exception $e) {
     error_log("PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage());
 }
 
 register_activation_hook(__FILE__, array(&$sequence, 'activation'));
 register_deactivation_hook(__FILE__, array(&$sequence, 'deactivation'));
 
-$plugin_updates = PucFactory::buildUpdateChecker(
+$plugin_updates = \PucFactory::buildUpdateChecker(
     'https://eighty20results.com/protected-content/e20r-sequences/metadata.json',
     __FILE__,
     'e20r-sequences'
