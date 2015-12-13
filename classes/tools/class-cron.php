@@ -185,7 +185,7 @@ class Cron
             $received_id = $sequence_id;
         }
 
-        $sequence->dbg_log("cron() - Sequence {$received_id} is ready to process messages... (received: " . (is_null($sequence_id) ? 'null' : $sequence_id) . ")");
+        $sequence->dbg_log("cron() - Sequence {$received_id} is ready to process messages... (received: " . (is_null($received_id) ? 'null' : $received_id) . ")");
 
         // Prepare SQL to get all sequences and users associated in the system who _may_ need to be notified
         if (is_null($received_id)) {
@@ -236,6 +236,7 @@ class Cron
 
             // Set the user ID we're processing for:
             $sequence->e20r_sequence_user_id = $s->user_id;
+            $sequence->sequence_id = $s->seq_id;
 
             // Load sequence data
             if (!$sequence->get_options($s->seq_id)) {
