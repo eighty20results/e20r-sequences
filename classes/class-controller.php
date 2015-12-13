@@ -2,6 +2,7 @@
 namespace E20R\Sequences\Sequence;
 
 use E20R\Sequences as Sequences;
+use E20R\Sequences\Main as Main;
 use E20R\Sequences\Sequence as Sequence;
 use E20R\Sequences\Tools as Tools;
 use E20R\Sequences\Shortcodes as Shortcodes;
@@ -6619,8 +6620,8 @@ use E20R\Sequences\Shortcodes as Shortcodes;
             flush_rewrite_rules();
 
             /* Search for existing pmpro_series posts & import */
-            e20r_sequences_import_all_PMProSeries();
-            e20r_sequences_import_all_PMProSequence();
+            Main\e20r_sequences_import_all_PMProSeries();
+            Main\e20r_sequences_import_all_PMProSequence();
 
             /* Convert old metadata format to new (v3) format */
 
