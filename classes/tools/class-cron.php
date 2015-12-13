@@ -1,5 +1,5 @@
 <?php
-namespace E20R\Sequences\Tools\Cron;
+namespace E20R\Sequences\Tools;
 
 /*
   License:
@@ -21,14 +21,10 @@ namespace E20R\Sequences\Tools\Cron;
 
 */
 
-use E20R\Sequences\Tools\Cron as Cron;
 use E20R\Sequences as Sequences;
+use E20R\Sequences\Tools as Tools;
 
-if (class_exists("\\E20R\\Sequences\\Tools\\Cron\\Job")) {
-    return;
-}
-
-class Job
+class Cron
 {
 
     /**
@@ -361,9 +357,9 @@ class Job
     }
 
     /**
-     * Return the Cron\Job class instance (when using singleton pattern)
+     * Return the Tools\Cron class instance (when using singleton pattern)
      *
-     * @return Cron\Job $this
+     * @return Tools\Cron $this
      */
     public function get_instance()
     {
