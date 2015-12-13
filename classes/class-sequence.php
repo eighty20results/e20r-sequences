@@ -3,6 +3,7 @@ namespace E20R\Sequences;
 
 use E20R\Sequences as Sequences;
 use E20R\Sequences\Tools\Cron as Cron;
+use E20R\Sequences\Shortcodes as Shortcode;
 
 /*
   License:
@@ -3840,7 +3841,7 @@ use E20R\Sequences\Tools\Cron as Cron;
 
             // Return immediately if the value we're given is a # of days (i.e. an integer)
             if ( is_numeric( $date ) ) {
-                $days = $date;
+                return $date;
             }
 
             if ( $this->is_valid_date( $date ) )
@@ -7492,6 +7493,9 @@ use E20R\Sequences\Tools\Cron as Cron;
             add_action('wp_ajax_nopriv_e20r_send_notices', array(&$this, 'unprivileged_ajax_error'));
             add_action('wp_ajax_nopriv_e20r_sequence_save_user_optin', array(&$this, 'unprivileged_ajax_error'));
             add_action('wp_ajax_nopriv_e20r_save_settings', array(&$this, 'unprivileged_ajax_error'));
+
+            // Load shortcodes (instantiate the object(s).
+            $shortcode_availableOn = new Shortcode\availableOn_shortcode();
 
         }
 
