@@ -1,9 +1,10 @@
 <?php
-namespace E20R\Sequences;
+namespace E20R\Sequences\Sequence;
 
 use E20R\Sequences as Sequences;
+use E20R\Sequences\Sequence as Sequence;
 use E20R\Sequences\Tools as Tools;
-use E20R\Sequences\Shortcodes as Shortcode;
+use E20R\Sequences\Shortcodes as Shortcodes;
 
 /*
   License:
@@ -26,7 +27,7 @@ use E20R\Sequences\Shortcodes as Shortcode;
 
 */
 
-	class Sequence
+	class Controller
 	{
 	    public $options;
 	    public $sequence_id = 0;
@@ -111,7 +112,7 @@ use E20R\Sequences\Shortcodes as Shortcode;
         }
 
         /**
-          * @return Sequences\Sequence $this - Current instance of the class
+          * @return Sequence\Controller $this - Current instance of the class
           * @since 4.0.0
           */
         public function get_instance() {
@@ -6614,7 +6615,7 @@ use E20R\Sequences\Shortcodes as Shortcode;
                 wp_die($errorMessage);
             }
 
-            Sequences\Sequence::create_custom_post_type();
+            Sequence\Controller::create_custom_post_type();
             flush_rewrite_rules();
 
             /* Search for existing pmpro_series posts & import */
@@ -6701,7 +6702,7 @@ use E20R\Sequences\Shortcodes as Shortcode;
             if (! is_wp_error($error) )
                 return true;
             else {
-                Sequences\Sequence::dbg_log('Error creating post type: ' . $error->get_error_message(), E20R_DEBUG_SEQ_CRITICAL);
+                Sequence\Controller::dbg_log('Error creating post type: ' . $error->get_error_message(), E20R_DEBUG_SEQ_CRITICAL);
                 wp_die($error->get_error_message());
                 return false;
             }
@@ -7402,7 +7403,7 @@ use E20R\Sequences\Shortcodes as Shortcode;
             add_action('wp_ajax_nopriv_e20r_save_settings', array(&$this, 'unprivileged_ajax_error'));
 
             // Load shortcodes (instantiate the object(s).
-            $shortcode_availableOn = new Shortcode\available_on();
+            $shortcode_availableOn = new Shortcodes\available_on();
 
         }
 
