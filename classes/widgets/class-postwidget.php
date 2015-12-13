@@ -251,7 +251,7 @@ class PostWidget extends \WP_Widget {
 		return implode( " ", $words);
 	}
 
-	private function print_available_date( Sequences\Sequence $seq, $postId ) {
+	private function print_available_date( Sequences\Sequence\Controller $seq, $postId ) {
 
 		$seqPost = $seq->get_post_details( $postId );
 		$max_delay = 0;
