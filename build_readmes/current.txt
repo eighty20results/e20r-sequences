@@ -1,1 +1,2 @@
-Fix: Error when loading e20r_available_on shortcode.
+Fix: Email alert sent on days where no new/repeating post is released
+Enh: Load fontawesome fonts from local server (not CDN)

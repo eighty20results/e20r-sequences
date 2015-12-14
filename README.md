@@ -5,7 +5,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.0.4
+Stable tag: 4.0.5
 
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -100,6 +100,8 @@ See ./email/README.txt for information on templates for the email alerts.
 * The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
 * Format for "Posts in sequence" metabox doesn't handle responsive screens well - Fix Pending
 
+For more, see the [Issues section](https://github.com/eighty20results/e20r-sequences/issues) for the plugin on Github.com.
+
 ###DEBUG
  To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
  A fair bit (understatement) of data which will get dumped into uploads/e20r-sequences/debug_log.txt
@@ -177,8 +179,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.0.4
-* Fix: Error when loading e20r_available_on shortcode.
+###4.0.5
+* Fix: Email alert sent on days where no new/repeating post is released
+* Enh: Load fontawesome fonts from local server (not CDN)
 
 ##Old releases
 ###.1
@@ -697,3 +700,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.0.3
 * Fix: Namespace for functions to import PMPro Series and PMProSequences data
+
+###4.0.4
+* Fix: Error when loading e20r_available_on shortcode.

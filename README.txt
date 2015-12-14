@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.0.4
+Stable tag: 4.0.5
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -57,6 +57,8 @@ See ./email/README.txt for information on templates for the email alerts.
 * If you started with this plugin on one of the V2.x versions, you *must* deactivate and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
 * The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
 * Format for "Posts in sequence" metabox doesn't handle responsive screens well - Fix Pending
+
+For more, see the [Issues section](https://github.com/eighty20results/e20r-sequences/issues) for the plugin on Github.com
 
 == DEBUG ==
 
