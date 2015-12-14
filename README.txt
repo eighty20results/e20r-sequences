@@ -136,6 +136,11 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 4.0.5 ==
+
+* Fix: Email alert sent on days where no new/repeating post is released
+* Enh: Load fontawesome fonts from local server (not CDN)
+
 == 4.0.4 ==
 
 * Fix: Error when loading e20r_available_on shortcode.
