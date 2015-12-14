@@ -1,9 +1,1 @@
-Set namespace for main plugin file
-Define namespaces used by main plugin file
-Fix autoloader
-Use renamed Controller() class for Sequence
-Escape global namespace entities
-Renamed class & class file Fix namespace issues
-Fixed typo in Namespace alias
-Fixed Namespace issues
-Fixed PHP Warning message while processing cron jobs
+Fix: Error when loading e20r_available_on shortcode.

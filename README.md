@@ -5,7 +5,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 3.0.4
+Stable tag: 4.0.4
 
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -177,16 +177,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.0.2
-* Set namespace for main plugin file
-* Define namespaces used by main plugin file
-* Fix autoloader
-* Use renamed Controller() class for Sequence
-* Escape global namespace entities
-* Renamed class & class file Fix namespace issues
-* Fixed typo in Namespace alias
-* Fixed Namespace issues
-* Fixed PHP Warning message while processing cron jobs
+###4.0.4
+* Fix: Error when loading e20r_available_on shortcode.
 
 ##Old releases
 ###.1
@@ -691,3 +683,17 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Enh: Moved PostWidget class definition into widgets directory for autoloader/namespace reasons.
 * Enh: Add autoloader support for classes
 * Enh: Remove static load of classes
+
+###4.0.2
+* Set namespace for main plugin file
+* Define namespaces used by main plugin file
+* Fix autoloader
+* Use renamed Controller() class for Sequence
+* Escape global namespace entities
+* Renamed class & class file Fix namespace issues
+* Fixed typo in Namespace alias
+* Fixed Namespace issues
+* Fixed PHP Warning message while processing cron jobs
+
+###4.0.3
+* Fix: Namespace for functions to import PMPro Series and PMProSequences data
