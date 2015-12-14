@@ -265,27 +265,33 @@ class Cron
                     ($sequence->options->sendNotice == 1))
             ) {
 
+                $sequence->dbg_log('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
+
+                // Load posts for this sequence.
+                // $sequence_posts = $sequence->getPosts();
+
+                // Get the most recent post in the sequence and notify for it (if we're supposed to notify).
+                $post = $sequence->find_closest_post($s->user_id);
+                $membership_day = $sequence->get_membership_days($s->user_id);
+
+                if (empty($post) || (!empty($post) && ($post->delay != $membership_day))) {
+
+                    $sequence->dbg_log("cron() - Skipping Alert: Did not find a valid/current post for user {$s->user_id} in sequence {$sequence->sequence_id}");
+                    // No posts found!
+                    continue;
+                }
+
                 // Set the opt-in timestamp if this is the first time we're processing alert settings for this user ID.
                 if (empty($notice_settings->last_notice_sent) || ($notice_settings->last_notice_sent == -1)) {
 
                     $notice_settings->last_notice_sent = current_time('timestamp');
                 }
 
-                $sequence->dbg_log('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
+                // $posts = $sequence->get_postDetails( $post->id );
+                $flag_value = "{$post->id}_" . $sequence->normalize_delay($post->delay);
 
-                // Load posts for this sequence.
-                // $sequence_posts = $sequence->getPosts();
-
-                // Get the most recent post in the sequence and notify for it (if we're supposed to notify.
-                $post = $sequence->find_closest_post($s->user_id);
-                $membership_day = $sequence->get_membership_days($s->user_id);
-
-                if (empty($post)) {
-
-                    $sequence->dbg_log("cron() - Could not find a post for user {$s->user_id} in sequence {$sequence->sequence_id}");
-                    // No posts found!
-                    continue;
-                }
+                $sequence->dbg_log("cron() - # of posts we've already notified for: " . count($notice_settings->posts));
+                $sequence->dbg_log("cron() - Do we notify {$s->user_id} of availability of post # {$post->id}?");
 
                 // $posts = $sequence->get_postDetails( $post->id );
                 $flag_value = "{$post->id}_" . $sequence->normalize_delay($post->delay);
@@ -297,9 +303,6 @@ class Cron
                     ', user ID: ' . $s->user_id .
                     ', already notified: ' . (!is_array($notice_settings->posts) || (in_array($flag_value, $notice_settings->posts) == false) ? 'false' : 'true') .
                     ', has access: ' . ($sequence->has_post_access($s->user_id, $post->id, true) === true ? 'true' : 'false'));
-
-                $sequence->dbg_log("cron() - # of posts we've already notified for: " . count($notice_settings->posts));
-                $sequence->dbg_log("cron() - Do we notify {$s->user_id} of availability of post # {$post->id}?");
 
                 if ((!empty($post)) &&
                     ($membership_day >= $sequence->normalize_delay($post->delay)) &&
