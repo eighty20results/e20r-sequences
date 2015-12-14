@@ -5086,7 +5086,7 @@ use E20R\Sequences\Shortcodes as Shortcodes;
                 }
             }
 
-            if (!$this->options) {
+            if (!isset($this->options->hidden)) {
                 $this->options = $this->default_options();
             }
 
