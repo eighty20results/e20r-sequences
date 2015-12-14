@@ -56,7 +56,7 @@ class available_on
         $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - Processing attributes.");
 
         $attributes = shortcode_atts(array(
-            'when' => 0,
+            'when' => 'today',
         ), $attr);
 
         /*
