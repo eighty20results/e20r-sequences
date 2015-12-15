@@ -324,7 +324,7 @@ class Cron
                             $notice_settings->posts[] = $flag_value;
 
                             // Increment send count.
-                            $sendCount[$s->user_id]++;
+                            $sendCount[$s->user_id] = ( isset($sendCount[$s->user_id]) ? $sendCount[$s->user_id]++ : 0); // Bug/Fix: Sometimes generates an undefined offset notice
 
                             $sequence->dbg_log("cron() - Sent email to user {$s->user_id} about post {$post->id} with delay {$post->delay} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}");
                             $notice_settings->last_notice_sent = current_time('timestamp');
