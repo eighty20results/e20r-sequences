@@ -1,12 +1,5 @@
 #Eighty/20 Results - Sequences
 
-Contributors: strangerstudios, eighty20results
-Tags: sequence, drip feed, serial, delayed, limited, memberships
-Requires at least: 3.4
-Requires PHP 5.3 or later.
-Tested up to: 4.4
-Stable tag: 4.0.5
-
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
 ##Description
@@ -179,9 +172,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.0.5
-* Fix: Email alert sent on days where no new/repeating post is released
-* Enh: Load fontawesome fonts from local server (not CDN)
+###4.0.6
+* Fix: Format check for 'when' attribute didn't always return the correct result.
+* Fix: Sometimes generates an undefined offset notice while running cron job
+* Fix: Test actual parameter that should be configured unless options haven't been defined yet
+* Enh: Use \\WP_Query() and leverage cache while deactivating the plugin & removing cron jobs.
+* Enh: Add link to issues section on GitHub.com
 
 ##Old releases
 ###.1
@@ -703,3 +699,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.0.4
 * Fix: Error when loading e20r_available_on shortcode.
+
+###4.0.5
+* Fix: Email alert sent on days where no new/repeating post is released
+* Enh: Load fontawesome fonts from local server (not CDN)
