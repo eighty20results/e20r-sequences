@@ -172,9 +172,9 @@ If they are not members of your site, they will *not* see this content
 ##Frequently Asked Questions
 TBD
 
-###I found a bug in the plugin.
+###I found a bug in your plugin.
 
-Please report it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/e20r-sequence/issues
+Please report it in the [issues section](https://github.com/eighty20results/e20r-sequences/issues) of GitHub and we'll fix it as soon as we can. Thanks for helping!
 You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog

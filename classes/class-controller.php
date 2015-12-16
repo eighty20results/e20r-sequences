@@ -5086,7 +5086,7 @@ use E20R\Sequences\Shortcodes as Shortcodes;
                 }
             }
 
-            if (!$this->options) {
+            if (!isset($this->options->hidden)) {
                 $this->options = $this->default_options();
             }
 
@@ -6567,8 +6567,7 @@ use E20R\Sequences\Shortcodes as Shortcodes;
 
             flush_rewrite_rules();
 
-            // Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
-
+            /*
             $sql = "
 		        SELECT *
 		        FROM {$wpdb->posts}
@@ -6576,6 +6575,10 @@ use E20R\Sequences\Shortcodes as Shortcodes;
 	    	";
 
             $seqs = $wpdb->get_results( $sql );
+            */
+
+            // Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
+            $seqs = \WP_Query( array( 'post_type' => 'pmpro_sequence') );
 
             // Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
             foreach($seqs as $s) {

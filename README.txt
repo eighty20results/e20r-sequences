@@ -129,9 +129,9 @@ If they are not members of your site, they will *not* see this content
 
 == Frequently Asked Questions ==
 
-= I found a bug in the plugin. =
+= I found a bug in your plugin. =
 
-Please post it in the issues section of GitHub and we'll fix it as soon as we can. Thanks for helping. https://github.com/eighty20results/pmpro-sequence/issues
+Please post it in the [issues section](https://github.com/eighty20results/e20r-sequences/issues) of GitHub and we'll fix it as soon as we can. Thanks for helping.
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
