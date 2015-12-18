@@ -301,9 +301,8 @@ a:hover.page-numbers {
     /* float: left; */
     font-weight: bold;
     opacity: 1;
-    -moz-opacity: opacity 1;
+    -moz-opacity: 1;
     -webkit-opacity: opacity 1;
-
 }
 .e20r_seq_linklist {
     padding: 5px 0px 5px 0px;
@@ -373,3 +372,13 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
 }
 .e20r-sequence-hidden { display: none; }
 .e20r-sequence-setting-col-2 strong { padding-left: 10px; }
+.e20r-sequence-float-right {
+    float: right;
+    margin-bottom: 5px;
+    margin-top: 10px;
+}
+.e20r-sequence-float-left {
+    float: left;
+    margin-bottom: 5px;
+    margin-top: 10px;
+}
