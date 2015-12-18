@@ -343,16 +343,19 @@ if (!function_exists('e20r_sequence_loader')) {
         foreach ($types as $type) {
 
             if ( false !== stripos($name, "controller")) {
-                $dir = "{$base_path}/";
+                $dir = "{$base_path}";
             } else {
-                $dir = "{$base_path}/{$type}/";
+                $dir = "{$base_path}/{$type}";
             }
 
             if (file_exists("{$dir}/class-{$name}.php")) {
 
-                //error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php is loading");
                 require_once("{$dir}/class-{$name}.php");
             }
+/*            else {
+                error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
+            }
+*/
         }
     }
 }
@@ -424,6 +427,7 @@ try {
 
     $sequence = new Sequence\Controller();
     $cron = new Tools\Cron();
+    $error = new Tools\E20RError();
 
     $sequence->load_actions();
 
