@@ -302,7 +302,7 @@ class Cron
                     ', post delay: ' . $sequence->normalize_delay($post->delay) .
                     ', user ID: ' . $s->user_id .
                     ', already notified: ' . (!is_array($notice_settings->posts) || (in_array($flag_value, $notice_settings->posts) == false) ? 'false' : 'true') .
-                    ', has access: ' . ($sequence->has_post_access($s->user_id, $post->id, true) === true ? 'true' : 'false'));
+                    ', has access: ' . ($sequence->has_post_access($s->user_id, $post->id, true, $sequence->sequence_id) === true ? 'true' : 'false'));
 
                 if ((!empty($post)) &&
                     ($membership_day >= $sequence->normalize_delay($post->delay)) &&
