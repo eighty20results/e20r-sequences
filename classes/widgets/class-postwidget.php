@@ -199,7 +199,7 @@ class PostWidget extends \WP_Widget {
 					</div>
 				</span><?php
 			}
-			elseif ( $sequence->has_post_access( $current_user->ID, $seqPost->id, false ) ) {
+			elseif ( $sequence->has_post_access( $current_user->ID, $seqPost->id, false, $sequence_id ) ) {
 
 				add_image_size( 'e20r_seq_recentpost_widget_size', 85, 45, false );
 
