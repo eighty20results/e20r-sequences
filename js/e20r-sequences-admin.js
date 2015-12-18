@@ -399,6 +399,11 @@ var postMeta = {
             });
         });
 
+        jQuery("button.e20r-sequences-clear-cache").unbind('click').on('click', function() {
+
+            $class.clear_cache();
+        });
+
         jQuery("#e20r-seq-new-meta").unbind('click').on( "click", function() {
 
             $class.manage_meta_rows();
@@ -513,7 +518,7 @@ var postMeta = {
                 e20r_sequence_id: jQuery('#e20r_sequence_id').val(),
                 e20r_seq_post: post_id,
                 e20r_seq_delay: delay,
-                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_postmeta_nonce').val()
+                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
             },
             error: function($data){
 
@@ -717,6 +722,39 @@ var postMeta = {
             // Hide all buttons
             jQuery('#e20r-seq-new').hide();
         }
+    },
+    clear_cache: function() {
+
+        var $class = this;
+        var sequence_id = jQuery("#post_ID").val();
+
+        console.log("Attempting to clear the sequence cache for: " + sequence_id);
+        jQuery.ajax({
+            url: e20r_sequence.ajaxurl,
+            type:'POST',
+            timeout:5000,
+            dataType: 'JSON',
+            data: {
+                action: 'e20r_sequence_clear_cache',
+                e20r_sequence_id: sequence_id,
+                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
+            },
+            error: function($data){
+
+                console.dir($data);
+
+                if ($data.data != '') {
+
+                    alert($data.data);
+                    $class.set_error_message( $data.data );
+                }
+            },
+            success: function($data){
+
+                location.reload();
+            },
+        });
+
     },
     manage_meta_rows: function() {
 
