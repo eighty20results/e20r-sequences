@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.0.6
+Stable tag: 4.1.0
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -135,6 +135,25 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.1.0 ==
+
+* Fix: Searchable select box would sometimes stop working in backend
+* Fix: More reliable detection of origination of add/remove post/page
+* Fix: More robust error handling during remove post/page operation
+* Fix: More robust error handling during add post/page operation
+* Fix: More robust error handling during clear cache operation
+* Fix: Display any warning messages after add post/page operation
+* Fix: Avoid confusion when checking user access rights to a post/delay/sequence combination
+* Fix: Extra training slashes for the autoloader paths
+* Fix: opacity setting when fading the post as we hover in sequence history list
+* Fix/Enh: Include warning messages resulting from add/remove operation
+* Fix/Enh: Make add/remove operations more robust
+* Enh: Add error handling as class: E20RError
+* Enh: Add styling for 'clear cache' button position in back-end
+* Enh: Add & load Error message class (E20RError)
+* Enh: Force a  sequence cache clean-up from wp-admin
+* Nit: Refactor Controller class
 
 == 4.0.6 ==
 
