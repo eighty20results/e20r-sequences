@@ -557,11 +557,11 @@ var postMeta = {
                 console.log("Returned for remove operation: ", $data);
 
                 // Fix: Handle case where there are no posts left in sequence.
-                if ($data.data.html.length) {
+                if ($data.data.html !== null && $data.data.html.length) {
                     jQuery('#e20r_sequence_posts').html( $data.data.html );
                 }
 
-                if ($data.data.message.length) {
+                if ($data.data.message !== null && $data.data.message.length) {
                     $class.set_error_message($data.data.message);
                 }
 
@@ -643,7 +643,7 @@ var postMeta = {
                     return;
                 }
 
-                if ($response.data.message.length) {
+                if ($response.data.message !== null && $response.data.message.length) {
 
                     // alert($data.data);
                     $class.set_error_message( $response.data.message );
@@ -653,17 +653,17 @@ var postMeta = {
 
                 console.log("success() - Returned data: ", $returned );
 
-                if ($returned.data.html.length) {
+                if ($returned.data.html !== null && $returned.data.html.length) {
                     console.log('Entry added to sequence & refreshing metabox content');
                     jQuery('#e20r_sequence_posts').html($returned.data.html);
                 }
 
-                if($returned.data.message.length){
+                if($returned.data.message.length !== null && $returned.data.message.length){
                     $class.set_error_message($returned.data.message);
                     return;
                 }
 
-                if ((!$returned.data.html.length)||($returned.data.message)) {
+                if (($returned.data.html !== null)|| ($returned.data.message !== null)) {
 
                     if (typeof $returned.data === 'object') {
 
@@ -811,7 +811,7 @@ var postMeta = {
                     return;
                 }
 
-                if ($data.data.message.length) {
+                if ($data.data.message !== null && $data.data.message.length) {
 
                     $class.set_error_message( $data.data.message );
                 }
