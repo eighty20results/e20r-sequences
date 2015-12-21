@@ -6585,9 +6585,10 @@ class Controller
 
         foreach( $sequences as $sequence ) {
 
-            if ($sequence == 0) {
+            if ($sequence->ID == 0) {
                 continue;
             }
+
             $options = $this->get_options( $sequence->ID );
             $delays[$sequence->ID] = $options->delayType;
         }
