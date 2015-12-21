@@ -172,24 +172,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.1.0
+###4.1.1
 
-* Fix: Searchable select box would sometimes stop working in backend
-* Fix: More reliable detection of origination of add/remove post/page
-* Fix: More robust error handling during remove post/page operation
-* Fix: More robust error handling during add post/page operation
-* Fix: More robust error handling during clear cache operation
-* Fix: Display any warning messages after add post/page operation
-* Fix: Avoid confusion when checking user access rights to a post/delay/sequence combination
-* Fix: Extra training slashes for the autoloader paths
-* Fix: opacity setting when fading the post as we hover in sequence history list
-* Fix/Enh: Include warning messages resulting from add/remove operation
-* Fix/Enh: Make add/remove operations more robust
-* Enh: Add error handling as class: E20RError
-* Enh: Add styling for 'clear cache' button position in back-end
-* Enh: Add & load Error message class (E20RError)
-* Enh: Force a  sequence cache clean-up from wp-admin
-* Nit: Refactor Controller class
+* Fix: Adding/Removing posts to sequence could result in JavaScript error
+* Fix: Would sometimes attempt to process auto-drafts
 
 ##Old releases
 ###.1
@@ -722,3 +708,22 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fix: Test actual parameter that should be configured unless options haven't been defined yet
 * Enh: Use \\WP_Query() and leverage cache while deactivating the plugin & removing cron jobs.
 * Enh: Add link to issues section on GitHub.com
+
+###4.1.0
+
+* Fix: Searchable select box would sometimes stop working in backend
+* Fix: More reliable detection of origination of add/remove post/page
+* Fix: More robust error handling during remove post/page operation
+* Fix: More robust error handling during add post/page operation
+* Fix: More robust error handling during clear cache operation
+* Fix: Display any warning messages after add post/page operation
+* Fix: Avoid confusion when checking user access rights to a post/delay/sequence combination
+* Fix: Extra training slashes for the autoloader paths
+* Fix: opacity setting when fading the post as we hover in sequence history list
+* Fix/Enh: Include warning messages resulting from add/remove operation
+* Fix/Enh: Make add/remove operations more robust
+* Enh: Add error handling as class: E20RError
+* Enh: Add styling for 'clear cache' button position in back-end
+* Enh: Add & load Error message class (E20RError)
+* Enh: Force a  sequence cache clean-up from wp-admin
+* Nit: Refactor Controller class
