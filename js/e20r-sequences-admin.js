@@ -471,6 +471,7 @@ var postMeta = {
         });
 
         $class.show_controls();
+        jQuery('#e20r_sequencepost').select2();
     },
     clear_post_notice_alerts: function( sequence_id, post_id, delay ) {
 
@@ -504,7 +505,11 @@ var postMeta = {
     remove_entry: function( post_id, delay ) {
 
         var $class = this;
+        var in_admin_panel = false;
 
+        if ( jQuery('#e20r_sequence_meta').length ) {
+            in_admin_panel = true;
+        }
         jQuery('#e20r_sequencesave').attr('disabled', 'disabled');
         // jQuery('#e20r_sequencesave').html(e20r_sequence.lang.saving);
 
@@ -516,27 +521,60 @@ var postMeta = {
             data: {
                 action: 'e20r_sequence_rm_post',
                 e20r_sequence_id: jQuery('#e20r_sequence_id').val(),
+                in_admin_panel: in_admin_panel,
                 e20r_seq_post: post_id,
                 e20r_seq_delay: delay,
                 e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
             },
-            error: function($data){
+            error: function(response, $errString, $errType){
 
-                console.dir($data);
+                console.log("Error during remove operation:", response, $errString, $errType);
 
-                if ($data.data != '') {
-
-                    alert($data.data);
-                    $class.set_error_message( $data.data );
+                if ($errString === 'timeout') {
+                    console.log("Error: Timeout...");
+                    return;
                 }
+
+                if (typeof response.data.message != 'undefined') {
+
+                    alert(response.data.message);
+                    $class.set_error_message( $data.data.message );
+                }
+
+                if (typeof response.data === 'object') {
+
+                    console.log("Received an object as the error status");
+                    var last_element = response.data.length - 1;
+
+                    console.log("Received " + response.data.length + " error messages");
+                    $class.set_error_message( response.data[last_element].message );
+                    alert(response.data.message);
+                }
+
             },
             success: function($data){
 
-                console.dir($data);
+                console.log("Returned for remove operation: ", $data);
 
-                if ($data.data) {
-                    jQuery('#e20r_sequence_posts').html( $data.data );
+                // Fix: Handle case where there are no posts left in sequence.
+                if ($data.data.html.length) {
+                    jQuery('#e20r_sequence_posts').html( $data.data.html );
                 }
+
+                if ($data.data.message.length) {
+                    $class.set_error_message($data.data.message);
+                }
+
+                if (typeof $data.data === 'object') {
+
+                    console.log("Received an object as the error status");
+                    var last_element = $data.data.length - 1;
+
+                    console.log("Received " + $data.data.length + " error messages");
+                    $class.set_error_message( $data.data[last_element].message );
+                    alert($data.data.message);
+                }
+
 
             },
             complete: function() {
@@ -590,38 +628,52 @@ var postMeta = {
             },
             error: function( $response, $errString, $errType ) {
                 console.log("error() - Returned data: " + $response + " and error:" + $errString + " and type: " + $errType );
-                console.dir( $response );
 
-                if ( '' != $response.data ) {
+                if ($errString === 'timeout') {
+                    $class.set_error_message("Timeout: Unable to add post/page (ID: " + jQuery("#e20r_sequencepost").val() + ")");
+                    return;
+                }
+
+                if (typeof $response.data === 'object') {
+
+                    console.log("Received an object as the error status");
+                    var last_element = $response.data.length - 1;
+                    console.log("Received " + $response.data.length + " error messages");
+                    $class.set_error_message( $response.data[last_element].message );
+                    return;
+                }
+
+                if ($response.data.message.length) {
 
                     // alert($data.data);
-                    $class.set_error_message( $response.data );
+                    $class.set_error_message( $response.data.message );
                 }
             },
             success: function($returned, $success ){
 
-                console.log("success() - Returned data: ", $returned.data );
-                console.log("success() - Returned status: ", $returned.success );
+                console.log("success() - Returned data: ", $returned );
 
-                if ( ( $returned.success === true ) ) {
-
+                if ($returned.data.html.length) {
                     console.log('Entry added to sequence & refreshing metabox content');
-                    jQuery('#e20r_sequence_posts').html($returned.data);
-                } else {
+                    jQuery('#e20r_sequence_posts').html($returned.data.html);
+                }
 
-                    if ( typeof $returned.data  === 'string' ) {
+                if($returned.data.message.length){
+                    $class.set_error_message($returned.data.message);
+                    return;
+                }
 
-                        console.log("Received a string as the error status");
-                        $class.set_error_message( $returned.data );
-                    }
-                    else {
+                if ((!$returned.data.html.length)||($returned.data.message)) {
+
+                    if (typeof $returned.data === 'object') {
 
                         console.log("Received an object as the error status");
-                        $class.set_error_message( $returned.data[0].message );
+                        var last_element = $returned.data.length - 1;
+                        console.log("Received " + $returned.data.length + " error messages");
+                        $class.set_error_message( $returned.data[last_element].message );
                     }
 
                 }
-
             },
             complete: function($data) {
 
@@ -725,6 +777,7 @@ var postMeta = {
     },
     clear_cache: function() {
 
+        event.preventDefault();
         var $class = this;
         var sequence_id = jQuery("#post_ID").val();
 
@@ -739,17 +792,31 @@ var postMeta = {
                 e20r_sequence_id: sequence_id,
                 e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
             },
-            error: function($data){
+            error: function($data, $errString, $errType){
 
-                console.dir($data);
+                console.log("Returned error object", $data);
+                if ($errString === 'timeout') {
+                    $class.set_error_message("Timeout: Unable to clear cache)");
+                    return;
+                }
 
-                if ($data.data != '') {
+                if (typeof $data.data === 'object') {
 
-                    alert($data.data);
-                    $class.set_error_message( $data.data );
+                    console.log("Received an object as the error status");
+                    var last_element = $data.data.length - 1;
+
+                    console.log("Received " + $data.data.length + " error messages");
+                    $class.set_error_message( $data.data[last_element].message );
+                    alert($data.data.message);
+                    return;
+                }
+
+                if ($data.data.message.length) {
+
+                    $class.set_error_message( $data.data.message );
                 }
             },
-            success: function($data){
+            success: function(){
 
                 location.reload();
             },
@@ -859,7 +926,7 @@ var postMeta = {
 
         var errCtl = jQuery('#e20r-seq-error');
 
-        errCtl.text($message);
+        errCtl.html($message);
         errCtl.show();
 
         var timeout = window.setTimeout(function() {
@@ -1098,7 +1165,6 @@ function e20r_sequence_removeEntry(post_id, delay) {
 
 jQuery(document).ready(function(){
 
-    jQuery('#e20r_sequencepost').select2();
     jQuery('div#e20r-seq-error').hide();
 
     var adminUI = sequenceSettings;
