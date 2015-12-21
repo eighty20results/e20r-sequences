@@ -172,10 +172,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.1.1
+###4.1.2
 
-* Fix: Adding/Removing posts to sequence could result in JavaScript error
-* Fix: Would sometimes attempt to process auto-drafts
+* Fix: Generating warning message while processing delay configuration for sequence(s)
+* Fix: Didn't always ignore unpublished/unavailable sequences
 
 ##Old releases
 ###.1
@@ -727,3 +727,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Enh: Add & load Error message class (E20RError)
 * Enh: Force a  sequence cache clean-up from wp-admin
 * Nit: Refactor Controller class
+
+###4.1.1
+
+* Fix: Adding/Removing posts to sequence could result in JavaScript error
+* Fix: Would sometimes attempt to process auto-drafts

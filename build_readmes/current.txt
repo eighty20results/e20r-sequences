@@ -1,2 +1,2 @@
-Fix: Adding/Removing posts to sequence could result in JavaScript error
-Fix: Would sometimes attempt to process auto-drafts
+Fix: Generating warning message while processing delay configuration for sequence(s)
+Fix: Didn't always ignore unpublished/unavailable sequences
