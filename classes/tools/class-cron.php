@@ -239,7 +239,7 @@ class Cron
             $sequence->sequence_id = $s->seq_id;
 
             // Load sequence data
-            if (!$sequence->get_options($s->seq_id)) {
+            if (!$sequence->init($s->seq_id)) {
 
                 $sequence->dbg_log("cron() - Sequence {$s->seq_id} is not converted to V3 metadata format. Exiting!");
                 $sequence->set_error_msg(__("Please de-activiate and activiate the Eighty / 20 Results - Sequences plug-in to facilitate conversion to v3 meta data format.", "e20rsequence"));
