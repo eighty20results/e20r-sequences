@@ -99,7 +99,14 @@ class Controller
 
         }
 
-		$this->transient_key = $this->transient_key . "{$current_user->ID}_";
+		if (empty($this->e20r_sequence_user_id)) {
+		    $this->transient_key = $this->transient_key . "{$current_user->ID}_";
+        }
+
+        if (!empty($this->sequence_user_id)) {
+            $this->transient_key = $this->transient_key . "{$this->e20r_sequence_user_id}_";
+        }
+
         $this->refreshed = null;
 
         // Should only do this once, unless the timeout is past.
