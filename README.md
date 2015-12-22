@@ -172,10 +172,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.1.2
+###4.1.3
 
-* Fix: Generating warning message while processing delay configuration for sequence(s)
-* Fix: Didn't always ignore unpublished/unavailable sequences
+* Fix: Didn't always select the correct key for the sequence cache
+* Fix: Didn't always load new sequence data
 
 ##Old releases
 ###.1
@@ -732,3 +732,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 * Fix: Adding/Removing posts to sequence could result in JavaScript error
 * Fix: Would sometimes attempt to process auto-drafts
+
+###4.1.2
+
+* Fix: Generating warning message while processing delay configuration for sequence(s)
+* Fix: Didn't always ignore unpublished/unavailable sequences
