@@ -27,31 +27,31 @@ var sequenceSettings = {
 
         var $class = this;
 
-        this.email_settings = jQuery('.pmpro-sequence-email');
-        this.sendAlertCtl   = jQuery('#pmpro_sequence_sendnotice');
-        this.checkboxes     = jQuery('.pmpro-sequence-settings-display .pmpro-sequence-setting-col-1 > input[type="checkbox"]');
+        this.email_settings = jQuery('.e20r-sequence-email');
+        this.sendAlertCtl   = jQuery('#e20r_sequence_sendnotice');
+        this.checkboxes     = jQuery('.e20r-sequence-settings-display .e20r-sequence-setting-col-1 > input[type="checkbox"]');
         this.saveBtn        = jQuery('a[class^="save-pmproseq"]');
         this.cancelBtn      = jQuery('a[class^="cancel-pmproseq"]');
-        this.editBtn        = jQuery('a.pmpro-seq-edit');
+        this.editBtn        = jQuery('a.e20r-seq-edit');
 
-        this.selects        = jQuery('div.pmpro-sequence-settings-input select');
-        this.sortOrderCtl   = jQuery('#pmpro_sequence_sortorder');
-        this.delayCtl       = jQuery('#pmpro_sequence_delaytype');
-        this.showDelayCtl   = jQuery('#pmpro_sequence_showdelayas');
-        this.templCtl       = jQuery('#pmpro_sequence_template');
-        this.timeCtl        = jQuery('#pmpro_sequence_noticetime');
-        this.dateCtl        = jQuery('#pmpro_sequence_dateformat');
-        this.offsetCtl      = jQuery('#pmpro_sequence_offset');
-        this.repeatCtl      = jQuery('#pmpro_sequence_allowRepeatPosts');
-        this.sndAsCtl       = jQuery('#pmpro_sequence_sendas');
+        this.selects        = jQuery('div.e20r-sequence-settings-input select');
+        this.sortOrderCtl   = jQuery('#e20r_sequence_sortorder');
+        this.delayCtl       = jQuery('#e20r_sequence_delaytype');
+        this.showDelayCtl   = jQuery('#e20r_sequence_showdelayas');
+        this.templCtl       = jQuery('#e20r_sequence_template');
+        this.timeCtl        = jQuery('#e20r_sequence_noticetime');
+        this.dateCtl        = jQuery('#e20r_sequence_dateformat');
+        this.offsetCtl      = jQuery('#e20r_sequence_offset');
+        this.repeatCtl      = jQuery('#e20r_sequence_allowRepeatPosts');
+        this.sndAsCtl       = jQuery('#e20r_sequence_sendas');
 
         /* Input */
-        this.excerptCtl     = jQuery('#pmpro_sequence_excerpt');
-        this.subjCtl        = jQuery('#pmpro_sequence_subject');
-        this.fromCtl        = jQuery('#pmpro_sequence_fromname');
-        this.replyCtl       = jQuery('#pmpro_sequence_replyto');
+        this.excerptCtl     = jQuery('#e20r_sequence_excerpt');
+        this.subjCtl        = jQuery('#e20r_sequence_subject');
+        this.fromCtl        = jQuery('#e20r_sequence_fromname');
+        this.replyCtl       = jQuery('#e20r_sequence_replyto');
 
-        this.offsetChkCtl   = jQuery('#pmpro_sequence_offsetchk');
+        this.offsetChkCtl   = jQuery('#e20r_sequence_offsetchk');
 
         this.spinner = jQuery('div .seq_spinner');
 
@@ -66,14 +66,14 @@ var sequenceSettings = {
         $class.editBtn.each( function() {
 
             jQuery(this).unbind().on('click', function() {
-                jQuery(this).closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-settings-input').slideToggle();
+                jQuery(this).closest('.e20r-sequence-settings-display').next('.e20r-sequence-settings-input').slideToggle();
                 jQuery(this).slideToggle();
             });
 
         });
 
         // Process manual 'Send now' request for alerts/notifications
-        jQuery("#pmpro_seq_send").unbind().on('click', function() {
+        jQuery("#e20r_seq_send").unbind().on('click', function() {
             console.log("Sending email alerts manually");
             $class.send_alert();
         });
@@ -83,9 +83,9 @@ var sequenceSettings = {
 
             $checkbox = jQuery(this);
 
-            if ( 'pmpro_sequence_offsetchk' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
+            if ( 'e20r_sequence_offsetchk' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
 
-                var $status = $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset');
+                var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
                 console.log("The checkbox for the preview functionality is set, show its status", $status);
                 $status.show();
             }
@@ -103,8 +103,8 @@ var sequenceSettings = {
             var $btn = jQuery(this);
             $btn.unbind().on('click', function(){
 
-                var isSelect = $btn.closest('.pmpro-sequence-settings-input').find('select');
-                var isInput = $btn.closest('.pmpro-sequence-settings-input').find('input[type="text"]');
+                var isSelect = $btn.closest('.e20r-sequence-settings-input').find('select');
+                var isInput = $btn.closest('.e20r-sequence-settings-input').find('input[type="text"]');
 
                 console.log("Contains select element?", isSelect );
 
@@ -131,15 +131,15 @@ var sequenceSettings = {
 
             jQuery(this).unbind().on('click', function(){
 
-                jQuery(this).closest('.pmpro-sequence-settings-input').slideToggle();
-                jQuery(this).closest('.pmpro-sequence-settings-input').prev('.pmpro-sequence-settings-display').find('.pmpro-seq-edit').slideToggle();
+                jQuery(this).closest('.e20r-sequence-settings-input').slideToggle();
+                jQuery(this).closest('.e20r-sequence-settings-input').prev('.e20r-sequence-settings-display').find('.e20r-seq-edit').slideToggle();
                 console.log("Clicked the cancel button");
             });
 
         });
     },
     _show_preview: function() {
-        jQuery('#pmpro_sequence_offset');
+        jQuery('#e20r_sequence_offset');
     },
     checked_box: function( $checkbox ) {
 
@@ -152,28 +152,28 @@ var sequenceSettings = {
         }
 
         if ( $checkbox.is(':checked') &&
-            $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-settings-display').hasClass('pmpro-sequence-offset') ) {
+            $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-settings-display').hasClass('e20r-sequence-offset') ) {
 
             console.log("Need to manage visibility for offset setting");
-            $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset').show();
+            $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset').show();
         }
         else if ( $checkbox.not(':checked') &&
-            $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-settings-display').hasClass('pmpro-sequence-offset') ) {
+            $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-settings-display').hasClass('e20r-sequence-offset') ) {
 
-            var $inputs = $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset').next('.pmpro-sequence-offset');
-            var $status = $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset');
+            var $inputs = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset').next('.e20r-sequence-offset');
+            var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
 
             $inputs.find('input[type="hidden"]').val(0);
-            $inputs.find('#pmpro_sequence_offset').val(0);
+            $inputs.find('#e20r_sequence_offset').val(0);
 
-            var $text = '<span class="pmpro-sequence-status">' + $inputs.find('#pmpro_sequence_offset option:selected').text() + '</span>';
-            $status.find('.pmpro-sequence-setting-col-2').html( $text );
+            var $text = '<span class="e20r-sequence-status">' + $inputs.find('#e20r_sequence_offset option:selected').text() + '</span>';
+            $status.find('.e20r-sequence-setting-col-2').html( $text );
 
-            $checkbox.closest('.pmpro-sequence-settings-display').next('.pmpro-sequence-offset').hide();
-            // jQuery('.pmpro-sequence-offset').hide();
+            $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset').hide();
+            // jQuery('.e20r-sequence-offset').hide();
         }
 
-        if ( 'pmpro_sequence_sendnotice' == $checkbox.attr('id')  ) {
+        if ( 'e20r_sequence_sendnotice' == $checkbox.attr('id')  ) {
 
             console.log('Show all alert related variables');
             if ( $checkbox.is(':checked') ) {
@@ -194,12 +194,12 @@ var sequenceSettings = {
 
         // if ( $checkbox.is(':checked') ) {
             console.log("Setting checkbox hidden value for: ", $checkbox.attr('id'));
-            $checkbox.closest('.pmpro-sequence-setting-col-1').find('input[type=hidden]').val( ( $checkbox.is(':checked') ? 1 : 0 ));
+            $checkbox.closest('.e20r-sequence-setting-col-1').find('input[type=hidden]').val( ( $checkbox.is(':checked') ? 1 : 0 ));
         // }
 
         /* if ( $checkbox.not(':checked') &&
             console.log("Setting checkbox hidden value for: ", $checkbox.attr('id'));
-            $checkbox.closest('.pmpro-sequence-setting-col-1').find('#hidden_pmpro_seq_allowRepeatPosts').val(1);
+            $checkbox.closest('.e20r-sequence-setting-col-1').find('#hidden_e20r_seq_allowRepeatPosts').val(1);
         }*/
 
     },
@@ -207,10 +207,10 @@ var sequenceSettings = {
 
         input = jQuery(input);
 
-        var container = input.closest('.pmpro-sequence-settings-input');
+        var container = input.closest('.e20r-sequence-settings-input');
         var hidden_input = container.find('input[type="hidden"]');
-        var status = container.prev('.pmpro-sequence-settings-display').find('.pmpro-sequence-setting-col-2')
-        var editBtn = container.prev('.pmpro-sequence-settings-display').find('.pmpro-seq-edit');
+        var status = container.prev('.e20r-sequence-settings-display').find('.e20r-sequence-setting-col-2')
+        var editBtn = container.prev('.e20r-sequence-settings-display').find('.e20r-seq-edit');
 
         /* Check whether the setting has changed */
         var $val;
@@ -219,7 +219,7 @@ var sequenceSettings = {
         if ( ( $val = input.val() ) != hidden_input.val() ) {
 
             hidden_input.val($val);
-            status.html( '<span class="pmpro-sequence-status">' + $val + '</span>');
+            status.html( '<span class="e20r-sequence-status">' + $val + '</span>');
         }
 
         input.css('margin-top', '10px');
@@ -233,15 +233,15 @@ var sequenceSettings = {
         var $class = this;
         select = jQuery(select);
 
-        if ( 'pmpro_sequence_delaytype' ==  select.attr('id')) {
+        if ( 'e20r_sequence_delaytype' ==  select.attr('id')) {
 
             $class.change_delay_type();
         }
 
-        var container = select.closest('.pmpro-sequence-settings-input');
+        var container = select.closest('.e20r-sequence-settings-input');
         var hidden_input = container.find('input[type="hidden"]');
-        var status = container.prev('.pmpro-sequence-settings-display').find('.pmpro-sequence-setting-col-2')
-        var editBtn = container.prev('.pmpro-sequence-settings-display').find('.pmpro-seq-edit');
+        var status = container.prev('.e20r-sequence-settings-display').find('.e20r-sequence-setting-col-2')
+        var editBtn = container.prev('.e20r-sequence-settings-display').find('.e20r-seq-edit');
 
         /* Check whether the setting has changed */
         var $val;
@@ -249,7 +249,7 @@ var sequenceSettings = {
         if ( ($val = select.find('option:selected').val()) != hidden_input.val() ) {
 
             /* Save the new text (for label) */
-            var $text = '<span class="pmpro-sequence-status">' + select.find('option:selected').text() +"</span>";
+            var $text = '<span class="e20r-sequence-status">' + select.find('option:selected').text() +"</span>";
 
             status.html($text); // Displayed setting value in label
             hidden_input.val($val); // Set the value='' for the hidden input field
@@ -262,21 +262,21 @@ var sequenceSettings = {
     },
     change_delay_type: function() {
 
-        var dtCtl = jQuery('#pmpro_sequence_delaytype');
+        var dtCtl = jQuery('#e20r_sequence_delaytype');
 
         var selected = dtCtl.val();
-        var current = jQuery('input[name=pmpro_sequence_settings_hidden_delay]').val();
+        var current = jQuery('input[name=e20r_sequence_settings_hidden_delay]').val();
 
-        if (dtCtl.val() != jQuery('#pmpro_sequence_settings_hidden_delay').val()) {
+        if (dtCtl.val() != jQuery('#e20r_sequence_settings_hidden_delay').val()) {
 
-            if (!confirm(pmpro_sequence.lang.delay_change_confirmation)) {
+            if (!confirm(e20r_sequence.lang.delay_change_confirmation)) {
 
                 dtCtl.val(current);
-                jQuery('#hidden_pmpro_seq_wipesequence').val(0);
+                jQuery('#hidden_e20r_seq_wipesequence').val(0);
 
                 return false;
             } else
-                jQuery('#hidden_pmpro_seq_wipesequence').val(1);
+                jQuery('#hidden_e20r_seq_wipesequence').val(1);
 
         }
     },
@@ -284,19 +284,19 @@ var sequenceSettings = {
 
         if ($visibility == 'hide') {
             console.log('Hide the showDelayAs options');
-            jQuery('.pmpro-seq-showdelayas').hide(); // hide
-            jQuery('#pmpro-seq-showdelayas-select').hide(); // hide
-            jQuery('.pmpro-seq-delay-btns').hide(); // hide
+            jQuery('.e20r-seq-showdelayas').hide(); // hide
+            jQuery('#e20r-seq-showdelayas-select').hide(); // hide
+            jQuery('.e20r-seq-delay-btns').hide(); // hide
         }
         else {
-            jQuery('.pmpro-seq-showdelayas').show(); // show
-            jQuery('.pmpro-seq-delay-btns').show(); // show
-            jQuery('#pmpro-seq-showdelayas-select').show(); // hide
+            jQuery('.e20r-seq-showdelayas').show(); // show
+            jQuery('.e20r-seq-delay-btns').show(); // show
+            jQuery('#e20r-seq-showdelayas-select').show(); // hide
         }
     },
     set_error_message: function( $message ) {
 
-        var errCtl = jQuery('#pmpro-seq-error');
+        var errCtl = jQuery('#e20r-seq-error');
 
         errCtl.text($message);
         errCtl.show();
@@ -312,8 +312,8 @@ var sequenceSettings = {
 
         console.log('In manageDelayLabels()');
 
-        var delayDlg = jQuery('#pmpro-seq-showdelayas');
-        var delayEdit = jQuery('#pmpro-seq-edit-showdelayas');
+        var delayDlg = jQuery('#e20r-seq-showdelayas');
+        var delayEdit = jQuery('#e20r-seq-edit-showdelayas');
 
         if ($currentDelayType == 'byDays') {
             delayDlg.show(); // Show
@@ -327,19 +327,19 @@ var sequenceSettings = {
     },
     hide_after_ok: function( $okBtn ) {
 
-        var $settings = $okBtn.closest('.pmpro-sequence-settings-input');
+        var $settings = $okBtn.closest('.e20r-sequence-settings-input');
         $settings.slideToggle();
-        $settings.prev('.pmpro-sequence-settings-display').find('.pmpro-seq-edit').slideToggle();
+        $settings.prev('.e20r-sequence-settings-display').find('.e20r-seq-edit').slideToggle();
     },
     hide_rows: function() {
 
-        jQuery('.pmpro-sequence-hidden').each(function() {
+        jQuery('.e20r-sequence-hidden').each(function() {
             jQuery(this).hide();
         });
     },
     close_setting: function( $me ) {
 
-        var $btnDiv = $me.closest('div.pmpro-sequence-full-row');
+        var $btnDiv = $me.closest('div.e20r-sequence-full-row');
     },
     send_alert: function() {
 
@@ -349,19 +349,19 @@ var sequenceSettings = {
         console.log("send_alert: ", $sequence );
 
         if ( $sequence === 'undefined' ) {
-            alert(pmpro_sequence.lang.alert_not_saved);
+            alert(e20r_sequence.lang.alert_not_saved);
         }
         else {
 
             jQuery.ajax({
-                url: pmpro_sequence.ajaxurl,
+                url: e20r_sequence.ajaxurl,
                 type: 'POST',
                 timeout: 5000,
                 dataType: 'JSON',
                 data: {
-                    action: 'pmpro_send_notices',
-                    pmpro_sequence_sendalert_nonce: jQuery('#pmpro_sequence_sendalert_nonce').val(),
-                    pmpro_sequence_id: $sequence
+                    action: 'e20r_send_notices',
+                    e20r_sequence_sendalert_nonce: jQuery('#e20r_sequence_sendalert_nonce').val(),
+                    e20r_sequence_id: $sequence
                 },
                 error: function (data) {
                     if (data.message != null) {
@@ -377,9 +377,9 @@ var sequenceSettings = {
 var postMeta = {
     init: function() {
 
-        this.sequence_list = jQuery( 'select.pmpro_seq-memberof-sequences');
+        this.sequence_list = jQuery( 'select.e20r_seq-memberof-sequences');
         this.spinner = jQuery('div.seq_spinner');
-        this.delay_type     = jQuery('#pmpro-seq-hidden-delay-type').val();
+        this.delay_type     = jQuery('#e20r-seq-hidden-delay-type').val();
 
         var $class = this;
 
@@ -389,9 +389,9 @@ var postMeta = {
 
         var $class = this;
 
-        $class.sequence_list = jQuery( 'select.pmpro_seq-memberof-sequences');
+        $class.sequence_list = jQuery( 'select.e20r_seq-memberof-sequences');
 
-        jQuery('select.new-sequence-select, .pmpro_seq-memberof-sequences').each(function() {
+        jQuery('select.new-sequence-select, .e20r_seq-memberof-sequences').each(function() {
             jQuery(this).unbind('change').on( 'change', function () {
 
                 console.log("User changed the content of the select box.")
@@ -399,7 +399,12 @@ var postMeta = {
             });
         });
 
-        jQuery("#pmpro-seq-new-meta").unbind('click').on( "click", function() {
+        jQuery("button.e20r-sequences-clear-cache").unbind('click').on('click', function() {
+
+            $class.clear_cache();
+        });
+
+        jQuery("#e20r-seq-new-meta").unbind('click').on( "click", function() {
 
             $class.manage_meta_rows();
             console.log("Add new table row for metabox");
@@ -421,7 +426,7 @@ var postMeta = {
                 $checkbox = jQuery(this);
             }
 
-            var delay_input = $checkbox.closest('td').find('.pmpro-seq-delay-info').val();
+            var delay_input = $checkbox.closest('td').find('.e20r-seq-delay-info').val();
 
             if ( ( '' == delay_input ) ) {
 
@@ -443,7 +448,7 @@ var postMeta = {
             }
         });
 
-        jQuery('.delay-row-input.sequence-delay button.pmpro-sequence-remove-alert').unbind('click').on('click', function() {
+        jQuery('.delay-row-input.sequence-delay button.e20r-sequence-remove-alert').unbind('click').on('click', function() {
             console.log("The 'clear alerts' button was clicked");
 
             var button = this;
@@ -452,8 +457,8 @@ var postMeta = {
                 button = jQuery( button );
             }
 
-            var delay_input = button.closest('td').find('.pmpro-seq-delay-info').val();
-            var sequence_id = button.closest('td').find('input.pmpro_seq-remove-seq').val();
+            var delay_input = button.closest('td').find('.e20r-seq-delay-info').val();
+            var sequence_id = button.closest('td').find('input.e20r_seq-remove-seq').val();
             var post_id = jQuery('#post_ID').val();
 
             if ( !post_id ) {
@@ -466,6 +471,7 @@ var postMeta = {
         });
 
         $class.show_controls();
+        jQuery('#e20r_sequencepost').select2();
     },
     clear_post_notice_alerts: function( sequence_id, post_id, delay ) {
 
@@ -473,14 +479,14 @@ var postMeta = {
 
         var data = {
             'action': 'e20r_remove_alert',
-            'pmpro_sequence_postmeta_nonce': jQuery('#pmpro_sequence_postmeta_nonce').val(),
-            'pmpro_sequence_id': sequence_id,
-            'pmpro_sequence_post': post_id,
-            'pmpro_sequence_post_delay': delay
+            'e20r_sequence_postmeta_nonce': jQuery('#e20r_sequence_postmeta_nonce').val(),
+            'e20r_sequence_id': sequence_id,
+            'e20r_sequence_post': post_id,
+            'e20r_sequence_post_delay': delay
         };
 
         jQuery.ajax({
-            url: pmpro_sequence.ajaxurl,
+            url: e20r_sequence.ajaxurl,
             type: 'POST',
             timeout: 5000,
             dataType: 'JSON',
@@ -499,44 +505,81 @@ var postMeta = {
     remove_entry: function( post_id, delay ) {
 
         var $class = this;
+        var in_admin_panel = false;
 
-        jQuery('#pmpro_sequencesave').attr('disabled', 'disabled');
-        // jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.saving);
+        if ( jQuery('#e20r_sequence_meta').length ) {
+            in_admin_panel = true;
+        }
+        jQuery('#e20r_sequencesave').attr('disabled', 'disabled');
+        // jQuery('#e20r_sequencesave').html(e20r_sequence.lang.saving);
 
         jQuery.ajax({
-            url: pmpro_sequence.ajaxurl,
+            url: e20r_sequence.ajaxurl,
             type:'POST',
             timeout:5000,
             dataType: 'JSON',
             data: {
-                action: 'pmpro_sequence_rm_post',
-                pmpro_sequence_id: jQuery('#pmpro_sequence_id').val(),
-                pmpro_seq_post: post_id,
-                pmpro_seq_delay: delay,
-                pmpro_sequence_rmpost_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val()
+                action: 'e20r_sequence_rm_post',
+                e20r_sequence_id: jQuery('#e20r_sequence_id').val(),
+                in_admin_panel: in_admin_panel,
+                e20r_seq_post: post_id,
+                e20r_seq_delay: delay,
+                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
             },
-            error: function($data){
+            error: function(response, $errString, $errType){
 
-                console.dir($data);
+                console.log("Error during remove operation:", response, $errString, $errType);
 
-                if ($data.data != '') {
-
-                    alert($data.data);
-                    $class.set_error_message( $data.data );
+                if ($errString === 'timeout') {
+                    console.log("Error: Timeout...");
+                    return;
                 }
+
+                if (typeof response.data.message != 'undefined') {
+
+                    alert(response.data.message);
+                    $class.set_error_message( $data.data.message );
+                }
+
+                if (typeof response.data === 'object') {
+
+                    console.log("Received an object as the error status");
+                    var last_element = response.data.length - 1;
+
+                    console.log("Received " + response.data.length + " error messages");
+                    $class.set_error_message( response.data[last_element].message );
+                    alert(response.data.message);
+                }
+
             },
             success: function($data){
 
-                console.dir($data);
+                console.log("Returned for remove operation: ", $data);
 
-                if ($data.data) {
-                    jQuery('#pmpro_sequence_posts').html( $data.data );
+                // Fix: Handle case where there are no posts left in sequence.
+                if ($data.data.html !== null && $data.data.html.length) {
+                    jQuery('#e20r_sequence_posts').html( $data.data.html );
                 }
+
+                if ($data.data.message !== null && $data.data.message.length) {
+                    $class.set_error_message($data.data.message);
+                }
+
+                if (typeof $data.data === 'object') {
+
+                    console.log("Received an object as the error status");
+                    var last_element = $data.data.length - 1;
+
+                    console.log("Received " + $data.data.length + " error messages");
+                    $class.set_error_message( $data.data[last_element].message );
+                    alert($data.data.message);
+                }
+
 
             },
             complete: function() {
                 // Enable the Save button again.
-                jQuery('#pmpro_sequencesave').removeAttr('disabled');
+                jQuery('#e20r_sequencesave').removeAttr('disabled');
                 $class.bind_controls();
             }
         });
@@ -544,9 +587,9 @@ var postMeta = {
     edit_entry: function(post_id, delay) {
 
         jQuery('#newmeta').focus();
-        jQuery('#pmpro_sequencepost').val(post_id).trigger("change");
-        jQuery('#pmpro_sequencedelay').val(delay);
-        jQuery('#pmpro_sequencesave').html(pmpro_sequence.lang.save);
+        jQuery('#e20r_sequencepost').val(post_id).trigger("change");
+        jQuery('#e20r_sequencedelay').val(delay);
+        jQuery('#e20r_sequencesave').html(e20r_sequence.lang.save);
     },
     edit_post: function( post_id ) {
 
@@ -558,70 +601,84 @@ var postMeta = {
     },
     add_entry: function() {
 
-        var saveBtn = jQuery('#pmpro_sequencesave');
+        var saveBtn = jQuery('#e20r_sequencesave');
         var $class = this;
 
-        if ('' == jQuery('#pmpro_sequence_post').val() || undefined != saveBtn.attr('disabled')) {
+        if ('' == jQuery('#e20r_sequence_post').val() || undefined != saveBtn.attr('disabled')) {
 
             return false; //already processing, ignore this request
         }
 
         // Disable save button
         saveBtn.attr('disabled', 'disabled');
-        saveBtn.html(pmpro_sequence.lang.saving);
+        saveBtn.html(e20r_sequence.lang.saving);
 
         //pass field values to AJAX service and refresh table above - Timeout is 5 seconds
         jQuery.ajax({
-            url: pmpro_sequence.ajaxurl,
+            url: e20r_sequence.ajaxurl,
             type:'POST',
             timeout:5000,
             dataType: 'JSON',
             data: {
-                action: 'pmpro_sequence_add_post',
-                pmpro_sequence_id: jQuery('#pmpro_sequence_id').val(),
-                pmpro_sequence_post: jQuery('#pmpro_sequencepost').val(),
-                pmpro_sequence_delay: jQuery('#pmpro_sequencedelay').val(),
-                pmpro_sequence_addpost_nonce: jQuery('#pmpro_sequence_addpost_nonce').val()
+                action: 'e20r_sequence_add_post',
+                e20r_sequence_id: jQuery('#e20r_sequence_id').val(),
+                e20r_sequence_post: jQuery('#e20r_sequencepost').val(),
+                e20r_sequence_delay: jQuery('#e20r_sequencedelay').val(),
+                e20r_sequence_addpost_nonce: jQuery('#e20r_sequence_addpost_nonce').val()
             },
             error: function( $response, $errString, $errType ) {
                 console.log("error() - Returned data: " + $response + " and error:" + $errString + " and type: " + $errType );
-                console.dir( $response );
 
-                if ( '' != $response.data ) {
+                if ($errString === 'timeout') {
+                    $class.set_error_message("Timeout: Unable to add post/page (ID: " + jQuery("#e20r_sequencepost").val() + ")");
+                    return;
+                }
+
+                if (typeof $response.data === 'object') {
+
+                    console.log("Received an object as the error status");
+                    var last_element = $response.data.length - 1;
+                    console.log("Received " + $response.data.length + " error messages");
+                    $class.set_error_message( $response.data[last_element].message );
+                    return;
+                }
+
+                if ($response.data.message !== null && $response.data.message.length) {
 
                     // alert($data.data);
-                    $class.set_error_message( $response.data );
+                    $class.set_error_message( $response.data.message );
                 }
             },
             success: function($returned, $success ){
 
-                console.log("success() - Returned data: ", $returned.data );
-                console.log("success() - Returned status: ", $returned.success );
+                console.log("success() - Returned data: ", $returned );
 
-                if ( ( $returned.success === true ) ) {
-
+                if ($returned.data.html !== null && $returned.data.html.length) {
                     console.log('Entry added to sequence & refreshing metabox content');
-                    jQuery('#pmpro_sequence_posts').html($returned.data);
-                } else {
+                    jQuery('#e20r_sequence_posts').html($returned.data.html);
+                }
 
-                    if ( typeof $returned.data  === 'string' ) {
+                if( null !== $returned.data.message && !$returned.data.message.length){
+                    $class.set_error_message($returned.data.message);
+                    return;
+                }
 
-                        console.log("Received a string as the error status");
-                        $class.set_error_message( $returned.data );
-                    }
-                    else {
+                if (($returned.data.html !== null)|| ($returned.data.message !== null)) {
+
+                    if (typeof $returned.data === 'object') {
 
                         console.log("Received an object as the error status");
-                        $class.set_error_message( $returned.data[0].message );
+                        var last_element = $returned.data.length - 1;
+                        console.log("Received " + $returned.data.length + " error messages");
+                        $class.set_error_message( $returned.data[last_element].message );
                     }
 
                 }
-
             },
             complete: function($data) {
 
                 // Re-enable save button
-                saveBtn.html(pmpro_sequence.lang.save);
+                saveBtn.html(e20r_sequence.lang.save);
                 saveBtn.removeAttr('disabled');
                 $class.bind_controls();
 
@@ -643,20 +700,20 @@ var postMeta = {
             $me = jQuery($me);
         }
 
-        var delay_ctrl = $me.closest('td').find('input.pmpro-seq-delay-info.pmpro-seq-days');
+        var delay_ctrl = $me.closest('td').find('input.e20r-seq-delay-info.e20r-seq-days');
         console.log("Delay value: ", delay_ctrl.val() );
 
         jQuery.ajax({
-            url: pmpro_sequence.ajaxurl,
+            url: e20r_sequence.ajaxurl,
             type: 'POST',
             timeout: 10000,
             dataType: 'JSON',
             data: {
-                action: 'pmpro_rm_sequence_from_post',
-                pmpro_sequence_id: $me.val(),
-                pmpro_seq_delay: delay_ctrl.val(),
-                pmpro_seq_post_id: jQuery('#post_ID').val(),
-                pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val()
+                action: 'e20r_rm_sequence_from_post',
+                e20r_sequence_id: $me.val(),
+                e20r_seq_delay: delay_ctrl.val(),
+                e20r_seq_post_id: jQuery('#post_ID').val(),
+                e20r_sequence_postmeta_nonce: jQuery('#e20r_sequence_postmeta_nonce').val()
             },
             error: function ($data) {
 
@@ -672,7 +729,7 @@ var postMeta = {
                 console.dir($data);
 
                 if ($data.data) {
-                    jQuery('#pmpro_seq-configure-sequence').html($data.data);
+                    jQuery('#e20r_seq-configure-sequence').html($data.data);
                 }
 
             },
@@ -705,9 +762,9 @@ var postMeta = {
             // Hide the 'new sequence' select and show the 'new' button.
             $class.row_visibility( jQuery( 'select.new-sequence-select') , 'none' );
 
-            jQuery('#pmpro-seq-new').show();
-            jQuery('#pmpro-seq-new-meta').show();
-            jQuery('#pmpro-seq-new-meta-reset').hide();
+            jQuery('#e20r-seq-new').show();
+            jQuery('#e20r-seq-new-meta').show();
+            jQuery('#e20r-seq-new-meta-reset').hide();
         }
         else {
 
@@ -715,12 +772,60 @@ var postMeta = {
             $class.row_visibility( jQuery( 'select.new-sequence-select' ), 'select' );
 
             // Hide all buttons
-            jQuery('#pmpro-seq-new').hide();
+            jQuery('#e20r-seq-new').hide();
         }
+    },
+    clear_cache: function() {
+
+        event.preventDefault();
+        var $class = this;
+        var sequence_id = jQuery("#post_ID").val();
+
+        console.log("Attempting to clear the sequence cache for: " + sequence_id);
+        jQuery.ajax({
+            url: e20r_sequence.ajaxurl,
+            type:'POST',
+            timeout:5000,
+            dataType: 'JSON',
+            data: {
+                action: 'e20r_sequence_clear_cache',
+                e20r_sequence_id: sequence_id,
+                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
+            },
+            error: function($data, $errString, $errType){
+
+                console.log("Returned error object", $data);
+                if ($errString === 'timeout') {
+                    $class.set_error_message("Timeout: Unable to clear cache)");
+                    return;
+                }
+
+                if (typeof $data.data === 'object') {
+
+                    console.log("Received an object as the error status");
+                    var last_element = $data.data.length - 1;
+
+                    console.log("Received " + $data.data.length + " error messages");
+                    $class.set_error_message( $data.data[last_element].message );
+                    alert($data.data.message);
+                    return;
+                }
+
+                if ($data.data.message !== null && $data.data.message.length) {
+
+                    $class.set_error_message( $data.data.message );
+                }
+            },
+            success: function(){
+
+                location.reload();
+            },
+        });
+
     },
     manage_meta_rows: function() {
 
-        jQuery( '.pmpro_seq-memberof-sequences, .new-sequence-select, .pmpro-seq-delay-info, .pmpro_seq-remove-seq' ).each( function() {
+        jQuery( '.e20r_seq-memberof-sequences, .new-sequence-select, .e20r-seq-delay-info, .e20r_seq-remove-seq' ).each( function() {
 
             if (! jQuery( this ).is( ':disabled') ) {
 
@@ -733,8 +838,8 @@ var postMeta = {
             }
         });
 
-        jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', true );
-        jQuery( '#pmpro-seq-new-meta-reset' ).attr( 'disabled', true );
+        jQuery( '#e20r-seq-new-meta' ).attr( 'disabled', true );
+        jQuery( '#e20r-seq-new-meta-reset' ).attr( 'disabled', true );
     },
     row_visibility: function( $element, $show ) {
 
@@ -768,28 +873,28 @@ var postMeta = {
     },
     _delay_label: function( sequence_id ) {
 
-        // console.log("Delay settings: ", pmpro_sequence.delay_config);
+        // console.log("Delay settings: ", e20r_sequence.delay_config);
         var $html;
         var $label;
 
-        if ( 'byDate' == pmpro_sequence.delay_config[ sequence_id ]  ) {
+        if ( 'byDate' == e20r_sequence.delay_config[ sequence_id ]  ) {
             $label = "Delay (Format: Date)";
 
         }
 
-        if ( 'byDays' ==  pmpro_sequence.delay_config[ sequence_id ] ) {
+        if ( 'byDays' ==  e20r_sequence.delay_config[ sequence_id ] ) {
             $label = "Delay (Format: Day count)";
         }
 
-        $html = '<label for="pmpro_seq-delay_' + sequence_id + '">' + $label + '</label>';
+        $html = '<label for="e20r_seq-delay_' + sequence_id + '">' + $label + '</label>';
         return $html;
     },
     _delay_input: function( sequence_id ) {
 
-        console.log("Delay settings: ", pmpro_sequence.delay_config);
+        console.log("Delay settings: ", e20r_sequence.delay_config);
         var $html;
 
-        if ( 'byDate' == pmpro_sequence.delay_config[ sequence_id ]  ) {
+        if ( 'byDate' == e20r_sequence.delay_config[ sequence_id ]  ) {
 
             var today = new Date();
             var dd = today.getDate();
@@ -806,11 +911,11 @@ var postMeta = {
 
             var starts = yyyy + '-' + mm - '-' + dd;
 
-            $html = "<input class='pmpro-seq-delay-info pmpro-seq-date' type='date' value='' name='pmpro_seq-delay[]' min='" + starts + "'>";
+            $html = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' value='' name='e20r_seq-delay[]' min='" + starts + "'>";
         }
 
-        if ( 'byDays' ==  pmpro_sequence.delay_config[ sequence_id ] ) {
-            $html = "<input class='pmpro-seq-delay-info pmpro-seq-days' type='text' name='pmpro_seq-delay[]' value=''>";
+        if ( 'byDays' ==  e20r_sequence.delay_config[ sequence_id ] ) {
+            $html = "<input class='e20r-seq-delay-info e20r-seq-days' type='text' name='e20r_seq-delay[]' value=''>";
         }
 
         return $html;
@@ -819,9 +924,9 @@ var postMeta = {
 
         console.log("Setting error message: " + $message );
 
-        var errCtl = jQuery('#pmpro-seq-error');
+        var errCtl = jQuery('#e20r-seq-error');
 
-        errCtl.text($message);
+        errCtl.html($message);
         errCtl.show();
 
         var timeout = window.setTimeout(function() {
@@ -835,7 +940,7 @@ var postMeta = {
 
         var $class = this;
 
-        var table = jQuery("#pmpro-seq-metatable").find('tbody');
+        var table = jQuery("#e20r-seq-metatable").find('tbody');
 
         var select_label_row = table.find('tr.select-row-label.sequence-select-label:first').clone();
         var select_row = table.find('tr.select-row-input.sequence-select:first').clone();
@@ -843,8 +948,8 @@ var postMeta = {
         var delay_row = table.find('tr.delay-row-input.sequence-delay:first').clone();
 
         console.log("Unselect the new sequence ID and clear any delay value(s)");
-        select_row.find('.pmpro_seq-memberof-sequences').val('');
-        delay_row.find('.pmpro-seq-delay-info.pmpro-seq-days').val('');
+        select_row.find('.e20r_seq-memberof-sequences').val('');
+        delay_row.find('.e20r-seq-delay-info.e20r-seq-days').val('');
 
         table.append( select_label_row );
         table.append( select_row );
@@ -860,7 +965,7 @@ var postMeta = {
         var $class = this;
         console.log("Using sequence ID: " + sequence_id + ' at element: ', entry );
 
-        jQuery("tr.select-row-input.sequence-select select.pmpro_seq-memberof-sequences").each( function() {
+        jQuery("tr.select-row-input.sequence-select select.e20r_seq-memberof-sequences").each( function() {
 
             var sequence = jQuery( this );
 
@@ -877,9 +982,9 @@ var postMeta = {
             var delay_label = select.next();
             var delay = delay_label.next();
 
-            console.log("Delay value is now: ", delay.find('input.pmpro-seq-delay-info.pmpro-seq-days').val() );
-            delay.find('input.pmpro-seq-delay-info.pmpro-seq-days').val('');
-            console.log("After (supposed) clear... Delay value is now: ", delay.find('input.pmpro-seq-delay-info.pmpro-seq-days').val() );
+            console.log("Delay value is now: ", delay.find('input.e20r-seq-delay-info.e20r-seq-days').val() );
+            delay.find('input.e20r-seq-delay-info.e20r-seq-days').val('');
+            console.log("After (supposed) clear... Delay value is now: ", delay.find('input.e20r-seq-delay-info.e20r-seq-days').val() );
 
             console.log("Find the last delay value input in the list: ", jQuery("tr.delay-row-input.sequence-delay:last") );
 
@@ -909,7 +1014,7 @@ var postMeta = {
 
         var managed_sequences = {};
 
-        $self.closest('#pmpro-seq-metatable').find('tr.select-row-input').find('select.pmpro_seq-memberof-sequences option:selected').each(function() {
+        $self.closest('#e20r-seq-metatable').find('tr.select-row-input').find('select.e20r_seq-memberof-sequences option:selected').each(function() {
 
             var input = jQuery(this);
 
@@ -921,7 +1026,7 @@ var postMeta = {
         });
 
         var sequence_id = $self.val();
-        var delay_value =  $self.closest('tr.select-row-input.new-sequence-select').next().next().find('input.pmpro-seq-delay-info').val();
+        var delay_value =  $self.closest('tr.select-row-input.new-sequence-select').next().next().find('input.e20r-seq-delay-info').val();
 
         if ( ( ( managed_sequences.hasOwnProperty( sequence_id ) ) && ( managed_sequences[ sequence_id ] instanceof jQuery ) ) && ('' == delay_value ) ) {
 
@@ -953,28 +1058,28 @@ var postMeta = {
         var delay_label_row = $self.closest('tr.select-row-input.sequence-select').next();
         var delay_row = $self.closest('tr.select-row-input.sequence-select').next().next();
 
-        delay_label_row.find('label[for^="pmpro_seq-delay"]').replaceWith($label);
-        delay_row.find('input.pmpro-seq-delay-info.pmpro-seq-days').replaceWith($input);
+        delay_label_row.find('label[for^="e20r_seq-delay"]').replaceWith($label);
+        delay_row.find('input.e20r-seq-delay-info.e20r-seq-days').replaceWith($input);
 
         // $class.show_controls();
         $class.manage_meta_rows();
         $class.bind_controls();
-        jQuery( '#pmpro-seq-new-meta' ).attr( 'disabled', false );
-        jQuery( '#pmpro-seq-new-meta-reset' ).attr( 'disabled', false );
+        jQuery( '#e20r-seq-new-meta' ).attr( 'disabled', false );
+        jQuery( '#e20r-seq-new-meta-reset' ).attr( 'disabled', false );
 
         $class.spinner.hide();
 
         /*
                 jQuery.ajax({
-                    url: pmpro_sequence.ajaxurl,
+                    url: e20r_sequence.ajaxurl,
                     type:'POST',
                     timeout:10000,
                     dataType: 'JSON',
                     data: {
-                        action: 'pmpro_sequence_update_post_meta',
-                        pmpro_sequence_id: sequence_id,
-                        pmpro_sequence_postmeta_nonce: jQuery('#pmpro_sequence_postmeta_nonce').val(),
-                        pmpro_sequence_post_id: jQuery('#post_ID').val()
+                        action: 'e20r_sequence_update_post_meta',
+                        e20r_sequence_id: sequence_id,
+                        e20r_sequence_postmeta_nonce: jQuery('#e20r_sequence_postmeta_nonce').val(),
+                        e20r_sequence_post_id: jQuery('#post_ID').val()
                     },
                     error: function($data){
                         console.log("error() - Returned data: " + $data.success + " and " + $data.data);
@@ -990,7 +1095,7 @@ var postMeta = {
                         if ($data.data) {
 
                             console.log('Entry added to sequence & refreshing metabox content');
-                            jQuery('#pmpro_seq-configure-sequence').html($data.data);
+                            jQuery('#e20r_seq-configure-sequence').html($data.data);
                             console.log("Loaded sequence meta info.");
                         } else {
                             console.log('No HTML returned???');
@@ -1004,64 +1109,63 @@ var postMeta = {
                         $class.show_controls();
                         $class.manage_meta_rows();
                         $class.bind_controls();
-                        jQuery( '#pmpro-seq-new').hide();
+                        jQuery( '#e20r-seq-new').hide();
                     }
                 });
                 */
     },
     _set_labels: function() {
 
-        var delayType = jQuery('#pmpro_sequence_delaytype').val();
-        var headerHTML_start = '<th id="pmpro_sequence_delaytype">';
+        var delayType = jQuery('#e20r_sequence_delaytype').val();
+        var headerHTML_start = '<th id="e20r_sequence_delaytype">';
         var headerHTML_end = '</th>';
-        var entryHTML_start = '<th id="pmpro_sequence_delayentrytype">';
+        var entryHTML_start = '<th id="e20r_sequence_delayentrytype">';
         var entryHTML_end = '</th>';
 
 
-        var labelText = pmpro_sequence.lang.undefined; // 'Not Defined';
-        var entryText = pmpro_sequence.lang.undefined;
+        var labelText = e20r_sequence.lang.undefined; // 'Not Defined';
+        var entryText = e20r_sequence.lang.undefined;
 
         if (delayType == 'byDays')
         {
-            labelText = pmpro_sequence.lang.daysLabel; // "Delay";
-            entryText = pmpro_sequence.lang.daysText; //"Days to delay";
+            labelText = e20r_sequence.lang.daysLabel; // "Delay";
+            entryText = e20r_sequence.lang.daysText; //"Days to delay";
         }
 
         if (delayType == 'byDate')
         {
-            labelText = pmpro_sequence.lang.dateLabel; // "Avail. on";
-            entryText = pmpro_sequence.lang.dateText; // "Release on (YYYY-MM-DD)";
+            labelText = e20r_sequence.lang.dateLabel; // "Avail. on";
+            entryText = e20r_sequence.lang.dateText; // "Release on (YYYY-MM-DD)";
         }
 
-        jQuery('#pmpro_sequence_delaylabel').html( headerHTML_start + labelText + headerHTML_end);
-        jQuery('#pmpro_sequence_delayentrylabel').html( entryHTML_start + entryText + entryHTML_end);
+        jQuery('#e20r_sequence_delaylabel').html( headerHTML_start + labelText + headerHTML_end);
+        jQuery('#e20r_sequence_delayentrylabel').html( entryHTML_start + entryText + entryHTML_end);
     }
 };
 
-function pmpro_sequence_addEntry() {
+function e20r_sequence_addEntry() {
 
     postMeta.add_entry();
 }
 
-function pmpro_sequence_editPost(post_id) {
+function e20r_sequence_editPost(post_id) {
 
     postMeta.edit_post( post_id );
 }
 
-function pmpro_sequence_editEntry(post_id, delay) {
+function e20r_sequence_editEntry(post_id, delay) {
 
     postMeta.edit_entry( post_id, delay );
 }
 
-function pmpro_sequence_removeEntry(post_id, delay) {
+function e20r_sequence_removeEntry(post_id, delay) {
 
     postMeta.remove_entry( post_id, delay );
 }
 
 jQuery(document).ready(function(){
 
-    jQuery('#pmpro_sequencepost').select2();
-    jQuery('div#pmpro-seq-error').hide();
+    jQuery('div#e20r-seq-error').hide();
 
     var adminUI = sequenceSettings;
     var posts = postMeta;
@@ -1072,14 +1176,14 @@ jQuery(document).ready(function(){
 
 
 /**
- * Set the pmpro_seq_error element in the Sequence Posts meta box
+ * Set the e20r_seq_error element in the Sequence Posts meta box
  */
 /*
-function pmpro_seq_setErroMsg( $msg ) {
+function e20r_seq_setErroMsg( $msg ) {
 
     console.log('Showing error message in meta box: ' + $msg);
 
-    var errCtl = jQuery('div#pmpro-seq-error');
+    var errCtl = jQuery('div#e20r-seq-error');
 
     errCtl.text($msg);
     errCtl.show();

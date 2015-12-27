@@ -1,13 +1,14 @@
 <?php
+namespace E20R\Sequences\Main;
 /*
 Plugin Name: Eighty / 20 Results Sequences for Paid Memberships Pro
 Plugin URI: http://www.eighty20results.com/pmpro-sequences/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 3.0.4
+Version: 4.2.2
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
-Text Domain: pmprosequence
+Text Domain: e20rsequence
 Domain Path: /languages
 License:
 
@@ -29,53 +30,63 @@ License:
 
 */
 
+/* Define namespaces */
+use E20R\Sequences\Main as Main;
+use E20R\Sequences\Sequence as Sequence;
+use E20R\Sequences\Tools as Tools;
+
+define(__NAMESPACE__ . '\NS', __NAMESPACE__ . '\\');
+
+// use NS as Sequence;
+
 /* Version number */
-define('PMPRO_SEQUENCE_VERSION', '3.0.4');
+define('E20R_SEQUENCE_VERSION', '4.2.1');
 
 /* Set the max number of email alerts to send in one go to one user */
-define('PMPRO_SEQUENCE_MAX_EMAILS', 3);
+define('E20R_SEQUENCE_MAX_EMAILS', 3);
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
-define('PMPRO_SEQ_REQUIRED_PHP_VERSION', '5.3');
+define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.3');
 
 /* Set the path to the PMPRO Sequence plugin */
-define('PMPRO_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
-define('PMPRO_SEQUENCE_PLUGIN_URL', plugin_dir_url(__FILE__));
+define('E20R_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
+define('E20R_SEQUENCE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
-define('PMPRO_SEQ_AS_DAYNO', 1);
-define('PMPRO_SEQ_AS_DATE', 2);
+define('E20R_SEQ_AS_DAYNO', 1);
+define('E20R_SEQ_AS_DATE', 2);
 
-define('PMPRO_SEQ_SEND_AS_SINGLE', 10);
-define('PMPRO_SEQ_SEND_AS_LIST', 20);
+define('E20R_SEQ_SEND_AS_SINGLE', 10);
+define('E20R_SEQ_SEND_AS_LIST', 20);
 
-define('DEBUG_SEQ_INFO', 10);
-define('DEBUG_SEQ_WARNING', 100);
-define('DEBUG_SEQ_CRITICAL', 1000);
+define('E20R_DEBUG_SEQ_INFO', 10);
+define('E20R_DEBUG_SEQ_WARNING', 100);
+define('E20R_DEBUG_SEQ_CRITICAL', 1000);
 
 define('MAX_LOG_SIZE', 3 * 1024 * 1024);
 
 /* Enable / Disable DEBUG logging to separate file */
-define('PMPRO_SEQUENCE_DEBUG', true);
-define('DEBUG_SEQ_LOG_LEVEL', DEBUG_SEQ_INFO);
+define('E20R_SEQUENCE_DEBUG', true);
+define('E20R_DEBUG_SEQ_LOG_LEVEL', E20R_DEBUG_SEQ_INFO);
 
 /**
  * Include the class for the update checker
  */
-require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php");
+require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php");
 
 /**
  *    Include the class for PMProSequences
  */
-if (!class_exists('PMProSequence')):
+/* if (!class_exists("\\E20R\\Sequences\\Sequence")):
 
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.PMProSequence.php");
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/scheduled/crons.php");
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/class-controller.php");
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-cron.php");
 
 endif;
 
-if (!class_exists('SeqRecentPostWidget')):
-    require_once(PMPRO_SEQUENCE_PLUGIN_DIR . "/classes/class.SeqRecentPostWidget.php");
+if (!class_exists("\\E20R\\Sequences\\Tools\\Widgets\\PostWidget")):
+    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/widgets/class-postwidget.php");
 endif;
+*/
 
 /** A debug function */
 
@@ -103,7 +114,7 @@ if (!function_exists("pmpro_getMemberStartdate")):
 
         global $pmpro_startdates;    //for cache
 
-        if (empty($pmpro_startdates[$user_id][$level_id])) {
+        if (empty($e20r_startdates[$user_id][$level_id])) {
 
             global $wpdb;
 
@@ -177,12 +188,12 @@ if (!function_exists("pmpro_getMemberStartdate")):
 */
 endif;
 
-if (!function_exists('pmpro_sequence_import_all_PMProSeries')):
+if (!function_exists('e20r_sequences_import_all_PMProSeries')):
 
     /**
      * Import PMPro Series as specified by the pmpro-sequence-import-pmpro-series filter
      */
-    function pmpro_sequence_import_all_PMProSeries()
+    function e20r_sequences_import_all_PMProSeries()
     {
 
         $importStatus = apply_filters('pmpro-sequence-import-pmpro-series', __return_false());
@@ -272,14 +283,14 @@ if (!function_exists('pmpro_sequence_import_all_PMProSeries')):
 
                 $post_list = get_post_meta($series->ID, '_series_posts', true);
 
-                $seq = new PMProSequence($seq_id);
+                $seq = apply_filters('get_sequence_class_instance', null);
                 $seq->init($seq_id);
 
                 foreach ($post_list as $seq_member) {
 
                     if (!$seq->addPost($seq_member->id, $seq_member->delay)) {
-                        return new WP_Error('sequence_import',
-                            sprintf(__('Could not complete import for series %s', 'pmprosequence'), $series->post_title), $seq->getError());
+                        return new \WP_Error('sequence_import',
+                            sprintf(__('Could not complete import for series %s', "e20rsequence"), $series->post_title), $seq->getError());
                     }
                 } // End of foreach
 
@@ -289,14 +300,65 @@ if (!function_exists('pmpro_sequence_import_all_PMProSeries')):
                 // update_post_meta( $seq_id, "_sequence_posts", $post_list );
             } else {
 
-                return new WP_Error('db_query_error',
-                    sprintf(__('Could not complete import for series %s', 'pmprosequence'), $series->post_title), $wpdb->last_error);
+                return new \WP_Error('db_query_error',
+                    sprintf(__('Could not complete import for series %s', "e20rsequence"), $series->post_title), $wpdb->last_error);
 
             }
         } // End of foreach (DB result)
     }
 endif;
 
+if (!function_exists('e20r_sequences_import_all_PMProSequence')):
+    /**
+     * Convert PMPro Sequences metadata
+     */
+    function e20r_sequences_import_all_PMProSequence()
+    {
+        // TODO: Implement e20r_sequences_import_all_PMProSequence(): Convert pmpro_sequence metadata to e20r_sequence
+        $sequence = apply_filters('get_sequence_class_instance', null);
+
+        if (class_exists('PMProSequence')) {
+
+            $sequence->dbg_log("conver_pmpro_sequence() - PMPro Sequences is still active. Can't convert!");
+            return;
+        }
+    }
+endif;
+
+if (!function_exists('e20r_sequence_loader')) {
+    function e20r_sequence_loader($class_name)
+    {
+
+        if (false === stripos($class_name, 'sequence')) {
+            return;
+        }
+
+        $parts = explode('\\', $class_name);
+
+        $base_path = plugin_dir_path(__FILE__) . "classes";
+        $name = strtolower($parts[(count($parts) - 1)]);
+
+        $types = array('shortcodes', 'tools', 'widgets');
+
+        foreach ($types as $type) {
+
+            if ( false !== stripos($name, "controller")) {
+                $dir = "{$base_path}";
+            } else {
+                $dir = "{$base_path}/{$type}";
+            }
+
+            if (file_exists("{$dir}/class-{$name}.php")) {
+
+                require_once("{$dir}/class-{$name}.php");
+            }
+/*            else {
+                error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
+            }
+*/
+        }
+    }
+}
 /**
  * Recursively iterate through an array (of, possibly, arrays) to find the needle in the haystack
  *
@@ -361,17 +423,23 @@ function in_object_r($key = null, $value = null, $object, $strict = false)
 
 try {
 
-    $sequence = new PMProSequence();
+    spl_autoload_register("E20R\\Sequences\\Main\\e20r_sequence_loader");
+
+    $sequence = new Sequence\Controller();
+    $cron = new Tools\Cron();
+    $error = new Tools\E20RError();
+
     $sequence->load_actions();
-} catch (Exception $e) {
+
+} catch (\Exception $e) {
     error_log("PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage());
 }
 
 register_activation_hook(__FILE__, array(&$sequence, 'activation'));
 register_deactivation_hook(__FILE__, array(&$sequence, 'deactivation'));
 
-$plugin_updates = PucFactory::buildUpdateChecker(
-    'https://eighty20results.com/protected-content/pmpro-sequences/metadata.json',
+$plugin_updates = \PucFactory::buildUpdateChecker(
+    'https://eighty20results.com/protected-content/e20r-sequences/metadata.json',
     __FILE__,
-    'pmpro-sequences'
+    'e20r-sequences'
 );

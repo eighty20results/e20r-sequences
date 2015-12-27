@@ -1,9 +1,1 @@
-Conditional return triggered fatal error in certain situations
-Use absolute URL for fontawesome
-Respect theme settings for fonts/text in widgets
-Respect theme settings for fonts/text in other text
-Fix error if is_managed() is called while PHP is outputting data
-Stop forcing access check for posts that aren't managed by any sequences.
-Fix formatting problem
-Initial update of version number to 3.0.4
-Update template file for vpt_reminder.html
+Fix: Didn't include all "unalerted" content prior to the specified delay value when sending alerts to users

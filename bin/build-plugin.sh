@@ -1,8 +1,9 @@
 #!/bin/bash
-# Build script for PMPRO Sequences plugin
+# Build script for Eighty/20 Results - Sequences plugin
 #
-include=(classes email scheduled css images js languages pmpro-sequences.php README.txt)
-short_name="pmpro-sequences"
+include=(classes email css fonts images js languages e20r-sequences.php README.txt)
+exclude=(*.yml *.phar composer.* vendor)
+short_name="e20r-sequences"
 plugin_path="${short_name}"
 version=$(egrep "^Version:" ../${short_name}.php | awk '{print $2}')
 metadata="../metadata.json"
@@ -25,6 +26,10 @@ fi
 
 for p in ${include[@]}; do
 	cp -R ${src_path}${p} ${dst_path}
+done
+
+for e in ${exclude[@]}; do
+    find ${dst_path} -name ${e} -exec rm -rf {} \;
 done
 
 cd ${dst_path}/..
