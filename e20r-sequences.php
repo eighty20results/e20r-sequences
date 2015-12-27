@@ -319,7 +319,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSequence')):
 
         if (class_exists('PMProSequence')) {
 
-            $sequence->dbg_log("conver_pmpro_sequence() - PMPro Sequences is still active. Can't convert!");
+            $sequence->dbg_log("convert_pmpro_sequence() - PMPro Sequences is still active. Can't convert!");
             return;
         }
     }
@@ -427,7 +427,7 @@ try {
 
     $sequence = new Sequence\Controller();
     $cron = new Tools\Cron();
-    $error = new Tools\E20RError();
+    $er = new Tools\E20RError();
 
     $sequence->load_actions();
 

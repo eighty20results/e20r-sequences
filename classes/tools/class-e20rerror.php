@@ -8,7 +8,7 @@
 
 namespace E20R\Sequences\Tools;
 
-class E20RError
+class E20RError extends \WP_Error
 {
     private $history = array();
     private static $_this;
@@ -26,7 +26,7 @@ class E20RError
 
     private function configure() {
 
-        return $error = array(
+        return array(
             'setting' => null,
             'code' => null,
             'message' => null,
