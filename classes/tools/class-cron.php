@@ -280,6 +280,8 @@ class Cron
                     continue;
                 }
 
+                $sequence->dbg_log("cron() - # of posts we've already notified for: " . count($notice_settings->posts) , ", and number of posts to process: " . count($posts));
+
                 // Set the opt-in timestamp if this is the first time we're processing alert settings for this user ID.
                 if (empty($notice_settings->last_notice_sent) || ($notice_settings->last_notice_sent == -1)) {
 
@@ -287,63 +289,117 @@ class Cron
                 }
 
                 // $posts = $sequence->get_postDetails( $post->id );
-                $sequence->dbg_log("cron() - # of posts we've already notified for: " . count($notice_settings->posts));
 
-                foreach( $posts as $post ) {
+                if (E20R_SEQ_SEND_AS_SINGLE == $sequence->options->noticeSendAs) {
 
-                    $sequence->dbg_log("cron() - Do we notify {$s->user_id} of availability of post # {$post->id}?");
-                    $flag_value = "{$post->id}_" . $sequence->normalize_delay($post->delay);
+                    $sequence->dbg_log("cron() - Processing " . count($posts) . " individual messages to send to {$s->user_id}");
 
-                    if (!in_array($flag_value, $notice_settings->posts)) {
+                    foreach ($posts as $post) {
 
-                        $sequence->dbg_log('cron() - Post: "' . get_the_title($post->id) . '"' .
-                            ', post ID: ' . $post->id .
-                            ', membership day: ' . $membership_day .
-                            ', post delay: ' . $sequence->normalize_delay($post->delay) .
-                            ', user ID: ' . $s->user_id .
-                            ', already notified: ' . (!is_array($notice_settings->posts) || (in_array($flag_value, $notice_settings->posts) == false) ? 'false' : 'true') .
-                            ', has access: ' . ($sequence->has_post_access($s->user_id, $post->id, true, $sequence->sequence_id) === true ? 'true' : 'false'));
+                        $sequence->dbg_log("cron() - Do we notify {$s->user_id} of availability of post # {$post->id}?");
+                        $flag_value = "{$post->id}_" . $sequence->normalize_delay($post->delay);
 
-                        $sequence->dbg_log("cron() - Need to send alert to {$s->user_id} for '{$post->title}': {$flag_value}");
+                        if (!in_array($flag_value, $notice_settings->posts)) {
 
-                        // Does the post alert need to be sent (only if its delay makes it available _after_ the user opted in.
-                        if ($sequence->is_after_opt_in($s->user_id, $notice_settings, $post)) {
+                            $sequence->dbg_log('cron() - Post: "' . get_the_title($post->id) . '"' .
+                                ', post ID: ' . $post->id .
+                                ', membership day: ' . $membership_day .
+                                ', post delay: ' . $sequence->normalize_delay($post->delay) .
+                                ', user ID: ' . $s->user_id .
+                                ', already notified: ' . (!is_array($notice_settings->posts) || (in_array($flag_value, $notice_settings->posts) == false) ? 'false' : 'true') .
+                                ', has access: ' . ($sequence->has_post_access($s->user_id, $post->id, true, $sequence->sequence_id) === true ? 'true' : 'false'));
 
-                            $sequence->dbg_log('cron() - Preparing the email message');
+                            $sequence->dbg_log("cron() - Need to send alert to {$s->user_id} for '{$post->title}': {$flag_value}");
 
-                            // Send the email notice to the user
-                            if ($sequence->send_notice($posts, $s->user_id, $sequence->sequence_id)) {
+                            // Does the post alert need to be sent (only if its delay makes it available _after_ the user opted in.
+                            if ($sequence->is_after_opt_in($s->user_id, $notice_settings, $post)) {
 
-                                $sequence->dbg_log('cron() - Email was successfully sent');
-                                // Update the sequence metadata that user has been notified
-                                $notice_settings->posts[] = $flag_value;
+                                $sequence->dbg_log('cron() - Preparing the email message');
 
-                                // Increment send count.
-                                $sendCount[$s->user_id] = (isset($sendCount[$s->user_id]) ? $sendCount[$s->user_id]++ : 0); // Bug/Fix: Sometimes generates an undefined offset notice
+                                // Send the email notice to the user
+                                if ($sequence->send_notice($post, $s->user_id, $sequence->sequence_id)) {
 
-                                $sequence->dbg_log("cron() - Sent email to user {$s->user_id} about post {$post->id} with delay {$post->delay} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}");
-                                $notice_settings->last_notice_sent = current_time('timestamp');
+                                    $sequence->dbg_log('cron() - Email was successfully sent');
+                                    // Update the sequence metadata that user has been notified
+                                    $notice_settings->posts[] = $flag_value;
+
+                                    // Increment send count.
+                                    $sendCount[$s->user_id] = (isset($sendCount[$s->user_id]) ? $sendCount[$s->user_id]++ : 0); // Bug/Fix: Sometimes generates an undefined offset notice
+
+                                    $sequence->dbg_log("cron() - Sent email to user {$s->user_id} about post {$post->id} with delay {$post->delay} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}");
+                                    $notice_settings->last_notice_sent = current_time('timestamp');
+                                } else {
+
+                                    $sequence->dbg_log("cron() - Error sending email message!", E20R_DEBUG_SEQ_CRITICAL);
+                                }
                             } else {
 
-                                $sequence->dbg_log("cron() - Error sending email message!", E20R_DEBUG_SEQ_CRITICAL);
+                                // Only add this post ID if it's not already present in the notifiedPosts array.
+                                if (!in_array("{$post->id}_{$post->delay}", $notice_settings->posts, true)) {
+
+                                    $sequence->dbg_log("cron() - Adding this previously released (old) post to the notified list");
+                                    $notice_settings->posts[] = "{$post->id}_" . $sequence->normalize_delay($post->delay);
+                                }
                             }
                         } else {
-
-                            // Only add this post ID if it's not already present in the notifiedPosts array.
-                            if (!in_array("{$post->id}_{$post->delay}", $notice_settings->posts, true)) {
-
-                                $sequence->dbg_log("cron() - Adding this previously released (old) post to the notified list");
-                                $notice_settings->posts[] = "{$post->id}_" . $sequence->normalize_delay($post->delay);
-                            }
+                            $sequence->dbg_log("cron() - Will NOT notify user {$s->user_id} about the availability of post {$post->id}", E20R_DEBUG_SEQ_WARNING);
                         }
-                    } else {
-                        $sequence->dbg_log("cron() - Will NOT notify user {$s->user_id} about the availability of post {$post->id}", E20R_DEBUG_SEQ_WARNING);
+                    } // End of foreach
+                } // End of "send as single"
+
+                if (E20R_SEQ_SEND_AS_LIST == $sequence->options->noticeSendAs) {
+
+                    $alerts = array();
+
+                    foreach ($posts as $pk => $post) {
+
+                        $flag_value = "{$post->id}_" . $sequence->normalize_delay($post->delay);
+
+                        if (in_array($flag_value, $notice_settings->posts, true)) {
+
+                            dbg("cron() - We already sent notice for {$flag_value}");
+                            unset($posts[$pk]);
+
+                        } else {
+
+                            $sequence->dbg_log('cron() - Adding notification setting for : "' . get_the_title($post->id) . '"' .
+                                ', post ID: ' . $post->id .
+                                ', membership day: ' . $membership_day .
+                                ', post delay: ' . $sequence->normalize_delay($post->delay) .
+                                ', user ID: ' . $s->user_id .
+                                ', already notified: ' . (!is_array($notice_settings->posts) || (in_array($flag_value, $notice_settings->posts) == false) ? 'false' : 'true') .
+                                ', has access: ' . ($sequence->has_post_access($s->user_id, $post->id, true, $sequence->sequence_id) === true ? 'true' : 'false'));
+
+                            $sequence->dbg_log("cron() - Adding this ({$post->id}) post to the possibly notified list: {$flag_value}");
+                            $alerts[$pk] = $flag_value;
+
+                            $posts[$pk]->after_optin = $sequence->is_after_opt_in($s->user_id, $notice_settings, $post);
+                        }
+
                     }
-                } // End of foreach
+
+                    $sequence->dbg_log("cron() - Sending " . count($posts) . " as a list of links to {$s->user_id}");
+
+                    // Send the email notice to the user
+                    if ($sequence->send_notice($posts, $s->user_id, $sequence->sequence_id)) {
+
+                        $notice_settings->last_notice_sent = current_time('timestamp');
+                        $notice_settings->posts = array_merge($notice_settings->posts, $alerts);
+
+                        $sequence->dbg_log("cron() - Merged notification settings for newly sent posts: ");
+                        $sequence->dbg_log($notice_settings->posts);
+                        $sequence->dbg_log($alerts);
+
+                    } else {
+
+                        $sequence->dbg_log("cron() - Will NOT notify user {$s->user_id} about these " . count($posts) . " new posts", E20R_DEBUG_SEQ_WARNING);
+                    }
+
+                } // End of "send as list"
 
                 // Save user specific notification settings (including array of posts we've already notified them of)
                 $sequence->save_user_notice_settings($s->user_id, $notice_settings, $sequence->sequence_id);
-                $sequence->dbg_log('cron() - Updated user meta for the notices');
+                $sequence->dbg_log('cron() - Updated meta for the user notices');
 
             } // End if
             else {
