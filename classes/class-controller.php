@@ -2138,7 +2138,7 @@ class Controller
 
         foreach( $this->posts as $post ) {
 
-            if ($post->delay == $delay ) {
+            if ($post->delay <= $delay ) {
 
                 $posts[] = $post;
             }
