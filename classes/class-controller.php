@@ -4307,6 +4307,12 @@ class Controller
             }
         }
 
+        if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
+
+            $this->dbg_log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
+            return false;
+        }
+
         foreach( $posts as $post ) {
 
             // $post = get_post($p->id);
@@ -4322,6 +4328,7 @@ class Controller
 
                     $as_list = true;
                     $emails[$idx] = $this->prepare_mailobj($post, $user, $templ[0]);
+                    $emails[$idx]->body = $template_content;
 
                     $emails[$idx]->data = array(
                         "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
@@ -4337,7 +4344,7 @@ class Controller
                 }
             }
 
-            if ( E20R_SEND_AS_SINGLE == $this->options->noticeSendAs ) {
+            if ( E20R_SEQ_SEND_AS_SINGLE == $this->options->noticeSendAs ) {
 
                 // Send one email message per piece of new content.
                 $emails[] = $this->prepare_mailobj($post, $user, $templ[0]);
@@ -4358,6 +4365,8 @@ class Controller
 
                 $post_links = "<a href=\"{$post->permalink}\" title=\"{$post->title}\">{$post->title}</a>";
 
+                $emails[$idx]->body = $template_content;
+
                 $emails[$idx]->data = array(
                     "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
                     "sitename" => get_option("blogname"),
@@ -4373,14 +4382,6 @@ class Controller
 
             }
 
-            if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
-
-                $this->dbg_log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
-                return false;
-            }
-
-            $emails[$idx]->body = $template_content;
-
             // Append the post_link ul/li element list when asking to send as list.
             if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
                 $emails[$idx]->data['post_link'] = "<ul>\n" . $post_links . "</ul>\n";
@@ -4389,53 +4390,7 @@ class Controller
         }
 
         $this->dbg_log("send_notice() - Have prepared " . count($emails) . " email notices for user {$user_id}");
-/*        if ( empty($emails) ) {
 
-            $email->from = $this->options->replyto; // = pmpro_getOption('from_email');
-            $email->template = $templ[0];
-            $email->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
-            $email->email = $user->user_email;
-            $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", current_time('timestamp') ));
-            $email->dateformat = $this->options->dateformat;
-
-            if ( !empty( $post->post_excerpt ) ) {
-
-                $this->dbg_log("Adding the post excerpt to email notice");
-
-                if ( empty( $this->options->excerpt_intro ) ) {
-                    $this->options->excerpt_intro = __('A summary of the post(s):', "e20rsequence");
-                }
-
-                $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
-            }
-            else {
-                $excerpt = '';
-            }
-
-            if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
-
-                $this->dbg_log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
-                return false;
-            }
-
-            $email->body = $template_content;
-            $email->data = array(
-                "name" => $user->first_name, // Options are: display_name, first_name, last_name, nickname
-                "sitename" => get_option("blogname"),
-                "post_link" => $post_link_prefix . $post_links . $post_link_postfix,
-                "today" => date($this->options->dateformat, current_time('timestamp')),
-                "excerpt" => $excerpt,
-                "ptitle" => $post->post_title
-            );
-
-            if ( isset( $this->options->track_google_analytics ) && ( true == $this->options->track_google_analytics) ) {
-                $email->data['google_analytics'] = $ga_tracking;
-            }
-
-            $email->sendEmail();
-        }
-        else {
-*/
         // Send the configured email messages
         foreach ( $emails as $email ) {
 
