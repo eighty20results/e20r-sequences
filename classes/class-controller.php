@@ -6525,19 +6525,8 @@ class Controller
 
         global $post;
 
-        if ( ! isset( $post->post_type ) )  {
-
-            return;
-        }
-
-        if ( ($post->post_type == 'e20r_sequence') ||
-             ( $hook == 'edit.php' || $hook == 'post.php' || $hook == 'post-new.php' ) ) {
-
-            $this->dbg_log("Loading admin scripts & styles for PMPro Sequence");
-            $this->register_admin_scripts();
-        }
-
-        $this->dbg_log("End of loading admin scripts & styles");
+        $this->dbg_log("Loading admin scripts & styles for E20R Sequences");
+        $this->register_admin_scripts();
     }
 
     public function register_admin_scripts() {
