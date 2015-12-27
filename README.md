@@ -172,8 +172,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.1
-* Fix: Didn't always load the correct font while in backend
+###4.2.2
+* Fix: Didn't include all 'unalerted' content prior to the specified delay value when sending alerts to users
 
 ##Old releases
 ###.1
@@ -755,3 +755,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Enh: Remove unused code from closest post logic Fix: Didn't always respect the notice type (as a digest of links or individual posts) for notices/alerts.
 * Enh: Add support for sending one or more notices to user for a single day's worth of content.
 * Enh: Add new_content_list template (Improved formatting for list of new content in the sequence).
+
+###4.2.1
+* Fix: Didn't always load the correct font while in backend

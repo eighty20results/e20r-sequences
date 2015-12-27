@@ -1,1 +1,1 @@
-Fix: Didn't always load the correct font while in backend
+Fix: Didn't include all "unalerted" content prior to the specified delay value when sending alerts to users
