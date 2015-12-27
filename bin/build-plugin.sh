@@ -2,7 +2,7 @@
 # Build script for Eighty/20 Results - Sequences plugin
 #
 include=(classes email css fonts images js languages e20r-sequences.php README.txt)
-exclude=(vendor *.yml *.phar composer.*)
+exclude=(*.yml *.phar composer.* vendor)
 short_name="e20r-sequences"
 plugin_path="${short_name}"
 version=$(egrep "^Version:" ../${short_name}.php | awk '{print $2}')
