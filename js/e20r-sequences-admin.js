@@ -658,7 +658,7 @@ var postMeta = {
                     jQuery('#e20r_sequence_posts').html($returned.data.html);
                 }
 
-                if($returned.data.message.length !== null && $returned.data.message.length){
+                if( null !== $returned.data.message && !$returned.data.message.length){
                     $class.set_error_message($returned.data.message);
                     return;
                 }
