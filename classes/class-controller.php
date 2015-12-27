@@ -831,6 +831,7 @@ class Controller
                 $p->delay = isset( $sPost->delay ) ? $sPost->delay : $p_delay;
                 $p->permalink = get_permalink( $sPost->ID );
                 $p->title = $sPost->post_title;
+                $p->excerpt = $sPost->post_excerpt;
                 $p->closest_post = false;
                 $p->current_post = false;
                 $p->is_future = false;
@@ -2130,6 +2131,28 @@ class Controller
         return null;
     }
 
+    public function find_posts_by_delay( $delay, $user_id = null ) {
+
+        $posts = array();
+        $this->dbg_log("find_posts_by_delay() - Have " . count($this->posts) . " to process");
+
+        foreach( $this->posts as $post ) {
+
+            if ($post->delay == $delay ) {
+
+                $posts[] = $post;
+            }
+        }
+
+        if (empty($posts)) {
+
+            $posts = $this->find_closest_post( $user_id );
+        }
+
+        $this->dbg_log("find_posts_by_delay() - Returning " . count($posts) . " with delay value of {$delay}");
+        return $posts;
+
+    }
     /**
      * Compares the object to the array of posts in the sequence
      * @param $delayComp -- Delay value to compare to
@@ -2152,15 +2175,8 @@ class Controller
 
         foreach ( $this->posts as $key => $post ) {
 
-            // Only interested in posts we actually have access to.
-
-    //                 if ( $this->has_post_access( $user_id, $post, true ) ) {
-
-                $nDelay = $this->normalize_delay( $post->delay );
-                // $this->dbg_log("find_closest_post_by_delay_val() - Normalized delay value: {$nDelay}");
-
-                $distances[ $key ] = abs( $delayComp - ( $nDelay /* + 1 */ ) );
-    //                }
+            $nDelay = $this->normalize_delay( $post->delay );
+            $distances[ $key ] = abs( $delayComp - ( $nDelay /* + 1 */ ) );
         }
 
         // Verify that we have one or more than one element
@@ -2952,7 +2968,17 @@ class Controller
                                 <label class="e20r-sequence-label" for="e20r-seq-sendas"><?php _e('Transmit:', "e20rsequence"); ?> </label>
                             </div>
                             <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-sendas-status" class="e20r-sequence-status e20r-sequence-setting-col-2"><?php echo ( $this->options->noticeSendAs = 10 ? _e('One alert per post', "e20rsequence") : _e('Digest of posts', "e20rsequence")); ?></span>
+                                <span id="e20r-seq-sendas-status" class="e20r-sequence-status e20r-sequence-setting-col-2"><?php
+
+                                switch($this->options->noticeSendAs) {
+                                    case E20R_SEQ_SEND_AS_SINGLE:
+                                        _e('One alert per post', "e20rsequence");
+                                        break;
+
+                                    case E20R_SEQ_SEND_AS_LIST:
+                                        _e('Digest of posts', "e20rsequence");
+                                        break;
+                                } ?></span>
                             </div>
                             <div class="e20r-sequence-setting-col-3">
                                 <a href="#" id="e20r-seq-edit-sendas" class="e20r-seq-edit e20r-sequence-setting-col-3">
@@ -4198,13 +4224,27 @@ class Controller
 
         if( isset($_COOKIE["_ga"]) ){
 
-            list($version,$domainDepth, $cid1, $cid2) = split('[\.]', $_COOKIE["_ga"],4);
+            list($version,$domainDepth, $cid1, $cid2) = preg_split('/[\.]/i', $_COOKIE["_ga"],4);
             return array('version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1.'.'.$cid2);
         }
 
         return array();
     }
 
+    private function prepare_mailobj( $post, $user, $template ) {
+
+        $email = new \PMProEmail();
+
+        $email->from = $this->options->replyto; // = pmpro_getOption('from_email');
+        $email->template = $template;
+        $email->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
+        $email->email = $user->user_email;
+        $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", current_time('timestamp') ));
+        $email->dateformat = $this->options->dateformat;
+
+        return $email;
+
+    }
     /**
      * Send email to userID about access to new post.
      *
@@ -4217,7 +4257,7 @@ class Controller
      *
      * TODO: Fix email body to be correct (standards compliant) MIME encoded HTML mail or text mail.
      */
-    public function send_notice($post_ids, $user_id, $seq_id) {
+    public function send_notice($posts, $user_id, $seq_id) {
 
         // Make sure the email class is loaded.
         if ( ! class_exists( '\\PMProEmail' ) ) {
@@ -4225,24 +4265,25 @@ class Controller
             return;
         }
 
-        if ( !is_array( $post_ids ) ) {
+        if ( !is_array( $posts ) ) {
 
-            $post_ids = array( $post_ids );
+            $posts = array( $posts );
         }
 
         $user = get_user_by('id', $user_id);
         $templ = preg_split('/\./', $this->options->noticeTemplate); // Parse the template name
 
         $emails = array();
+
         $post_links = '';
         $excerpt = '';
         $ga_tracking = '';
 
-        $this->dbg_log("send_notice() - Preparing to send " . count( $post_ids ) . " post alerts for user {$user_id} regarding sequence {$seq_id}");
+        $this->dbg_log("send_notice() - Preparing to send " . count( $posts ) . " post alerts for user {$user_id} regarding sequence {$seq_id}");
         $this->dbg_log($templ);
 
         // Add data/img entry for google analytics.
-/*
+
         if ( isset( $this->options->track_google_analytics ) &&
             ( true === $this->options->track_google_analytics ) ) {
 
@@ -4265,79 +4306,90 @@ class Controller
                 $ga_tracking = '<img src="' . $url . '" >';
             }
         }
-*/
-        if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
 
-            $post_link_prefix = "<ul>\n";
-            $post_link_postfix = "</ul>\n";
-        }
-        else {
-            $post_link_prefix = '';
-            $post_link_postfix = '';
-        }
+        foreach( $posts as $post ) {
 
-        foreach( $post_ids as $post_id ) {
+            // $post = get_post($p->id);
+            $as_list = false;
 
-            $post = get_post($post_id);
-            $email = new \PMProEmail();
-
+            // Send all of the links to new content in a single email message.
             if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
 
-                $post_links .= '<li><a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a></li>';
+                $idx = 0;
+                $post_links .= "<li><a href=\"{$post->permalink}\" title=\"{$post->title}\">{$post->title}</a></li>\n";
 
+                if (false === $as_list) {
+
+                    $as_list = true;
+                    $emails[$idx] = $this->prepare_mailobj($post, $user, $templ[0]);
+
+                    $emails[$idx]->data = array(
+                        "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
+                        "sitename" => get_option("blogname"),
+                        "today" => date($this->options->dateformat, current_time('timestamp')),
+                        "excerpt" => '',
+                        "ptitle" => $post->title
+                    );
+
+                    if ( isset( $this->options->track_google_analytics ) && ( true == $this->options->track_google_analytics) ) {
+                       $emails[$idx]->data['google_analytics'] = $ga_tracking;
+                    }
+                }
             }
-            else {
-                $emails[] = $email;
 
-                $idx = count( $emails ) - 1;
+            if ( E20R_SEND_AS_SINGLE == $this->options->noticeSendAs ) {
 
-                $emails[$idx]->from = $this->options->replyto; // = pmpro_getOption('from_email');
-                $emails[$idx]->template = $templ[0];
-                $emails[$idx]->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
-                $emails[$idx]->email = $user->user_email;
-                $emails[$idx]->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", current_time('timestamp') ));
-                $emails[$idx]->dateformat = $this->options->dateformat;
+                // Send one email message per piece of new content.
+                $emails[] = $this->prepare_mailobj($post, $user, $templ[0]);
 
-                if ( !empty( $post->post_excerpt ) ) {
+                // super defensive programming...
+                $idx = ( empty( $emails ) ? 0 : count($emails) - 1);
+
+                if ( !empty( $post->excerpt ) ) {
 
                     $this->dbg_log("send_notice() - Adding the post excerpt to email notice");
 
                     if ( empty( $this->options->excerpt_intro ) ) {
-                        $this->options->excerpt_intro = __('A summary of the post:', "e20rsequence");
+                        $this->options->excerpt_intro = __('A summary:', "e20rsequence");
                     }
 
-                    $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->post_excerpt . '</p>';
-                }
-                else {
-                    $excerpt = '';
+                    $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->excerpt . '</p>';
                 }
 
-                if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
-
-                    $this->dbg_log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
-                    return false;
-                }
-
-                $emails[$idx]->body = $template_content;
-                $post_links .= '<a href="' . get_permalink($post->ID) . '" title="' . $post->post_title . '">' . $post->post_title . '</a>';
+                $post_links = "<a href=\"{$post->permalink}\" title=\"{$post->title}\">{$post->title}</a>";
 
                 $emails[$idx]->data = array(
                     "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
                     "sitename" => get_option("blogname"),
-                    "post_link" => $post_link_prefix . $post_links . $post_link_postfix,
+                    "post_link" => $post_links,
                     "today" => date($this->options->dateformat, current_time('timestamp')),
                     "excerpt" => $excerpt,
-                    "ptitle" => $post->post_title
+                    "ptitle" => $post->title
                 );
 
                 if ( isset( $this->options->track_google_analytics ) && ( true == $this->options->track_google_analytics) ) {
-                    $emails[$idx]->data['google_analytics'] = $ga_tracking;
+                   $emails[$idx]->data['google_analytics'] = $ga_tracking;
                 }
+
             }
+
+            if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
+
+                $this->dbg_log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
+                return false;
+            }
+
+            $emails[$idx]->body = $template_content;
+
+            // Append the post_link ul/li element list when asking to send as list.
+            if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
+                $emails[$idx]->data['post_link'] = "<ul>\n" . $post_links . "</ul>\n";
+            }
+
         }
 
         $this->dbg_log("send_notice() - Have prepared " . count($emails) . " email notices for user {$user_id}");
-        if ( empty($emails) ) {
+/*        if ( empty($emails) ) {
 
             $email->from = $this->options->replyto; // = pmpro_getOption('from_email');
             $email->template = $templ[0];
@@ -4383,16 +4435,15 @@ class Controller
             $email->sendEmail();
         }
         else {
+*/
+        // Send the configured email messages
+        foreach ( $emails as $email ) {
 
-            // Send everything as individual email messages.
-            foreach ( $emails as $email ) {
-
-                $this->dbg_log('send_notice() - Array contains: ' . print_r($email->data, true));
-                $email->sendEmail();
-            }
+            $this->dbg_log('send_notice() - Substitutions are: ' . print_r($email->data, true));
+            $email->sendEmail();
         }
 
-        wp_reset_postdata();
+        // wp_reset_postdata();
         // All of the array list names are !!<name>!! escaped values.
         return true;
     }
@@ -4493,8 +4544,6 @@ class Controller
             $phpmailer->Body = apply_filters( 'e20r-sequence-alert-message-title', str_replace( "!!ptitle!!", $phpmailer->ptitle, $phpmailer->Body ) );
         }
 
-        $this->dbg_log("email_body() - Content of email object: ");
-        $this->dbg_log($phpmailer);
     }
 
     /**
