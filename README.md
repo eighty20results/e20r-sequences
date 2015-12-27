@@ -172,20 +172,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.0
-
-* Fix: Load template (or exit if template can't be found)
-* Fix: Didn't respect settings for individual alerts for new content (not digest)
-* Fix: Remove hidden/inactive code
-* Fix: Correctly handle digests and single notification per post scenarios
-* Fix: Add support for multiple or single notification message to user.
-* Fix: Use actual sequence objects when processing notices/alerts
-* Fix: Typo in template example
-* Enh/Fix: Allow more than one post to be returned if there are multiple posts with the same delay value in the sequence
-* Enh: Include post excerpt(s) when loading post(s) for/to a sequence
-* Enh: Remove unused code from closest post logic Fix: Didn't always respect the notice type (as a digest of links or individual posts) for notices/alerts.
-* Enh: Add support for sending one or more notices to user for a single day's worth of content.
-* Enh: Add new_content_list template (Improved formatting for list of new content in the sequence).
+###4.2.1
+* Fix: Didn't always load the correct font while in backend
 
 ##Old releases
 ###.1
@@ -752,3 +740,18 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 * Fix: Didn't always select the correct key for the sequence cache
 * Fix: Didn't always load new sequence data
+
+###4.2.0
+
+* Fix: Load template (or exit if template can't be found)
+* Fix: Didn't respect settings for individual alerts for new content (not digest)
+* Fix: Remove hidden/inactive code
+* Fix: Correctly handle digests and single notification per post scenarios
+* Fix: Add support for multiple or single notification message to user.
+* Fix: Use actual sequence objects when processing notices/alerts
+* Fix: Typo in template example
+* Enh/Fix: Allow more than one post to be returned if there are multiple posts with the same delay value in the sequence
+* Enh: Include post excerpt(s) when loading post(s) for/to a sequence
+* Enh: Remove unused code from closest post logic Fix: Didn't always respect the notice type (as a digest of links or individual posts) for notices/alerts.
+* Enh: Add support for sending one or more notices to user for a single day's worth of content.
+* Enh: Add new_content_list template (Improved formatting for list of new content in the sequence).
