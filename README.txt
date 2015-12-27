@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.1.3
+Stable tag: 4.2.0
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
@@ -135,6 +135,21 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.2.0 ==
+
+* Fix: Load template (or exit if template can't be found)
+* Fix: Didn't respect settings for individual alerts for new content (not digest)
+* Fix: Remove hidden/inactive code
+* Fix: Correctly handle digests and single notification per post scenarios
+* Fix: Add support for multiple or single notification message to user.
+* Fix: Use actual sequence objects when processing notices/alerts
+* Fix: Typo in template example
+* Enh/Fix: Allow more than one post to be returned if there are multiple posts with the same delay value in the sequence
+* Enh: Include post excerpt(s) when loading post(s) for/to a sequence
+* Enh: Remove unused code from closest post logic Fix: Didn't always respect the notice type (as a digest of links or individual posts) for notices/alerts.
+* Enh: Add support for sending one or more notices to user for a single day's worth of content.
+* Enh: Add new_content_list template (Improved formatting for list of new content in the sequence).
 
 == 4.1.3 ==
 
