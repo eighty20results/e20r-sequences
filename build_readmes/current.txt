@@ -1,1 +1,2 @@
-Fix: Didn't include all "unalerted" content prior to the specified delay value when sending alerts to users
+Fix: Avoid using reserved variable names
+Fix: Extend WP_Error wotj E20RError class

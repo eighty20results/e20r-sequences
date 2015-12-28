@@ -172,8 +172,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.2
-* Fix: Didn't include all 'unalerted' content prior to the specified delay value when sending alerts to users
+###4.2.3
+
+* Fix: Avoid using reserved variable names
+* Fix: Extend WP_Error wotj E20RError class
 
 ##Old releases
 ###.1
@@ -758,3 +760,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.2.1
 * Fix: Didn't always load the correct font while in backend
+
+###4.2.2
+* Fix: Didn't include all 'unalerted' content prior to the specified delay value when sending alerts to users
