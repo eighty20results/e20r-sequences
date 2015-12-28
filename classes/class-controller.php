@@ -379,13 +379,13 @@ class Controller
 
         $this->error = $msg;
 
-        $error = apply_filters('get_e20rerror_class_instance', null);
+        $e = apply_filters('get_e20rerror_class_instance', null);
 
         if ( $msg !== null ) {
 
             $this->dbg_log("set_error_msg(): {$msg}");
 
-            $error->set_error( $msg, 'error', null, 'e20r_seq_errors' );
+            $e->set_error( $msg, 'error', null, 'e20r_seq_errors' );
         }
     }
 
@@ -2355,7 +2355,7 @@ class Controller
      */
     public function get_error_msg() {
 
-        $error = apply_filters('get_e20rerror_class_instance', null);
+        $e = apply_filters('get_e20rerror_class_instance', null);
 
     /*            if ( empty( $this->error ) ) {
 
@@ -2365,7 +2365,7 @@ class Controller
             $this->error = $error->get_error( 'error' );
         }
     */
-        $this->error = $error->get_error( 'error' );
+        $this->error = $e->get_error( 'error' );
 
         if ( ! empty( $this->error ) ) {
 

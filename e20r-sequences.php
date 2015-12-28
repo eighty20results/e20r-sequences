@@ -4,7 +4,7 @@ namespace E20R\Sequences\Main;
 Plugin Name: Eighty / 20 Results Sequences for Paid Memberships Pro
 Plugin URI: http://www.eighty20results.com/pmpro-sequences/
 Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
-Version: 4.2.2
+Version: 4.2.3
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: http://www.eighty20results.com
@@ -40,7 +40,7 @@ define(__NAMESPACE__ . '\NS', __NAMESPACE__ . '\\');
 // use NS as Sequence;
 
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '4.2.1');
+define('E20R_SEQUENCE_VERSION', '4.2.3');
 
 /* Set the max number of email alerts to send in one go to one user */
 define('E20R_SEQUENCE_MAX_EMAILS', 3);
@@ -319,7 +319,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSequence')):
 
         if (class_exists('PMProSequence')) {
 
-            $sequence->dbg_log("conver_pmpro_sequence() - PMPro Sequences is still active. Can't convert!");
+            $sequence->dbg_log("convert_pmpro_sequence() - PMPro Sequences is still active. Can't convert!");
             return;
         }
     }
@@ -427,7 +427,7 @@ try {
 
     $sequence = new Sequence\Controller();
     $cron = new Tools\Cron();
-    $error = new Tools\E20RError();
+    $er = new Tools\E20RError();
 
     $sequence->load_actions();
 
