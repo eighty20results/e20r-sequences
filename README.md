@@ -172,10 +172,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.3
-
-* Fix: Avoid using reserved variable names
-* Fix: Extend WP_Error wotj E20RError class
+###4.2.4
+* Fix: Didn't always allow access to a post that was supposed to be available
+* Fix: The subject of email alerts used the incorrect date for the post alert
+* Enh: Didn't have a default notification type (single post per alert)
+* Enh: Use WP's time constants (DAY|WEEK|etc_IN_SECONDS)
+* Enh: The replaceable value !!today!! didn't use the delay value of the post to calculate the date.
 
 ##Old releases
 ###.1
@@ -476,12 +478,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Support removing one of multiple sequence entries from a post/page in edit.php
 
 ###3.0-beta-3
-
 * Renamed 'Add' button to 'New Sequence'
 * Would sometimes add an extra sequence/delay input field when the 'Add' button was clicked in edit.php
 
 ###3.0-beta-4
-
 * Update the TODO section in README.txt
 * Clean up TODO items class.PMProSequence.php
 * Would loop indefinitely if there were no sequence posts and the sequence was attempted viewed from the front-end.
@@ -494,7 +494,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Re-enable the wipe functionality when changing the type of sequence from day # based to date based (or vice versa)
 
 ###3.0-beta-5
-
 * Fix error handling in add post to sequence operation
 * Add class function to configure & time out error message in /wp-admin/
 * Fix $_POST variables in add_entry()
@@ -510,7 +509,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Refactor add_post_callback()
 
 ###3.0-beta-6
-
 * Primarily convert to V3 as part of plugin activation or if the user attempts to load the sequence.
 * Would sometimes get into a load/convert loop Flag conversion attempt as 'forced' if no posts are found with V3 format and the sequence is NOT previously converted.
 * Add padding to opt-in checkbox
@@ -521,14 +519,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Updated translations (Norwegian & English/US)
 
 ###3.0-beta-7
-
 * Wouldn't always honor the refresh value when loading the sequence
 * Refactor conversion for user's new-post notice settings
 * Clean up erroneous notification settings for user
 * Didn't save the 'Allow email notification' setting
 
 ###3.0-beta-8
-
 * Didn't always set the optin_at timestamp correctly in the default user alert settings
 * Removed redundant option management
 * Don't show a checkmark if the user has opted-out of receiving alert notices/emails
@@ -555,14 +551,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fix is_after_opt_in() to support new user alert setting format
 
 ###3.0-beta-9
-
 * Didn't always display the delay input box in the post editor metabox.
 * Make opt-in checkbox responsive
 * Didn't always display the delay input box in the post editor metabox.
 * Update change log & version numbers
 
 ###3.0-beta-10
-
 * Add all_sequences() static function
 * Add post_details() static function
 * Update change log & version numbers
@@ -570,7 +564,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Add static function to fetch all sequence IDs that a post_id is associated with
 
 ###3.0-beta-11
-
 * Update version number and change log
 * find_by_id() would sometimes load unneeded posts (and not honor cache)
 * When loading a specific post_id for the sequence, don't ignore drafts (May cause duplication in DB)
@@ -582,12 +575,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Update text in email opt-in checkbox
 
 ###3.0-beta-12
-
 * Load Font Awesome fonts as part of script/style load.
 * Update path to Font Awesome fonts (CDN)
 
 ###3.0-beta-13
-
 * Would sometimes return all posts in the sequence while  deleting one post.
 * Fix undefined variable warning in load_sequence_post()
 * Didn't include sequence members (posts) in DRAFT state when displaying list of sequences in metabox(es)
@@ -596,13 +587,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Run wp_reset_query() before returning all sequences in get_all_sequences().
 
 ###3.0.1
-
 * Would sometimes issue warning in find_by_id()
 * Updated to direct user to dashboard
 * v3.0.1
 
 ###3.0.2
-
 * Would sometimes trigger warning message while searching for a specific post ID
 * Only grant blanket access to post in sequence if admin is logged in on dashboard and we're not in an ajax operation
 * Comment out incomplete Google Analytics tracking support
@@ -610,13 +599,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Make opt-in form full-width
 
 ###3.0.3
-
 * On the edit.php page, add a 'Clear alerts' button for a specific post/sequence/delay combination
 * Allow admin to clear notification flags for a specific post/delay/sequence id from the posts edit page
 * Make language tag consistent
 
 ###3.0.4
-
 * Conditional return triggered fatal error in certain situations
 * Use absolute URL for fontawesome
 * Respect theme settings for fonts/text in widgets
@@ -710,7 +697,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Enh: Add link to issues section on GitHub.com
 
 ###4.1.0
-
 * Fix: Searchable select box would sometimes stop working in backend
 * Fix: More reliable detection of origination of add/remove post/page
 * Fix: More robust error handling during remove post/page operation
@@ -729,22 +715,18 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Nit: Refactor Controller class
 
 ###4.1.1
-
 * Fix: Adding/Removing posts to sequence could result in JavaScript error
 * Fix: Would sometimes attempt to process auto-drafts
 
 ###4.1.2
-
 * Fix: Generating warning message while processing delay configuration for sequence(s)
 * Fix: Didn't always ignore unpublished/unavailable sequences
 
 ###4.1.3
-
 * Fix: Didn't always select the correct key for the sequence cache
 * Fix: Didn't always load new sequence data
 
 ###4.2.0
-
 * Fix: Load template (or exit if template can't be found)
 * Fix: Didn't respect settings for individual alerts for new content (not digest)
 * Fix: Remove hidden/inactive code
@@ -763,3 +745,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.2.2
 * Fix: Didn't include all 'unalerted' content prior to the specified delay value when sending alerts to users
+
+###4.2.3
+* Fix: Avoid using reserved variable names
+* Fix: Extend WP_Error wotj E20RError class
