@@ -675,7 +675,7 @@ class Controller
 
                 $this->dbg_log("load_sequence_post() - Expected delay value is a 'date' so need to convert");
                 $startdate = pmpro_getMemberStartdate( $user_id );
-                $delay = date('Y-m-d', ($startdate + ( $delay * 3600*24 ) ) );
+                $delay = date('Y-m-d', ($startdate + ($delay * DAY_IN_SECONDS)) );
                 $data_type = 'DATE';
             }
 
@@ -1777,9 +1777,9 @@ class Controller
 
 		if ( true === $is_authorized_ajax && false === $is_editor ){
 
-			$this->dbg_log("has_post_access() - User does not have edit permissions: ");
+			$this->dbg_log("has_post_access() - User ({$user_id}) does not have edit permissions: ");
 			$this->dbg_log("has_post_access() - Editor: " . ($is_editor ? 'true' : 'false') . " AJAX: " . ($is_authorized_ajax ? 'true' : 'false'));
-			return false;
+			// return false;
 		}
 
 		$retval = false;
@@ -2149,7 +2149,7 @@ class Controller
             $posts = $this->find_closest_post( $user_id );
         }
 
-        $this->dbg_log("find_posts_by_delay() - Returning " . count($posts) . " with delay value of {$delay}");
+        $this->dbg_log("find_posts_by_delay() - Returning " . count($posts) . " with delay value <= {$delay}");
         return $posts;
 
     }
@@ -4235,11 +4235,13 @@ class Controller
 
         $email = new \PMProEmail();
 
+        $user_started = (pmpro_getMemberStartdate($user->ID) - DAY_IN_SECONDS) + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS);
+
         $email->from = $this->options->replyto; // = pmpro_getOption('from_email');
         $email->template = $template;
         $email->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
         $email->email = $user->user_email;
-        $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", current_time('timestamp') ));
+        $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", $user_started));
         $email->dateformat = $this->options->dateformat;
 
         return $email;
@@ -4313,10 +4315,14 @@ class Controller
             return false;
         }
 
+        $user_started = (pmpro_getMemberStartdate($user_id) - DAY_IN_SECONDS);
+
         foreach( $posts as $post ) {
 
             // $post = get_post($p->id);
             $as_list = false;
+
+            $post_date = date($this->options->dateformat, ($user_started + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS)));
 
             // Send all of the links to new content in a single email message.
             if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
@@ -4333,7 +4339,7 @@ class Controller
                     $emails[$idx]->data = array(
                         "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
                         "sitename" => get_option("blogname"),
-                        "today" => date($this->options->dateformat, current_time('timestamp')),
+                        "today" => $post_date,
                         "excerpt" => '',
                         "ptitle" => $post->title
                     );
@@ -4371,7 +4377,7 @@ class Controller
                     "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
                     "sitename" => get_option("blogname"),
                     "post_link" => $post_links,
-                    "today" => date($this->options->dateformat, current_time('timestamp')),
+                    "today" => $post_date,
                     "excerpt" => $excerpt,
                     "ptitle" => $post->title
                 );
