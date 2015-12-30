@@ -4241,7 +4241,7 @@ class Controller
         $email->template = $template;
         $email->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
         $email->email = $user->user_email;
-        $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", $user_started));
+        $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->title, strftime("%x", $user_started));
         $email->dateformat = $this->options->dateformat;
 
         return $email;
