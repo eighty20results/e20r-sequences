@@ -289,8 +289,9 @@ class Cron
                 }
 
                 // $posts = $sequence->get_postDetails( $post->id );
+                $sequence->dbg_log("cron() - sendNoticeAs option is currently: {$sequence->options->noticeSendAs}");
 
-                if (E20R_SEQ_SEND_AS_SINGLE == $sequence->options->noticeSendAs) {
+                if (empty($sequence->options->noticeSendAs) || E20R_SEQ_SEND_AS_SINGLE == $sequence->options->noticeSendAs) {
 
                     $sequence->dbg_log("cron() - Processing " . count($posts) . " individual messages to send to {$s->user_id}");
 
