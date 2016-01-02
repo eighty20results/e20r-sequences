@@ -46,7 +46,7 @@ define('E20R_SEQUENCE_VERSION', '4.2.5');
 define('E20R_SEQUENCE_MAX_EMAILS', 3);
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
-define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.3');
+define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.4');
 
 /* Set the path to the PMPRO Sequence plugin */
 define('E20R_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
