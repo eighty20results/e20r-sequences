@@ -172,12 +172,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.4
-* Fix: Didn't always allow access to a post that was supposed to be available
-* Fix: The subject of email alerts used the incorrect date for the post alert
-* Enh: Didn't have a default notification type (single post per alert)
-* Enh: Use WP's time constants (DAY|WEEK|etc_IN_SECONDS)
-* Enh: The replaceable value !!today!! didn't use the delay value of the post to calculate the date.
+###4.2.5
+* Fix: Would attempt to load sequence posts for users not logged in.
+* Fix: Didn't include the title for the new content in alert(s)
 
 ##Old releases
 ###.1
@@ -749,3 +746,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 ###4.2.3
 * Fix: Avoid using reserved variable names
 * Fix: Extend WP_Error wotj E20RError class
+
+###4.2.4
+* Fix: Didn't always allow access to a post that was supposed to be available
+* Fix: The subject of email alerts used the incorrect date for the post alert
+* Enh: Didn't have a default notification type (single post per alert)
+* Enh: Use WP's time constants (DAY|WEEK|etc_IN_SECONDS)
+* Enh: The replaceable value !!today!! didn't use the delay value of the post to calculate the date.
