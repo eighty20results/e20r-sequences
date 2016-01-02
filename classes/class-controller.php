@@ -3380,6 +3380,8 @@ class Controller
      */
     public function init( $id = null ) {
 
+        global $current_user;
+
         if ( !is_null( $id ) ) {
 
             $this->sequence = get_post( $id );
@@ -3387,7 +3389,11 @@ class Controller
 
             // Set options for the sequence
             $this->get_options( $id );
-            $this->load_sequence_post();
+
+            if ( 0 != $current_user->ID ) {
+                $this->dbg_log('init() - Loading the "' . get_the_title($id) . '" sequence posts');
+                $this->load_sequence_post();
+            }
 
             if ( empty( $this->posts ) && ( !$this->is_converted( $id ) ) ) {
 
