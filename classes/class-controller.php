@@ -5118,10 +5118,17 @@ class Controller
 
             /*
              *  Using these to decide whether or not to assume 'today' or 'tomorrow' for initial schedule for
-             * this cron() job.
+             *  this cron() job.
              *
-             * If the admin attempts to schedule a job that's less than 30 minutes away, we'll schedule it for tomorrow.
+             *  If the admin attempts to schedule a job that's less than 30 minutes away, we'll schedule it for tomorrow.
              */
+
+            $timestamp = strtotime("{$timeString} " . get_option('timezone_string'));
+
+            if ($timestamp < current_time('timestamp')) {
+                $timestamp = strtotime("+1 day", $timestamp);
+            }
+/*
             $hourDiff = $schedHour - $nowHour;
             $hourDiff += ( ( ($hourDiff == 0) && (($schedMin - $nowMin) <= 0 )) ? 0 : 1);
 
@@ -5133,9 +5140,11 @@ class Controller
                 $this->dbg_log('calculate_timestamp() - Assuming tomorrow');
                 $when = 'tomorrow ';
             }
-            /* Create the string we'll use to generate a timestamp for cron() */
+
+            // Create the string we'll use to generate a timestamp for cron()
             $timeInput = $when . $timeString . ' ' . get_option('timezone_string');
             $timestamp = strtotime($timeInput);
+*/
         }
         catch (Exception $e)
         {
