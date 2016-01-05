@@ -26,7 +26,6 @@ use E20R\Sequences\Tools as Tools;
 
 class Cron
 {
-
     /**
      * Job constructor.
      */
@@ -187,43 +186,10 @@ class Cron
 
         $sequence->dbg_log("cron() - Sequence {$received_id} is ready to process messages... (received: " . (is_null($received_id) ? 'null' : $received_id) . ")");
 
-        // Prepare SQL to get all sequences and users associated in the system who _may_ need to be notified
-        if (is_null($received_id)) {
-
-            // dbgOut('cron() - No Sequence ID specified. Processing for all sequences');
-            $all_sequences = true;
-            $sequence->dbg_log("cron() - Loading and processing ALL sequences");
-            $sql = "
-					SELECT usrs.*, pgs.page_id AS seq_id
-					FROM {$wpdb->pmpro_memberships_users} AS usrs
-						INNER JOIN {$wpdb->pmpro_memberships_pages} AS pgs
-							ON (usrs.membership_id = pgs.membership_id)
-						INNER JOIN {$wpdb->posts} AS posts
-							ON ( pgs.page_id = posts.ID AND posts.post_type = 'pmpro_sequence')
-					WHERE (usrs.status = 'active')
-				";
-        } // Get the specified sequence and its associated users
-        else {
-
-            // dbgOut('cron() - Sequence ID specified in function argument. Processing for sequence: ' . $sequenceId);
-            $sequence->dbg_log("cron() - Loading and processing specific sequence: {$received_id}");
-
-            $sql = $wpdb->prepare(
-                "
-					SELECT usrs.*, pgs.page_id AS seq_id
-					FROM {$wpdb->pmpro_memberships_users} AS usrs
-						INNER JOIN {$wpdb->pmpro_memberships_pages} AS pgs
-							ON (usrs.membership_id = pgs.membership_id)
-						INNER JOIN {$wpdb->posts} AS posts
-							ON ( posts.ID = pgs.page_id AND posts.post_type = 'pmpro_sequence')
-					WHERE (usrs.status = 'active') AND (pgs.page_id = %d)
-				",
-                $received_id
-            );
-        }
+        // TODO: Remove dependency on PMPro to obtain sequence(s) and users...
 
         // Get the data from the database
-        $sequences = $wpdb->get_results($sql);
+        $sequences = self::get_user_sequence_list($received_id);
 
         $sequence->dbg_log("cron() - Found " . count($sequences) . " records to process for {$received_id}");
         // Track user send-count (just in case we'll need it to ensure there's not too many mails being sent to one user.
@@ -420,7 +386,64 @@ class Cron
      */
     public function get_instance()
     {
-
         return $this;
+    }
+
+    /**
+     * Loads a sequence (or a list of sequences) and its consumers (users)
+     *
+     * @param null $sequence_id - The ID of the sequence to load info about
+     * @return mixed|void -  Returns records containing
+     *
+     * @since 4.2.6
+     */
+    private function get_user_sequence_list($sequence_id = null) {
+
+        $sequence = apply_filters('get_sequence_class_instance', null);
+        $result = array();
+
+        if (function_exists('pmpro_has_membership_access')) {
+
+            global $wpdb;
+
+            // Prepare SQL to get all sequences and users associated in the system who _may_ need to be notified
+            if (is_null($sequence_id)) {
+
+                // dbgOut('get_user_sequence_list() - No Sequence ID specified. Processing for all sequences');
+                $all_sequences = true;
+                $sequence->dbg_log("get_user_sequence_list() - Loading and processing ALL sequences");
+                $sql = "
+                        SELECT usrs.*, pgs.page_id AS seq_id
+                        FROM {$wpdb->pmpro_memberships_users} AS usrs
+                            INNER JOIN {$wpdb->pmpro_memberships_pages} AS pgs
+                                ON (usrs.membership_id = pgs.membership_id)
+                            INNER JOIN {$wpdb->posts} AS posts
+                                ON ( pgs.page_id = posts.ID AND posts.post_type = 'pmpro_sequence')
+                        WHERE (usrs.status = 'active')
+                    ";
+            } // Get the specified sequence and its associated users
+            else {
+
+                // dbgOut('cron() - Sequence ID specified in function argument. Processing for sequence: ' . $sequenceId);
+                $sequence->dbg_log("get_user_sequence_list() - Loading and processing specific sequence: {$sequence_id}");
+
+                $sql = $wpdb->prepare(
+                    "
+                        SELECT usrs.*, pgs.page_id AS seq_id
+                        FROM {$wpdb->pmpro_memberships_users} AS usrs
+                            INNER JOIN {$wpdb->pmpro_memberships_pages} AS pgs
+                                ON (usrs.membership_id = pgs.membership_id)
+                            INNER JOIN {$wpdb->posts} AS posts
+                                ON ( posts.ID = pgs.page_id AND posts.post_type = 'pmpro_sequence')
+                        WHERE (usrs.status = 'active') AND (pgs.page_id = %d)
+                    ",
+                    $sequence_id
+                );
+            }
+
+            $result = $wpdb->get_results($sql);
+        }
+
+        return apply_filters('e20r-sequence-get-protected-users-posts', $result, $sequence_id);
     }
 }
