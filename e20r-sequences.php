@@ -1,19 +1,18 @@
 <?php
 namespace E20R\Sequences\Main;
 /*
-Plugin Name: Eighty / 20 Results Sequences for Paid Memberships Pro
-Plugin URI: http://www.eighty20results.com/pmpro-sequences/
-Description: Offer serialized (drip feed) content to your PMPro members. Derived from the PMPro Series plugin by Stranger Studios.
+Plugin Name: Sequences by Eighty / 20 Results
+Plugin URI: https://eighty20results.com/plugins/e20r-sequences/
+Description: Drip feed content for your users (See website for available membership module support).
 Version: 4.2.5
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
-Author URI: http://www.eighty20results.com
+Author URI: https://eighty20results.com/thomas-sjolshagen
 Text Domain: e20rsequence
 Domain Path: /languages
 License:
 
-	Copyright 2015 Wicked Strong Chicks, LLC (info@eighty20results.com)
-	Copyright 2013 Stranger Studios (jason@strangerstudios.com)
+	Copyright 2014-2016 Eighty / 20 Results by Wicked Strong Chicks, LLC (info@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -34,13 +33,14 @@ License:
 use E20R\Sequences\Main as Main;
 use E20R\Sequences\Sequence as Sequence;
 use E20R\Sequences\Tools as Tools;
+use E20R\Sequences\Modules as Modules;
 
 define(__NAMESPACE__ . '\NS', __NAMESPACE__ . '\\');
 
 // use NS as Sequence;
 
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '4.2.5');
+define('E20R_SEQUENCE_VERSION', '4.2.6');
 
 /* Set the max number of email alerts to send in one go to one user */
 define('E20R_SEQUENCE_MAX_EMAILS', 3);
