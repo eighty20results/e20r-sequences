@@ -1,2 +1,26 @@
-Fix: Would attempt to load sequence posts for users not logged in.
-Fix: Didn't include the title for the new content in alert(s)
+Fix: Various problems with calculating the correct time for the next cron run.
+Fix: Plugin info Fix: Copyright notice Enh: Add modules namespace (preparation for dedicated content protection modules) Fix: Version number bump
+Fix: Update copyright notice
+Fix: Would sometimes load zero sequence members (posts) due to caching issues
+Fix: Confirm that there is a live cache entry for the user/sequence in is_cache_valid()
+Fix: Wouldn't load sequence posts if running as a cron job
+Fix: Simplify timestamp management/creation
+Fix: Bump minimum required PHP version to 5.4
+Maint: Escape backslash for JSON
+Maint: Updated .gitignore
+Enh: Initial commit of membership module base class
+Enh: Use constant for select2 library versions Fix: Path to CDN for select2 library Fix: Enqueue select2 CSS
+Enh: Loading list of sequence(s) and its consumers (users) in dedicated & filtered function
+Enh: No longer depends on PMPro to process cron jobs, but has default reliance on it (Upcoming: Decouple PMPro requirement)
+Enh: Better error recovery in cache management
+Enh: Use standard method for obtaining the cache identifier for the user/sequence
+Enh: Decouple most of the PMPro dependencies & use filters instead
+Enh: Enforce singleton behavior for sequence class
+Enh: Use static variable - self::$seq_post_type - to identify the sequence post type
+Enh: New filter for default sender email for a sequence: e20r-sequence-default-sender-email (returns email address, uses admin email as default)
+Enh: New filter for default sender name for a sequence: e20r-sequence-default-sender-name (returns a string, uses admin's display_name as default)
+Enh: New filter for user's startdate: 'e20r-sequence-user-startdate' (accepts startdate, user_id variables, returns a UNIX timestamp/seconds since start of epoch)
+Enh: New filter for days as member calculation: 'e20r-sequence-days-as-member' (accepts $user_id & $level_id, returns #of days (float or int))
+Enh: New filter to get the membership level for a user: 'e20r-sequence-membership-level-for-user' (Accepts a user_id and a boolean 'force' variable to indicate whether to read from DB or cache if applicable. Returns the user's membership level ID or false if not a member)
+Enh: New filter to check membership levels for a user id: 'e20r-sequence-has-membership-level' (Accepts an integer or array representing level id(s) and a user Id to check. Returns true/false)
+Enh: New filter to check membership access to a post id for a user id: 'e20r-sequence-membership-access' (Accepts optional post id, optional user_id and a boolean flag to determine whether to force a read from any DB table (if it exists).

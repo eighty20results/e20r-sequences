@@ -1,40 +1,43 @@
 === Eighty/20 Results - Sequences ===
-Contributors: strangerstudios, eighty20results
+Contributors: eighty20results
 Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
 Stable tag: 4.2.5
 
-Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time. This is an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
+Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
 == Description ==
-This plugin currently requires Paid Memberships Pro and started life as a complete rip-off of the pmpro_series
- plugin from strangerstudios. I needed a drip-content plugin that supported different delay type options, paginated
+This plugin currently requires Paid Memberships Pro and started life as a fork of the PMPro Series
+ plugin by strangerstudios. However, I needed a drip-content plugin that supported different delay type options, paginated
  lists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type,
- etc.
+ etc, etc, so I wound up with something completely different from PMPro Series. At this point, there's really nothing
+ left of the original fork.
 
-Added a features that weren't included in pmpro_series, specifically the ability to:
+== Features ==
 
-* Multiple delay values for the same post ID (repeating alerts & posts/pages)
-* Post/page metabox to assign one or more sequence(s) and delay value(s) to a post while editing it
-* Sequence configuration via Metabox on sequence editor page
-* [sequence_list] shortcode for paginated sequence list
+* Configuration UI for the drip feed sequence (meta box)
+* Add supported post types to one or more sequences with one or more delay values from the post edit page
+* [sequence_list] shortcode with attributes for paginated sequence list
 * [e20r_available_on] shortcode to prevent visibility of content between [e20r_available_on] and [/e20r_available_on] until a specific date, or until a certain number of days after the users membership started.
-* Widget containing summary (excerpt) of most recent post in a sequence [***] for the logged in user.
-* Configure the sort order for the sequence
-* Show or hide upcoming posts in a ssequence from the end-user ("show" means all post titles for the sequence will be listed for the user with date/day of availability).
-* Show or hide "You are on day XXX of your membership" notice on sequence page.
-* Show "delay time" as "days since membership started" or "calendar date" to end-user.
-* Let admin decide whether to show "post available on" as a "day of membership" or date (relative to users membership).
-* Admin defined schedule (using WP-Cron) for new content alert emails to users.
-* User opt-in for receiving email alerts (User can disable/re-enable as desired if admin adds [sequence_alert] shortcode to a page/post).
-* Templated email alerts for new content
-* Pagination of sequence lists in sequence page
-* Allows 'preview' of upcoming posts in the sequence (Lets the admin/editor send alerts for "today" while letting the user read ahead if so desired - used in coaching programs, for instance).
-* A settings metabox to simplify configuration (rather than only use filters)
-* Filters to let the admin specify the types of posts/pages to include in a sequence, etc.
-* Convert and existing PMPro Series to a sequence (using filter)
+* [sequence_alert] shortcode to display opt-in form for user to receive new sequence content alert emails.
+* Excerpt widget for current users's most recently available post (display post title & excerpt in widget).
+* Multiple delay values for the one post ID (i.e. repeating alerts & display in sequence lists)
+* Configurable sort order when listing sequence content
+* Show or hide future (upcoming) posts in a drip-feed sequence listing
+    * ("show" means all post titles for the sequence will be visible to the user with a configurable view of date or day of membership for availability).
+* Independent schedules (using WP-Cron) for sending new content alert emails to users.
+    * Default global schedule for sending new content alert emails to users.
+* Use either absolute dates or "days since membership started" as delay value for post(s) in a sequence.
+* Hide "You are on day XXX of your membership" notice when displaying sequence page.
+* Show "delay time" as "days since membership started" or "calendar date" to end-user in sequence post lists.
+* Admin configurable setting to show "post available on" as a "day of membership" or a date.
+* Uses templates for email alerts for new content
+* Allows 'preview' of upcoming posts in the sequence (Lets the admin/editor send alerts for "today" while letting the user read/view upcoming content in the sequence - used in coaching programs, for instance).
+* Filters to simplify integration with other membership frameworks/content restriction frameworks
+* Supports automatic conversion of existing PMPro Series to sequences on init (filter based)
+* See filter table for overview of all available filters/hooks
 
 See ./email/README.txt for information on templates for the email alerts.
 
@@ -135,6 +138,39 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.2.5 ==
+
+* Fix: Various problems with calculating the correct time for the next cron run.
+* Fix: Plugin info Fix: Copyright notice
+* Fix: Version number bump
+* Fix: Update copyright notice
+* Fix: Would sometimes load zero sequence members (posts) due to caching issues
+* Fix: Confirm that there is a live cache entry for the user/sequence in is_cache_valid()
+* Fix: Wouldn't load sequence posts if running as a cron job
+* Fix: Simplify timestamp management/creation
+* Fix: Bump minimum required PHP version to 5.4
+* Fix: Path to CDN for select2 library
+* Fix: Enqueue select2 CSS
+* Maint: Escape backslash for JSON
+* Maint: Updated .gitignore
+* Enh: Initial commit of membership module base class
+* Enh: Use constant for select2 library versions
+* Enh: Add modules namespace (preparation for dedicated content protection modules)
+* Enh: Loading list of sequence(s) and its consumers (users) in dedicated & filtered function
+* Enh: No longer depends on PMPro to process cron jobs, but has default reliance on it (Upcoming: Decouple PMPro requirement)
+* Enh: Better error recovery in cache management
+* Enh: Use standard method for obtaining the cache identifier for the user/sequence
+* Enh: Decouple most of the PMPro dependencies & use filters instead
+* Enh: Enforce singleton behavior for sequence class
+* Enh: Use static variable - self::$seq_post_type - to identify the sequence post type
+* Enh: New filter for default sender email for a sequence: e20r-sequence-default-sender-email (returns email address, uses admin email as default)
+* Enh: New filter for default sender name for a sequence: e20r-sequence-default-sender-name (returns a string, uses admin's display_name as default)
+* Enh: New filter for user's startdate: 'e20r-sequence-user-startdate' (accepts startdate, user_id variables, returns a UNIX timestamp/seconds since start of epoch)
+* Enh: New filter for days as member calculation: 'e20r-sequence-days-as-member' (accepts $user_id & $level_id, returns #of days (float or int))
+* Enh: New filter to get the membership level for a user: 'e20r-sequence-membership-level-for-user' (Accepts a user_id and a boolean 'force' variable to indicate whether to read from DB or cache if applicable. Returns the user's membership level ID or false if not a member)
+* Enh: New filter to check membership levels for a user id: 'e20r-sequence-has-membership-level' (Accepts an integer or array representing level id(s) and a user Id to check. Returns true/false)
+* Enh: New filter to check membership access to a post id for a user id: 'e20r-sequence-membership-access' (Accepts optional post id, optional user_id and a boolean flag to determine whether to force a read from any DB table (if it exists).
 
 == 4.2.5 ==
 
