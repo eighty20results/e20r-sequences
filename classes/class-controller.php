@@ -10,8 +10,7 @@ use E20R\Sequences\Shortcodes as Shortcodes;
 /*
   License:
 
-	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
-	Copyright 2013 Stranger Studios (jason@strangerstudios.com)
+	Copyright 2014-2016 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -44,6 +43,8 @@ class Controller
     private $sequence;
     private $managed_types = null;
     private $current_metadata_versions = array();
+
+    private static $select2_version = '4.0.1';
     private static $seq_post_type = 'pmpro_sequence';
 
     // private static $transient_option_key = '_transient_timeout_';
@@ -6726,8 +6727,9 @@ class Controller
         $delay_config = $this->set_delay_config();
 
         wp_enqueue_style( 'fontawesome', E20R_SEQUENCE_PLUGIN_URL . '/css/font-awesome.min.css', false, '4.5.0' );
+        wp_enqueue_style( 'select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/css/select2.min.css", false, self::$select2_version);
 
-        wp_enqueue_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
+        wp_enqueue_script('select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/js/select2.min.js", array( 'jquery' ), self::$select2_version );
         wp_enqueue_script('e20r-sequence-admin', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences-admin.js', array( 'jquery', 'select2' ), E20R_SEQUENCE_VERSION, true);
 
         wp_enqueue_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
