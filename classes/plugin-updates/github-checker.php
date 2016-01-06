@@ -1,8 +1,8 @@
 <?php
 
-if ( !class_exists('PucGitHubChecker_2_1', false) ):
+if ( !class_exists('PucGitHubChecker_2_3', false) ):
 
-class PucGitHubChecker_2_1 extends PluginUpdateChecker_2_1 {
+class PucGitHubChecker_2_3 extends PluginUpdateChecker_2_3 {
 	/**
 	 * @var string GitHub username.
 	 */
@@ -57,7 +57,7 @@ class PucGitHubChecker_2_1 extends PluginUpdateChecker_2_1 {
 	 * @return PluginInfo
 	 */
 	public function requestInfo($unusedQueryArgs = array()) {
-		$info = new PluginInfo_2_1();
+		$info = new PluginInfo_2_3();
 		$info->filename = $this->pluginFile;
 		$info->slug = $this->slug;
 		$info->sections = array();
@@ -94,6 +94,8 @@ class PucGitHubChecker_2_1 extends PluginUpdateChecker_2_1 {
 
 		if ( empty($info->download_url) ) {
 			$info->download_url = $this->buildArchiveDownloadUrl($ref);
+		} else if ( !empty($this->accessToken) ) {
+			$info->download_url = add_query_arg('access_token', $this->accessToken, $info->download_url);
 		}
 
 		//Get headers from the main plugin file in this branch/tag. Its "Version" header and other metadata
@@ -375,7 +377,7 @@ class PucGitHubChecker_2_1 extends PluginUpdateChecker_2_1 {
 	 * Copy plugin metadata from a file header to a PluginInfo object.
 	 *
 	 * @param array $fileHeader
-	 * @param PluginInfo_2_1 $pluginInfo
+	 * @param PluginInfo_2_3 $pluginInfo
 	 */
 	protected function setInfoFromHeader($fileHeader, $pluginInfo) {
 		$headerToPropertyMap = array(
