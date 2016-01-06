@@ -4,7 +4,7 @@ namespace E20R\Sequences\Main;
 Plugin Name: Sequences by Eighty / 20 Results
 Plugin URI: https://eighty20results.com/plugins/e20r-sequences/
 Description: Drip feed content for your users (See website for available membership module support).
-Version: 4.2.5
+Version: 4.2.6
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen
@@ -73,21 +73,6 @@ define('E20R_DEBUG_SEQ_LOG_LEVEL', E20R_DEBUG_SEQ_INFO);
  */
 require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php");
 
-/**
- *    Include the class for PMProSequences
- */
-/* if (!class_exists("\\E20R\\Sequences\\Sequence")):
-
-    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/class-controller.php");
-    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/tools/class-cron.php");
-
-endif;
-
-if (!class_exists("\\E20R\\Sequences\\Tools\\Widgets\\PostWidget")):
-    require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/widgets/class-postwidget.php");
-endif;
-*/
-
 /** A debug function */
 
 /**
@@ -104,6 +89,7 @@ if (!function_exists("pmpro_getMemberStartdate")):
      *
      * @returns mixed - The start date for this user_id at the specific level_id (or in general)
      */
+    /*
     function pmpro_getMemberStartdate($user_id = NULL, $level_id = 0)
     {
         if (empty($user_id)) {
@@ -151,7 +137,7 @@ if (!function_exists("pmpro_getMemberStartdate")):
 
         return $pmpro_startdates[$user_id][$level_id];
     }
-
+    */
     /**
      * Calculate the # of days since the membership level (or membership in general) was started for a specific user_id
      *
@@ -288,9 +274,9 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
 
                 foreach ($post_list as $seq_member) {
 
-                    if (!$seq->addPost($seq_member->id, $seq_member->delay)) {
+                    if (!$seq->add_post($seq_member->id, $seq_member->delay)) {
                         return new \WP_Error('sequence_import',
-                            sprintf(__('Could not complete import for series %s', "e20rsequence"), $series->post_title), $seq->getError());
+                            sprintf(__('Could not complete import of post id %d for series %s', "e20rsequence"), $seq_member->id, $series->post_title), $seq->getError());
                     }
                 } // End of foreach
 
