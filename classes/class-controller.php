@@ -163,7 +163,7 @@ class Controller
         global $current_user;
         $key = null;
 
-        if (0 == $current_user->ID && $this->is_cron &&
+        if ((0 == $current_user->ID && $this->is_cron) ||
             (is_numeric($this->e20r_sequence_user_id) && 0 < $this->e20r_sequence_user_id)) {
 
             $user_id = $this->e20r_sequence_user_id;
@@ -5099,8 +5099,8 @@ class Controller
 
         if ( isset($_POST['hidden_e20r_seq_delaytype']) )
         {
-            $this->options->delayType = esc_attr($_POST['hidden_e20r_seq_delaytype']);
-            $this->dbg_log('save_settings(): POST value for settings->delayType: ' . esc_attr($_POST['hidden_e20r_seq_delaytype']) );
+            $this->options->delayType = sanitize_text_field($_POST['hidden_e20r_seq_delaytype']);
+            $this->dbg_log('save_settings(): POST value for settings->delayType: ' . sanitize_text_field($_POST['hidden_e20r_seq_delaytype']) );
         }
         elseif (empty($this->options->delayType))
             $this->options->delayType = 'byDays';
@@ -5108,24 +5108,24 @@ class Controller
         // options->showDelayAs
         if ( isset($_POST['hidden_e20r_seq_showdelayas']) )
         {
-            $this->options->showDelayAs = esc_attr($_POST['hidden_e20r_seq_showdelayas']);
-            $this->dbg_log('save_settings(): POST value for settings->showDelayAs: ' . esc_attr($_POST['hidden_e20r_seq_showdelayas']) );
+            $this->options->showDelayAs = sanitize_text_field($_POST['hidden_e20r_seq_showdelayas']);
+            $this->dbg_log('save_settings(): POST value for settings->showDelayAs: ' . sanitize_text_field($_POST['hidden_e20r_seq_showdelayas']) );
         }
         elseif (empty($this->options->showDelayAs))
             $this->options->delayType = E20R_SEQ_AS_DAYNO;
 
         if ( isset($_POST['hidden_e20r_seq_offset']) )
         {
-            $this->options->previewOffset = esc_attr($_POST['hidden_e20r_seq_offset']);
-            $this->dbg_log('save_settings(): POST value for settings->previewOffset: ' . esc_attr($_POST['hidden_e20r_seq_offset']) );
+            $this->options->previewOffset = sanitize_text_field($_POST['hidden_e20r_seq_offset']);
+            $this->dbg_log('save_settings(): POST value for settings->previewOffset: ' . sanitize_text_field($_POST['hidden_e20r_seq_offset']) );
         }
         elseif (empty($this->options->previewOffset))
             $this->options->previewOffset = 0;
 
         if ( isset($_POST['hidden_e20r_seq_startwhen']) )
         {
-            $this->options->startWhen = esc_attr($_POST['hidden_e20r_seq_startwhen']);
-            $this->dbg_log('save_settings(): POST value for settings->startWhen: ' . esc_attr($_POST['hidden_e20r_seq_startwhen']) );
+            $this->options->startWhen = sanitize_text_field($_POST['hidden_e20r_seq_startwhen']);
+            $this->dbg_log('save_settings(): POST value for settings->startWhen: ' . sanitize_text_field($_POST['hidden_e20r_seq_startwhen']) );
         }
         elseif (empty($this->options->startWhen))
             $this->options->startWhen = 0;
@@ -5148,69 +5148,70 @@ class Controller
 
         if ( isset($_POST['hidden_e20r_seq_sendas']) )
         {
-            $this->options->noticeSendAs = esc_attr($_POST['hidden_e20r_seq_sendas']);
-            $this->dbg_log('save_settings(): POST value for settings->noticeSendAs: ' . esc_attr($_POST['hidden_e20r_seq_sendas']) );
+            $this->options->noticeSendAs = sanitize_text_field($_POST['hidden_e20r_seq_sendas']);
+            $this->dbg_log('save_settings(): POST value for settings->noticeSendAs: ' . sanitize_text_field($_POST['hidden_e20r_seq_sendas']) );
         }
         else
             $this->options->noticeSendAs = E20R_SEQ_SEND_AS_SINGLE;
 
         if ( isset($_POST['hidden_e20r_seq_noticetemplate']) )
         {
-            $this->options->noticeTemplate = esc_attr($_POST['hidden_e20r_seq_noticetemplate']);
-            $this->dbg_log('save_settings(): POST value for settings->noticeTemplate: ' . esc_attr($_POST['hidden_e20r_seq_noticetemplate']) );
+            $this->options->noticeTemplate = sanitize_text_field($_POST['hidden_e20r_seq_noticetemplate']);
+            $this->dbg_log('save_settings(): POST value for settings->noticeTemplate: ' . sanitize_text_field($_POST['hidden_e20r_seq_noticetemplate']) );
         }
         else
             $this->options->noticeTemplate = 'new_content.html';
 
         if ( isset($_POST['hidden_e20r_seq_noticetime']) )
         {
-            $this->options->noticeTime = esc_attr($_POST['hidden_e20r_seq_noticetime']);
+            $this->options->noticeTime = sanitize_text_field($_POST['hidden_e20r_seq_noticetime']);
             $this->dbg_log('save_settings() - noticeTime in settings: ' . $this->options->noticeTime);
 
             /* Calculate the timestamp value for the noticeTime specified (noticeTime is in current timezone) */
             $this->options->noticeTimestamp = $this->calculate_timestamp($settings->noticeTime);
 
-            $this->dbg_log('save_settings(): POST value for settings->noticeTime: ' . esc_attr($_POST['hidden_e20r_seq_noticetime']) );
+            $this->dbg_log('save_settings(): POST value for settings->noticeTime: ' . sanitize_text_field($_POST['hidden_e20r_seq_noticetime']) );
+            $this->dbg_log('save_settings(): Which translates to a timestamp value of: ' . $this->options->noticeTimestamp );
         }
         else
             $this->options->noticeTime = '00:00';
 
         if ( isset($_POST['hidden_e20r_seq_excerpt']) )
         {
-            $this->options->excerpt_intro = esc_attr($_POST['hidden_e20r_seq_excerpt']);
-            $this->dbg_log('save_settings(): POST value for settings->excerpt_intro: ' . esc_attr($_POST['hidden_e20r_seq_excerpt']) );
+            $this->options->excerpt_intro = sanitize_text_field($_POST['hidden_e20r_seq_excerpt']);
+            $this->dbg_log('save_settings(): POST value for settings->excerpt_intro: ' . sanitize_text_field($_POST['hidden_e20r_seq_excerpt']) );
         }
         else
             $this->options->excerpt_intro = 'A summary of the post follows below:';
 
         if ( isset($_POST['hidden_e20r_seq_fromname']) )
         {
-            $this->options->fromname = esc_attr($_POST['hidden_e20r_seq_fromname']);
-            $this->dbg_log('save_settings(): POST value for settings->fromname: ' . esc_attr($_POST['hidden_e20r_seq_fromname']) );
+            $this->options->fromname = sanitize_text_field($_POST['hidden_e20r_seq_fromname']);
+            $this->dbg_log('save_settings(): POST value for settings->fromname: ' . sanitize_text_field($_POST['hidden_e20r_seq_fromname']) );
         }
         else
             $this->options->fromname = e20r_getOption('from_name');
 
         if ( isset($_POST['hidden_e20r_seq_dateformat']) )
         {
-            $this->options->dateformat = esc_attr($_POST['hidden_e20r_seq_dateformat']);
-            $this->dbg_log('save_settings(): POST value for settings->dateformat: ' . esc_attr($_POST['hidden_e20r_seq_dateformat']) );
+            $this->options->dateformat = sanitize_text_field($_POST['hidden_e20r_seq_dateformat']);
+            $this->dbg_log('save_settings(): POST value for settings->dateformat: ' . sanitize_text_field($_POST['hidden_e20r_seq_dateformat']) );
         }
         else
             $this->options->dateformat = __('m-d-Y', "e20rsequence"); // Default is MM-DD-YYYY (if translation supports it)
 
         if ( isset($_POST['hidden_e20r_seq_replyto']) )
         {
-            $this->options->replyto = esc_attr($_POST['hidden_e20r_seq_replyto']);
-            $this->dbg_log('save_settings(): POST value for settings->replyto: ' . esc_attr($_POST['hidden_e20r_seq_replyto']) );
+            $this->options->replyto = sanitize_text_field($_POST['hidden_e20r_seq_replyto']);
+            $this->dbg_log('save_settings(): POST value for settings->replyto: ' . sanitize_text_field($_POST['hidden_e20r_seq_replyto']) );
         }
         else
             $this->options->replyto = e20r_getOption('from_email');
 
         if ( isset($_POST['hidden_e20r_seq_subject']) )
         {
-            $this->options->subject = esc_attr($_POST['hidden_e20r_seq_subject']);
-            $this->dbg_log('save_settings(): POST value for settings->subject: ' . esc_attr($_POST['hidden_e20r_seq_subject']) );
+            $this->options->subject = sanitize_text_field($_POST['hidden_e20r_seq_subject']);
+            $this->dbg_log('save_settings(): POST value for settings->subject: ' . sanitize_text_field($_POST['hidden_e20r_seq_subject']) );
         }
         else
             $this->options->subject = __('New Content ', "e20rsequence");
@@ -5274,30 +5275,50 @@ class Controller
 
         // Use local time (not UTC) for 'current time' at server location
         // This is what Wordpress apparently uses (at least in v3.9) for wp-cron.
-        $timestamp = current_time('timestamp');
+        $timezone = get_option('timezone_string');
+
+        $saved_tz = ini_get('date.timezone');
+        $this->dbg_log("calculate_timestamp() - PHP Configured timezone: {$saved_tz} vs wordpress: {$timezone}");
+
+        // Verify the timezone to use (the Wordpress timezone)
+        if ($timezone != $saved_tz) {
+
+            if (!ini_set("date.timezone", $timezone)) {
+                $this->dbg_log("WARNING: Unable to set the timezone value to: {$timezone}!");
+            }
+
+            $saved_tz = ini_get('date.timezone');
+        }
+
+        $tz =  get_option('gmt_offset');
+
+        // Now in the Wordpress local timezone
+        $now = current_time('timestamp', true);
+        $time = "today {$timeString} {$saved_tz}";
+
+        $this->dbg_log("calculate_timestamp() - Using time string for strtotime(): {$time}");
+        $req = strtotime($time);
+
+        $this->dbg_log("calculate_timestamp() - Current time: {$now} when using UTC vs {$req} in {$saved_tz}");
 
         try {
+
             /* current time & date */
-            $schedHour = date_i18n( 'H', strtotime($timeString));
-            $schedMin = date_i18n('i', strtotime($timeString));
+            $schedHour = date_i18n( 'H', $req );
+            $nowHour = date_i18n('H', $now);
 
-            $nowHour = date_i18n('H', $timestamp);
-            $nowMin = date_i18n('i', $timestamp);
+            $this->dbg_log("calculate_timestamp() - Timestring: {$timeString}, scheduled Hour: {$schedHour} and current Hour: {$nowHour}" );
 
-            $this->dbg_log('calculate_timestamp() - Timestring: ' . $timeString . ', scheduled Hour: ' . $schedHour . ' and current Hour: ' .$nowHour );
+            $timestamp = strtotime("today {$timeString} {$saved_tz}");
 
-            /*
-             *  Using these to decide whether or not to assume 'today' or 'tomorrow' for initial schedule for
-             *  this cron() job.
-             *
-             *  If the admin attempts to schedule a job that's less than 30 minutes away, we'll schedule it for tomorrow.
-             */
+            $this->dbg_log("calculate_timestamp() - {$timeString} will be ({$timestamp}) vs. " . current_time('timestamp', true));
 
-            $timestamp = strtotime("{$timeString} " . get_option('timezone_string'));
-
-            if ($timestamp < current_time('timestamp')) {
+            if ($timestamp < (current_time('timestamp', true) + 15*60)) {
                 $timestamp = strtotime("+1 day", $timestamp);
             }
+
+
+
 /*
             $hourDiff = $schedHour - $nowHour;
             $hourDiff += ( ( ($hourDiff == 0) && (($schedMin - $nowMin) <= 0 )) ? 0 : 1);
