@@ -90,7 +90,7 @@ class Controller
         }
 
         $this->managed_types = apply_filters("e20r-sequence-managed-post-types", array("post", "page") );
-        $this->current_metadata_versions = get_option( self::$seq_post_type . "_metadata_version", array() );
+        $this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
 
         add_filter( "get_sequence_class_instance", [ $this, 'get_instance' ] );
     }
@@ -132,7 +132,7 @@ class Controller
         // Check that we're being called in context of an actual Sequence 'edit' operation
         $this->dbg_log('get_options(): Loading settings from DB for (' . $this->sequence_id . ') "' . get_the_title($this->sequence_id) . '"');
 
-        $settings = get_post_meta($this->sequence_id, '_' . self::$seq_post_type . '_settings', true);
+        $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', true);
         // $this->dbg_log("get_options() - Settings are now: " . print_r( $settings, true ) );
 
         // Fix: Offset error when creating a brand new sequence for the first time.
@@ -254,7 +254,7 @@ class Controller
     public function get_all_sequences( $statuses = 'publish' ) {
 
         $query = array(
-            'post_type' => self::$seq_post_type,
+            'post_type' => 'pmpro_sequence',
             'post_status' => $statuses,
         );
 
@@ -270,7 +270,7 @@ class Controller
 
         if ( empty( $this->current_metadata_versions ) ) {
 
-            $this->current_metadata_versions = get_option( self::$seq_post_type . "_metadata_version", array() );
+            $this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
         }
 
         $is_pre_v3 = get_post_meta( $sequence_id, "_sequence_posts", true );
@@ -285,7 +285,7 @@ class Controller
             'posts_per_page' => -1,
             'meta_query' => array(
                     array(
-                        'key' => '_' . self::$seq_post_type . '_post_belongs_to',
+                        'key' => '_pmpro_sequence_post_belongs_to',
                         'value' => $sequence_id,
                         'compare' => '=',
                     ),
@@ -300,7 +300,7 @@ class Controller
 
                 $this->dbg_log( "is_converted() - Sequence # {$sequence_id} is converted already. Updating the settings");
                 $this->current_metadata_versions[$sequence_id] = 3;
-                update_option( self::$seq_post_type . '_metadata_version', $this->current_metadata_versions, true );
+                update_option( 'pmpro_sequence_metadata_version', $this->current_metadata_versions, true );
             }
 
             return true;
@@ -475,7 +475,7 @@ class Controller
 
             $this->dbg_log("convert_posts_to_v3() - Successfully converted to v3 metadata format for all sequence member posts");
             $this->current_metadata_versions[$this->sequence_id] = 3;
-            update_option( self::$seq_post_type . "_metadata_version", $this->current_metadata_versions );
+            update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
 
             // Reset sequence info.
             $this->get_options( $old_sequence_id );
@@ -813,10 +813,10 @@ class Controller
                 'posts_per_page' => -1,
                 'orderby' => $order_by,
                 'order' => $order,
-                'meta_key' => "_" . self::$seq_post_type . "_{$sequence_id}_post_delay",
+                'meta_key' => "_pmpro_sequence_{$sequence_id}_post_delay",
                 'meta_query' => array(
                     array(
-                        'key' => '_' . self::$seq_post_type . '_post_belongs_to',
+                        'key' => '_pmpro_sequence_post_belongs_to',
                         'value' => $sequence_id,
                         'compare' => '=',
                     ),
@@ -834,10 +834,10 @@ class Controller
                 'order_by' => $order_by,
                 'p' => $post_id,
                 'order' => $order,
-                'meta_key' => "_" . self::$seq_post_type . "_{$sequence_id}_post_delay",
+                'meta_key' => "_pmpro_sequence_{$sequence_id}_post_delay",
                 'meta_query' => array(
                     array(
-                        'key' => '_' . self::$seq_post_type . '_post_belongs_to',
+                        'key' => '_pmpro_sequence_post_belongs_to',
                         'value' => $sequence_id,
                         'compare' => '=',
                     ),
@@ -855,7 +855,7 @@ class Controller
         if ( $find_by_delay ) {
 			$this->dbg_log("load_sequence_post() - Requested look-up by delay value {$delay} in sequence {$sequence_id}");
             $args['meta_query'][] = array(
-                    'key' => "_" . self::$seq_post_type . "_{$sequence_id}_post_delay",
+                    'key' => "_pmpro_sequence_{$sequence_id}_post_delay",
                     'value' => $delay,
                     'compare' => $comparison,
                     'type' => $data_type
@@ -896,7 +896,7 @@ class Controller
 
             $id = $sPost->ID;
 
-            $tmp_delay = get_post_meta( $id, "_" . self::$seq_post_type . "_{$sequence_id}_post_delay" );
+            $tmp_delay = get_post_meta( $id, "_pmpro_sequence_{$sequence_id}_post_delay" );
 
             $is_repeat = false;
 
@@ -1409,7 +1409,7 @@ class Controller
         $new_post->current_post = false;
         $new_post->type = get_post_type($new_post->id);
 
-        $belongs_to = get_post_meta( $new_post->id, "_" . self::$seq_post_type . "_post_belongs_to" );
+        $belongs_to = get_post_meta( $new_post->id, "_pmpro_sequence_post_belongs_to" );
 
         wp_reset_postdata();
 
@@ -1418,7 +1418,7 @@ class Controller
 
         if ( ( false === $belongs_to) || (is_array($belongs_to) && !in_array( $sequence_id, $belongs_to)) ) {
 
-            if ( false === add_post_meta( $post_id, "_" . self::$seq_post_type . "_post_belongs_to", $sequence_id ) ) {
+            if ( false === add_post_meta( $post_id, "_pmpro_sequence_post_belongs_to", $sequence_id ) ) {
                 $this->dbg_log("add_post_to_sequence() - Unable to add/update this post {$post_id} for the sequence {$sequence_id}");
             }
         }
@@ -1427,11 +1427,11 @@ class Controller
 
         if ( !$this->allow_repetition() ) {
             // TODO: Need to check if the meta/value combination already exists for the post ID.
-            if ( false === add_post_meta( $post_id, "_" .self::$seq_post_type . "_{$sequence_id}_post_delay", $delay, true ) ) {
+            if ( false === add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay, true ) ) {
 
                 $this->dbg_log("add_post_to_sequenece() - Couldn't add {$post_id} with delay {$delay}. Attempting update operation" );
 
-                if ( false === update_post_meta( $post_id, "_" . self::$seq_post_type . "_{$sequence_id}_post_delay", $delay ) ) {
+                if ( false === update_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay ) ) {
                     $this->dbg_log("add_post_to_sequence() - Both add and update operations for {$post_id} in sequence {$sequence_id} with delay {$delay} failed!", E20R_DEBUG_SEQ_WARNING);
                 }
             }
@@ -1439,27 +1439,27 @@ class Controller
         }
         else {
 
-            $delays = get_post_meta( $post_id, "_" . self::$seq_post_type . "_{$sequence_id}_post_delay" );
+            $delays = get_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay" );
 
             $this->dbg_log("add_post_to_sequence() - Checking whether the '{$delay}' delay value is already recorded for this post: {$post_id}");
 
             if ( ( false === $delays ) || ( !in_array( $delay, $delays ) ) ) {
 
                 $this->dbg_log( "add_post_to_seuqence() - Not previously added. Now adding delay value meta ({$delay}) to post id {$post_id}");
-                add_post_meta( $post_id, "_" . self::$seq_post_type . "_{$sequence_id}_post_delay", $delay );
+                add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay );
             }
             else {
                 $this->dbg_log("add_post_to_sequence() - Post # {$post_id} in sequence {$sequence_id} is already recorded with delay {$delay}");
             }
         }
 
-        if ( false === get_post_meta( $post_id, "_" . self::$seq_post_type . "_post_belongs_to" ) ) {
+        if ( false === get_post_meta( $post_id, "_pmpro_sequence_post_belongs_to" ) ) {
 
             $this->dbg_log("add_post_to_sequence() - Didn't add {$post_id} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
             return false;
         }
 
-        if ( false === get_post_meta( $post_id, "_" . self::$seq_post_type . "_{$sequence_id}_post_delay" ) ) {
+        if ( false === get_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay" ) ) {
 
             $this->dbg_log("add_post_to_sequence() - Couldn't add post/delay value(s) for {$post_id}/{$delay} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
             return false;
@@ -1602,7 +1602,7 @@ class Controller
 
                 // $this->posts = array_values( $this->posts );
 
-                $delays = get_post_meta( $post->id, "_" . self::$seq_post_type . "_{$this->sequence_id}_post_delay" );
+                $delays = get_post_meta( $post->id, "_pmpro_sequence_{$this->sequence_id}_post_delay" );
 
                 $this->dbg_log("remove_post() - Delay meta_values: ");
                 $this->dbg_log( $delays );
@@ -1611,13 +1611,13 @@ class Controller
 
                     $this->dbg_log("remove_post() - A single post associated with this post id: {$post_id}");
 
-                    if ( false === delete_post_meta( $post_id, "_" . self::$seq_post_type . "_{$this->sequence_id}_post_delay", $post->delay ) ) {
+                    if ( false === delete_post_meta( $post_id, "_pmpro_sequence_{$this->sequence_id}_post_delay", $post->delay ) ) {
 
                         $this->dbg_log("remove_post() - Unable to remove the delay meta for {$post_id} / {$post->delay}");
                         return false;
                     }
 
-                    if ( false === delete_post_meta( $post_id, "_" . self::$seq_post_type . "_post_belongs_to", $this->sequence_id ) ) {
+                    if ( false === delete_post_meta( $post_id, "_pmpro_sequence_post_belongs_to", $this->sequence_id ) ) {
 
                         $this->dbg_log("remove_post() - Unable to remove the sequence meta for {$post_id} / {$this->sequence_id}");
                         return false;
@@ -1628,7 +1628,7 @@ class Controller
                     $this->dbg_log($delays);
                     $this->dbg_log("remove_post() - Multiple (" . count( $delays ) . ") posts associated with this post id: {$post_id} in sequence {$this->sequence_id}");
 
-                    if ( false == delete_post_meta( $post_id, "_" . self::$seq_post_type . "_{$this->sequence_id}_post_delay", $post->delay ) ) {
+                    if ( false == delete_post_meta( $post_id, "_pmpro_sequence_{$this->sequence_id}_post_delay", $post->delay ) ) {
 
                         $this->dbg_log("remove_post() - Unable to remove the sequence meta for {$post_id} / {$this->sequence_id}");
                         return false;
@@ -1691,7 +1691,7 @@ class Controller
 
             $this->dbg_log( "remove_post_notified_flag() - Searching for Post ID {$post_id} in notification settings for user with ID: {$user->user_id}" );
 
-            // $userSettings = get_user_meta( $user->user_id, $wpdb->prefix .  self::$seq_post_type . '_notices', true );
+            // $userSettings = get_user_meta( $user->user_id, $wpdb->prefix .  'pmpro_sequence_notices', true );
             $userSettings = $this->load_user_notice_settings( $user->user_id, $this->sequence_id );
 
             isset( $userSettings->id ) && $userSettings->id == $this->sequence_id ? $this->dbg_log("Notification settings exist for {$this->sequence_id}") : $this->dbg_log('No notification settings found');
@@ -1707,7 +1707,7 @@ class Controller
 
                 if ( $this->save_user_notice_settings( $user->user_id, $userSettings, $this->sequence_id ) ) {
 
-                    // update_user_meta( $user->user_id, $wpdb->prefix . self::$seq_post_type . '_notices', $userSettings );
+                    // update_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $userSettings );
                     $this->dbg_log( "remove_post_notified_flag() - Deleted post # {$post_id} in the notification settings for user with id {$user->user_id}", E20R_DEBUG_SEQ_INFO );
                 }
                 else {
@@ -1770,7 +1770,7 @@ class Controller
             return null;
         }
 
-        $optIn = get_user_meta( $user_id,  self::$seq_post_type . "_id_{$sequence_id}_notices", true);
+        $optIn = get_user_meta( $user_id,  "pmpro_sequence_id_{$sequence_id}_notices", true);
 
         $this->dbg_log("load_user_notice_settings() - V3 user alert settings configured: " . ( isset($optIn->send_notices) ? 'Yes' : 'No') );
 
@@ -1845,9 +1845,9 @@ class Controller
 
         $this->dbg_log("save_user_notice_settings() - Save V3 style user notification opt-in settings to usermeta for {$user_id} and sequence {$sequence_id}");
 
-        update_user_meta( $user_id, self::$seq_post_type . "_id_{$sequence_id}_notices", $settings );
+        update_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices", $settings );
 
-        $test = get_user_meta( $user_id, self::$seq_post_type . "_id_{$sequence_id}_notices",  true );
+        $test = get_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices",  true );
 
         if ( empty($test) ) {
 
@@ -2113,8 +2113,8 @@ class Controller
 
             foreach ( $post_sequences as $seq_id ) {
 
-                add_post_meta( $post_id, '_' . self::$seq_post_type . '_post_belongs_to', $seq_id, true ) or
-                    update_post_meta( $post_id, '_' . self::$seq_post_type . '_post_belongs_to', $seq_id );
+                add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $seq_id, true ) or
+                    update_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $seq_id );
             }
 
             $this->dbg_log("get_sequences_for_post() - Removing old sequence list metadata");
@@ -2122,7 +2122,7 @@ class Controller
         }
 
         $this->dbg_log("get_sequences_for_post() - Attempting to load sequence list for post {$post_id}", E20R_DEBUG_SEQ_INFO );
-        $sequence_ids = get_post_meta( $post_id, '_' . self::$seq_post_type . 'post_belongs_to' );
+        $sequence_ids = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
 
         $sequence_count = array_count_values( $sequence_ids );
 
@@ -2130,9 +2130,9 @@ class Controller
 
             if ( $count > 1 ) {
 
-                if ( delete_post_meta( $post_id, '_' . self::$seq_post_type . '_post_belongs_to', $s_id ) ) {
+                if ( delete_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $s_id ) ) {
 
-                    if ( !add_post_meta( $post_id, '_' . self::$seq_post_type . '_post_belongs_to', $s_id, true ) ) {
+                    if ( !add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $s_id, true ) ) {
 
                         $this->dbg_log("get_sequences_for_post() - Unable to clean up the sequence list for {$post_id}", E20R_DEBUG_SEQ_WARNING );
                     }
@@ -2171,7 +2171,7 @@ class Controller
 
         $retval = true;
 
-        $seq = get_post_meta( $post_id, '_' . self::$seq_post_type . '_post_belongs_to' );
+        $seq = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
         if ( is_array( $sequence_ids ) ) {
 
             $this->dbg_log("set_sequences_for_post() - Received array of sequences to add to post # {$post_id}");
@@ -2184,7 +2184,7 @@ class Controller
                 if ( ( false === $seq ) || ( !in_array( $id, $seq ) ) ) {
 
                     $this->dbg_log( "set_sequences_for_post() - Not previously added. Now adding sequence ID meta ({$id}) for post # {$post_id}");
-                    $retval = $retval && add_post_meta( $post_id, '_' . self::$seq_post_type . '_post_belongs_to', $id );
+                    $retval = $retval && add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $id );
                 }
                 else {
                     $this->dbg_log("set_sequences_for_post() - Post # {$post_id} is already included in sequence {$id}");
@@ -2198,7 +2198,7 @@ class Controller
             if ( ( false === $seq ) || ( !in_array( $sequence_ids, $seq ) ) ) {
 
                 $this->dbg_log( "set_sequences_for_post() - Not previously added. Now adding sequence ID meta ({$sequence_ids}) for post # {$post_id}");
-                $retval = $retval && add_post_meta( $post_id, '_' . self::$seq_post_type . '_post_belongs_to', $sequence_ids );
+                $retval = $retval && add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $sequence_ids );
             }
         }
 
@@ -2414,7 +2414,7 @@ class Controller
 
         foreach( $this->managed_types as $type ) {
 
-            if ( $type !== self::$seq_post_type ) {
+            if ( $type !== 'pmpro_sequence' ) {
                 add_meta_box( 'e20r-seq-post-meta', __( 'Drip Feed Settings', "e20rsequence" ), array( &$this, 'render_post_edit_metabox' ), $type, 'side', 'high' );
             }
         }
@@ -2459,15 +2459,15 @@ class Controller
     public function define_metaboxes() {
 
         //PMPro box
-        add_meta_box('pmpro_page_meta', __('Require Membership', "e20rsequence"), 'pmpro_page_meta', self::$seq_post_type, 'side');
+        add_meta_box('pmpro_page_meta', __('Require Membership', "e20rsequence"), 'pmpro_page_meta', 'pmpro_sequence', 'side');
 
         $this->dbg_log("Loading post meta boxes");
 
         // sequence settings box (for posts & pages)
-        add_meta_box('e20r-sequence-settings', __('Settings for this Sequence', "e20rsequence"), array( &$this, 'settings_meta_box'), self::$seq_post_type, 'side', 'high');
+        add_meta_box('e20r-sequence-settings', __('Settings for this Sequence', "e20rsequence"), array( &$this, 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
 
         //sequence meta box
-        add_meta_box('e20r_sequence_meta', __('Posts in this Sequence', "e20rsequence"), array(&$this, "sequence_settings_metabox"), self::$seq_post_type, 'normal', 'high');
+        add_meta_box('e20r_sequence_meta', __('Posts in this Sequence', "e20rsequence"), array(&$this, "sequence_settings_metabox"), 'pmpro_sequence', 'normal', 'high');
     }
 
     /**
@@ -2809,7 +2809,7 @@ class Controller
             return;
         }
 
-        if( ( self::$seq_post_type == $current_screen->post_type ) && ( $current_screen->action == 'add' )) {
+        if( ( 'pmpro_sequence' == $current_screen->post_type ) && ( $current_screen->action == 'add' )) {
             $this->dbg_log("Adding a new post so hiding the 'Send' for notification alerts");
             $new_post = true;
         }
@@ -3503,7 +3503,7 @@ class Controller
             return $content;
         }
 
-        if ( ( self::$seq_post_type == $post->post_type ) && $this->has_membership_access() ) {
+        if ( ( 'pmpro_sequence' == $post->post_type ) && $this->has_membership_access() ) {
 
             global $load_e20r_sequence_script;
 
@@ -3859,7 +3859,7 @@ class Controller
 
         global $current_user;
 
-        // $meta_key = $wpdb->prefix . self::$seq_post_type . "_notices";
+        // $meta_key = $wpdb->prefix . "pmpro_sequence_notices";
 
         $this->dbg_log('view_user_notice_opt_in() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
 
@@ -4117,7 +4117,7 @@ class Controller
             return true;
         }
 
-        if ( ( !empty( $sequence_id ) ) && ( self::$seq_post_type != get_post_type( $sequence_id ) ) ){
+        if ( ( !empty( $sequence_id ) ) && ( 'pmpro_sequence' != get_post_type( $sequence_id ) ) ){
 
             // Not a E20R Sequence CPT post_id
             return true;
@@ -4197,7 +4197,7 @@ class Controller
         try {
 
             // Update the *_postmeta table for this sequence
-            update_post_meta($this->sequence_id, '_' . self::$seq_post_type . '_settings', $settings );
+            update_post_meta($this->sequence_id, '_pmpro_sequence_settings', $settings );
 
             // Preserve the settings in memory / class context
             $this->dbg_log('save_sequence_meta(): Saved Sequence Settings for ' . $this->sequence_id);
@@ -4305,7 +4305,7 @@ class Controller
 
         $this->dbg_log("is_managed() - Check whether post ID {$post_id} is managed by a sequence: " . $this->who_called_me());
 
-        $is_sequence = get_post_meta( $post_id, '_' . self::$seq_post_type . '_post_belongs_to' );
+        $is_sequence = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
         $retval = empty($is_sequence) ? false : true;
 
         return $retval;
@@ -4627,10 +4627,10 @@ class Controller
         global $wpdb;
 
         $this->dbg_log("reset_user_alerts() - Attempting to delete old-style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
-        $old_style = delete_user_meta( $userId, $wpdb->prefix . self::$seq_post_type . '_notices' );
+        $old_style = delete_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence' . '_notices' );
 
         $this->dbg_log("reset_user_alerts() - Attempting to delete v3 style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
-        $v3_style = delete_user_meta( $userId, self::$seq_post_type . "_id_{$sequenceId}_notices" );
+        $v3_style = delete_user_meta( $userId, "pmpro_sequence_id_{$sequenceId}_notices" );
 
         if ( $old_style || $v3_style ) {
 
@@ -4650,7 +4650,7 @@ class Controller
 
                     unset($notices->sequences[$seqId]);
                     //  Use $this->save_user_notice_settings( $userId, $notices, $sequenceId )
-                    return update_user_meta( $userId, $wpdb->prefix . self::$seq_post_type . '_notices', $notices );
+                    return update_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence' . '_notices', $notices );
                 }
             }
         }
@@ -4956,7 +4956,7 @@ class Controller
             return $post_id;
         }
 
-        if ( ! isset( $post->post_type) || ( self::$seq_post_type != $post->post_type ) ) {
+        if ( ! isset( $post->post_type) || ( 'pmpro_sequence' != $post->post_type ) ) {
             return $post_id;
         }
 
@@ -5238,13 +5238,13 @@ class Controller
 
         $retval = false;
 
-        if ( delete_post_meta_by_key( "_" . self::$seq_post_type . "_{$sequence_id}_post_delay" ) ) {
+        if ( delete_post_meta_by_key( "_pmpro_sequence_{$sequence_id}_post_delay" ) ) {
             $retval = true;
         }
 
         foreach( $this->posts as $post ) {
 
-            if ( delete_post_meta( $post->id, "_" . self::$seq_post_type . "_post_belongs_to", $sequence_id ) ) {
+            if ( delete_post_meta( $post->id, "_pmpro_sequence_post_belongs_to", $sequence_id ) ) {
                 $retval = true;
             }
 
@@ -5423,7 +5423,7 @@ class Controller
                 $this->dbg_log('Updating user settings for user #: ' . $user_id);
 
                 // Grab the metadata from the database
-                // $usrSettings = get_user_meta($user_id, $wpdb->prefix . self::$seq_post_type . '_notices', true);
+                // $usrSettings = get_user_meta($user_id, $wpdb->prefix . 'pmpro_sequence' . '_notices', true);
                 $usrSettings = $this->load_user_notice_settings( $user_id, $seqId );
 
             }
@@ -5495,7 +5495,7 @@ class Controller
                 $this->dbg_log('Saving user_meta for UID ' . $user_id . ' Settings: ' . print_r($usrSettings, true));
 
                 $this->save_user_notice_settings( $user_id, $usrSettings, $seqId );
-                // update_user_meta( $user_id, $wpdb->prefix . self::$seq_post_type . '_notices', $usrSettings );
+                // update_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence' . '_notices', $usrSettings );
                 $status = true;
                 $this->set_error_msg(null);
             }
@@ -6292,14 +6292,14 @@ class Controller
         $sql = "
             SELECT *
             FROM {$wpdb->posts}
-            WHERE post_type = self::$seq_post_type
+            WHERE post_type = 'pmpro_sequence'
         ";
 
         $seqs = $wpdb->get_results( $sql );
         */
 
         // Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
-        $seqs = \WP_Query( array( 'post_type' => self::$seq_post_type ) );
+        $seqs = \WP_Query( array( 'post_type' => 'pmpro_sequence' ) );
 
         // Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
         foreach($seqs as $s) {
@@ -6406,7 +6406,7 @@ class Controller
             'not_found_in_trash' => __( 'No Sequence Found In Trash', "e20rsequence" )
         );
 
-        $error = register_post_type( self::$seq_post_type,
+        $error = register_post_type( 'pmpro_sequence',
             array( 'labels' => apply_filters( 'e20r-sequence-cpt-labels', $labels ),
                 'public' => true,
                 'show_ui' => true,
@@ -6439,7 +6439,7 @@ class Controller
 
         // Load all sequences from the DB
         $query = array(
-            'post_type' => self::$seq_post_type,
+            'post_type' => 'pmpro_sequence',
             'post_status' => apply_filters( 'e20r-sequence-allowed-post-statuses', array( 'publish', 'future', 'private' ) ),
             'posts_per_page' => -1
         );
@@ -6460,15 +6460,15 @@ class Controller
             foreach ( $users as $user ) {
 
                 $this->e20r_sequence_user_id = $user->user_id;
-                $userSettings = get_user_meta( $user->user_id, self::$seq_post_type . "_id_{$sequence_id}_notices", true);
+                $userSettings = get_user_meta( $user->user_id, "pmpro_sequence_id_{$sequence_id}_notices", true);
 
                 // No V3 formatted settings found. Will convert from V2 (if available)
                 if ( empty( $userSettings ) || ( !isset( $userSettings->send_notices ) ) ) {
 
                     $this->dbg_log("convert_user_notifications() - Converting notification settings for user with ID: {$user->user_id}" );
-                    $this->dbg_log("convert_user_notifications() - Loading V2 meta: {$wpdb->prefix}" . self::$seq_post_type . "_notices for user ID: {$user->user_id}");
+                    $this->dbg_log("convert_user_notifications() - Loading V2 meta: {$wpdb->prefix}pmpro_sequence_notices for user ID: {$user->user_id}");
 
-                    $v2 = get_user_meta( $user->user_id, "{$wpdb->prefix}"  . self::$seq_post_type . "_notices", true );
+                    $v2 = get_user_meta( $user->user_id, "{$wpdb->prefix}"  . "pmpro_sequence_notices", true );
 
                     // $this->dbg_log($old_optIn);
 
@@ -6493,7 +6493,7 @@ class Controller
 
                                 $this->save_user_notice_settings( $user->user_id, $userSettings, $sId );
                                 $this->dbg_log("convert_user_notifications() - Removing converted opt-in settings from the database" );
-                                delete_user_meta( $user->user_id, $wpdb->prefix  . self::$seq_post_type . "_notices" );
+                                delete_user_meta( $user->user_id, $wpdb->prefix  . "pmpro_sequence_notices" );
                             }
                         }
                     }
@@ -6597,11 +6597,11 @@ class Controller
 
         global $wpdb;
 
-        $v2 = get_post_meta( $user_id, $wpdb->prefix . self::$seq_post_type . "_notices", true );
+        $v2 = get_post_meta( $user_id, $wpdb->prefix . "pmpro_sequence_notices", true );
 
         if ( !empty( $v2 ) ) {
 
-            return delete_user_meta( $user_id, $wpdb->prefix . self::$seq_post_type . "_notices" );
+            return delete_user_meta( $user_id, $wpdb->prefix . "pmpro_sequence_notices" );
         }
         else {
             // No v2 meta found..
@@ -6616,7 +6616,7 @@ class Controller
     public function post_type_icon() {
         ?>
         <style>
-            #adminmenu .menu-top.menu-icon-<?php echo self::$seq_post_type;?> div.wp-menu-image:before {
+            #adminmenu .menu-top.menu-icon-<?php echo 'pmpro_sequence';?> div.wp-menu-image:before {
                 font-family:  FontAwesome !important;
                 content: '\f160';
             }
@@ -6642,7 +6642,7 @@ class Controller
 
         $this->dbg_log("register_user_scripts() - 'sequence_links' or 'sequence_alert' shortcode present? " . ( $found_links || $found_optin ? 'Yes' : 'No') );
 
-        if ( ( true === $found_links ) || ( true === $found_optin ) || ( self::$seq_post_type == $this->get_post_type() ) ) {
+        if ( ( true === $found_links ) || ( true === $found_optin ) || ( 'pmpro_sequence' == $this->get_post_type() ) ) {
 
             $load_e20r_sequence_script = true;
 
@@ -6985,12 +6985,12 @@ class Controller
         do_action( 'e20r_sequence_cron_hook', array( $sequence_id ));
 
         $this->dbg_log( 'send_user_alert_notices() - Completed action for sequence #' . $sequence_id );
-        wp_redirect('/wp-admin/edit.php?post_type=' . self::$seq_post_type);
+        wp_redirect('/wp-admin/edit.php?post_type=pmpro_sequence');
     }
 
     public function send_alert_notice_from_menu( $actions, $post ) {
 
-        if ( ( self::$seq_post_type == $post->post_type ) && current_user_can('edit_posts' ) ) {
+        if ( ( 'pmpro_sequence' == $post->post_type ) && current_user_can('edit_posts' ) ) {
 
             $options = $this->get_options( $post->ID );
 
