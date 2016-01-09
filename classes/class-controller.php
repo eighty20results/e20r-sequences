@@ -525,8 +525,8 @@ class Controller
 
             // Default object to avoid warning notices
             $admin = new \stdClass();
-            $admin->user_email = '';
-            $admin->display_name = '';
+            $admin->user_email = 'nobody@example.com';
+            $admin->display_name = 'Not Applicable';
         }
 
         $settings->hidden =  0; // 'hidden' (Show them)
