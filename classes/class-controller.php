@@ -3060,7 +3060,7 @@ class Controller
                                 <label class="e20r-sequence-label" for="e20r-seq-replyto"><?php _e('Email:', "e20rsequence"); ?> </label>
                             </div>
                             <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-replyto-status" class="e20r-sequence-status"><?php echo ( $this->options->replyto != '' ? esc_attr($this->options->replyto) : e20r_getOption("from_email") ); ?></span>
+                                <span id="e20r-seq-replyto-status" class="e20r-sequence-status"><?php echo ( $this->options->replyto != '' ? esc_attr($this->options->replyto) : pmpro_getOption("from_email") ); ?></span>
                             </div>
                             <div class="e20r-sequence-setting-col-3">
                                 <a href="#" id="e20r-seq-edit-replyto" class="e20r-seq-edit">
@@ -3073,9 +3073,9 @@ class Controller
                     <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
                         <div class="e20r-sequences-settings-row clear-after e20r-sequence-email e20r-sequence-replyto e20r-sequence-full-row">
                             <div id="e20r-seq-email-input">
-                                <input type="hidden" name="hidden_e20r_seq_replyto" id="hidden_e20r_seq_replyto" value="<?php echo ($this->options->replyto != '' ? esc_attr($this->options->replyto) : e20r_getOption("from_email") ); ?>" />
+                                <input type="hidden" name="hidden_e20r_seq_replyto" id="hidden_e20r_seq_replyto" value="<?php echo ($this->options->replyto != '' ? esc_attr($this->options->replyto) : pmpro_getOption("from_email") ); ?>" />
                                 <label for="e20r_sequence_replyto"></label>
-                                <input type="text" name="e20r_sequence_replyto" id="e20r_sequence_replyto" value="<?php echo ($this->options->replyto != '' ? esc_attr($this->options->replyto) : e20r_getOption("from_email")); ?>"/>
+                                <input type="text" name="e20r_sequence_replyto" id="e20r_sequence_replyto" value="<?php echo ($this->options->replyto != '' ? esc_attr($this->options->replyto) : pmpro_getOption("from_email")); ?>"/>
                             </div>
                         </div>
                         <div class="e20r-sequences-settings-row clear-after e20r-sequence-email e20r-sequence-settings e20r-sequence-full-row">
@@ -3091,7 +3091,7 @@ class Controller
                                 <label class="e20r-sequence-label" for="e20r-seq-fromname"><?php _e('Name:', "e20rsequence"); ?> </label>
                             </div>
                             <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-fromname-status" class="e20r-sequence-status"><?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : e20r_getOption("from_name") ); ?></span>
+                                <span id="e20r-seq-fromname-status" class="e20r-sequence-status"><?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : pmpro_getOption("from_name") ); ?></span>
                             </div>
                             <div class="e20r-sequence-setting-col-3">
                                 <a href="#" id="e20r-seq-edit-fromname" class="e20r-seq-edit e20r-sequence-setting-col-3">
@@ -3105,8 +3105,8 @@ class Controller
                         <div class="e20r-sequences-settings-row clear-after e20r-sequence-replyto e20r-sequence-full-row">
                             <div id="e20r-seq-email-input">
                                 <label for="e20r_sequence_fromname"></label>
-                                <input type="text" name="e20r_sequence_fromname" id="e20r_sequence_fromname" value="<?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : e20r_getOption("from_name") ); ?>"/>
-                                <input type="hidden" name="hidden_e20r_seq_fromname" id="hidden_e20r_seq_fromname" value="<?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : e20r_getOption("from_name")); ?>" />
+                                <input type="text" name="e20r_sequence_fromname" id="e20r_sequence_fromname" value="<?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : pmpro_getOption("from_name") ); ?>"/>
+                                <input type="hidden" name="hidden_e20r_seq_fromname" id="hidden_e20r_seq_fromname" value="<?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : pmpro_getOption("from_name")); ?>" />
                             </div>
                         </div>
                         <div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-full-row">
@@ -5190,7 +5190,7 @@ class Controller
             $this->dbg_log('save_settings(): POST value for settings->fromname: ' . sanitize_text_field($_POST['hidden_e20r_seq_fromname']) );
         }
         else
-            $this->options->fromname = e20r_getOption('from_name');
+            $this->options->fromname = pmpro_getOption('from_name');
 
         if ( isset($_POST['hidden_e20r_seq_dateformat']) )
         {
@@ -5206,7 +5206,7 @@ class Controller
             $this->dbg_log('save_settings(): POST value for settings->replyto: ' . sanitize_text_field($_POST['hidden_e20r_seq_replyto']) );
         }
         else
-            $this->options->replyto = e20r_getOption('from_email');
+            $this->options->replyto = pmpro_getOption('from_email');
 
         if ( isset($_POST['hidden_e20r_seq_subject']) )
         {
