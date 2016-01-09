@@ -521,6 +521,14 @@ class Controller
 
         $admin = get_user_by('email', get_option('admin_email'));
 
+        if (!isset($admin->user_email)) {
+
+            // Default object to avoid warning notices
+            $admin = new \stdClass();
+            $admin->user_email = '';
+            $admin->display_name = '';
+        }
+
         $settings->hidden =  0; // 'hidden' (Show them)
         $settings->lengthVisible = 1; //'lengthVisible'
         $settings->sortOrder = SORT_ASC; // 'sortOrder'
