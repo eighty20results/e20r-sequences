@@ -6421,7 +6421,7 @@ class Controller
                 'show_in_menu' => true,
                 'publicly_queryable' => true,
                 'hierarchical' => true,
-                'supports' => array('title','editor','thumbnail','custom-fields','author'),
+                'supports' => array('title','editor','thumbnail','custom-fields','author', 'excerpt'),
                 'can_export' => true,
                 'show_in_nav_menus' => true,
                 'rewrite' => array(
@@ -6961,7 +6961,7 @@ class Controller
 
         $mofile = "{$domain}-{$locale}.mo";
 
-        $mofile_local = plugin_basename(__FILE__) . "/../languages/";
+        $mofile_local = E20R_SEQUENCE_PLUGIN_DIR . "/languages/";
         $mofile_global = WP_LANG_DIR . "/e20r-sequence/" . $mofile;
 
         load_textdomain( $domain, $mofile_global );
