@@ -4,7 +4,7 @@ namespace E20R\Sequences\Main;
 Plugin Name: Sequences by Eighty / 20 Results
 Plugin URI: https://eighty20results.com/plugins/e20r-sequences/
 Description: Drip feed content for your users (See website for available membership module support).
-Version: 4.2.6
+Version: 4.2.9
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen
@@ -34,13 +34,14 @@ use E20R\Sequences\Main as Main;
 use E20R\Sequences\Sequence as Sequence;
 use E20R\Sequences\Tools as Tools;
 use E20R\Sequences\Modules as Modules;
+use E20R\Tools as E20RTools;
 
 define(__NAMESPACE__ . '\NS', __NAMESPACE__ . '\\');
 
 // use NS as Sequence;
 
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '4.2.6');
+define('E20R_SEQUENCE_VERSION', '4.2.9');
 
 /* Set the max number of email alerts to send in one go to one user */
 define('E20R_SEQUENCE_MAX_EMAILS', 3);
@@ -72,107 +73,6 @@ define('E20R_DEBUG_SEQ_LOG_LEVEL', E20R_DEBUG_SEQ_INFO);
  * Include the class for the update checker
  */
 require_once(E20R_SEQUENCE_PLUGIN_DIR . "/classes/plugin-updates/plugin-update-checker.php");
-
-/** A debug function */
-
-/**
- *    Couple functions from PMPro in case we don't have them loaded yet.
- */
-if (!function_exists("pmpro_getMemberStartdate")):
-
-    /**
-     *
-     * Get the member's start date (either generally speaking or for a specific level)
-     *
-     * @param $user_id (int) - ID of user who's start date we're finding
-     * @param $level_id (int) - ID of the level to find the start date for (optional)
-     *
-     * @returns mixed - The start date for this user_id at the specific level_id (or in general)
-     */
-    /*
-    function pmpro_getMemberStartdate($user_id = NULL, $level_id = 0)
-    {
-        if (empty($user_id)) {
-
-            global $current_user;
-            $user_id = $current_user->ID;
-        }
-
-        global $pmpro_startdates;    //for cache
-
-        if (empty($e20r_startdates[$user_id][$level_id])) {
-
-            global $wpdb;
-
-            if (!empty($level_id)) {
-
-                $sqlQuery = $wpdb->prepare(
-                    "
-						SELECT UNIX_TIMESTAMP( startdate )
-						FROM {$wpdb->pmpro_memberships_users}
-						WHERE status = %s AND membership_id IN ( %d ) AND user_id = %d
-						ORDER BY id LIMIT 1
-					",
-                    'active',
-                    $level_id,
-                    $user_id
-                );
-            } else {
-                $sqlQuery = $wpdb->prepare(
-                    "
-						SELECT UNIX_TIMESTAMP( startdate )
-						FROM {$wpdb->pmpro_memberships_users}
-						WHERE status = %s AND user_id = %d
-						ORDER BY id LIMIT 1
-					",
-                    'active',
-                    $user_id
-                );
-            }
-
-            $startdate = apply_filters("pmpro_member_startdate", $wpdb->get_var($sqlQuery), $user_id, $level_id);
-
-            $pmpro_startdates[$user_id][$level_id] = $startdate;
-        }
-
-        return $pmpro_startdates[$user_id][$level_id];
-    }
-    */
-    /**
-     * Calculate the # of days since the membership level (or membership in general) was started for a specific user_id
-     *
-     * @param int $user_id -- user_id to calculate # of days since membership start for
-     * @param int $level_id -- level_id to calculate the # of days for
-     * @return int -- Number of days since user_id started their membership (at this level)
-     *//*
-    function pmpro_getMemberDays($user_id = NULL, $level_id = 0)
-	{
-		if(empty($user_id))
-		{
-			global $current_user;
-			$user_id = $current_user->ID;
-		}
-		
-		global $pmpro_member_days;
-
-		if(empty($pmpro_member_days[$user_id][$level_id]))
-		{
-			// Get the timestamp representing the start date for the specific user_id.
-			$startdate = pmpro_getMemberStartdate($user_id, $level_id);
-
-			// Check that there is a start date at all
-			if(empty($startdate))
-				$days = 0;
-			else
-				$days = pmpro_seq_datediff($startdate, current_time('timestamp'));
-
-			$pmpro_member_days[$user_id][$level_id] = $days;
-		}
-		
-		return $pmpro_member_days[$user_id][$level_id];
-	}
-*/
-endif;
 
 if (!function_exists('e20r_sequences_import_all_PMProSeries')):
 
@@ -314,8 +214,7 @@ endif;
 if (!function_exists('e20r_sequence_loader')) {
     function e20r_sequence_loader($class_name)
     {
-
-        if (false === stripos($class_name, 'sequence')) {
+        if (false === stripos($class_name, 'sequence') && ( false === stripos($class_name, 'e20r'))) {
             return;
         }
 
@@ -338,7 +237,8 @@ if (!function_exists('e20r_sequence_loader')) {
 
                 require_once("{$dir}/class-{$name}.php");
             }
-/*            else {
+/*
+            else {
                 error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
             }
 */
@@ -414,6 +314,8 @@ try {
     $sequence = new Sequence\Controller();
     $cron = new Tools\Cron();
     $er = new Tools\E20RError();
+
+    E20RTools\DBG::set_plugin_name('e20r-sequences');
 
     $sequence->load_actions();
 
