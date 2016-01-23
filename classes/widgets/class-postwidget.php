@@ -3,7 +3,7 @@ namespace E20R\Sequences\Tools\Widgets;
 /**
     License:
 
-	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
+	Copyright 2014-2016 Eighty/20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -27,8 +27,8 @@ class PostWidget extends \WP_Widget {
 
 	public function __construct() {
 		parent::__construct(
-			'pmpro_sequence__currentpost_widget',
-			'Sequence: Currently available Post/Page',
+			'e20r_sequences__currentpost_widget',
+			__('Sequences: Current', 'e20rsequence'),
 			array(
 				'description' =>
 					__('Display a summary of the most recently available sequence post (or page) for the currently logged-in user.', "e20rsequence")
