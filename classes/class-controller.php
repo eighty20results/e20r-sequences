@@ -7013,13 +7013,13 @@ class Controller
 
         $locale = apply_filters( "plugin_locale", get_locale(), $domain );
 
-        $mofile = "{$domain}-{$locale}.mo";
+        $mofile = "e20rsequence-{$locale}.mo";
 
         $mofile_local = E20R_SEQUENCE_PLUGIN_DIR . "/languages/";
-        $mofile_global = WP_LANG_DIR . "/e20r-sequence/" . $mofile;
+        $mofile_global = WP_LANG_DIR . "/e20r-sequences/" . $mofile;
 
-        load_textdomain( $domain, $mofile_global );
-        load_plugin_textdomain( $domain, FALSE, $mofile_local );
+        load_textdomain( "e20rsequence", $mofile_global );
+        load_textdomain( "e20rsequence", $mofile_local );
     }
 
     /**
