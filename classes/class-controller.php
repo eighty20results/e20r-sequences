@@ -95,6 +95,7 @@ class Controller
         $this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
 
         add_filter( "get_sequence_class_instance", [ $this, 'get_instance' ] );
+        add_action("init", array($this, 'load_textdomain'), 1);
 
     }
 
@@ -7011,12 +7012,12 @@ class Controller
 
         $domain = "e20rsequence";
 
-        $locale = apply_filters( "plugin_locale", get_locale(), $domain );
+        $locale = apply_filters( "plugin_locale", get_locale(), 'e20rsequence' );
 
         $mofile = "e20rsequence-{$locale}.mo";
 
-        $mofile_local = E20R_SEQUENCE_PLUGIN_DIR . "/languages/";
-        $mofile_global = WP_LANG_DIR . "/e20r-sequences/" . $mofile;
+        $mofile_local = dirname(__FILE__) . "/../languages/" . $mofile;
+        $mofile_global = WP_LANG_DIR . "/e20rsequence/" . $mofile;
 
         load_textdomain( "e20rsequence", $mofile_global );
         load_textdomain( "e20rsequence", $mofile_local );
