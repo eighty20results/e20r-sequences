@@ -23,6 +23,7 @@ namespace E20R\Sequences\Tools;
 
 use E20R\Sequences as Sequences;
 use E20R\Sequences\Tools as Tools;
+use E20R\Tools as E20RTools;
 
 class Cron
 {
@@ -68,21 +69,21 @@ class Cron
             if (false !== ($timestamp = wp_next_scheduled( 'e20r_sequence_cron_hook', array($sequence->sequence_id) ) )) {
 
                 // Clear old cronjob for this sequence
-                $sequence->dbg_log('Current cron job for sequence # ' . $sequence->sequence_id . ' scheduled for ' . $timestamp);
+                E20RTools\DBG::log('Current cron job for sequence # ' . $sequence->sequence_id . ' scheduled for ' . $timestamp, 'e20r-sequences');
                 $prevScheduled = true;
 
                 // wp_clear_scheduled_hook($timestamp, 'e20r_sequence_cron_hook', array( $this->sequence_id ));
             }
 
-            $sequence->dbg_log('update_user_notice_cron() - Next scheduled at (timestamp): ' . print_r(wp_next_scheduled('e20r_sequence_cron_hook', array($sequence->sequence_id)), true));
+            E20RTools\DBG::log('update_user_notice_cron() - Next scheduled at (timestamp): ' . print_r(wp_next_scheduled('e20r_sequence_cron_hook', array($sequence->sequence_id)), true));
 
             // Set time (what time) to run this cron job the first time.
-            $sequence->dbg_log('update_user_notice_cron() - Alerts for sequence #' . $sequence->sequence_id . ' at ' . date('Y-m-d H:i:s', $sequence->options->noticeTimestamp) . ' UTC');
+            E20RTools\DBG::log('update_user_notice_cron() - Alerts for sequence #' . $sequence->sequence_id . ' at ' . date('Y-m-d H:i:s', $sequence->options->noticeTimestamp) . ' UTC');
 
             if  ( ($prevScheduled) &&
                 ($sequence->options->noticeTimestamp != $timestamp) ) {
 
-                $sequence->dbg_log('update_user_notice_cron() - Admin changed when the job is supposed to run. Deleting old cron job for sequence w/ID: ' . $sequence->sequence_id);
+                E20RTools\DBG::log('update_user_notice_cron() - Admin changed when the job is supposed to run. Deleting old cron job for sequence w/ID: ' . $sequence->sequence_id);
                 wp_clear_scheduled_hook( 'e20r_sequence_cron_hook', array($sequence->sequence_id) );
 
                 // Schedule a new event for the specified time
@@ -94,26 +95,26 @@ class Cron
                     )) {
 
                     $sequence->set_error_msg( printf( __('Could not schedule new content alert for %s', "e20rsequence"), $sequence->options->noticeTime) );
-                    $sequence->dbg_log("update_user_notice_cron() - Did not schedule the new cron job at ". $sequence->options->noticeTime . " for this sequence (# " . $sequence->sequence_id . ')');
+                    E20RTools\DBG::log("update_user_notice_cron() - Did not schedule the new cron job at ". $sequence->options->noticeTime . " for this sequence (# " . $sequence->sequence_id . ')');
                     return false;
                 }
             }
             elseif (! $prevScheduled)
                 wp_schedule_event($sequence->options->noticeTimestamp, 'daily', 'e20r_sequence_cron_hook', array($sequence->sequence_id));
             else
-                $sequence->dbg_log("update_user_notice_cron() - Timestamp didn't change so leave the schedule as-is");
+                E20RTools\DBG::log("update_user_notice_cron() - Timestamp didn't change so leave the schedule as-is");
 
             // Validate that the event was scheduled as expected.
             $ts = wp_next_scheduled( 'e20r_sequence_cron_hook', array($sequence->sequence_id) );
 
-            $sequence->dbg_log('update_user_notice_cron() - According to WP, the job is scheduled for: ' . date('d-m-Y H:i:s', $ts) . ' UTC and we asked for ' . date('d-m-Y H:i:s', $sequence->options->noticeTimestamp) . ' UTC');
+            E20RTools\DBG::log('update_user_notice_cron() - According to WP, the job is scheduled for: ' . date('d-m-Y H:i:s', $ts) . ' UTC and we asked for ' . date('d-m-Y H:i:s', $sequence->options->noticeTimestamp) . ' UTC');
 
             if ($ts != $sequence->options->noticeTimestamp)
-                $sequence->dbg_log("update_user_notice_cron() - Timestamp for actual cron entry doesn't match the one in the options...");
+                E20RTools\DBG::log("update_user_notice_cron() - Timestamp for actual cron entry doesn't match the one in the options...");
         }
         catch (\Exception $e) {
             // echo 'Error: ' . $e->getMessage();
-            $sequence->dbg_log('Error updating cron job(s): ' . $e->getMessage());
+            E20RTools\DBG::log('Error updating cron job(s): ' . $e->getMessage());
 
             if ( is_null($sequence->get_error_msg()) )
                 $sequence->set_error_msg("Exception in update_user_notice_cron(): " . $e->getMessage());
@@ -132,7 +133,7 @@ class Cron
     static public function stop_sending_user_notices( $sequence_id = null ) {
 
         $sequence = apply_filters('get_sequence_class_instance', null);
-        $sequence->dbg_log("Cron\\Job::stop_sending_user_notices() - Removing alert notice hook for sequence # " . $sequence_id );
+        E20RTools\DBG::log("Cron\\Job::stop_sending_user_notices() - Removing alert notice hook for sequence # " . $sequence_id );
 
         if ( is_null( $sequence_id ) )
         {
@@ -173,8 +174,8 @@ class Cron
         // Process arguments we may (or may not) have received
         if (is_array($sequence_id)) {
 
-            $sequence->dbg_log("cron() - Received argument as array: ");
-            $sequence->dbg_log($sequence_id);
+            E20RTools\DBG::log("cron() - Received argument as array: ");
+            E20RTools\DBG::log($sequence_id);
 
             $received_id = array_pop($sequence_id);
         }
@@ -184,14 +185,14 @@ class Cron
             $received_id = $sequence_id;
         }
 
-        $sequence->dbg_log("cron() - Sequence {$received_id} is ready to process messages... (received: " . (is_null($received_id) ? 'null' : $received_id) . ")");
+        E20RTools\DBG::log("cron() - Sequence {$received_id} is ready to process messages... (received: " . (is_null($received_id) ? 'null' : $received_id) . ")");
 
         // TODO: Remove dependency on PMPro to obtain sequence(s) and users...
 
         // Get the data from the database
         $sequences = self::get_user_sequence_list($received_id);
 
-        $sequence->dbg_log("cron() - Found " . count($sequences) . " records to process for {$received_id}");
+        E20RTools\DBG::log("cron() - Found " . count($sequences) . " records to process for {$received_id}");
         // Track user send-count (just in case we'll need it to ensure there's not too many mails being sent to one user.
         $sendCount[] = array();
 
@@ -207,22 +208,22 @@ class Cron
             // Load sequence data
             if (!$sequence->init($s->seq_id)) {
 
-                $sequence->dbg_log("cron() - Sequence {$s->seq_id} is not converted to V3 metadata format. Exiting!");
+                E20RTools\DBG::log("cron() - Sequence {$s->seq_id} is not converted to V3 metadata format. Exiting!");
                 $sequence->set_error_msg(__("Please de-activiate and activiate the Eighty / 20 Results - Sequences plug-in to facilitate conversion to v3 meta data format.", "e20rsequence"));
                 continue;
             }
 
-            $sequence->dbg_log('cron() - Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
+            E20RTools\DBG::log('cron() - Processing sequence: ' . $sequence->sequence_id . ' for user ' . $s->user_id);
 
             if (($sequence->options->sendNotice == 1) && ($all_sequences === true)) {
-                $sequence->dbg_log('cron() - This sequence will be processed directly. Skipping it for now (All)');
+                E20RTools\DBG::log('cron() - This sequence will be processed directly. Skipping it for now (All)');
                 continue;
             }
 
             // Get user specific settings regarding sequence alerts.
-            $sequence->dbg_log("cron() - Loading alert settings for user {$s->user_id} and sequence {$sequence->sequence_id}");
+            E20RTools\DBG::log("cron() - Loading alert settings for user {$s->user_id} and sequence {$sequence->sequence_id}");
             $notice_settings = $sequence->load_user_notice_settings($s->user_id, $sequence->sequence_id);
-            // $sequence->dbg_log($notice_settings);
+            // E20RTools\DBG::log($notice_settings);
 
             // Check if this user wants new content notices/alerts
             // OR, if they have not opted out, but the admin has set the sequence to allow notices
@@ -231,7 +232,7 @@ class Cron
                     ($sequence->options->sendNotice == 1))
             ) {
 
-                $sequence->dbg_log('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
+                E20RTools\DBG::log('cron() - Sequence ' . $sequence->sequence_id . ' is configured to send new content notices to users.');
 
                 // Load posts for this sequence.
                 // $sequence_posts = $sequence->getPosts();
@@ -241,12 +242,12 @@ class Cron
 
                 if (empty($posts)) {
 
-                    $sequence->dbg_log("cron() - Skipping Alert: Did not find a valid/current post for user {$s->user_id} in sequence {$sequence->sequence_id}");
+                    E20RTools\DBG::log("cron() - Skipping Alert: Did not find a valid/current post for user {$s->user_id} in sequence {$sequence->sequence_id}");
                     // No posts found!
                     continue;
                 }
 
-                $sequence->dbg_log("cron() - # of posts we've already notified for: " . count($notice_settings->posts) , ", and number of posts to process: " . count($posts));
+                E20RTools\DBG::log("cron() - # of posts we've already notified for: " . count($notice_settings->posts) , ", and number of posts to process: " . count($posts));
 
                 // Set the opt-in timestamp if this is the first time we're processing alert settings for this user ID.
                 if (empty($notice_settings->last_notice_sent) || ($notice_settings->last_notice_sent == -1)) {
@@ -255,20 +256,20 @@ class Cron
                 }
 
                 // $posts = $sequence->get_postDetails( $post->id );
-                $sequence->dbg_log("cron() - sendNoticeAs option is currently: {$sequence->options->noticeSendAs}");
+                E20RTools\DBG::log("cron() - sendNoticeAs option is currently: {$sequence->options->noticeSendAs}");
 
                 if (empty($sequence->options->noticeSendAs) || E20R_SEQ_SEND_AS_SINGLE == $sequence->options->noticeSendAs) {
 
-                    $sequence->dbg_log("cron() - Processing " . count($posts) . " individual messages to send to {$s->user_id}");
+                    E20RTools\DBG::log("cron() - Processing " . count($posts) . " individual messages to send to {$s->user_id}");
 
                     foreach ($posts as $post) {
 
-                        $sequence->dbg_log("cron() - Do we notify {$s->user_id} of availability of post # {$post->id}?");
+                        E20RTools\DBG::log("cron() - Do we notify {$s->user_id} of availability of post # {$post->id}?");
                         $flag_value = "{$post->id}_" . $sequence->normalize_delay($post->delay);
 
                         if (!in_array($flag_value, $notice_settings->posts)) {
 
-                            $sequence->dbg_log('cron() - Post: "' . get_the_title($post->id) . '"' .
+                            E20RTools\DBG::log('cron() - Post: "' . get_the_title($post->id) . '"' .
                                 ', post ID: ' . $post->id .
                                 ', membership day: ' . $membership_day .
                                 ', post delay: ' . $sequence->normalize_delay($post->delay) .
@@ -276,40 +277,40 @@ class Cron
                                 ', already notified: ' . (!is_array($notice_settings->posts) || (in_array($flag_value, $notice_settings->posts) == false) ? 'false' : 'true') .
                                 ', has access: ' . ($sequence->has_post_access($s->user_id, $post->id, true, $sequence->sequence_id) === true ? 'true' : 'false'));
 
-                            $sequence->dbg_log("cron() - Need to send alert to {$s->user_id} for '{$post->title}': {$flag_value}");
+                            E20RTools\DBG::log("cron() - Need to send alert to {$s->user_id} for '{$post->title}': {$flag_value}");
 
                             // Does the post alert need to be sent (only if its delay makes it available _after_ the user opted in.
                             if ($sequence->is_after_opt_in($s->user_id, $notice_settings, $post)) {
 
-                                $sequence->dbg_log('cron() - Preparing the email message');
+                                E20RTools\DBG::log('cron() - Preparing the email message');
 
                                 // Send the email notice to the user
                                 if ($sequence->send_notice($post, $s->user_id, $sequence->sequence_id)) {
 
-                                    $sequence->dbg_log('cron() - Email was successfully sent');
+                                    E20RTools\DBG::log('cron() - Email was successfully sent');
                                     // Update the sequence metadata that user has been notified
                                     $notice_settings->posts[] = $flag_value;
 
                                     // Increment send count.
                                     $sendCount[$s->user_id] = (isset($sendCount[$s->user_id]) ? $sendCount[$s->user_id]++ : 0); // Bug/Fix: Sometimes generates an undefined offset notice
 
-                                    $sequence->dbg_log("cron() - Sent email to user {$s->user_id} about post {$post->id} with delay {$post->delay} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}");
+                                    E20RTools\DBG::log("cron() - Sent email to user {$s->user_id} about post {$post->id} with delay {$post->delay} in sequence {$sequence->sequence_id}. The SendCount is {$sendCount[ $s->user_id ]}");
                                     $notice_settings->last_notice_sent = current_time('timestamp');
                                 } else {
 
-                                    $sequence->dbg_log("cron() - Error sending email message!", E20R_DEBUG_SEQ_CRITICAL);
+                                    E20RTools\DBG::log("cron() - Error sending email message!", E20R_DEBUG_SEQ_CRITICAL);
                                 }
                             } else {
 
                                 // Only add this post ID if it's not already present in the notifiedPosts array.
                                 if (!in_array("{$post->id}_{$post->delay}", $notice_settings->posts, true)) {
 
-                                    $sequence->dbg_log("cron() - Adding this previously released (old) post to the notified list");
+                                    E20RTools\DBG::log("cron() - Adding this previously released (old) post to the notified list");
                                     $notice_settings->posts[] = "{$post->id}_" . $sequence->normalize_delay($post->delay);
                                 }
                             }
                         } else {
-                            $sequence->dbg_log("cron() - Will NOT notify user {$s->user_id} about the availability of post {$post->id}", E20R_DEBUG_SEQ_WARNING);
+                            E20RTools\DBG::log("cron() - Will NOT notify user {$s->user_id} about the availability of post {$post->id}", E20R_DEBUG_SEQ_WARNING);
                         }
                     } // End of foreach
                 } // End of "send as single"
@@ -329,7 +330,7 @@ class Cron
 
                         } else {
 
-                            $sequence->dbg_log('cron() - Adding notification setting for : "' . get_the_title($post->id) . '"' .
+                            E20RTools\DBG::log('cron() - Adding notification setting for : "' . get_the_title($post->id) . '"' .
                                 ', post ID: ' . $post->id .
                                 ', membership day: ' . $membership_day .
                                 ', post delay: ' . $sequence->normalize_delay($post->delay) .
@@ -337,7 +338,7 @@ class Cron
                                 ', already notified: ' . (!is_array($notice_settings->posts) || (in_array($flag_value, $notice_settings->posts) == false) ? 'false' : 'true') .
                                 ', has access: ' . ($sequence->has_post_access($s->user_id, $post->id, true, $sequence->sequence_id) === true ? 'true' : 'false'));
 
-                            $sequence->dbg_log("cron() - Adding this ({$post->id}) post to the possibly notified list: {$flag_value}");
+                            E20RTools\DBG::log("cron() - Adding this ({$post->id}) post to the possibly notified list: {$flag_value}");
                             $alerts[$pk] = $flag_value;
 
                             $posts[$pk]->after_optin = $sequence->is_after_opt_in($s->user_id, $notice_settings, $post);
@@ -345,7 +346,7 @@ class Cron
 
                     }
 
-                    $sequence->dbg_log("cron() - Sending " . count($posts) . " as a list of links to {$s->user_id}");
+                    E20RTools\DBG::log("cron() - Sending " . count($posts) . " as a list of links to {$s->user_id}");
 
                     // Send the email notice to the user
                     if ($sequence->send_notice($posts, $s->user_id, $sequence->sequence_id)) {
@@ -353,30 +354,30 @@ class Cron
                         $notice_settings->last_notice_sent = current_time('timestamp');
                         $notice_settings->posts = array_merge($notice_settings->posts, $alerts);
 
-                        $sequence->dbg_log("cron() - Merged notification settings for newly sent posts: ");
-                        $sequence->dbg_log($notice_settings->posts);
-                        $sequence->dbg_log($alerts);
+                        E20RTools\DBG::log("cron() - Merged notification settings for newly sent posts: ");
+                        E20RTools\DBG::log($notice_settings->posts);
+                        E20RTools\DBG::log($alerts);
 
                     } else {
 
-                        $sequence->dbg_log("cron() - Will NOT notify user {$s->user_id} about these " . count($posts) . " new posts", E20R_DEBUG_SEQ_WARNING);
+                        E20RTools\DBG::log("cron() - Will NOT notify user {$s->user_id} about these " . count($posts) . " new posts", E20R_DEBUG_SEQ_WARNING);
                     }
 
                 } // End of "send as list"
 
                 // Save user specific notification settings (including array of posts we've already notified them of)
                 $sequence->save_user_notice_settings($s->user_id, $notice_settings, $sequence->sequence_id);
-                $sequence->dbg_log('cron() - Updated meta for the user notices');
+                E20RTools\DBG::log('cron() - Updated meta for the user notices');
 
             } // End if
             else {
 
                 // Move on to the next one since this one isn't configured to send notices
-                $sequence->dbg_log('cron() - Sequence ' . $s->seq_id . ' is not configured for sending alerts. Skipping...', E20R_DEBUG_SEQ_WARNING);
+                E20RTools\DBG::log('cron() - Sequence ' . $s->seq_id . ' is not configured for sending alerts. Skipping...', E20R_DEBUG_SEQ_WARNING);
             } // End of sendNotice test
         } // End of data processing loop
 
-        $sequence->dbg_log("cron() - Completed execution of cron job for {$received_id}");
+        E20RTools\DBG::log("cron() - Completed execution of cron job for {$received_id}");
     }
 
     /**
@@ -411,7 +412,7 @@ class Cron
 
                 // dbgOut('get_user_sequence_list() - No Sequence ID specified. Processing for all sequences');
                 $all_sequences = true;
-                $sequence->dbg_log("get_user_sequence_list() - Loading and processing ALL sequences");
+                E20RTools\DBG::log("get_user_sequence_list() - Loading and processing ALL sequences");
                 $sql = "
                         SELECT usrs.*, pgs.page_id AS seq_id
                         FROM {$wpdb->pmpro_memberships_users} AS usrs
@@ -425,7 +426,7 @@ class Cron
             else {
 
                 // dbgOut('cron() - Sequence ID specified in function argument. Processing for sequence: ' . $sequenceId);
-                $sequence->dbg_log("get_user_sequence_list() - Loading and processing specific sequence: {$sequence_id}");
+                E20RTools\DBG::log("get_user_sequence_list() - Loading and processing specific sequence: {$sequence_id}");
 
                 $sql = $wpdb->prepare(
                     "
