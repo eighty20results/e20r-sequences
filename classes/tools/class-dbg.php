@@ -37,7 +37,7 @@ class DBG
         $uplDir = wp_upload_dir();
 
         $trace=debug_backtrace();
-        $caller=$trace[2];
+        $caller=$trace[1];
         $who_called_me = '';
 
         if (isset($caller['class']))
