@@ -4451,7 +4451,7 @@ class Controller
             if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
 
                 $idx = 0;
-                $post_links .= "<li><a href=\"{$post->permalink}\" title=\"{$post->title}\">{$post->title}</a></li>\n";
+				$post_links .= '<li><a href="'. wp_login_url($post->permalink) . '" title="' . $post->title . '">' . $post->title . '</a></li>\n';
 
                 if (false === $as_list) {
 
