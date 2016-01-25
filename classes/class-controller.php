@@ -2345,14 +2345,14 @@ class Controller
      */
     public function render_post_edit_metabox() {
 
-        E20RTools\DBG::log( "render_post_edit_metabox() - Metabox for editor" );
+        E20RTools\DBG::log( "Metabox for editor" );
         $metabox = '';
 
         global $post;
 
         $seq = apply_filters('get_sequence_class_instance', null);
 
-        E20RTools\DBG::log("render_post_edit_metabox() - Page Metabox being loaded");
+        E20RTools\DBG::log("Page Metabox being loaded");
 
         ob_start();
         ?>
@@ -3668,7 +3668,7 @@ class Controller
                         <tr id="e20r-seq-selected-post">
                             <td class="e20r-seq-post-img"><?php echo apply_filters( 'e20r-sequence-closest-post-indicator-image', $closestPostImg ); ?></td>
                             <td class="e20r-seq-post-hl">
-                                <a href="<?php echo $p->permalink; ?>" title="<?php echo $p->title; ?>"><strong><?php echo $p->title; ?></strong>&nbsp;&nbsp;<em>(Current)</em></a>
+                                <a href="<?php echo $p->permalink; ?>" title="<?php echo $p->title; ?>"><strong><?php echo $p->title; ?></strong>&nbsp;&nbsp;<em>(<?php _e("Current", "e20rsequence");?>)</em></a>
                             </td>
                             <td <?php echo( $button ? 'class="e20r-seq-availnow-btn"' : '' ); ?>><?php
 
@@ -4691,7 +4691,7 @@ class Controller
             $delays = array();
         }
 
-        if ( empty( $delays ) ) {
+        if ( empty( $delays ) && (!in_array(0, $delays)) ) {
 
             $this->set_error_msg( __( "Error: No delay value(s) received", "e20rsequence") );
             E20RTools\DBG::log( "post_save_action() - Error: delay not specified! ", E20R_DEBUG_SEQ_CRITICAL );
@@ -4733,9 +4733,8 @@ class Controller
             if ( $id == 0 ) {
 
                 E20RTools\DBG::log("post_save_action() - No specified sequence or it's set to 'nothing'");
-
             }
-            elseif ( empty( $delays[$key] ) ) {
+            elseif ( is_null($delays[$key]) ||  (empty( $delays[$key] ) && !is_numeric($delays[$key]) ) ) {
 
                 E20RTools\DBG::log("post_save_action() - Not a valid delay value...: " . $delays[$key], E20R_DEBUG_SEQ_CRITICAL);
                 $this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", "e20rsequence"), get_the_title( $id ) ) );
@@ -5853,7 +5852,7 @@ class Controller
 
                     foreach( $d_posts as $delay ) {
 
-                        if ( isset( $delay->delay ) && !empty( $delay->delay ) ) {
+                        if ( isset( $delay->delay ) && (!is_null( $delay->delay ) && is_numeric($delay->delay)) ) {
 
                             E20RTools\DBG::log( "load_sequence_meta() - Delay Value: {$delay->delay}" );
                             $delayVal = " value='{$delay->delay}' ";
