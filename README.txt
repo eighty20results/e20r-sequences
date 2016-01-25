@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.2.5
+Stable tag: 4.2.9
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -139,8 +139,45 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
-== 4.2.5 ==
+== 4.2.9 ==
+* FIX: Didn't always handle cases where post/page was given delay value of 0
+* FIX: Make text translatable
+* FIX: Update translation file to include latest updates
+* FIX: Would show the calling function for the active function
+* FIX: Returned warning if sequence was empty.
+* FIX: Didn't use the correct opt-in string in shortcode.
+* FIX: Didn't always load translation
+* FIX: Didn't load translations correctly
+* FIX: Update copyright notice
+* FIX: Grammar update
+* FIX: Clean up Change log
+* FIX: Remove old PMPro functions
+* FIX: Transition to DBG::log()
+* FIX: Transition to DBG::log()
+* FIX: Didn't use absolute path when loading the language files.
+* FIX: Uninitialized variable warnings
+* ENH: Refactor shortcodes to own class files
+* ENH: Add new Norwegian translation files
+* ENH: Adding example settigns for user_email & display_name in default settings.
+* ENH: Add debug logging class
+* ENH: Add excerpt support for CPT page
+* ENH: Rename local datediff() function
+* ENH: Use DBG::log() functions & configure for current plugin
+* ENH: Autoloader needs to support new DBG:: class.
+* ENH: Updated translation files for Norwegian/Bokmål
+* ENH: Refactor debug functionality to own class & namespace
 
+== 4.2.8 ==
+* Fix: Whitescreened due to undefined function call
+
+== 4.2.7 ==
+* Fix: Roll back $seq_post_type static use
+* Fix: Remove dependency on pmpro_getMemberStartdate() function
+* Fix: Could fail with error during import of PMPro Series member posts
+* Fix/Enh: Rely completely on autoloader
+* Enh: New version of update-checker for plugin.
+
+== 4.2.6 ==
 * Fix: Various problems with calculating the correct time for the next cron run.
 * Fix: Plugin info Fix: Copyright notice
 * Fix: Version number bump
@@ -173,12 +210,10 @@ Or you can email support@eighty20results.zendesk.com
 * Enh: New filter to check membership access to a post id for a user id: 'e20r-sequence-membership-access' (Accepts optional post id, optional user_id and a boolean flag to determine whether to force a read from any DB table (if it exists).
 
 == 4.2.5 ==
-
 * Fix: Would attempt to load sequence posts for users not logged in.
 * Fix: Didn't include the title for the new content in alert(s)
 
 == 4.2.4 ==
-
 * Fix: Didn't always allow access to a post that was supposed to be available
 * Fix: The subject of email alerts used the incorrect date for the post alert
 * Enh: Didn't have a default notification type (single post per alert)
@@ -186,20 +221,16 @@ Or you can email support@eighty20results.zendesk.com
 * Enh: The replaceable value !!today!! didn't use the delay value of the post to calculate the date.
 
 == 4.2.3 ==
-
 * Fix: Avoid using reserved variable names
 * Fix: Extend WP_Error with E20RError class
 
 == 4.2.2 ==
-
 * Fix: Didn't include all 'unalerted' content prior to the specified delay value when sending alerts to users
 
 == 4.2.1 ==
-
 * Fix: Didn't always load the correct font while in backend
 
 == 4.2.0 ==
-
 * Fix: Load template (or exit if template can't be found)
 * Fix: Didn't respect settings for individual alerts for new content (not digest)
 * Fix: Remove hidden/inactive code
@@ -214,22 +245,18 @@ Or you can email support@eighty20results.zendesk.com
 * Enh: Add new_content_list template (Improved formatting for list of new content in the sequence).
 
 == 4.1.3 ==
-
 * Fix: Didn't always select the correct key for the sequence cache
 * Fix: Didn't always load new sequence data
 
 == 4.1.2 ==
-
 * Fix: Generating warning message while processing delay configuration for sequence(s)
 * Fix: Didn't always ignore unpublished/unavailable sequences
 
 == 4.1.1 ==
-
 * Fix: Adding/Removing posts to sequence could result in JavaScript error
 * Fix: Would sometimes attempt to process auto-drafts
 
 == 4.1.0 ==
-
 * Fix: Searchable select box would sometimes stop working in backend
 * Fix: More reliable detection of origination of add/remove post/page
 * Fix: More robust error handling during remove post/page operation
@@ -248,7 +275,6 @@ Or you can email support@eighty20results.zendesk.com
 * Nit: Refactor Controller class
 
 == 4.0.6 ==
-
 * Fix: Format check for 'when' attribute didn't always return the correct result.
 * Fix: Sometimes generates an undefined offset notice while running cron job
 * Fix: Test actual parameter that should be configured unless options haven't been defined yet
@@ -256,20 +282,16 @@ Or you can email support@eighty20results.zendesk.com
 * Enh: Add link to issues section on GitHub.com
 
 == 4.0.5 ==
-
 * Fix: Email alert sent on days where no new/repeating post is released
 * Enh: Load fontawesome fonts from local server (not CDN)
 
 == 4.0.4 ==
-
 * Fix: Error when loading e20r_available_on shortcode.
 
 == 4.0.3 ==
-
 * Fix: Namespace for functions to import PMPro Series and PMProSequences data
 
 == 4.0.2 ==
-
 * Set namespace for main plugin file
 * Define namespaces used by main plugin file
 * Fix autoloader
@@ -281,7 +303,6 @@ Or you can email support@eighty20results.zendesk.com
 * Fixed PHP Warning message while processing cron jobs
 
 == 4.0.1 ==
-
 * Fix: Namespace for Tools/Cron
 * Fix: Use singleton model for sequence object
 * Fix: Renamed Job() class to Cron() for autoloader purposes
@@ -313,7 +334,6 @@ Or you can email support@eighty20results.zendesk.com
 * Enh: Remove static load of classes
 
 == 4.0.0 ==
-
 * Fix: Namespace declaration for Sequences class(es)
 * Fix: Move namespace declaration to Sequence class
 * Fix: PHPDoc for some of the classes (apply namespace)
@@ -337,7 +357,6 @@ Or you can email support@eighty20results.zendesk.com
 * Update README & .json files
 
 == 3.0.4 ==
-
 * Conditional return triggered fatal error in certain situations
 * Use absolute URL for fontawesome
 * Respect theme settings for fonts/text in widgets
@@ -349,13 +368,11 @@ Or you can email support@eighty20results.zendesk.com
 * Update template file for vpt_reminder.html
 
 == 3.0.3 ==
-
 * On the edit.php page, add a 'Clear alerts' button for a specific post/sequence/delay combination
 * Allow admin to clear notification flags for a specific post/delay/sequence id from the posts edit page
 * Make language tag consistent
 
 == 3.0.2 ==
-
 * Would sometimes trigger warning message while searching for a specific post ID
 * Only grant blanket access to post in sequence if admin is logged in on dashboard and we're not in an ajax operation
 * Comment out incomplete Google Analytics tracking support
@@ -363,13 +380,11 @@ Or you can email support@eighty20results.zendesk.com
 * Make opt-in form full-width
 
 == 3.0.1 ==
-
 * Would sometimes issue warning in find_by_id()
 * Updated to direct user to dashboard
 * v3.0.1
 
 == 3.0-beta-13 ==
-
 * Would sometimes return all posts in the sequence while  deleting one post.
 * Fix undefined variable warning in load_sequence_post()
 * Didn't include sequence members (posts) in DRAFT state when displaying list of sequences in metabox(es)
@@ -378,12 +393,10 @@ Or you can email support@eighty20results.zendesk.com
 * Run wp_reset_query() before returning all sequences in get_all_sequences().
 
 == 3.0-beta-12 ==
-
 * Load Font Awesome fonts as part of script/style load.
 * Update path to Font Awesome fonts (CDN)
 
 == 3.0-beta-11 ==
-
 * Update version number and change log
 * find_by_id() would sometimes load unneeded posts (and not honor cache)
 * When loading a specific post_id for the sequence, don't ignore drafts (May cause duplication in DB)
@@ -395,7 +408,6 @@ Or you can email support@eighty20results.zendesk.com
 * Update text in email opt-in checkbox
 
 == 3.0-beta-10 ==
-
 * Add all_sequences() static function
 * Add post_details() static function
 * Update change log & version numbers
@@ -403,13 +415,11 @@ Or you can email support@eighty20results.zendesk.com
 * Add static function to fetch all sequence IDs that a post_id is associated with
 
 == 3.0-beta-9 ==
-
 * Didn't always display the delay input box in the post editor metabox.
 * Make opt-in checkbox responsive
 * Update change log & version numbers
 
 == 3.0-beta-8 ==
-
 * Didn't always set the optin_at timestamp correctly in the default user alert settings
 * Removed redundant option management
 * Don't show a checkmark if the user has opted-out of receiving alert notices/emails
@@ -436,14 +446,12 @@ Or you can email support@eighty20results.zendesk.com
 * Fix is_after_opt_in() to support new user alert setting format
 
 == 3.0-beta-7 ==
-
 * Wouldn't always honor the refresh value when loading the sequence
 * Refactor conversion for user's new-post notice settings
 * Clean up erroneous notification settings for user
 * Didn't save the 'Allow email notification' setting
 
 == 3.0-beta-6 ==
-
 * Primarily convert to V3 as part of plugin activation or if the user attempts to load the sequence.
 * Would sometimes get into a load/convert loop Flag conversion attempt as 'forced' if no posts are found with V3 format and the sequence is NOT previously converted.
 * Add padding to opt-in checkbox
@@ -454,7 +462,6 @@ Or you can email support@eighty20results.zendesk.com
 * Updated translations (Norwegian & English/US)
 
 == 3.0-beta-5 ==
-
 * Fix error handling in add post to sequence operation
 * Add class function to configure & time out error message in /wp-admin/
 * Fix $_POST variables in add_entry()
@@ -470,7 +477,6 @@ Or you can email support@eighty20results.zendesk.com
 * Refactor add_post_callback()
 
 == 3.0-beta-4 ==
-
 * Update the TODO section in README.txt
 * Clean up TODO items class.PMProSequence.php
 * Would loop indefinitely if there were no sequence posts and the sequence was attempted viewed from the front-end.
@@ -483,12 +489,10 @@ Or you can email support@eighty20results.zendesk.com
 * Re-enable the wipe functionality when changing the type of sequence from day # based to date based (or vice versa)
 
 == 3.0-beta-3 ==
-
 * Renamed 'Add' button to 'New Sequence'
 * Would sometimes add an extra sequence/delay input field when the 'Add' button was clicked in edit.php
 
 == 3.0-beta-2 ==
-
 * Track conversion to v3 metadata based on sequence ID in options table
 * If option value isn't configured, double-check that the V3 metadata isn't there in is_converted()
 * Reduce the number of error messages on back-end
@@ -508,7 +512,6 @@ Or you can email support@eighty20results.zendesk.com
 * Support removing one of multiple sequence entries from a post/page in edit.php
 
 == 3.0-beta-1 ==
-
 * Check whether V3 postmeta is the current format on admin_init.
 * Skip sending notices for sequences that haven't been converted yet.
 * Add error message if the meta data for the sequence members isn't in V3 format.
@@ -552,7 +555,6 @@ Or you can email support@eighty20results.zendesk.com
 * Fix convertNotification() function (works)
 
 == 2.4.15 ==
-
 * Set allowRepeatPosts default to false
 * Add $delay to javascript entries for edit/remove post entries in sequence
 * Add allowRepeatPosts setting to sequence settings metabox
@@ -569,70 +571,56 @@ Or you can email support@eighty20results.zendesk.com
 * Simplify has_membership_access_filter() (Thanks to Jessica Oros @ PMPro)
 
 == 2.4.14 ==
-
 * Removed CR+LF (\n) from sendEmail()
 
 == 2.4.13 ==
-
 * Added 'pmpro-sequence-add-startdate-offset' filter which will allow the admin to add an offset (pos/neg integer) to the
 'current day' calculation. This modifies when the current user apparently started their access to the sequence. The filter
 expects a numeric value to be returned.
 
 
 == 2.4.12 ==
-
 * Update docs for pmpro_has_membership_access_filter()
 * Apply new 'pmpro-sequence-has-access-filter' filter to result from $this->hasAccess() in has_membership_access_filter() function
 * Increase priority of has_membership_access_filter() function in pmpro_has_membership_access_filter.
 
 == 2.4.10 ==
-
 * Remove redundant footer-like text
 * Remove \n for replaceable text
 
 == 2.4.9 ==
-
 * Fix 'Drip Feed Settings' metabox actions/events.
 * We should _enable_ not _disable_ a disabled row.
 
 == 2.4.8 ==
-
 * Reload content of sequence list select in post/page metabox
 
 == 2.4.7 ==
-
 * Instantiate $class variable
 
 == 2.4.6 ==
-
 * Instantiate $class variable within bind_controls() function.
 * Handle meta control display when adding/editing supported posts/pages.
 
 == 2.4.5 ==
-
 * Fix excerpt, post_link and post title (ptitle) handling for pmproemail class.
 * Remove pmpro_after_phpmailer_init filter/handler.
 
 == 2.4.4 ==
-
 * Edit license text (copyright)
 
 == 2.4.3 ==
-
 * Updated translations
 
 == 2.4.2 ==
-
 * Init the update checker on plugin load
 * Correct path to update check functionality
 
 == 2.4.1 ==
-
 * Fix settings text for previews
 * Adjust new change log creation script for this plugin
 
 == 2.4 ==
-
 * Refactor for two classes & member functions.
 * Make settings updates more uniform w/o breaking compatibility with back-end.
 * Remove old function/event structure.

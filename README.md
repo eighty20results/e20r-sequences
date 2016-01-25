@@ -87,13 +87,13 @@ See ./email/README.txt for information on templates for the email alerts.
 | e20r-sequence-after-widget | Insert stuff after the widget gets rendered | $instance['after_widget'] |
 | e20r-sequence-import-pmpro-series | Whether to automatically try to import PMPro Series CPT entries to this plugin. Accepts a number of different return values: The string 'all' or boolean true will import all defined series. An array of Post IDs, i.e. array( 2000, 4000 ), will treat the numbers as the post id for the Series. A single number (array or otherwise) will be treated as a Post ID to import.  | __return_false() |
 | e20r-sequence-shortcode-text-unavailable| The text to display if the current user should not be permitted to see the content protected by the e20r_available_on shortcode | null |
-| e20r-sequence-user-startdate | Returns the stardate (as seconds in UNIX epoch) for the specified user ID| strtotime(today) - midnight today |
+| e20r-sequence-user-startdate | Returns the startdate (as seconds in UNIX epoch) for the specified user ID| strtotime(today) - midnight today |
 | e20r-sequence-days-as-member | Returns the number of days the user Id has been a member of the site | 0 |
 | e20r-sequence-membership-level-for-user | Returns the membership level the user ID has been assigned | false or an integer value representing a level id|
 | e20r-sequence-has-membership-level | Decide whether or not the user is assigned the specified membership level(s) | false |
 | e20r-sequence-membership-access | Whether the user ID has been granted access to the post ID specified | 3 element array: 0 => boolean for access, 1 => Numeric array of level Ids w/access, 2 => string array of level descr |
 | e20r-sequence-default-sender-email | The email address to use as the default sequence notification sender | email address for admin user |
-| e20r-sequence-default-sender-name | The name to use as teh default sequence notification sender | Name of the admin user (display name) |
+| e20r-sequence-default-sender-name | The name to use as the default sequence notification sender | Name of the admin user (display name) |
 
 ##Roadmap (possible features)
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
@@ -186,35 +186,33 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.5
-* Fix: Various problems with calculating the correct time for the next cron run.
-* Fix: Plugin info Fix: Copyright notice 
-* Fix: Version number bump
-* Fix: Update copyright notice
-* Fix: Would sometimes load zero sequence members (posts) due to caching issues
-* Fix: Confirm that there is a live cache entry for the user/sequence in is_cache_valid()
-* Fix: Wouldn't load sequence posts if running as a cron job
-* Fix: Simplify timestamp management/creation
-* Fix: Bump minimum required PHP version to 5.4
-* Maint: Escape backslash for JSON
-* Maint: Updated .gitignore
-* Enh: Add modules namespace (preparation for dedicated content protection modules)
-* Enh: Initial commit of membership module base class
-* Enh: Use constant for select2 library versions Fix: Path to CDN for select2 library Fix: Enqueue select2 CSS
-* Enh: Loading list of sequence(s) and its consumers (users) in dedicated & filtered function
-* Enh: No longer depends on PMPro to process cron jobs, but has default reliance on it (Upcoming: Decouple PMPro requirement)
-* Enh: Better error recovery in cache management
-* Enh: Use standard method for obtaining the cache identifier for the user/sequence
-* Enh: Decouple most of the PMPro dependencies & use filters instead
-* Enh: Enforce singleton behavior for sequence class
-* Enh: Use static variable - self::$seq_post_type - to identify the sequence post type
-* Enh: New filter for default sender email for a sequence: e20r-sequence-default-sender-email (returns email address, uses admin email as default)
-* Enh: New filter for default sender name for a sequence: e20r-sequence-default-sender-name (returns a string, uses admin's display_name as default)
-* Enh: New filter for user's startdate: 'e20r-sequence-user-startdate' (accepts startdate, user_id variables, returns a UNIX timestamp/seconds since start of epoch)
-* Enh: New filter for days as member calculation: 'e20r-sequence-days-as-member' (accepts $user_id & $level_id, returns #of days (float or int))
-* Enh: New filter to get the membership level for a user: 'e20r-sequence-membership-level-for-user' (Accepts a user_id and a boolean 'force' variable to indicate whether to read from DB or cache if applicable. Returns the user's membership level ID or false if not a member)
-* Enh: New filter to check membership levels for a user id: 'e20r-sequence-has-membership-level' (Accepts an integer or array representing level id(s) and a user Id to check. Returns true/false)
-* Enh: New filter to check membership access to a post id for a user id: 'e20r-sequence-membership-access' (Accepts optional post id, optional user_id and a boolean flag to determine whether to force a read from any DB table (if it exists).
+###4.2.9
+* FIX: Didn't always handle cases where post/page was given delay value of 0
+* FIX: Make text translatable
+* FIX: Update translation file to include latest updates
+* FIX: Would show the calling function for the active function
+* FIX: Returned warning if sequence was empty.
+* FIX: Didn't use the correct opt-in string in shortcode.
+* FIX: Didn't always load translation
+* FIX: Didn't load translations correctly
+* FIX: Update copyright notice
+* FIX: Grammar update
+* FIX: Clean up Change log
+* FIX: Remove old PMPro functions
+* FIX: Transition to DBG::log()
+* FIX: Transition to DBG::log()
+* FIX: Didn't use absolute path when loading the language files.
+* FIX: Uninitialized variable warnings
+* ENH: Refactor shortcodes to own class files
+* ENH: Add new Norwegian translation files
+* ENH: Adding example settigns for user_email & display_name in default settings.
+* ENH: Add debug logging class
+* ENH: Add excerpt support for CPT page
+* ENH: Rename local datediff() function
+* ENH: Use DBG::log() functions & configure for current plugin
+* ENH: Autoloader needs to support new DBG:: class.
+* ENH: Updated translation files for Norwegian/Bokmål
+* ENH: Refactor debug functionality to own class & namespace
 
 ##Old releases
 ###.1
@@ -798,3 +796,42 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fix: Would attempt to load sequence posts for users not logged in.
 * Fix: Didn't include the title for the new content in alert(s)
 
+###4.2.6
+* Fix: Various problems with calculating the correct time for the next cron run.
+* Fix: Plugin info Fix: Copyright notice 
+* Fix: Version number bump
+* Fix: Update copyright notice
+* Fix: Would sometimes load zero sequence members (posts) due to caching issues
+* Fix: Confirm that there is a live cache entry for the user/sequence in is_cache_valid()
+* Fix: Wouldn't load sequence posts if running as a cron job
+* Fix: Simplify timestamp management/creation
+* Fix: Bump minimum required PHP version to 5.4
+* Maint: Escape backslash for JSON
+* Maint: Updated .gitignore
+* Enh: Add modules namespace (preparation for dedicated content protection modules)
+* Enh: Initial commit of membership module base class
+* Enh: Use constant for select2 library versions Fix: Path to CDN for select2 library Fix: Enqueue select2 CSS
+* Enh: Loading list of sequence(s) and its consumers (users) in dedicated & filtered function
+* Enh: No longer depends on PMPro to process cron jobs, but has default reliance on it (Upcoming: Decouple PMPro requirement)
+* Enh: Better error recovery in cache management
+* Enh: Use standard method for obtaining the cache identifier for the user/sequence
+* Enh: Decouple most of the PMPro dependencies & use filters instead
+* Enh: Enforce singleton behavior for sequence class
+* Enh: Use static variable - self::$seq_post_type - to identify the sequence post type
+* Enh: New filter for default sender email for a sequence: e20r-sequence-default-sender-email (returns email address, uses admin email as default)
+* Enh: New filter for default sender name for a sequence: e20r-sequence-default-sender-name (returns a string, uses admin's display_name as default)
+* Enh: New filter for user's startdate: 'e20r-sequence-user-startdate' (accepts startdate, user_id variables, returns a UNIX timestamp/seconds since start of epoch)
+* Enh: New filter for days as member calculation: 'e20r-sequence-days-as-member' (accepts $user_id & $level_id, returns #of days (float or int))
+* Enh: New filter to get the membership level for a user: 'e20r-sequence-membership-level-for-user' (Accepts a user_id and a boolean 'force' variable to indicate whether to read from DB or cache if applicable. Returns the user's membership level ID or false if not a member)
+* Enh: New filter to check membership levels for a user id: 'e20r-sequence-has-membership-level' (Accepts an integer or array representing level id(s) and a user Id to check. Returns true/false)
+* Enh: New filter to check membership access to a post id for a user id: 'e20r-sequence-membership-access' (Accepts optional post id, optional user_id and a boolean flag to determine whether to force a read from any DB table (if it exists).
+
+###4.2.7
+* Fix: Roll back $seq_post_type static use
+* Fix: Remove dependency on pmpro_getMemberStartdate() function
+* Fix: Could fail with error during import of PMPro Series member posts
+* Fix/Enh: Rely completely on autoloader
+* Enh: New version of update-checker for plugin.
+
+###4.2.8
+* Fix: Whitescreened due to undefined function call
