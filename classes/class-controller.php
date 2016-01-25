@@ -72,6 +72,7 @@ class Controller
 
             error_log($error_message);
             wp_die( $error_message);
+
         }
 
         self::$_this = $this;
