@@ -4492,7 +4492,7 @@ class Controller
                     $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->excerpt . '</p>';
                 }
 
-                $post_links = "<a href=\"{$post->permalink}\" title=\"{$post->title}\">{$post->title}</a>";
+                $post_links = '<a href="'. wp_login_url($post->permalink) . '" title="' . $post->title . '">' . $post->title . '</a>';
 
                 $emails[$idx]->body = $template_content;
 
