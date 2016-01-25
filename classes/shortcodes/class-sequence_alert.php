@@ -80,7 +80,7 @@ class sequence_alert {
 
 		if ( !empty( $sequence_id ) ) {
 
-			$sequence = new Sequence\Controller();
+			$sequence = apply_filters('get_sequence_class_instance');
 
 			if ( !$sequence->init( $sequence_id ) ) {
 
