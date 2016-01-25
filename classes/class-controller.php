@@ -6778,155 +6778,10 @@ class Controller
     public function register_shortcodes() {
 
         // Generates paginated list of links to sequence members
-        add_shortcode( 'sequence_links', [ $this, 'sequence_links_shortcode' ] );
-        add_shortcode( 'sequence_alert', [ $this, 'sequence_optin_shortcode' ] );
-        add_shortcode( 'upcoming_content', array(
-                                                apply_filters(
-                                                    'get_upcoming_content_class_instance',
-                                                    'load_shortcode'
-                                                ) ) );
+        add_shortcode( 'sequence_links', array( $this, 'sequence_links_shortcode') );
+        add_shortcode( 'sequence_alert', array( apply_filters( 'get_sequence_optin_class_instance', null ), 'load_shortcode') );
+        add_shortcode( 'upcoming_content', array( apply_filters( 'get_upcoming_content_class_instance', null ), 'load_shortcode' ) );
 
-    }
-
-    /**
-     * Debug function (if executes if DEBUG is defined)
-     *
-     * @param $msg -- Debug message to print to debug log.
-     *
-     * @access public
-     * @since v2.1
-     */
-    public function dbg_log( $msg, $lvl = E20R_DEBUG_SEQ_INFO ) {
-
-        // Give up if WP_Debug isn't configured.
-        if (!defined('WP_DEBUG') || WP_DEBUG === false) {
-            return;
-        }
-
-        $uplDir = wp_upload_dir();
-
-        $trace=debug_backtrace();
-        $caller=$trace[2];
-        $who_called_me = '';
-
-        if (isset($caller['class'])) {
-            $who_called_me .= "{$caller['class']}::";
-        }
-
-        $who_called_me .=  "{$caller['function']}() - ";
-
-        $plugin = "/e20r-sequences/";
-
-        $dbgRoot = $uplDir['basedir'] . "${plugin}";
-        // $dbgRoot = "${plugin}/";
-        $dbgPath = "${dbgRoot}";
-
-        if ( ( WP_DEBUG === true ) && ( ( $lvl >= E20R_DEBUG_SEQ_LOG_LEVEL ) || ( $lvl == E20R_DEBUG_SEQ_INFO ) ) ) {
-
-            if ( !file_exists( $dbgRoot ) ) {
-
-                mkdir($dbgRoot, 0750);
-
-                if (!is_writable($dbgRoot)) {
-                    error_log("{$who_called_me} Debug log directory {$dbgRoot} is not writable. exiting.");
-                    return;
-                }
-            }
-
-            if (!file_exists($dbgPath)) {
-
-                // Create the debug logging directory
-                mkdir($dbgPath, 0750);
-
-                if (!is_writable($dbgPath)) {
-                    error_log("{$who_called_me} Debug log directory {$dbgPath} is not writable. exiting.");
-                    return;
-                }
-            }
-
-            // $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d', current_time("timestamp") ) . '.txt';
-            $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'debug_log.txt';
-
-            $tid = sprintf("%08x", abs(crc32($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_TIME'] . $_SERVER['REMOTE_PORT'])));
-
-            $dbgMsg = '(' . date('d-m-y H:i:s', current_time('timestamp')) . "-{$tid}) -- {$who_called_me} " .
-                ((is_array($msg) || (is_object($msg))) ? print_r($msg, true) : $msg) . "\n";
-
-            $this->add_log_text($dbgMsg, $dbgFile);
-        }
-    }
-
-    private function add_log_text($text, $filename) {
-
-        if ( !file_exists($filename) ) {
-
-            touch( $filename );
-            chmod( $filename, 0640 );
-        }
-
-        if ( filesize( $filename ) > MAX_LOG_SIZE ) {
-
-            $filename2 = "$filename.old";
-
-            if ( file_exists( $filename2 ) ) {
-
-                unlink($filename2);
-            }
-
-            rename($filename, $filename2);
-            touch($filename);
-            chmod($filename,0640);
-        }
-
-        if ( !is_writable( $filename ) ) {
-
-            error_log( "Unable to open debug log file ($filename)" );
-        }
-
-        if ( !$handle = fopen( $filename, 'a' ) ) {
-
-            error_log("Unable to open debug log file ($filename)");
-        }
-
-        if ( fwrite( $handle, $text ) === FALSE ) {
-
-            error_log("Unable to write to debug log file ($filename)");
-        }
-
-        fclose($handle);
-    }
-  /**
-    * Shortcode to display notification opt-in checkbox
-    * @param string $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
-    *
-    * @return string - HTML of the opt-in
-    */
-    public function sequence_optin_shortcode( $attributes ) {
-
-        E20RTools\DBG::log("sequence_optin_shortcode() - Loading user alert opt-in");
-        $sequence_id = null;
-
-        extract( shortcode_atts( array(
-            'sequence_id' => 0,
-        ), $attributes ) );
-
-        E20RTools\DBG::log("sequence_optin_shortcode() - shortcode specified sequence id: {$sequence_id}");
-
-        if ( !empty( $sequence_id ) ) {
-
-            if ( !$this->init( $sequence_id ) ) {
-
-                return $this->get_error_msg();
-            }
-
-            return $this->view_user_notice_opt_in();
-        }
-        else {
-
-            E20RTools\DBG::log("sequence_optin_shortcode() - ERROR: No sequence ID specified!", E20R_DEBUG_SEQ_WARNING );
-        }
-
-        return null;
     }
 
     /**
@@ -7009,8 +6864,6 @@ class Controller
      * Load and use L18N based text (if available)
      */
     public function load_textdomain() {
-
-        $domain = "e20rsequence";
 
         $locale = apply_filters( "plugin_locale", get_locale(), 'e20rsequence' );
 
