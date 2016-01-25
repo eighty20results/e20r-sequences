@@ -6779,9 +6779,8 @@ class Controller
 
         // Generates paginated list of links to sequence members
         add_shortcode( 'sequence_links', array( $this, 'sequence_links_shortcode') );
-        add_shortcode( 'sequence_alert', array( apply_filters( 'get_sequence_optin_class_instance', null ), 'load_shortcode') );
+        add_shortcode( 'sequence_optin', array( apply_filters( 'get_sequence_optin_class_instance', null ), 'load_shortcode') );
         add_shortcode( 'upcoming_content', array( apply_filters( 'get_upcoming_content_class_instance', null ), 'load_shortcode' ) );
-
     }
 
     /**
