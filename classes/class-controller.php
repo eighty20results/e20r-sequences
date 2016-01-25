@@ -3591,7 +3591,15 @@ class Controller
         }
 
         E20RTools\DBG::log( "create_sequence_list() - Loading posts with pagination enabled. Expecing \\WP_Query result" );
-        list( $seqList, $max_num_pages ) = $this->load_sequence_post( null, null, null, '=', $pagesize, true );
+        $retSeq = $this->load_sequence_post( null, null, null, '=', $pagesize, true );
+
+        if ( is_array($retSeq ) && !empty($retSeq)) {
+
+            list( $seqList, $max_num_pages ) = $retSeq;
+        } else {
+            $seqList = null;
+            $max_num_pages = 0;
+        }
 
         // $sequence_posts = $this->posts;
         $memberDayCount = $this->get_membership_days();
@@ -5894,7 +5902,7 @@ class Controller
      * @return   bool          True if the post exists; otherwise, false.
      * @since    1.0.0
      */
-    private function sequence_exists( $id ) {
+    public function sequence_exists( $id ) {
 
         return is_string( get_post_status( $id ) );
     }
@@ -6777,86 +6785,15 @@ class Controller
      */
     public function register_shortcodes() {
 
+		$sl = new Shortcodes\sequence_links();
+		$sa = new Shortcodes\sequence_alert();
+		$uc = new Shortcodes\upcoming_content();
+
+
         // Generates paginated list of links to sequence members
-        add_shortcode( 'sequence_links', array( $this, 'sequence_links_shortcode') );
-        add_shortcode( 'sequence_optin', array( apply_filters( 'get_sequence_optin_class_instance', null ), 'load_shortcode') );
-        add_shortcode( 'upcoming_content', array( apply_filters( 'get_upcoming_content_class_instance', null ), 'load_shortcode' ) );
-    }
-
-    /**
-     * Generates a formatted list of posts in the specified sequence.
-     *
-     * @param $attributes -- Shortcode attributes
-     *
-     * @return string -- HTML output containing the list of posts for the specified sequence(s)
-     */
-    public function sequence_links_shortcode( $attributes ) {
-
-        global $current_user, $load_e20r_sequence_script;
-
-        $load_e20r_sequence_script = true;
-
-        // To avoid errors in development tool
-        $highlight = false;
-        $button = false;
-        $scrollbox = false;
-        $pagesize = 30;
-        $id = 0;
-        $title = null;
-
-        extract( shortcode_atts( array(
-            'id' => 0,
-            'pagesize' => 30,
-            'title' => '',
-            'button' => false,
-            'highlight' => false,
-            'scrollbox' => false,
-        ), $attributes ) );
-
-        if ( $pagesize == 0 ) {
-
-            $pagesize = 30; // Default
-        }
-
-        if ( ( $id == 0 ) && ( $this->sequence_id == 0 ) ) {
-
-            global $wp_query;
-
-            // Try using the current WP post ID
-            if (! empty( $wp_query->post->ID ) ) {
-
-                $id = $wp_query->post->ID;
-            }
-            else {
-
-                return ''; // No post given so returning no info.
-            }
-        }
-        E20RTools\DBG::log("We're given the ID of: {$id} ");
-
-        // Make sure the sequence exists.
-        if ( ! $this->sequence_exists( $id ) ) {
-
-            E20RTools\DBG::log("shortcode() - The requested sequence (id: {$id}) does not exist", E20R_DEBUG_SEQ_WARNING );
-            $errorMsg = '<p class="error" style="text-align: center;">The specified PMPro Sequence was not found. <br/>Please report this error to the webmaster.</p>';
-
-            return apply_filters( 'e20r-sequence-not-found-msg', $errorMsg );
-        }
-
-        if ( !$this->init( $id ) ) {
-            return $this->get_error_msg();
-        }
-
-        E20RTools\DBG::log("shortcode() - Ready to build link list for sequence with ID of: " . $id);
-
-        if ( $this->has_post_access( $current_user->ID, $id, false, $id ) ) {
-
-            return $this->create_sequence_list( $highlight, $pagesize, $button, $title, $scrollbox );
-        }
-        else {
-
-            return '';
-        }
+        add_shortcode( 'sequence_links', array( $sl, 'load_shortcode') );
+        add_shortcode( 'sequence_alert', array( $sa, 'load_shortcode') );
+        add_shortcode( 'upcoming_content', array( $uc, 'load_shortcode' ) );
     }
 
     /**
