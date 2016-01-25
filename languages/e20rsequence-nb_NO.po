@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PMPro Sequence\n"
 "POT-Creation-Date: 2016-01-24 20:45-0500\n"
-"PO-Revision-Date: 2016-01-24 20:46-0500\n"
+"PO-Revision-Date: 2016-01-24 22:31-0500\n"
 "Last-Translator: Thomas Sjolshagen <thomas@eighty20results.com>\n"
 "Language-Team: \n"
 "Language: nb_NO\n"
@@ -136,7 +136,7 @@ msgstr "(ID: %d)"
 #: classes/class-controller.php:3130 classes/class-controller.php:3173
 #: classes/class-controller.php:3204 classes/class-controller.php:3235
 msgid "Edit"
-msgstr "Rediger sekvensen"
+msgstr "Rediger"
 
 #: classes/class-controller.php:2519
 msgid "Post"
@@ -767,7 +767,7 @@ msgstr "Sekvens"
 
 #: classes/class-controller.php:6356 classes/class-controller.php:6357
 msgid "Edit Sequence"
-msgstr "Rediger"
+msgstr "Rediger Sekvensen"
 
 #: classes/class-controller.php:6358
 msgid "Add New"
