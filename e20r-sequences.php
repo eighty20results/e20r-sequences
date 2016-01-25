@@ -4,7 +4,7 @@ namespace E20R\Sequences\Main;
 Plugin Name: Sequences by Eighty / 20 Results
 Plugin URI: https://eighty20results.com/plugins/e20r-sequences/
 Description: Drip feed content for your users (See website for available membership module support).
-Version: 4.2.9
+Version: 4.2.10
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen

@@ -186,33 +186,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.9
-* FIX: Didn't always handle cases where post/page was given delay value of 0
-* FIX: Make text translatable
-* FIX: Update translation file to include latest updates
-* FIX: Would show the calling function for the active function
-* FIX: Returned warning if sequence was empty.
-* FIX: Didn't use the correct opt-in string in shortcode.
-* FIX: Didn't always load translation
-* FIX: Didn't load translations correctly
-* FIX: Update copyright notice
-* FIX: Grammar update
-* FIX: Clean up Change log
-* FIX: Remove old PMPro functions
-* FIX: Transition to DBG::log()
-* FIX: Transition to DBG::log()
-* FIX: Didn't use absolute path when loading the language files.
-* FIX: Uninitialized variable warnings
-* ENH: Refactor shortcodes to own class files
-* ENH: Add new Norwegian translation files
-* ENH: Adding example settigns for user_email & display_name in default settings.
-* ENH: Add debug logging class
-* ENH: Add excerpt support for CPT page
-* ENH: Rename local datediff() function
-* ENH: Use DBG::log() functions & configure for current plugin
-* ENH: Autoloader needs to support new DBG:: class.
-* ENH: Updated translation files for Norwegian/Bokmål
-* ENH: Refactor debug functionality to own class & namespace
+###4.2.10
+* FIX: Would sometimes trip on Singleton error
+* FIX: Updated language files
+* FIX: Removed old language files (didn't load)
 
 ##Old releases
 ###.1
@@ -835,3 +812,31 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.2.8
 * Fix: Whitescreened due to undefined function call
+
+###4.2.9
+* FIX: Didn't always handle cases where post/page was given delay value of 0
+* FIX: Make text translatable
+* FIX: Update translation file to include latest updates
+* FIX: Would show the calling function for the active function
+* FIX: Returned warning if sequence was empty.
+* FIX: Didn't use the correct opt-in string in shortcode.
+* FIX: Didn't always load translation
+* FIX: Didn't load translations correctly
+* FIX: Update copyright notice
+* FIX: Grammar update
+* FIX: Clean up Change log
+* FIX: Remove old PMPro functions
+* FIX: Transition to DBG::log()
+* FIX: Transition to DBG::log()
+* FIX: Didn't use absolute path when loading the language files.
+* FIX: Uninitialized variable warnings
+* ENH: Refactor shortcodes to own class files
+* ENH: Add new Norwegian translation files
+* ENH: Adding example settigns for user_email & display_name in default settings.
+* ENH: Add debug logging class
+* ENH: Add excerpt support for CPT page
+* ENH: Rename local datediff() function
+* ENH: Use DBG::log() functions & configure for current plugin
+* ENH: Autoloader needs to support new DBG:: class.
+* ENH: Updated translation files for Norwegian/Bokmål
+* ENH: Refactor debug functionality to own class & namespace

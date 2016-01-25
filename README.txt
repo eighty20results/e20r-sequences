@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.2.9
+Stable tag: 4.2.10
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -138,6 +138,11 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.2.10 ==
+* FIX: Would sometimes trip on Singleton error
+* FIX: Updated language files
+* FIX: Removed old language files (didn't load)
 
 == 4.2.9 ==
 * FIX: Didn't always handle cases where post/page was given delay value of 0
