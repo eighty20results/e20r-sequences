@@ -4512,7 +4512,7 @@ class Controller
 
                 $emails[$idx]->data = array(
                     "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
-                    "sitename" => get_option("blogname"),
+                    "sitename" => apply_filters('e20r-sequence-site-name', get_option("blogname")),
                     "post_link" => $post_links,
                     'post_url' => $post_url,
                     "today" => $post_date,
