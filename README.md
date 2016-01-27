@@ -61,7 +61,7 @@ See ./email/README.txt for information on templates for the email alerts.
 | e20r-sequence-closest-post-indicator-image | URL to the image to use to indicate which of the posts in the post list is the most recently available post for the current user | URL to __PLUGIN_DIR__/images/most-recent.png|
 | e20r-sequence-list-pagination-code | The Pagination code for the Sequence List being rendered | Result from E20R\Sequences\Sequence::post_paging_nav() function |
 | e20r-sequence-list-html | The HTML (as a table) for a paginated list of posts (E20R Sequence posts) | $html - the HTML that will render to show the paginated list (self-contained <div> |
-| e20r-sequence-email-alert-template-path | The path to the email alert template(s) | $path = E20R_SEQUENCE_PLUGIN_DIR . "/email/" - the file system path to the templates | 
+| e20r-sequence-email-alert-template-path | Array of paths to the email alert template(s) | $path = E20R_SEQUENCE_PLUGIN_DIR . "/email/" - the file system path to the templates | 
 | e20r-sequence-has-access-filter | A plug-in specific version of the pmpro_has_membership_access_filter filter | $hasAccess (bool), (WP_Post) $post, (WP_User) $user, (array) $levels |
 | e20r-sequence-add-startdate-offset | Offset the apparent startdate for a user when calculating access rights for a specific sequence. | (int) $sequence_id |
 | e20r-sequence-check-valid-date | Check whether the supplied string is a valid date. Return true if so. | Return value from E20R\Sequences\Sequence::isValidDate( $delay ) |
