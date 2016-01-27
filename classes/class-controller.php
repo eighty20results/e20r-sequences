@@ -3344,16 +3344,29 @@ class Controller
         <option value=""></option>
         <?php
 
+		E20RTools\DBG::log("Found " . count($template_path) . " user specific custom templates:");
+		E20RTools\DBG::log($template_path);
+
         $f_dirs = apply_filters( 'e20r-sequence-email-alert-template-path', array( E20R_SEQUENCE_PLUGIN_DIR . "/email/" ) );
 
+		if (!is_array($f_dirs)) {
+
+			$f_dirs = array($f_dirs);
+		}
+
 		$template_path = array_merge($template_path, $f_dirs);
+
+		E20RTools\DBG::log("Total number of template paths: " . count($template_path));
 
 		foreach ( $template_path as $dir ) {
 
 			chdir($dir);
 
+			E20RTools\DBG::log("Processing directory: {$dir}");
+
 	        foreach ( glob('*.html') as $file) {
 
+				E20RTools\DBG::log("File: {$file}");
 	            echo('<option value="' . sanitize_file_name($file) . '" ' . selected( esc_attr( $this->options->noticeTemplate), sanitize_file_name($file) ) . ' >' . sanitize_file_name($file) .'</option>');
 	        }
 		}
@@ -4493,6 +4506,7 @@ class Controller
                 }
 
                 $post_links = '<a href="'. wp_login_url($post->permalink) . '" title="' . $post->title . '">' . $post->title . '</a>';
+				$post_url = wp_login_url($post->permalink);
 
                 $emails[$idx]->body = $template_content;
 
@@ -4500,6 +4514,7 @@ class Controller
                     "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
                     "sitename" => get_option("blogname"),
                     "post_link" => $post_links,
+                    'post_url' => $post_url,
                     "today" => $post_date,
                     "excerpt" => $excerpt,
                     "ptitle" => $post->title
