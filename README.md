@@ -94,6 +94,7 @@ See ./email/README.txt for information on templates for the email alerts.
 | e20r-sequence-membership-access | Whether the user ID has been granted access to the post ID specified | 3 element array: 0 => boolean for access, 1 => Numeric array of level Ids w/access, 2 => string array of level descr |
 | e20r-sequence-default-sender-email | The email address to use as the default sequence notification sender | email address for admin user |
 | e20r-sequence-default-sender-name | The name to use as the default sequence notification sender | Name of the admin user (display name) |
+| e20r-sequence-site-name | A text/string containing the name you wish to use as the blog name for this site | get_option('blogname') |
 
 ##Roadmap (possible features)
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
@@ -114,6 +115,23 @@ For more, see the [Issues section](https://github.com/eighty20results/e20r-seque
  A fair bit (understatement) of data which will get dumped into uploads/e20r-sequences/debug_log.txt
  (located the under the plugin directory).
 
+## About the email alert templates
+ These templates are standard HTML files and need to have .html as their extension. By default, we have included two template files, one template is for the scenario where you want to send one alert per new post available that day. The other is a digest approach where we include a link of posts that were made available for the sequence and user that day.
+  
+  The alert templates support a few variables that it can substitute:
+  
+  `!!name!!` - The First Name for the user as defined in their profile
+  `!!sitename!!` - A filtered variable containing the name of the site (default: is the option 'blogname' as defined in the Site settings).
+  `!!post_link!!` - Either an <a href> tag (if configured to send one message per new post) or an unordered list of <a href> entries for each of the posts made available that day (depending on settings).
+  `!!post_url!!` - The URL to the available post (only available when configured to send one alert per newly available post/page for the user).
+  `!!today!!` - The date for when the user is supposed to get access to the specified post/page in the sequence (i.e. membership startdate + delay value)
+  `!!excerpt!!` - The excerpt from the post/page containing the content we're sending a reminder about.
+  `!!ptitle!!` - The title of the post/page we're sending the alert about.
+  
+  The template file _must_ end with the .html extension. 
+   
+  Whether or not the template file contains any of the replaceable variables is entirely optional.
+  
 ## Shortcode attributes
 
 ###[sequence_links]
@@ -186,10 +204,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.10
-* FIX: Would sometimes trip on Singleton error
-* FIX: Updated language files
-* FIX: Removed old language files (didn't load)
+###4.2.11
+* FIX: e20r-sequence-email-alert-template-path requires array() of paths as argument
+* FIX: Support for customized reminder templates (stored in 'sequence-email-alert' directory under active theme.
+* FIX: Add login form redirect support to email notices
+* ENH: Add !!post_url!! as valid substitution in email templates.
+* ENH: Add filter to !!sitename!! variable for email alerts
 
 ##Old releases
 ###.1
@@ -840,3 +860,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Autoloader needs to support new DBG:: class.
 * ENH: Updated translation files for Norwegian/Bokmål
 * ENH: Refactor debug functionality to own class & namespace
+
+###4.2.10
+* FIX: Would sometimes trip on Singleton error
+* FIX: Updated language files
+* FIX: Removed old language files (didn't load)
+

@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial, delayed, limited, memberships
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.2.10
+Stable tag: 4.2.11
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -68,6 +68,24 @@ For more, see the [Issues section](https://github.com/eighty20results/e20r-seque
  To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
  A LOT of data which will get dumped into debug/sequence_debug_log.txt
  (located the under the plugin directory).
+
+
+== About the email alert templates ==
+ These templates are standard HTML files and need to have .html as their extension. By default, we have included two template files, one template is for the scenario where you want to send one alert per new post available that day. The other is a digest approach where we include a link of posts that were made available for the sequence and user that day.
+
+  The alert templates support a few variables that it can substitute:
+
+  `!!name!!` - The First Name for the user as defined in their profile
+  `!!sitename!!` - A filtered variable containing the name of the site (default: is the option 'blogname' as defined in the Site settings).
+  `!!post_link!!` - Either an <a href> tag (if configured to send one message per new post) or an unordered list of <a href> entries for each of the posts made available that day (depending on settings).
+  `!!post_url!!` - The URL to the available post (only available when configured to send one alert per newly available post/page for the user).
+  `!!today!!` - The date for when the user is supposed to get access to the specified post/page in the sequence (i.e. membership startdate + delay value)
+  `!!excerpt!!` - The excerpt from the post/page containing the content we're sending a reminder about.
+  `!!ptitle!!` - The title of the post/page we're sending the alert about.
+
+  The template file _must_ end with the .html extension.
+
+  Whether or not the template file contains any of the replaceable variables is entirely optional.
 
 == Shortcode attributes
 
@@ -138,6 +156,13 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.2.11 ==
+* FIX: e20r-sequence-email-alert-template-path shortcode requires array() of paths as argument
+* FIX: Support for customized reminder templates (stored in 'sequence-email-alert' directory under active theme.
+* FIX: Add login form redirect support to email notices
+* ENH: Add !!post_url!! as valid substitution in email templates.
+* ENH: Add filter to !!sitename!! variable for email alerts
 
 == 4.2.10 ==
 * FIX: Would sometimes trip on Singleton error
