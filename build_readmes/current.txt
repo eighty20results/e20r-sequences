@@ -1,5 +1,1 @@
-FIX: e20r-sequence-email-alert-template-path requires array() of paths as argument
-FIX: Support for customized reminder templates (stored in 'sequence-email-alert' directory under active theme.
-FIX: Add login form redirect support to email notices
-ENH: Add !!post_url!! as valid substitution in email templates.
-ENH: Add filter to !!sitename!! variable for email alerts
+FIX: Error while attempting to print debug output

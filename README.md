@@ -204,12 +204,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.11
-* FIX: e20r-sequence-email-alert-template-path requires array() of paths as argument
-* FIX: Support for customized reminder templates (stored in 'sequence-email-alert' directory under active theme.
-* FIX: Add login form redirect support to email notices
-* ENH: Add !!post_url!! as valid substitution in email templates.
-* ENH: Add filter to !!sitename!! variable for email alerts
+###4.2.12
+* FIX: Error while attempting to print debug output
 
 ##Old releases
 ###.1
@@ -866,3 +862,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * FIX: Updated language files
 * FIX: Removed old language files (didn't load)
 
+###4.2.11
+* FIX: e20r-sequence-email-alert-template-path requires array() of paths as argument
+* FIX: Support for customized reminder templates (stored in 'sequence-email-alert' directory under active theme.
+* FIX: Add login form redirect support to email notices
+* ENH: Add !!post_url!! as valid substitution in email templates.
+* ENH: Add filter to !!sitename!! variable for email alerts
