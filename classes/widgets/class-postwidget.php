@@ -22,6 +22,7 @@ namespace E20R\Sequences\Tools\Widgets;
 
 use E20R\Sequences as Sequences;
 use E20R\Sequences\Tools\Widgets as Widget;
+use E20R\Tools as E20RTools;
 
 class PostWidget extends \WP_Widget {
 
@@ -203,7 +204,7 @@ class PostWidget extends \WP_Widget {
 
 				add_image_size( 'e20r_seq_recentpost_widget_size', 85, 45, false );
 
-				// $sequence->dbg_log("Widget - Posts: " . print_r($seq_post, true));
+				// E20RTools\DBG::log("Widget - Posts: " . print_r($seq_post, true));
 
 				$image = ( has_post_thumbnail( $seqPost->id ) ? get_the_post_thumbnail( $seqPost->id, 'e20r_seq_recentpost_widget_size' ) : '<div class="noThumb"></div>' );
 

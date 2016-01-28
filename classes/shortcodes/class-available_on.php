@@ -7,6 +7,7 @@
  */
 
 namespace E20R\Sequences\Shortcodes;
+use E20R\Tools as E20RTools;
 
 class available_on
 {
@@ -53,7 +54,7 @@ class available_on
         $delay = 0;
 
         $sequence_obj = apply_filters('get_sequence_class_instance', null);
-        $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - Processing attributes.");
+        E20RTools\DBG::log("Shortcodes\\available_on::load_shortcode() - Processing attributes.");
 
         $when = 'today';
 
@@ -63,15 +64,15 @@ class available_on
 
         /*
         if (!in_array($attributes['type'], array('days', 'date'))) {
-            $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - User didn't specify the correct type attribute in the shortcode definition. Used: {$attributes['type']}");
+            E20RTools\DBG::log("Shortcodes\\available_on::load_shortcode() - User didn't specify the correct type attribute in the shortcode definition. Used: {$attributes['type']}");
             wp_die( sprintf(__('%s is not a valid type attribute for the e20r_available_on shortcode', 'e20rsequence'), $type));
         }
         */
-        $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - When attribute is specified: {$attributes['when']}");
+        E20RTools\DBG::log("Shortcodes\\available_on::load_shortcode() - When attribute is specified: {$attributes['when']}");
 
         if ( !is_numeric( $attributes['when'] ) && (false === strtotime( $attributes['when'] )) ) {
 
-            $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - User didn't specify a recognizable format for the 'when' attribute");
+            E20RTools\DBG::log("Shortcodes\\available_on::load_shortcode() - User didn't specify a recognizable format for the 'when' attribute");
             wp_die( sprintf(__('%s is not a recognizable format for the when attribute in the e20r_available_on shortcode', 'e20rsequence'), $attributes['when']));
         }
 
@@ -83,11 +84,11 @@ class available_on
 
         if ($delay <= $days_since_start) {
 
-            $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - We need to display the content for the shortcode.");
+            E20RTools\DBG::log("Shortcodes\\available_on::load_shortcode() - We need to display the content for the shortcode.");
             return do_shortcode($content);
         }
 
-        $sequence_obj->dbg_log("Shortcodes\\available_on::load_shortcode() - We can't display the content within the shortcode block: {$delay} vs {$days_since_start}");
+        E20RTools\DBG::log("Shortcodes\\available_on::load_shortcode() - We can't display the content within the shortcode block: {$delay} vs {$days_since_start}");
         return apply_filters('e20r-sequence-shortcode-text-unavailable', null);
     }
 

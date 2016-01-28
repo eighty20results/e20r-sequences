@@ -205,7 +205,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSequence')):
 
         if (class_exists('PMProSequence')) {
 
-            $sequence->dbg_log("convert_pmpro_sequence() - PMPro Sequences is still active. Can't convert!");
+            E20RTools\DBG::log("PMPro Sequences is still active. Can't convert!");
             return;
         }
     }
