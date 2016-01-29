@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid m
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.3
+Stable tag: 4.3.1
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -86,6 +86,10 @@ For more, see the [Issues section](https://github.com/eighty20results/e20r-seque
   The template file _must_ end with the .html extension.
 
   Whether or not the template file contains any of the replaceable variables is entirely optional.
+
+    _Note_: As of v4.3, the admin can define any substitutions they would like in the template, and apply the 'e20r-sequence-email-substitution-fields' filter to do the "dirty work". The substitutions will be executed before the email gets sent to the user. Also new in 4.3 is the fact that all of the above listed substitution vairables have filters (See the sources for information on the filters).
+
+    All field names need to be wrapped in dual "bang" characters ('!'). However, when specifying the substitution variable it's done without any '!!' characters. I.e. '!!post_url!! becomes `'post_url' => "http://example.com/my-post-name"` in the substitution array.
 
 == Shortcode attributes
 
