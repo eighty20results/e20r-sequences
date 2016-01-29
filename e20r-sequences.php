@@ -3,7 +3,7 @@
 Plugin Name: Sequences by Eighty / 20 Results
 Plugin URI: https://eighty20results.com/plugins/e20r-sequences/
 Description: Drip feed content for your users (See website for available membership module support).
-Version: 4.3.1
+Version: 4.3.2
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen
@@ -28,7 +28,7 @@ License:
 
 */
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '4.3.1');
+define('E20R_SEQUENCE_VERSION', '4.3.2');
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
 define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.4');
@@ -41,5 +41,5 @@ if ( version_compare( PHP_VERSION, E20R_SEQ_REQUIRED_PHP_VERSION, '<=' ) ) {
     add_action( 'admin_notices', create_function( '', "echo '<div class=\"error\"><p>".sprintf( __('The Sequences by Eighty / 20 Results plugin <strong>requires PHP %s or later</strong> and will not function properly without it. Please upgrade PHP on this server, or deactivate Sequences by Eighty / 20 Results.', 'e20rsequence'), E20R_SEQ_REQUIRED_PHP_VERSION ) ."</p></div>';" ) );
     return;
 } else {
-    require_once( E20R_SEQUENCE_PLUGIN_DIR . '/e20r-sequences-loader.php');
+    require_once( E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences-loader.php');
 }
