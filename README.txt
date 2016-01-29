@@ -161,6 +161,10 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 4.3.2 ==
+* FIX: Add e20r-sequences loader file to build
+* FIX: Incorrect path to loader file
+
 == 4.3.1 ==
 * FIX: Didn't always have a saved setting for the type of alert to send (digest or individual for each post).
 * FIX: Verify correct PHP version before loading the plugin

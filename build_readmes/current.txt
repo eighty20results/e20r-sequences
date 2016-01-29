@@ -1,8 +1,2 @@
-FIX: Didn't always have a saved setting for the type of alert to send (digest or individual for each post).
-FIX: Verify correct PHP version before loading the plugin
-FIX: License header
-ENH: Fix I18N string for PHP warning
-ENH: Updated Norwegian translation files
-ENH: Update README.txt to highlight new substitution filter(s)
-ENH: Update README.md to highlight new substitution filter(s)
-ENH: Add set_option_by_name() function
+FIX: Add e20r-sequences loader file to build
+FIX: Incorrect path to loader file
