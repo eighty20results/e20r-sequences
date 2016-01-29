@@ -1,7 +1,7 @@
 #!/bin/bash
 # Build script for Eighty/20 Results - Sequences plugin
 #
-include=(classes email css fonts images js languages e20r-sequences.php README.txt)
+include=(classes email css fonts images js languages e20r-sequences.php e20r-sequences-loader.php README.txt)
 exclude=(*.yml *.phar composer.* vendor)
 build=(classes/plugin-updates/vendor/*.php)
 short_name="e20r-sequences"
