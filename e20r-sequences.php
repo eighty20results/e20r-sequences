@@ -38,7 +38,7 @@ define('E20R_SEQUENCE_PLUGIN_DIR', plugin_dir_path(__FILE__));
 define('E20R_SEQUENCE_PLUGIN_URL', plugin_dir_url(__FILE__));
 
 if ( version_compare( PHP_VERSION, E20R_SEQ_REQUIRED_PHP_VERSION, '<=' ) ) {
-    add_action( 'admin_notices', create_function( '', "echo '<div class=\"error\"><p>".__('The Sequences by Eighty / 20 Results plugin <strong>requires PHP " . E20R_SEQ_REQUIRED_PHP_VERSION . " or later</strong> to function properly. Please upgrade PHP or deactivate Sequences by Eighty / 20 Results.', 'e20rsequence') ."</p></div>';" ) );
+    add_action( 'admin_notices', create_function( '', "echo '<div class=\"error\"><p>".sprintf( __('The Sequences by Eighty / 20 Results plugin <strong>requires PHP %s or later</strong> and will not function properly without it. Please upgrade PHP on this server, or deactivate Sequences by Eighty / 20 Results.', 'e20rsequence'), E20R_SEQ_REQUIRED_PHP_VERSION ) ."</p></div>';" ) );
     return;
 } else {
     require_once( E20R_SEQUENCE_PLUGIN_DIR . '/e20r-sequences-loader.php');
