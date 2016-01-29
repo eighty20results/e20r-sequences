@@ -161,6 +161,16 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 4.3.1 ==
+* FIX: Didn't always have a saved setting for the type of alert to send (digest or individual for each post).
+* FIX: Verify correct PHP version before loading the plugin
+* FIX: License header
+* ENH: Fix I18N string for PHP warning
+* ENH: Updated Norwegian translation files
+* ENH: Update README.txt to highlight new substitution filter(s)
+* ENH: Update README.md to highlight new substitution filter(s)
+* ENH: Add set_option_by_name() function
+
 == 4.3 ==
 * FIX: Remove function name(s) in debug output for cron job(s).
 * FIX: Clean up path management for template(s).

@@ -208,19 +208,15 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.3
-* FIX: Remove function name(s) in debug output for cron job(s).
-* FIX: Clean up path management for template(s).
-* ENH: Remove dependency on PMProMailer class and roll our own mailer class.
-* ENH: Introduce use of own function for fetching Sequence option(s)
-* ENH: Rename prepare_mailobj() function to prepare_mail_obj()
-* ENH: Use get_option_by_name() in prepare_mail_obj()
-* ENH: Remove dependency on PMPro mail class (roll our own, based on theirs)
-* ENH: Add E20R\Sequences\Tools\e20rMail() class
-* ENH: Use own email class
-* ENH: Make all substitute codes filterable by default.
-* ENH: Add filter to modify/set data to substitute
-* ENH: Clean up how we handle directories and files for templates
+###4.3.1
+* FIX: Didn't always have a saved setting for the type of alert to send (digest or individual for each post).
+* FIX: Verify correct PHP version before loading the plugin
+* FIX: License header
+* ENH: Fix I18N string for PHP warning
+* ENH: Updated Norwegian translation files
+* ENH: Update README.txt to highlight new substitution filter(s)
+* ENH: Update README.md to highlight new substitution filter(s)
+* ENH: Add set_option_by_name() function
 
 ##Old releases
 ###.1
@@ -886,3 +882,17 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.2.12
 * FIX: Error while attempting to print debug output
+
+###4.3
+* FIX: Remove function name(s) in debug output for cron job(s).
+* FIX: Clean up path management for template(s).
+* ENH: Remove dependency on PMProMailer class and roll our own mailer class.
+* ENH: Introduce use of own function for fetching Sequence option(s)
+* ENH: Rename prepare_mailobj() function to prepare_mail_obj()
+* ENH: Use get_option_by_name() in prepare_mail_obj()
+* ENH: Remove dependency on PMPro mail class (roll our own, based on theirs)
+* ENH: Add E20R\Sequences\Tools\e20rMail() class
+* ENH: Use own email class
+* ENH: Make all substitute codes filterable by default.
+* ENH: Add filter to modify/set data to substitute
+* ENH: Clean up how we handle directories and files for templates
