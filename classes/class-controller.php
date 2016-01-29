@@ -478,6 +478,12 @@ class Controller
         return $this->options->{$option};
     }
 
+    public function set_option_by_name( $option, $value )
+    {
+        $this->options->{$option} = $value;
+    }
+
+
     private function get_cache_expiry($sequence_id) {
 
         E20RTools\DBG::log("get_cache_expiry(): Loading cache timeout value for {$sequence_id}");
@@ -4466,6 +4472,15 @@ class Controller
 
         $user_started = ($this->get_user_startdate($user_id) - DAY_IN_SECONDS);
 
+        $send_as = $this->get_option_by_name('noticeSendAs');
+
+        if ( empty($send_as) ) {
+
+            E20RTools\DBG::log("WARNING: Have to update the noticeSendAs setting!");
+            $this->set_option_by_name('noticeSendAs', E20R_SEQ_SEND_AS_SINGLE );
+            $this->save_settings($seq_id);
+        }
+
         foreach( $posts as $post ) {
 
             $as_list = false;
@@ -4473,7 +4488,7 @@ class Controller
             $post_date = date($this->get_option_by_name('dateformat'), ($user_started + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS)));
 
             // Send all of the links to new content in a single email message.
-            if ( E20R_SEQ_SEND_AS_LIST == $this->get_option_by_name('noticeSendAs') ) {
+            if ( E20R_SEQ_SEND_AS_LIST == $send_as ) {
 
                 $idx = 0;
 				$post_links .= '<li><a href="'. wp_login_url($post->permalink) . '" title="' . $post->title . '">' . $post->title . '</a></li>\n';
@@ -4500,8 +4515,7 @@ class Controller
                     $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
                 }
             }
-
-            if ( E20R_SEQ_SEND_AS_SINGLE == $this->options->noticeSendAs ) {
+            elseif ( E20R_SEQ_SEND_AS_SINGLE == $send_as ) {
 
                 // Send one email message per piece of new content.
                 $emails[] = $this->prepare_mail_obj($post, $user, $templ[0]);
@@ -4541,6 +4555,7 @@ class Controller
 
                 $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
             }
+
 
         }
 
