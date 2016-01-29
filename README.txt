@@ -1,10 +1,10 @@
 === Eighty/20 Results - Sequences ===
 Contributors: eighty20results
-Tags: sequence, drip feed, serial, delayed, limited, memberships
+Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.2.12
+Stable tag: 4.3
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -156,6 +156,20 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.3 ==
+* FIX: Remove function name(s) in debug output for cron job(s).
+* FIX: Clean up path management for template(s).
+* ENH: Remove dependency on PMProMailer class and roll our own mailer class.
+* ENH: Introduce use of own function for fetching Sequence option(s)
+* ENH: Rename prepare_mailobj() function to prepare_mail_obj()
+* ENH: Use get_option_by_name() in prepare_mail_obj()
+* ENH: Remove dependency on PMPro mail class (roll our own, based on theirs)
+* ENH: Add E20R\Sequences\Tools\e20rMail() class
+* ENH: Use own email class
+* ENH: Make all substitute codes filterable by default.
+* ENH: Add filter to modify/set data to substitute
+* ENH: Clean up how we handle directories and files for templates
 
 == 4.2.12 ==
 * FIX: Error while attempting to print debug output

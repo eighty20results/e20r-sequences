@@ -204,8 +204,19 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.2.12
-* FIX: Error while attempting to print debug output
+###4.3
+* FIX: Remove function name(s) in debug output for cron job(s).
+* FIX: Clean up path management for template(s).
+* ENH: Remove dependency on PMProMailer class and roll our own mailer class.
+* ENH: Introduce use of own function for fetching Sequence option(s)
+* ENH: Rename prepare_mailobj() function to prepare_mail_obj()
+* ENH: Use get_option_by_name() in prepare_mail_obj()
+* ENH: Remove dependency on PMPro mail class (roll our own, based on theirs)
+* ENH: Add E20R\Sequences\Tools\e20rMail() class
+* ENH: Use own email class
+* ENH: Make all substitute codes filterable by default.
+* ENH: Add filter to modify/set data to substitute
+* ENH: Clean up how we handle directories and files for templates
 
 ##Old releases
 ###.1
@@ -868,3 +879,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * FIX: Add login form redirect support to email notices
 * ENH: Add !!post_url!! as valid substitution in email templates.
 * ENH: Add filter to !!sitename!! variable for email alerts
+
+###4.2.12
+* FIX: Error while attempting to print debug output
