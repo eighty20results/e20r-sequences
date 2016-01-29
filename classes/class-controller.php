@@ -468,6 +468,16 @@ class Controller
         return $settings;
     }
 
+    public function get_option_by_name( $option )
+    {
+        if ( ! isset($this->options->{$option} ) ) {
+
+            return false;
+        }
+
+        return $this->options->{$option};
+    }
+
     private function get_cache_expiry($sequence_id) {
 
         E20RTools\DBG::log("get_cache_expiry(): Loading cache timeout value for {$sequence_id}");
@@ -4366,19 +4376,22 @@ class Controller
         return array();
     }
 
-    private function prepare_mailobj( $post, $user, $template ) {
+    private function prepare_mail_obj( $post, $user, $template ) {
 
-        // TODO: Fix and remove dependency on PMProEmail()
-        $email = new \PMProEmail();
+        E20RTools\DBG::log("Attempting to load email class...");
+
+        $email = new Tools\e20rMail();
+
+        E20RTools\DBG::log("Loaded " . get_class($email));
 
         $user_started = ($this->get_user_startdate($user->ID) - DAY_IN_SECONDS) + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS);
 
-        $email->from = $this->options->replyto; // = pmpro_getOption('from_email');
+        $email->from = $this->get_option_by_name('replyto');
         $email->template = $template;
-        $email->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
-        $email->email = $user->user_email;
-        $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->title, strftime("%x", $user_started));
-        $email->dateformat = $this->options->dateformat;
+        $email->fromname = $this->get_option_by_name('fromname');
+        $email->to = $user->user_email;
+        $email->subject = sprintf('%s: %s (%s)', $this->get_option_by_name('subject'), $post->title, strftime("%x", $user_started));
+        $email->dateformat = $this->get_option_by_name('dateformat');
 
         return $email;
 
@@ -4395,21 +4408,21 @@ class Controller
      *
      * TODO: Fix email body to be correct (standards compliant) MIME encoded HTML mail or text mail.
      */
-    public function send_notice($posts, $user_id, $seq_id) {
-
+    public function send_notice($posts, $user_id, $seq_id)
+    {
         // Make sure the email class is loaded.
-        if ( ! class_exists( '\\PMProEmail' ) ) {
-            E20RTools\DBG::log("send_notice() - PMProEmail class is missing??");
+        if ( ! class_exists( 'E20R\\Sequences\\Tools\\e20rMail' ) ) {
+            E20RTools\DBG::log("Tools\\e20rMail class is missing??");
             return;
         }
 
-        if ( !is_array( $posts ) ) {
+        if ( ! is_array( $posts ) ) {
 
             $posts = array( $posts );
         }
 
         $user = get_user_by('id', $user_id);
-        $templ = preg_split('/\./', $this->options->noticeTemplate); // Parse the template name
+        $templ = preg_split('/\./', $this->get_option_by_name('noticeTemplate')); // Parse the template name
 
         $emails = array();
 
@@ -4417,13 +4430,13 @@ class Controller
         $excerpt = '';
         $ga_tracking = '';
 
-        E20RTools\DBG::log("send_notice() - Preparing to send " . count( $posts ) . " post alerts for user {$user_id} regarding sequence {$seq_id}");
+        E20RTools\DBG::log("Preparing to send " . count( $posts ) . " post alerts for user {$user_id} regarding sequence {$seq_id}");
         E20RTools\DBG::log($templ);
 
         // Add data/img entry for google analytics.
+        $track_with_ga = $this->get_option_by_name('track_google_analytics');
 
-        if ( isset( $this->options->track_google_analytics ) &&
-            ( true === $this->options->track_google_analytics ) ) {
+        if ( ! empty( $track_with_ga) && ( true === $track_with_ga ) ) {
 
             // FIXME: get_google_analytics_client_id() can't work since this isn't being run during a user session!
             $cid = esc_html( $this->ga_getCid() );
@@ -4447,7 +4460,7 @@ class Controller
 
         if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
 
-            E20RTools\DBG::log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
+            E20RTools\DBG::log('ERROR: Could not read content from template file: '. $this->get_option_by_name('noticeTemplate'));
             return false;
         }
 
@@ -4455,13 +4468,12 @@ class Controller
 
         foreach( $posts as $post ) {
 
-            // $post = get_post($p->id);
             $as_list = false;
 
-            $post_date = date($this->options->dateformat, ($user_started + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS)));
+            $post_date = date($this->get_option_by_name('dateformat'), ($user_started + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS)));
 
             // Send all of the links to new content in a single email message.
-            if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
+            if ( E20R_SEQ_SEND_AS_LIST == $this->get_option_by_name('noticeSendAs') ) {
 
                 $idx = 0;
 				$post_links .= '<li><a href="'. wp_login_url($post->permalink) . '" title="' . $post->title . '">' . $post->title . '</a></li>\n';
@@ -4469,34 +4481,37 @@ class Controller
                 if (false === $as_list) {
 
                     $as_list = true;
-                    $emails[$idx] = $this->prepare_mailobj($post, $user, $templ[0]);
+                    $emails[$idx] = $this->prepare_mail_obj( $post, $user, $this->get_option_by_name('noticeTemplate') );
                     $emails[$idx]->body = $template_content;
 
-                    $emails[$idx]->data = array(
-                        "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
-                        "sitename" => get_option("blogname"),
-                        "today" => $post_date,
-                        "excerpt" => '',
-                        "ptitle" => $post->title
+                    $data = array(
+                        "name"      => apply_filters( 'e20r-sequence-alert-message-name', $user->user_firstname ), // Options could be: display_name, first_name, last_name, nickname
+                        "sitename"  => apply_filters('e20r-sequence-site-name', get_option("blogname")),
+                        "today"     => apply_filters( 'e20r-sequence-alert-message-date', $post_date ),
+                        "excerpt"   => apply_filters( 'e20r-sequence-alert-message-excerpt-intro', $post->excerpt ),
+                        "post_link" => apply_filters( 'e20r-sequence-alert-message-link-href-element', $post_links ),
+                        "ptitle"    => apply_filters( 'e20r-sequence-alert-message-title', $post->title ),
                     );
 
                     if ( isset( $this->options->track_google_analytics ) && ( true == $this->options->track_google_analytics) ) {
-                       $emails[$idx]->data['google_analytics'] = $ga_tracking;
+                       $data['google_analytics'] = $ga_tracking;
                     }
+
+                    $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
                 }
             }
 
             if ( E20R_SEQ_SEND_AS_SINGLE == $this->options->noticeSendAs ) {
 
                 // Send one email message per piece of new content.
-                $emails[] = $this->prepare_mailobj($post, $user, $templ[0]);
+                $emails[] = $this->prepare_mail_obj($post, $user, $templ[0]);
 
                 // super defensive programming...
                 $idx = ( empty( $emails ) ? 0 : count($emails) - 1);
 
                 if ( !empty( $post->excerpt ) ) {
 
-                    E20RTools\DBG::log("send_notice() - Adding the post excerpt to email notice");
+                    E20RTools\DBG::log("Adding the post excerpt to email notice");
 
                     if ( empty( $this->options->excerpt_intro ) ) {
                         $this->options->excerpt_intro = __('A summary:', "e20rsequence");
@@ -4510,36 +4525,46 @@ class Controller
 
                 $emails[$idx]->body = $template_content;
 
-                $emails[$idx]->data = array(
-                    "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
-                    "sitename" => apply_filters('e20r-sequence-site-name', get_option("blogname")),
-                    "post_link" => $post_links,
-                    'post_url' => $post_url,
-                    "today" => $post_date,
-                    "excerpt" => $excerpt,
-                    "ptitle" => $post->title
-                );
-
                 if ( isset( $this->options->track_google_analytics ) && ( true == $this->options->track_google_analytics) ) {
-                   $emails[$idx]->data['google_analytics'] = $ga_tracking;
+                   $data['google_analytics'] = $ga_tracking;
                 }
 
-            }
+                $data = array(
+                    "name"          => apply_filters( 'e20r-sequence-alert-message-name', $user->user_firstname ), // Options could be: display_name, first_name, last_name, nickname
+                    "sitename"      => apply_filters( 'e20r-sequence-site-name', get_option("blogname")),
+                    "post_link"     => apply_filters( 'e20r-sequence-alert-message-link-href-element', $post_links ),
+                    'post_url'      => apply_filters( 'e20r-sequence-alert-message-post-permalink', $post_url ),
+                    "today"         => apply_filters( 'e20r-sequence-alert-message-date', $post_date ),
+                    "excerpt"       => apply_filters( 'e20r-sequence-alert-message-excerpt-intro', $post->excerpt ),
+                    "ptitle" => apply_filters( 'e20r-sequence-alert-message-title', $post->title ),
+                );
 
-            // Append the post_link ul/li element list when asking to send as list.
-            if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
-                $emails[$idx]->data['post_link'] = "<ul>\n" . $post_links . "</ul>\n";
+                $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
             }
 
         }
 
-        E20RTools\DBG::log("send_notice() - Have prepared " . count($emails) . " email notices for user {$user_id}");
+        // Append the post_link ul/li element list when asking to send as list.
+        if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
+
+            E20RTools\DBG::log('Set link variable for list of link format');
+            $emails[(count($emails) - 1)]->post_link = "<ul>\n" . $post_links . "</ul>\n";
+        }
+
+        $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
+
+        E20RTools\DBG::log("Have prepared " . count($emails) . " email notices for user {$user_id}");
+
+        $user = get_user_by( 'id', $user_id );
 
         // Send the configured email messages
         foreach ( $emails as $email ) {
 
-            E20RTools\DBG::log('send_notice() - Substitutions are: ' . print_r($email->data, true));
-            $email->sendEmail();
+            E20RTools\DBG::log('Email object: ' . get_class($email));
+            if ( false == $email->send() ) {
+
+                E20RTools\DBG::log("ERROR - Failed to send new sequence content email to {$user->user_email}! ");
+            }
         }
 
         // wp_reset_postdata();
@@ -4548,24 +4573,24 @@ class Controller
     }
 
     /**
-     * Check the theme/child-theme/PMPro Sequence plugin directory for the specified notice template.
+     * Check the theme/child-theme/Sequence plugin directory for the specified notice template.
      *
      * @return null|string -- Path to the selected template for the email alert notice.
      */
     private function email_template_path() {
 
-        if ( file_exists( get_stylesheet_directory() . "/sequence-email-alerts/{$this->options->noticeTemplate}")) {
+        if ( file_exists( get_stylesheet_directory() . "/sequence-email-alerts/" . $this->get_option_by_name('noticeTemplate') ) ) {
 
-            $template_path = get_stylesheet_directory() . "/sequence-email-alerts/{$this->options->noticeTemplate}";
+            $template_path = get_stylesheet_directory() . "/sequence-email-alerts/" . $this->get_option_by_name('noticeTemplate');
 
         }
-        elseif ( file_exists( get_template_directory() . "/sequence-email-alerts/{$this->options->noticeTemplate}" ) ) {
+        elseif ( file_exists( get_template_directory() . "/sequence-email-alerts/" . $this->get_option_by_name('noticeTemplate') ) ) {
 
-            $template_path = get_template_directory() . "/sequence-email-alerts/{$this->options->noticeTemplate}";
+            $template_path = get_template_directory() . "/sequence-email-alerts/" . $this->get_option_by_name('noticeTemplate');
         }
-        elseif ( file_exists( E20R_SEQUENCE_PLUGIN_DIR . "/email/{$this->options->noticeTemplate}" ) ) {
+        elseif ( file_exists( E20R_SEQUENCE_PLUGIN_DIR . "email/" . $this->get_option_by_name('noticeTemplate') ) ) {
 
-            $template_path = E20R_SEQUENCE_PLUGIN_DIR . "/email/{$this->options->noticeTemplate}";
+            $template_path = E20R_SEQUENCE_PLUGIN_DIR . "email/" . $this->get_option_by_name('noticeTemplate');
         }
         else {
 
