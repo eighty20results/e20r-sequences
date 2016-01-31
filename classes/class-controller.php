@@ -6656,7 +6656,7 @@ class Controller
 
         E20RTools\DBG::log("register_user_scripts() - 'sequence_links' or 'sequence_alert' shortcode present? " . ( $found_links || $found_optin ? 'Yes' : 'No') );
 
-        if ( ( true === $found_links ) || ( true === $found_optin ) || ( 'pmpro_sequence' == $this->get_post_type() ) ) {
+        if ( ( true === $found_links ) || ( true === $found_optin ) || ( 'pmpro_sequence' == $this->get_post_type() ) || 'pmpro_sequence' == $post->post_type ) {
 
             $load_e20r_sequence_script = true;
 
