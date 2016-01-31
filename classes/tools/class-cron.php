@@ -264,6 +264,11 @@ class Cron
 
                     foreach ($posts as $post) {
 
+                        if ( $post->delay == 0) {
+                            E20RTools\DBG::log("Since the delay value for this post {$post->id} is 0 (confirm: {$post->delay}), user {$s->user_id} won't be notified for it...");
+                            continue;
+                        }
+
                         E20RTools\DBG::log("Do we notify {$s->user_id} of availability of post # {$post->id}?");
                         $flag_value = "{$post->id}_" . $sequence->normalize_delay($post->delay);
 
