@@ -4305,23 +4305,24 @@ class Controller
 
         if ( $settings->optin_at != -1) {
 
-            E20RTools\DBG::log( 'is_after_opt_in() -- User: ' . $user_id . ' Optin TS: ' . $settings->optin_at .
+            E20RTools\DBG::log( 'User: ' . $user_id . ' Optin TS: ' . $settings->optin_at .
                 ', Optin Date: ' . date( 'Y-m-d', $settings->optin_at )
             );
 
             $delay_ts = $this->delay_as_timestamp( $post->delay, $user_id );
+            E20RTools\DBG::log("Timestamp for delay value: {$delay_ts}");
 
             // Compare the Delay to the optin (subtract 24 hours worth of time from the opt-in TS)
-            if ( $delay_ts >= ( $settings->last_notice_sent - (3600 * 24)) ) {
+            if ( $delay_ts >= ( $settings->last_notice_sent - DAY_IN_SECONDS ) ) {
 
-                E20RTools\DBG::log('is_after_opt_in() - This post SHOULD be allowed to be alerted on');
+                E20RTools\DBG::log('This post SHOULD be allowed to be alerted on');
                 return true;
             } else {
-                E20RTools\DBG::log('is_after_opt_in() - This post should NOT be allowed to be alerted on');
+                E20RTools\DBG::log('This post should NOT be allowed to be alerted on');
                 return false;
             }
         } else {
-            E20RTools\DBG::log('is_after_opt_in() - Negative opt-in timestamp value. The user  (' . $user_id . ') does not want to receive alerts');
+            E20RTools\DBG::log('Negative opt-in timestamp value. The user  (' . $user_id . ') does not want to receive alerts');
             return false;
         }
     }
