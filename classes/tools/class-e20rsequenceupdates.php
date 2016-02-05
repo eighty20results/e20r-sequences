@@ -31,7 +31,8 @@ class e20rSequenceUpdates
         self::$_this = $this;
 
         add_filter('get_sequence_update_class_instance', array( $this, 'get_instance'));
-        add_action('init', array($this, 'init'));
+        add_action('plugins_loaded', array($this, 'init'));
+        add_action('wp_loaded', array($this, 'update'), 1); // Run early
     }
 
     public function init() {
@@ -61,13 +62,20 @@ class e20rSequenceUpdates
         $su_class = apply_filters('get_sequence_update_class_instance',null);
         $version = $su_class->get_version();
 
-        E20RTools\DBG::log("Running pre (before) update action for {$version}");
-        do_action("e20r_sequence_before_update_{$version}");
+        $upgrade_file = str_replace('.', '_', $version);
 
-        E20RTools\DBG::log("Running update action for {$version}");
-        do_action("e20r_sequence_update_{$version}");
+        if (file_exists(E20R_SEQUENCE_PLUGIN_DIR . "upgrades/{$upgrade_file}.php"))
+        {
+            require_once(E20R_SEQUENCE_PLUGIN_DIR . "upgrades/{$upgrade_file}.php");
 
-        E20RTools\DBG::log("Running clean-up (after) update action for {$version}");
-        do_action("e20r_sequence_after_update_{$version}");
+            E20RTools\DBG::log("Running pre (before) update action for {$version}");
+            do_action("e20r_sequence_before_update_{$version}");
+
+            E20RTools\DBG::log("Running update action for {$version}");
+            do_action("e20r_sequence_update_{$version}");
+
+            E20RTools\DBG::log("Running clean-up (after) update action for {$version}");
+            do_action("e20r_sequence_after_update_{$version}");
+        }
     }
 }
