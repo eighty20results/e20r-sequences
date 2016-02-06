@@ -4,23 +4,25 @@ Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid m
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.4.0
+Stable tag: 4.4.1
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
 == Description ==
 This plugin currently requires Paid Memberships Pro and started life as a fork of the PMPro Series
- plugin by strangerstudios. However, I needed a drip-content plugin that supported different delay type options, paginated
+ plugin by Stranger Studios, LLC. However, I needed a drip-content plugin that supported different delay type options, paginated
  lists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type,
  etc, etc, so I wound up with something completely different from PMPro Series. At this point, there's really nothing
- left of the original fork.
+ left of the original in this fork.
 
 == Features ==
 
-* Configuration UI for the drip feed sequence (meta box)
-* Add supported post types to one or more sequences with one or more delay values from the post edit page
+* Configuration UI for the drip feed sequence (settings meta box)
+* Add the post/page you're editing to a sequence without leaving the Post/Page editor.
+* Extend support to other post types (CTPs) using filter
+* The plugin is translatable (I18N support)
 * [sequence_list] shortcode with attributes for paginated sequence list
-* [e20r_available_on] shortcode to prevent visibility of content between [e20r_available_on] and [/e20r_available_on] until a specific date, or until a certain number of days after the users membership started.
+* [e20r_available_on] shortcode to prevent visibility of the content placed between [e20r_available_on] and [/e20r_available_on], until a specific date, or until a certain number of days after the users membership started.
 * [sequence_alert] shortcode to display opt-in form for user to receive new sequence content alert emails.
 * Excerpt widget for current users's most recently available post (display post title & excerpt in widget).
 * Multiple delay values for the one post ID (i.e. repeating alerts & display in sequence lists)
@@ -166,6 +168,13 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.4.1 ==
+* FIX: Intermittent problem changing sort order
+* FIX: Didn't always display full sequence list for shortcode
+* FIX: Sequence listing didn't always display correctly in sequence_list shortcode
+* FIX: Pagination didn't always work after view/controller split
+* FIX: Didn't always run upgrade actions as expected.
 
 == 4.4.0 ==
 * FIX: Would sometimes error during display of available posts for sequence (in post list metabox)
