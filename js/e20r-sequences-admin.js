@@ -524,7 +524,7 @@ var postMeta = {
                 in_admin_panel: in_admin_panel,
                 e20r_seq_post: post_id,
                 e20r_seq_delay: delay,
-                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
+                e20r_sequence_post_nonce: jQuery('#e20r_sequence_post_nonce').val()
             },
             error: function(response, $errString, $errType){
 
@@ -624,7 +624,7 @@ var postMeta = {
                 e20r_sequence_id: jQuery('#e20r_sequence_id').val(),
                 e20r_sequence_post: jQuery('#e20r_sequencepost').val(),
                 e20r_sequence_delay: jQuery('#e20r_sequencedelay').val(),
-                e20r_sequence_addpost_nonce: jQuery('#e20r_sequence_addpost_nonce').val()
+                e20r_sequence_post_nonce: jQuery('#e20r_sequence_post_nonce').val()
             },
             error: function( $response, $errString, $errType ) {
                 console.log("error() - Returned data: " + $response + " and error:" + $errString + " and type: " + $errType );
@@ -790,7 +790,7 @@ var postMeta = {
             data: {
                 action: 'e20r_sequence_clear_cache',
                 e20r_sequence_id: sequence_id,
-                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
+                e20r_sequence_post_nonce: jQuery('#e20r_sequence_post_nonce').val()
             },
             error: function($data, $errString, $errType){
 
