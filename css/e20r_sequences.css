@@ -437,3 +437,4 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
 .table_newmeta.e20r-meta-table-col-3 a.button {
     text-align: right;
 }
+.table_newmeta .select2-container {width: 100%;}
