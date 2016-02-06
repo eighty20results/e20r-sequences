@@ -1,8 +1,9 @@
 #!/bin/bash
 # Build script for Eighty/20 Results - Sequences plugin
 #
-include=(classes email css fonts images js languages e20r-sequences.php README.txt)
+include=(classes email css fonts images js languages upgrades e20r-sequences.php e20r-sequences-loader.php README.txt)
 exclude=(*.yml *.phar composer.* vendor)
+build=(classes/plugin-updates/vendor/*.php)
 short_name="e20r-sequences"
 plugin_path="${short_name}"
 version=$(egrep "^Version:" ../${short_name}.php | awk '{print $2}')
@@ -29,7 +30,12 @@ for p in ${include[@]}; do
 done
 
 for e in ${exclude[@]}; do
-    find ${dst_path} -name ${e} -exec rm -rf {} \;
+    find ${dst_path} -type d -iname ${e} -exec rm -rf {} \;
+done
+
+mkdir -p ${dst_path}/classes/plugin-updates/vendor/
+for b in ${build[@]}; do
+    cp ${src_path}${b} ${dst_path}/classes/plugin-updates/vendor/
 done
 
 cd ${dst_path}/..

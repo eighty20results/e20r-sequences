@@ -6,12 +6,11 @@ use E20R\Sequences\Main as Main;
 use E20R\Sequences\Sequence as Sequence;
 use E20R\Sequences\Tools as Tools;
 use E20R\Sequences\Shortcodes as Shortcodes;
-
+use E20R\Tools as E20RTools;
 /*
   License:
 
-	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
-	Copyright 2013 Stranger Studios (jason@strangerstudios.com)
+	Copyright 2014-2016 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -27,15 +26,15 @@ use E20R\Sequences\Shortcodes as Shortcodes;
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-
 class Controller
 {
     public $options;
     public $sequence_id = 0;
     public $error = null;
-    public $e20r_sequence_user_level; // List of available posts for user ID
-    public $e20r_sequence_user_id; // list of future posts for user ID (if the sequence is configured to show hidden posts)
+    public $e20r_sequence_user_level = null; // List of available posts for user ID
+    public $e20r_sequence_user_id = null; // list of future posts for user ID (if the sequence is configured to show hidden posts)
     public $is_cron = false; // WP_POST definition for the sequence
+
     private $id;
     private $posts = array();
     private $cached_for = null;
@@ -44,11 +43,17 @@ class Controller
     private $managed_types = null;
     private $current_metadata_versions = array();
 
+    private static $select2_version = '4.0.1';
+    private static $seq_post_type = 'pmpro_sequence';
+
     // private static $transient_option_key = '_transient_timeout_';
     private static $cache_timeout = 10; // In minutes
     private $transient_key = '_e20r_seq_';
     private $expires;
     private $refreshed;
+
+    // Refers to a single instance of this class
+    private static $_this = null;
 
     /**
      * Constructor for the Sequence
@@ -56,7 +61,18 @@ class Controller
      * @param null $id -- The ID of the sequence to initialize
      * @throws \Exception - If the sequence doesn't exist.
      */
-    function __construct($id = null) {
+    function __construct($id = null)
+    {
+        if ( null !== self::$_this ) {
+            $error_message = sprintf(__("Attempted to load a second instance of a singleton class (%s)", "e20rsequence"),
+                                    get_class($this)
+                            );
+
+            error_log($error_message);
+            wp_die( $error_message);
+        }
+
+        self::$_this = $this;
 
         // Make sure it's not a dummy construct() call - i.e. for a post that doesn't exist.
         if ( ( $id != null ) && ( $this->sequence_id == 0 ) ) {
@@ -64,14 +80,20 @@ class Controller
             $this->sequence_id = $this->get_sequence_by_id( $id ); // Try to load it from the DB
 
             if ( $this->sequence_id == false ) {
-                throw new \Exception( __("A Sequence with the specified ID does not exist on this system", "e20rsequence" ) );
+                throw new \Exception(
+                    sprintf(
+                        __("A Sequence with the specified ID (%s) does not exist on this system", "e20rsequence" ),
+                        $id
+                    )
+                );
             }
         }
 
         $this->managed_types = apply_filters("e20r-sequence-managed-post-types", array("post", "page") );
-        $this->current_metadata_versions = get_option( 'pmpro_sequence_metadata_version', array() );
+        $this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
 
         add_filter( "get_sequence_class_instance", [ $this, 'get_instance' ] );
+        add_action("init", array($this, 'load_textdomain'), 1);
     }
 
     /**
@@ -81,30 +103,20 @@ class Controller
      * @param int $sequence_id - The Sequence ID to fetch options for
      * @return mixed -- Returns array of options if options were successfully fetched & saved.
      */
-    public function get_options( $sequence_id = 0 ) {
-
-		global $current_user;
+    public function get_options( $sequence_id = null )
+    {
 
         // Does the ID differ from the one this object has stored already?
-        if ( ( $this->sequence_id != 0 ) && ( $this->sequence_id != $sequence_id )) {
+        if ( ! is_null($sequence_id) && ( $this->sequence_id != $sequence_id )) {
 
-            $this->dbg_log('get_options() - ID defined already but we were given a different sequence ID');
+            E20RTools\DBG::log('ID defined already but we were given a different sequence ID');
             $this->sequence_id = $sequence_id;
         }
-        elseif ($this->sequence_id == 0) {
+        elseif ( is_null( $sequence_id) && $sequence_id != 0) {
 
             // This shouldn't be possible... (but never say never!)
-            $this->dbg_log("get_options() - The defined sequence ID is empty so we'll set it to " . $sequence_id);
+            E20RTools\DBG::log("The defined sequence ID is empty so we'll set it to " . $sequence_id);
             $this->sequence_id = $sequence_id;
-
-        }
-
-		if (empty($this->e20r_sequence_user_id)) {
-		    $this->transient_key = $this->transient_key . "{$current_user->ID}_";
-        }
-
-        if (!empty($this->sequence_user_id)) {
-            $this->transient_key = $this->transient_key . "{$this->e20r_sequence_user_id}_";
         }
 
         $this->refreshed = null;
@@ -117,10 +129,10 @@ class Controller
         }
 
         // Check that we're being called in context of an actual Sequence 'edit' operation
-        $this->dbg_log('get_options(): Loading settings from DB for (' . $this->sequence_id . ') "' . get_the_title($this->sequence_id) . '"');
+        E20RTools\DBG::log('Loading settings from DB for (' . $this->sequence_id . ') "' . get_the_title($this->sequence_id) . '"');
 
         $settings = get_post_meta($this->sequence_id, '_pmpro_sequence_settings', true);
-        // $this->dbg_log("get_options() - Settings are now: " . print_r( $settings, true ) );
+        // E20RTools\DBG::log("Settings are now: " . print_r( $settings, true ) );
 
         // Fix: Offset error when creating a brand new sequence for the first time.
         if ( empty( $settings ) ) {
@@ -130,13 +142,40 @@ class Controller
         }
 
         $loaded_options = $settings;
-        $default_options = $this->default_options();
+        $options = $this->default_options();
 
-        $this->options = (object) array_replace( (array)$default_options, (array)$loaded_options );
+        foreach( $loaded_options as $key => $value ) {
 
-        // $this->dbg_log( "get_options() for {$this->sequence_id}: Current: " . print_r( $this->options, true ) );
+            $options->{$key} =  $value;
+        }
+
+        // $this->options = (object) array_replace( (array)$default_options, (array)$loaded_options );
+        // E20RTools\DBG::log( "For {$this->sequence_id}: Current: " . print_r( $this->options, true ) );
+        $options->loaded = true;
 
         return $this->options;
+    }
+
+    /**
+     * Generate a key to identify the transient for a user/sequence combination
+     *
+     * @param $sequence_id - Id of sequence
+     * @return string - The transient key being used.
+     */
+    private function get_cache_key($sequence_id)
+    {
+        global $current_user;
+        $key = null;
+
+        if ((0 == $current_user->ID && $this->is_cron) ||
+            (is_numeric($this->e20r_sequence_user_id) && 0 < $this->e20r_sequence_user_id)) {
+
+            $user_id = $this->e20r_sequence_user_id;
+            $key = $this->transient_key . "{$user_id}_{$sequence_id}";
+        }
+
+        E20RTools\DBG::log("Cache key: " . (is_null($key) ? 'NULL' : $key));
+        return $key;
     }
 
     /**
@@ -161,22 +200,22 @@ class Controller
     }
 
 
-    static public function post_details( $sequence_id, $post_id ) {
-
+    static public function post_details( $sequence_id, $post_id )
+    {
         $seq = apply_filters('get_sequence_class_instance', null);
         $seq->get_options( $sequence_id );
 
         return $seq->find_by_id( $post_id );
     }
 
-    static public function all_sequences( $statuses = 'publish' ) {
-
+    static public function all_sequences( $statuses = 'publish' )
+    {
         $seq = apply_filters('get_sequence_class_instance', null);
         return $seq->get_all_sequences( $statuses );
     }
 
-    static public function sequences_for_post( $post_id ) {
-
+    static public function sequences_for_post( $post_id )
+    {
         $cSequence = apply_filters('get_sequence_class_instance', null);
 
         return $cSequence->get_sequences_for_post( $post_id );
@@ -186,13 +225,17 @@ class Controller
       * @return Sequence\Controller $this - Current instance of the class
       * @since 4.0.0
       */
-    public function get_instance() {
+    public function get_instance()
+    {
+        if (null == self::$_this) {
+            self::$_this = new self;
+        }
 
-        return $this;
+        return self::$_this;
     }
 
-    public function check_conversion() {
-
+    public function check_conversion()
+    {
         $sequences = $this->get_all_sequences();
         $flag = false;
 
@@ -242,7 +285,18 @@ class Controller
 
         if ( ( false === $is_pre_v3 ) || ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) ) {
 
-            $this->dbg_log("is_converted() - {$sequence_id} is at v3 format");
+            E20RTools\DBG::log("{$sequence_id} is at v3 format");
+            return true;
+        }
+
+        if ( wp_is_post_revision( $sequence_id ) )
+            return true;
+
+        if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+            return true;
+        }
+
+        if ( 'trash' == get_post_status( $sequence_id ) ) {
             return true;
         }
 
@@ -258,115 +312,23 @@ class Controller
             );
 
         $is_converted = new \WP_Query( $args );
+        $options = $this->get_options( $sequence_id );
 
-        if ( $is_converted->post_count >= 1 ) {
+        if ( $is_converted->post_count >= 1 || $options->loaded === true ) {
 
             if ( !isset( $this->current_metadata_versions[$sequence_id] ) ) {
 
-                $this->dbg_log( "is_converted() - Sequence # {$sequence_id} is converted already. Updating the settings");
+                E20RTools\DBG::log( "Sequence # {$sequence_id} is converted already. Updating the settings");
                 $this->current_metadata_versions[$sequence_id] = 3;
-                update_option('pmpro_sequence_metadata_version', $this->current_metadata_versions, true );
+                update_option( 'pmpro_sequence_metadata_version', $this->current_metadata_versions, true );
             }
 
             return true;
         }
-        // $this->set_error_msg("Error: Please de-activate and then activate the PMPro Sequences plugin to convert from old to new metadata structure");
         return false;
     }
 
-    /**
-     * Debug function (if executes if DEBUG is defined)
-     *
-     * @param $msg -- Debug message to print to debug log.
-     *
-     * @access public
-     * @since v2.1
-     */
-    public function dbg_log( $msg, $lvl = E20R_DEBUG_SEQ_INFO ) {
 
-        $uplDir = wp_upload_dir();
-        $plugin = "/e20r-sequences/";
-
-        $dbgRoot = $uplDir['basedir'] . "${plugin}";
-        // $dbgRoot = "${plugin}/";
-        $dbgPath = "${dbgRoot}";
-
-        // $dbgPath = E20R_SEQUENCE_PLUGIN_DIR . 'debug';
-
-        if ( ( WP_DEBUG === true ) && ( ( $lvl >= E20R_DEBUG_SEQ_LOG_LEVEL ) || ( $lvl == E20R_DEBUG_SEQ_INFO ) ) ) {
-
-            if ( !file_exists( $dbgRoot ) ) {
-
-                mkdir($dbgRoot, 0750);
-
-                if (!is_writable($dbgRoot)) {
-                    error_log("E20R Sequence: Debug log directory {$dbgRoot} is not writable. exiting.");
-                    return;
-                }
-            }
-
-            if (!file_exists($dbgPath)) {
-
-                // Create the debug logging directory
-                mkdir($dbgPath, 0750);
-
-                if (!is_writable($dbgPath)) {
-                    error_log("E20R Sequence: Debug log directory {$dbgPath} is not writable. exiting.");
-                    return;
-                }
-            }
-
-            // $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d', current_time("timestamp") ) . '.txt';
-            $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'debug_log.txt';
-
-            $tid = sprintf("%08x", abs(crc32($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_TIME'] . $_SERVER['REMOTE_PORT'])));
-
-            $dbgMsg = '(' . date('d-m-y H:i:s', current_time('timestamp')) . "-{$tid}) -- " .
-                ((is_array($msg) || (is_object($msg))) ? print_r($msg, true) : $msg) . "\n";
-
-            $this->add_log_text($dbgMsg, $dbgFile);
-        }
-    }
-
-    private function add_log_text($text, $filename) {
-
-        if ( !file_exists($filename) ) {
-
-            touch( $filename );
-            chmod( $filename, 0640 );
-        }
-
-        if ( filesize( $filename ) > MAX_LOG_SIZE ) {
-
-            $filename2 = "$filename.old";
-
-            if ( file_exists( $filename2 ) ) {
-
-                unlink($filename2);
-            }
-
-            rename($filename, $filename2);
-            touch($filename);
-            chmod($filename,0640);
-        }
-
-        if ( !is_writable( $filename ) ) {
-
-            error_log( "Unable to open debug log file ($filename)" );
-        }
-
-        if ( !$handle = fopen( $filename, 'a' ) ) {
-
-            error_log("Unable to open debug log file ($filename)");
-        }
-
-        if ( fwrite( $handle, $text ) === FALSE ) {
-
-            error_log("Unable to write to debug log file ($filename)");
-        }
-
-        fclose($handle);
-    }
 
     /**
      * Set the private $error value
@@ -383,7 +345,7 @@ class Controller
 
         if ( $msg !== null ) {
 
-            $this->dbg_log("set_error_msg(): {$msg}");
+            E20RTools\DBG::log("set_error_msg(): {$msg}");
 
             $e->set_error( $msg, 'error', null, 'e20r_seq_errors' );
         }
@@ -395,7 +357,7 @@ class Controller
 
             if ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) {
 
-                $this->dbg_log("convert_posts_to_v3() - Sequence {$sequence_id} is already converted.");
+                E20RTools\DBG::log("Sequence {$sequence_id} is already converted.");
                 return;
             }
 
@@ -410,7 +372,7 @@ class Controller
 
         $is_pre_v3 = get_post_meta( $this->sequence_id, "_sequence_posts", true );
 
-        $this->dbg_log("convert_posts_to_v3() - Need to convert from old metadata format to new format for sequence {$this->sequence_id}");
+        E20RTools\DBG::log("Need to convert from old metadata format to new format for sequence {$this->sequence_id}");
         $retval = true;
 
         if ( !empty( $this->sequence_id ) ) {
@@ -420,14 +382,14 @@ class Controller
 
             foreach( $posts as $sp ) {
 
-                $this->dbg_log("convert_posts_to_v3() - Adding post # {$sp->id} with delay {$sp->delay} to sequence {$this->sequence->id} ");
+                E20RTools\DBG::log("Adding post # {$sp->id} with delay {$sp->delay} to sequence {$this->sequence->id} ");
                 $retval = $retval && $this->add_post_to_sequence( $this->sequence_id, $sp->id, $sp->delay );
             }
 
-            // $this->dbg_log("convert_posts_to_v3() - Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
+            // E20RTools\DBG::log("Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
             // $retval = $retval && $this->save_sequence_post();
 
-            $this->dbg_log("convert_posts_to_v3() - Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log("Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
             $retval = $retval && delete_post_meta( $this->sequence_id, "_sequence_posts" );
         }
         else {
@@ -438,7 +400,7 @@ class Controller
 
         if ( $retval == true ) {
 
-            $this->dbg_log("convert_posts_to_v3() - Successfully converted to v3 metadata format for all sequence member posts");
+            E20RTools\DBG::log("Successfully converted to v3 metadata format for all sequence member posts");
             $this->current_metadata_versions[$this->sequence_id] = 3;
             update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
 
@@ -484,7 +446,18 @@ class Controller
 
         $settings = new \stdClass();
 
-        $settings->hidden =  0; // 'hidden' (Show them)
+        $admin = get_user_by('email', get_option('admin_email'));
+
+        if (!isset($admin->user_email)) {
+
+            // Default object to avoid warning notices
+            $admin = new \stdClass();
+            $admin->user_email = 'nobody@example.com';
+            $admin->display_name = 'Not Applicable';
+        }
+
+        $settings->loaded = false;
+        $settings->hideFuture =  0; // 'hidden' (Show them)
         $settings->lengthVisible = 1; //'lengthVisible'
         $settings->sortOrder = SORT_ASC; // 'sortOrder'
         $settings->delayType = 'byDays'; // 'delayType'
@@ -497,78 +470,102 @@ class Controller
         $settings->noticeSendAs = E20R_SEQ_SEND_AS_SINGLE; // Send the alert notice as one notice per message.
         $settings->noticeTime = '00:00'; // At Midnight (server TZ)
         $settings->noticeTimestamp = current_time('timestamp'); // The current time (in UTC)
-        $settings->excerpt_intro = __('A summary of the post follows below:', "e20rsequence");
-        $settings->replyto = pmpro_getOption("from_email");
-        $settings->fromname = pmpro_getOption("from_name");
+        $settings->excerptIntro = __('A summary of the post follows below:', "e20rsequence");
+        $settings->replyto = apply_filters('e20r-sequence-default-sender-email', $admin->user_email); // << Update Name
+        $settings->fromname = apply_filters('e20r-sequence-default-sender-name', $admin->display_name); // << Updated Name!
         $settings->subject = __('New Content ', "e20rsequence");
-        $settings->dateformat = __('m-d-Y', "e20rsequence"); // Using American MM-DD-YYYY format.
-        $settings->track_google_analytics = false; // Whether to use Google analytics to track message open operations or not
-        $settings->ga_tid = null; // The Google Analytics ID to use (TID)
+        $settings->dateformat = __('m-d-Y', "e20rsequence"); // Using American MM-DD-YYYY format. << Updated name!
+        $settings->trackGoogleAnalytics = false; // Whether to use Google analytics to track message open operations or not
+        $settings->gaTid = null; // The Google Analytics ID to use (TID)
 
         $this->options = $settings; // Save as options for this sequence
 
         return $settings;
     }
 
+    public function get_option_by_name( $option )
+    {
+        if ( ! isset($this->options->{$option} ) ) {
+
+            return false;
+        }
+
+        return $this->options->{$option};
+    }
+
+    public function set_option_by_name( $option, $value )
+    {
+        $this->options->{$option} = $value;
+    }
+
+
     private function get_cache_expiry($sequence_id) {
 
-        $this->dbg_log("get_cache_expiry(): Loading cache timeout value for {$sequence_id}");
+        E20RTools\DBG::log("Loading cache timeout value for {$sequence_id}");
+
         global $wpdb;
+        $expires = null;
 
-        $sql = $wpdb->prepare("
-			SELECT option_value
-				FROM {$wpdb->options}
-				WHERE option_name = %s
-		",
-		"_transient_timeout_{$this->transient_key}{$sequence_id}"
-		);
+        $key = $this->get_cache_key($sequence_id);
 
-        $expires = $wpdb->get_var($sql);
+        if (!is_null($key)) {
 
-        $this->dbg_log("get_cache_expiry(): Loaded cache timeout value for {$sequence_id}: {$expires}");
+            $sql = $wpdb->prepare("
+                SELECT option_value
+                    FROM {$wpdb->options}
+                    WHERE option_name = %s
+            ",
+            "_transient_timeout_{$key}"
+            );
+
+            $expires = $wpdb->get_var($sql);
+        }
+
+        E20RTools\DBG::log("Loaded cache timeout value for {$sequence_id}: " .( is_null($expires) ? "NULL" : "{$expires}"));
+
         return $expires;
     }
 
     private function is_cache_valid() {
 
-        $this->dbg_log("is_cache_valid() - We have " . count($this->posts) . " posts in the post list" );
+        E20RTools\DBG::log("We have " . count($this->posts) . " posts in the post list" );
+
+        $this->expires = $this->get_cache_expiry($this->sequence_id);
 
         if ( empty( $this->posts ) || is_null($this->expires)) {
 
-            $this->dbg_log( "is_cache_valid() - Cache is INVALID");
+            E20RTools\DBG::log( "Cache is INVALID");
             return false;
         }
 
-        $this->dbg_log("is_cache_valid() - Current refresh value: {$this->expires} vs " . current_time('timestamp', true) );
+        E20RTools\DBG::log("Current refresh value: {$this->expires} vs " . current_time('timestamp', true) );
 
         if ( ( $this->expires  >= current_time( 'timestamp' ) ) /* && !empty( $this->posts ) */) {
 
-            $this->dbg_log( "is_cache_valid() - Cache IS VALID.");
+            E20RTools\DBG::log( "Cache IS VALID.");
             return true;
         }
 
         if ( empty($this->posts) && $this->expires >= current_time('timestamp')) {
-            $this->dbg_log( "is_cache_valid() - No data in list, but cache IS VALID.");
+            E20RTools\DBG::log( "No data in list, but cache IS VALID.");
             return true;
         }
 
-        $this->dbg_log( "is_cache_valid() - Cache is INVALID");
+        E20RTools\DBG::log( "Cache is INVALID");
         return false;
     }
 
     public function delete_cache( $sequence_id = null ) {
 
 		$direct_operation = false;
+        $status = false;
 
-		if ( empty($sequence_id) && (isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_rmpost_nonce'])) ) {
+		if ( empty($sequence_id) && (isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_post_nonce'])) ) {
 
-            global $current_user;
-			$this->transient_key = "{$this->transient_key}{$current_user->ID}_";
-
-			$this->dbg_log("delete_cache() - Attempting to clear cache during AJAX operation");
+			E20RTools\DBG::log("Attempting to clear cache during AJAX operation");
 			$direct_operation = true;
 
-			wp_verify_nonce("e20r-sequence-rm-post", "e20r_sequence_rmpost_nonce");
+			wp_verify_nonce("e20r-sequence-post", "e20r_sequence_post_nonce");
 			$sequence_id = isset($_POST['e20r_sequence_id']) ? intval($_POST['e20r_sequence_id']) : null;
 
 			if (is_null($sequence_id)) {
@@ -577,18 +574,23 @@ class Controller
 			}
 		}
 
-        $this->dbg_log("delete_cache() - Removing old/stale cache data for {$sequence_id}");
+        $key = $this->get_cache_key($sequence_id);
+
+        E20RTools\DBG::log("Removing old/stale cache data for {$sequence_id}");
         $this->expires = null;
-        $status = delete_transient( $this->transient_key . $sequence_id );
+
+        if (!is_null($key)) {
+            $status = delete_transient( $key );
+        }
 
         if( (false === $status) && (true === $direct_operation) &&
-            ( isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_rmpost_nonce']) )) {
+            ( isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_post_nonce']) )) {
             wp_send_json_error( array( array('message' => __("No cache to clear, or unable to clear the cache", "e20rsequence"))));
             wp_die();
         }
 
         if ((true === $status) && (true === $direct_operation) &&
-            (isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_rmpost_nonce']) )) {
+            (isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_post_nonce']) )) {
 
             wp_send_json_success();
             wp_die();
@@ -604,14 +606,18 @@ class Controller
 
         // $this->delete_cache( $this->transient_key . $sequence_id);
 
-        $this->dbg_log("set_cache() - Saving data to cache for {$sequence_id}...");
-        $success = set_transient( "{$this->transient_key}{$sequence_id}", $sequence_posts, self::$cache_timeout * MINUTE_IN_SECONDS);
+        E20RTools\DBG::log("Saving data to cache for {$sequence_id}...");
+        $key = $this->get_cache_key($sequence_id);
+
+        if (!is_null($key)) {
+            $success = set_transient( $key, $sequence_posts, self::$cache_timeout * MINUTE_IN_SECONDS);
+        }
 
         if (true === $success) {
             $this->expires = $this->get_cache_expiry($sequence_id);
-            $this->dbg_log("set_cache() - Cache set to expire: {$this->expires}");
+            E20RTools\DBG::log("Cache set to expire: {$this->expires}");
         } else {
-            $this->dbg_log("set_cache() - Unable to update the cache for {$sequence_id}!");
+            E20RTools\DBG::log("Unable to update the cache for {$sequence_id}!");
             $this->expires = null;
         }
 
@@ -621,12 +627,14 @@ class Controller
 
     private function get_cache( $sequence_id ) {
 
-        $this->dbg_log("get_cache() - Loading from cache for {$sequence_id}...");
+        E20RTools\DBG::log("Loading from cache for {$sequence_id}...");
+
+        $cache = false;
 
         if ( $this->expires > current_time( 'timestamp' ) &&
             ( date('N', current_time('timestamp')) !== date('N', $this->expires)) )
         {
-            $this->dbg_log("get_cache() - The timestamps takes us across the local dateline, so clear the cache...");
+            E20RTools\DBG::log("The timestamps takes us across the local dateline, so clear the cache...");
 
 			// We're crossing over the day threshold, so flush the cache and return false
             $this->expires = -1;
@@ -634,8 +642,30 @@ class Controller
         }
 
 		$this->expires = $this->get_cache_expiry($sequence_id);
-        return get_transient( $this->transient_key . $sequence_id );
+		$key = $this->get_cache_key($sequence_id);
+
+        if (!is_null($key)) {
+            $cache = get_transient( $key );
+        }
+
+        return $cache;
         // $cached_value = wp_cache_get( $key, $group, $force, $found );
+    }
+
+    /**
+      * @param $user_id -- The user ID to find the startdate for
+      * @return mixed|void  - A UNIX timestamp (seconds since start of epoch)
+      */
+    private function get_user_startdate($user_id = null, $level_id = null)
+    {
+        $startdate = strtotime('today ' . get_option('timezone_string'));
+
+        // TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
+        if (function_exists('pmpro_getMemberStartdate')) {
+            $startdate = pmpro_getMemberStartdate( $user_id, $level_id );
+        }
+
+        return apply_filters('e20r-sequence-user-startdate', $startdate, $user_id, $level_id);
     }
 
     public function load_sequence_post( $sequence_id = null, $delay = null, $post_id = null, $comparison = '=', $pagesize = null, $force = false, $status = 'default' ) {
@@ -648,22 +678,22 @@ class Controller
 
         if ( !is_null( $this->e20r_sequence_user_id )  && ( $this->e20r_sequence_user_id != $current_user->ID ) ) {
 
-            $this->dbg_log("load_sequence_post() - Using user id from e20r_sequence_user_id: {$this->e20r_sequence_user_id}");
+            E20RTools\DBG::log("Using user id from e20r_sequence_user_id: {$this->e20r_sequence_user_id}");
             $user_id = $this->e20r_sequence_user_id;
         }
         else {
-            $this->dbg_log("load_sequence_post() - Using user id (from current_user): {$current_user->ID}");
+            E20RTools\DBG::log("Using user id (from current_user): {$current_user->ID}");
             $user_id = $current_user->ID;
         }
 
         if ( is_null( $sequence_id ) && ( !empty( $this->sequence_id ) ) ) {
-            $this->dbg_log("load_sequence_post() - No sequence ID specified in call. Using default value of {$this->sequence_id}");
+            E20RTools\DBG::log("No sequence ID specified in call. Using default value of {$this->sequence_id}");
             $sequence_id = $this->sequence_id;
         }
 
         if ( empty( $sequence_id ) ) {
 
-            $this->dbg_log( "load_sequence_post() - No sequence ID configured. Returning error (null)", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log( "No sequence ID configured. Returning error (null)", E20R_DEBUG_SEQ_WARNING );
             return null;
         }
 
@@ -673,31 +703,32 @@ class Controller
 
             if ( $this->options->delayType == 'byDate' ) {
 
-                $this->dbg_log("load_sequence_post() - Expected delay value is a 'date' so need to convert");
-                $startdate = pmpro_getMemberStartdate( $user_id );
+                E20RTools\DBG::log("Expected delay value is a 'date' so need to convert");
+                $startdate = $this->get_user_startdate($user_id);
+
                 $delay = date('Y-m-d', ($startdate + ($delay * DAY_IN_SECONDS)) );
                 $data_type = 'DATE';
             }
 
-            $this->dbg_log("load_sequence_post() - Using delay value: {$delay}");
+            E20RTools\DBG::log("Using delay value: {$delay}");
             $find_by_delay = true;
         }
 
-        $this->dbg_log("load_sequence_post() - Sequence ID var: " . ( empty($sequence_id) ? 'Not defined' : $sequence_id ) );
-        $this->dbg_log("load_sequence_post() - Force var: " . ( ($force === false ) ? 'Not defined' : 'True' ) );
-        $this->dbg_log("load_sequence_post() - Post ID var: " . ( is_null($post_id) ? 'Not defined' : $post_id ) );
+        E20RTools\DBG::log("Sequence ID var: " . ( empty($sequence_id) ? 'Not defined' : $sequence_id ) );
+        E20RTools\DBG::log("Force var: " . ( ($force === false ) ? 'Not defined' : 'True' ) );
+        E20RTools\DBG::log("Post ID var: " . ( is_null($post_id) ? 'Not defined' : $post_id ) );
 
         if ( ( false === $force ) && empty($post_id) && (false !== ($found = $this->get_cache( $sequence_id )))) {
 
-            $this->dbg_log("load_sequence_post() - Loaded post list for sequence # {$sequence_id} from cache. " . count($found) . " entries");
+            E20RTools\DBG::log("Loaded post list for sequence # {$sequence_id} from cache. " . count($found) . " entries");
             $this->posts = $found;
             return $this->posts;
         }
 
-        $this->dbg_log("load_sequence_post() - Delay var: " . ( empty($delay) ? 'Not defined' : $delay ) );
-        $this->dbg_log("load_sequence_post() - Comparison var: {$comparison}" );
-        $this->dbg_log("load_sequence_post() - Page size ID var: " . ( empty($pagesize) ? 'Not defined' : $pagesize ) );
-		$this->dbg_log("load_sequence_post() - have to refresh data...");
+        E20RTools\DBG::log("Delay var: " . ( empty($delay) ? 'Not defined' : $delay ) );
+        E20RTools\DBG::log("Comparison var: {$comparison}" );
+        E20RTools\DBG::log("Page size ID var: " . ( empty($pagesize) ? 'Not defined' : $pagesize ) );
+		E20RTools\DBG::log("have to refresh data...");
 
         // $this->refreshed = current_time('timestamp', true);
         $this->refreshed = null;
@@ -724,9 +755,11 @@ class Controller
             $statuses = apply_filters( 'e20r-sequence-allowed-post-statuses', $status );
         }
 
+        E20RTools\DBG::log("Loading posts with status: " . print_r($statuses, true));
+
         if ( is_null( $post_id ) ) {
 
-            $this->dbg_log("load_sequence_post() - No post ID specified. Loading posts....");
+            E20RTools\DBG::log("No post ID specified. Loading posts....");
 
             $args = array(
                 'post_type' => apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) ),
@@ -746,7 +779,7 @@ class Controller
         }
         else {
 
-            $this->dbg_log("load_sequence_post() - Post ID specified so we'll only search for post #{$post_id}");
+            E20RTools\DBG::log("Post ID specified so we'll only search for post #{$post_id}");
 
             $args = array(
                 'post_type' => apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) ),
@@ -768,13 +801,13 @@ class Controller
 
         if ( !is_null( $pagesize )  ) {
 
-            $this->dbg_log("load_sequence_post() - Enable paging, grab page #: " . get_query_var( 'page' ) );
+            E20RTools\DBG::log("Enable paging, grab page #: " . get_query_var( 'page' ) );
 
             $page_num = ( get_query_var( 'page' ) ) ? absint( get_query_var( 'page' ) ) : 1;
         }
 
         if ( $find_by_delay ) {
-			$this->dbg_log("load_sequence_post() - Requested look-up by delay value {$delay} in sequence {$sequence_id}");
+			E20RTools\DBG::log("Requested look-up by delay value {$delay} in sequence {$sequence_id}");
             $args['meta_query'][] = array(
                     'key' => "_pmpro_sequence_{$sequence_id}_post_delay",
                     'value' => $delay,
@@ -783,20 +816,20 @@ class Controller
             );
         }
 
-        // $this->dbg_log("load_sequence_post() - Args for \WP_Query(): ");
-        // $this->dbg_log($args);
+        // E20RTools\DBG::log("Args for \WP_Query(): ");
+        // E20RTools\DBG::log($args);
 
         $posts = new \WP_Query( $args );
 
-        $this->dbg_log("load_sequence_post() - Loaded {$posts->post_count} posts from wordpress database for sequence {$sequence_id}");
+        E20RTools\DBG::log("Loaded {$posts->post_count} posts from wordpress database for sequence {$sequence_id}");
 
         if ( ( 0 === $posts->post_count ) && is_null( $pagesize ) && ( is_null( $post_id ) ) ) {
 
-            $this->dbg_log("load_sequence_post() - Didn't find any posts. Checking if we need to convert...?");
+            E20RTools\DBG::log("Didn't find any posts. Checking if we need to convert...?");
 
             if ( !$this->is_converted( $sequence_id ) ) {
 
-                $this->dbg_log("load_sequence_post() - Forcing conversion attempt for sequence # {$sequence_id}");
+                E20RTools\DBG::log("Forcing conversion attempt for sequence # {$sequence_id}");
                 $this->convert_posts_to_v3( $sequence_id, true );
             }
         }
@@ -805,7 +838,7 @@ class Controller
 
         $member_days = ( $is_admin || ( is_admin() && ( $this->is_cron == false ) ) ) ? 9999 : $this->get_membership_days( $user_id );
 
-        $this->dbg_log("load_sequence_post() - User {$user_id} has been a member for {$member_days} days. Admin? " . ( $is_admin ? 'Yes' : 'No') );
+        E20RTools\DBG::log("User {$user_id} has been a member for {$member_days} days. Admin? " . ( $is_admin ? 'Yes' : 'No') );
 
         $post_list = $posts->get_posts();
 
@@ -813,7 +846,7 @@ class Controller
 
         foreach( $post_list as $k => $sPost ) {
 
-            $this->dbg_log("load_sequence_post() - Loading metadata for post #: {$sPost->ID}");
+            E20RTools\DBG::log("Loading metadata for post #: {$sPost->ID}");
 
             $id = $sPost->ID;
 
@@ -837,11 +870,11 @@ class Controller
                 $p->is_future = false;
                 $p->type = $sPost->post_type;
 
-                // $this->dbg_log("load_sequence_post() - Configured delay value: {$p->delay}. Normalized delay: " . $this->normalize_delay( $p->delay ));
+                // E20RTools\DBG::log("Configured delay value: {$p->delay}. Normalized delay: " . $this->normalize_delay( $p->delay ));
                 // Only add posts to list if the member is supposed to see them
                 if ( $member_days >= $this->normalize_delay( $p->delay ) ) {
 
-                    // $this->dbg_log("load_sequence_post() - Adding {$p->id} ({$p->title}) with delay {$p->delay} to list of available posts");
+                    // E20RTools\DBG::log("Adding {$p->id} ({$p->title}) with delay {$p->delay} to list of available posts");
                     $p->is_future = false;
                     $found[] = $p;
                 }
@@ -851,12 +884,12 @@ class Controller
 
                     if ( !$this->hide_upcoming_posts() ) {
 
-                        $this->dbg_log("load_sequence_post() - Loading {$p->id} with delay {$p->delay} to list of upcoming posts");
+                        E20RTools\DBG::log("Loading {$p->id} with delay {$p->delay} to list of upcoming posts");
                         $p->is_future = true;
                         $found[] = $p;
                     }
                     else {
-                        $this->dbg_log("load_sequence_post() - Ignoring post {$p->id} with delay {$p->delay} to sequence list for {$sequence_id}");
+                        E20RTools\DBG::log("Ignoring post {$p->id} with delay {$p->delay} to sequence list for {$sequence_id}");
                         if ( !is_null( $pagesize ) ) {
 
                             unset( $post_list[ $k ] );
@@ -868,58 +901,58 @@ class Controller
             $is_repeat = false;
         } // End of foreach for post_list
 
-        $this->dbg_log("load_sequence_post() - Found " . count( $found ) . " posts for sequence {$sequence_id} and user {$user_id}");
+        E20RTools\DBG::log("Found " . count( $found ) . " posts for sequence {$sequence_id} and user {$user_id}");
 
         if ( is_null( $post_id ) && is_null( $delay ) && !empty( $post_list ) ) {
 
-			$this->dbg_log("load_sequence_post() - Preparing array of posts to return to calling function");
+			E20RTools\DBG::log("Preparing array of posts to return to calling function");
 
             $this->posts = $found;
 
             // Default to old _sequence_posts data
             if ( 0 == count( $this->posts ) ) {
 
-                $this->dbg_log("load_sequence_post() - No posts found using the V3 meta format. Reverting... ", E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log("No posts found using the V3 meta format. Reverting... ", E20R_DEBUG_SEQ_WARNING );
 
                 $tmp = get_post_meta( $this->sequence_id, "_sequence_posts", true );
                 $this->posts = ( $tmp ? $tmp : array() ); // Fixed issue where empty sequences would generate error messages.
 
-                $this->dbg_log("load_sequence_post() - Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log("Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
                 $this->save_sequence_post();
 
-                $this->dbg_log("load_sequence_post() - Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log("Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
                 delete_post_meta( $this->sequence_id, "_sequence_posts" );
             }
 
-            $this->dbg_log("load_sequence_post() - Identify the closest post for {$user_id}");
+            E20RTools\DBG::log("Identify the closest post for {$user_id}");
             $this->posts = $this->set_closest_post( $this->posts, $user_id );
 
-            $this->dbg_log("load_sequence_post() - Have " . count( $this->posts )  ." posts we're sorting");
+            E20RTools\DBG::log("Have " . count( $this->posts )  ." posts we're sorting");
             usort( $this->posts, array( $this, "sort_posts_by_delay" ));
 /*
-            $this->dbg_log("load_sequence_post() - Have " . count( $this->upcoming )  ." upcoming/future posts we need to sort");
+            E20RTools\DBG::log("Have " . count( $this->upcoming )  ." upcoming/future posts we need to sort");
             if (!empty( $this->upcoming ) ) {
 
                 usort( $this->upcoming, array( $this, "sort_posts_by_delay" ) );
             }
 */
 
-            $this->dbg_log("load_sequence_post() - Will return " . count( $found ) . " sequence members and refreshing cache for {$sequence_id}");
+            E20RTools\DBG::log("Will return " . count( $found ) . " sequence members and refreshing cache for {$sequence_id}");
             $this->set_cache($this->posts, $sequence_id);
 
             if ( is_null( $pagesize ) ) {
 
-				$this->dbg_log("load_sequence_post() - Returning non-paginated list");
+				E20RTools\DBG::log("Returning non-paginated list");
                 return $this->posts;
             }
             else {
 
-				$this->dbg_log("load_sequence_post() - Preparing paginated list");
+				E20RTools\DBG::log("Preparing paginated list");
                 if ( !empty( $this->upcoming ) ) {
 
-                    $this->dbg_log("load_sequence_posts() - Appending the upcoming array to the post array. posts =  " . count( $this->posts ) . " and upcoming = " . count( $this->upcoming ) );
+                    E20RTools\DBG::log("Appending the upcoming array to the post array. posts =  " . count( $this->posts ) . " and upcoming = " . count( $this->upcoming ) );
                     $this->posts = array_combine( $this->posts, $this->upcoming );
-                    $this->dbg_log("load_sequence_posts() - Joined array contains " . count ($this->posts ) . " total posts");
+                    E20RTools\DBG::log("Joined array contains " . count ($this->posts ) . " total posts");
                 }
 
                 $paged_list = $this->paginate_posts( $this->posts, $pagesize, $page_num );
@@ -929,33 +962,33 @@ class Controller
 
                 list( $min, $max ) = $this->set_min_max( $pagesize, $page_num, $paged_list );
 
-                $this->dbg_log("load_sequence_post() - Check max / min delay values for paginated set. Max: {$max}, Min: {$min}");
+                E20RTools\DBG::log("Check max / min delay values for paginated set. Max: {$max}, Min: {$min}");
 
                 foreach( $paged_list as $k => $p ) {
 
-                    $this->dbg_log("load_sequence_post() - Checking post key {$k} (post: {$p->id}) with delay {$p->delay}");
+                    E20RTools\DBG::log("Checking post key {$k} (post: {$p->id}) with delay {$p->delay}");
 
                     if ( $p->delay < $min ) {
 
-                        $this->dbg_log("load_sequence_post() - removing post entry {$k} -> ({$p->delay}) because its delay value is less than min for the listing" );
+                        E20RTools\DBG::log("removing post entry {$k} -> ({$p->delay}) because its delay value is less than min for the listing" );
 
                         unset( $paged_list[$k] );
                     }
                     elseif ( $p->delay > $max ) {
 
-                        $this->dbg_log("load_sequence_post() - removing post entry {$k} -> ({$p->delay}) because its delay value is greater than max for the listing" );
+                        E20RTools\DBG::log("removing post entry {$k} -> ({$p->delay}) because its delay value is greater than max for the listing" );
                         unset( $paged_list[$k] );
 
                     }
                 }
 
-                $this->dbg_log("load_sequence_post() - Returning the \\WP_Query result to process for pagination.");
+                E20RTools\DBG::log("Returning the \\WP_Query result to process for pagination.");
                 return array( $paged_list, $posts->max_num_pages );
             }
 
         }
         else {
-            $this->dbg_log("load_sequence_post() - Returning list of posts (size: ". count( $found ) . " ) located by specific post_id: {$post_id}");
+            E20RTools\DBG::log("Returning list of posts (size: ". count( $found ) . " ) located by specific post_id: {$post_id}");
             return $found;
         }
     }
@@ -970,40 +1003,32 @@ class Controller
      */
     public function get_membership_days( $user_id = NULL, $level_id = 0 ) {
 
+        $days = 0;
+
         if(empty($user_id))
         {
             global $current_user;
             $user_id = $current_user->ID;
         }
 
-        global $pmpro_member_days;
+        $startdate = $this->get_user_startdate( $user_id, $level_id );
+        $tz = get_option('timezone_string');
 
-        if ( empty( $pmpro_member_days[$user_id][$level_id] ) ) {
+        //check we received a start date
+        if (empty($startdate)) {
 
-            $startdate = pmpro_getMemberStartdate( $user_id, $level_id );
-
-            //check that there was a startdate at all
-            if( empty( $startdate ) && current_user_can( 'manage_options' ) ) {
-
-                $days = $this->seq_datediff( strtotime( '2013-01-01' ), current_time('timestamp') );
-                $pmpro_member_days[$user_id][$level_id] = $days;
-            }
-            elseif ( empty( $startdate ) ) {
-
-                $pmpro_member_days[$user_id][$level_id] = 0;
-            }
-            else {
-                $now = current_time("timestamp");
-
-                // $days = round( abs( $now - $startdate ) / ( 60*60*24 ) ) + 1;
-                $days = $this->seq_datediff( $startdate, $now );
-
-                $pmpro_member_days[$user_id][$level_id] = $days;
-
-            }
+            $stardate = strtotime('today ' . $tz );
         }
 
-        return $pmpro_member_days[$user_id][$level_id];
+        $now = current_time("timestamp");
+        $days = $this->datediff( $startdate, $now, $tz );
+
+/*
+        if (function_exists('pmpro_getMemberDays')) {
+            $days = pmpro_getMemberDays($user_id, $level_id);
+        }
+*/
+        return apply_filters('e20r-sequence-days-as-member', $days, $user_id, $level_id);
     }
 
     /**
@@ -1013,11 +1038,11 @@ class Controller
      * @param $enddate (timestamp) - timestamp value for end date
      * @return int
      */
-    private function seq_datediff( $startdate, $enddate = null, $tz = 'UTC' ) {
+    private function datediff( $startdate, $enddate = null, $tz = 'UTC' ) {
 
         $days = 0;
 
-        $this->dbg_log("seq_datediff() - Timezone: {$tz}");
+        E20RTools\DBG::log("Timezone: {$tz}");
 
         // use current day as $enddate if nothing is specified
         if ( ( is_null( $enddate ) ) && ( $tz == 'UTC') ) {
@@ -1142,7 +1167,8 @@ class Controller
                 $levelId = $this->e20r_sequence_user_level;
             }
             else {
-                $level = pmpro_getMembershipLevelForUser( $userId );
+
+                $level = $this->get_membership_level_for_user($userId);
 
                 if ( is_object( $level )) {
                     $levelId = $level->id;
@@ -1158,12 +1184,12 @@ class Controller
             return $date;
         }
 
-        $this->dbg_log($levelId);
+        E20RTools\DBG::log($levelId);
 
         if ( $this->is_valid_date( $date ) )
         {
-            // $this->dbg_log("convert_date_to_days() - Using {$userId} and {$levelId} for the credentials");
-            $startDate = pmpro_getMemberStartdate( $userId, $levelId ); /* Needs userID & Level ID ... */
+            // E20RTools\DBG::log("Using {$userId} and {$levelId} for the credentials");
+            $startDate = $this->get_user_startdate( $userId, $levelId ); /* Needs userID & Level ID ... */
 
             if ( empty( $startDate ) && ( current_user_can('manage_options'))) {
 
@@ -1174,20 +1200,39 @@ class Controller
                 $startDate = strtotime( "tomorrow" );
             }
 
-            $this->dbg_log("convert_date_to_days() - Given date: {$date} and startdate: {$startDate} for user {$userId} with level {$levelId}");
+            E20RTools\DBG::log("Given date: {$date} and startdate: {$startDate} for user {$userId} with level {$levelId}");
 
             try {
 
                 // Use PHP v5.2 and v5.3 compatible function to calculate difference
                 $compDate = strtotime( "{$date} 00:00:00" );
-                $days = $this->seq_datediff( $startDate, $compDate ); // current_time('timestamp')
+                $days = $this->datediff( $startDate, $compDate ); // current_time('timestamp')
 
             } catch (Exception $e) {
-                $this->dbg_log('convert_date_to_days() - Error calculating days: ' . $e->getMessage());
+                E20RTools\DBG::log('Error calculating days: ' . $e->getMessage());
             }
         }
 
         return $days;
+    }
+
+    /**
+      * Return a membership level object (stdClass/wpdb row) containing minimally an 'id' parameter
+      * Could also simply return false or null if the user doesn't have a level.
+      *
+      * @param int|null $user_id - Id of user (or null)
+      * @param bool $force - Whether to force refresh from a (possible) database table
+      * @return mixed|void - Object containing the level information (including an 'id' parameter.
+      */
+    private function get_membership_level_for_user($user_id = null, $force = false) {
+
+        $level = false;
+
+        if (function_exists('pmpro_getMembershipLevelForUser')) {
+            $level = pmpro_getMembershipLevelForUser( $user_id, $force );
+        }
+
+        return apply_filters('e20r-sequence-membership-level-for-user', $level, $user_id, $force);
     }
 
     /**
@@ -1199,8 +1244,8 @@ class Controller
      */
     public function hide_upcoming_posts()
     {
-        // $this->dbg_log('hide_upcoming_posts(): Do we show or hide upcoming posts?');
-        return ( $this->options->hidden == 1 ? true : false );
+        // E20RTools\DBG::log('hide_upcoming_posts(): Do we show or hide upcoming posts?');
+        return ( $this->options->hideFuture == 1 ? true : false );
     }
 
     /**
@@ -1223,7 +1268,7 @@ class Controller
 
                 if ( !$this->add_post_to_sequence( $this->sequence_id, $p_obj->id, $p_obj->delay ) ) {
 
-                    $this->dbg_log("save_sequence_post() - Unable to add post {$p_obj->id} with delay {$p_obj->delay} to sequence {$this->sequence_id}", E20R_DEBUG_SEQ_WARNING );
+                    E20RTools\DBG::log("Unable to add post {$p_obj->id} with delay {$p_obj->delay} to sequence {$this->sequence_id}", E20R_DEBUG_SEQ_WARNING );
                     return false;
                 }
             }
@@ -1238,11 +1283,11 @@ class Controller
                 $sequence_id = $this->sequence_id;
             }
 
-            $this->dbg_log("save_sequence_post() - Saving post {$post_id} with delay {$delay} to sequence {$sequence_id}");
+            E20RTools\DBG::log("Saving post {$post_id} with delay {$delay} to sequence {$sequence_id}");
             return $this->add_post_to_sequence( $sequence_id, $post_id, $delay );
         }
         else {
-            $this->dbg_log("save_sequence_post() - Need both post ID and delay values to save the post to sequence {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log("Need both post ID and delay values to save the post to sequence {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
             return false;
         }
     }
@@ -1258,29 +1303,29 @@ class Controller
 
         global $current_user;
 
-        $this->dbg_log("add_post_to_sequence() - Adding post {$post_id} to sequence {$sequence_id} using v3 meta format");
+        E20RTools\DBG::log("Adding post {$post_id} to sequence {$sequence_id} using v3 meta format");
 
 		$found_post = $this->is_present( $post_id, $delay );
 /*
         if ($this->is_present( $post_id, $delay )) {
 
-            $this->dbg_log("add_post_to_sequence() - Post {$post_id} with delay {$delay} is already present in sequence {$sequence_id}");
+            E20RTools\DBG::log("Post {$post_id} with delay {$delay} is already present in sequence {$sequence_id}");
             $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', "e20rsequence" ) );
             return true;
         }
 */
-		$this->dbg_log("add_post_to_sequence() - The post was not found in the current list of posts for {$sequence_id}");
+		E20RTools\DBG::log("The post was not found in the current list of posts for {$sequence_id}");
 
         $posts = $this->find_by_id( $post_id, $sequence_id );
 
         if ( (count($posts) > 0 && false === $this->allow_repetition()) || true === $found_post) {
 
-            $this->dbg_log("add_post_to_sequence() - Post is a duplicate and we're not allowed to add duplicates");
+            E20RTools\DBG::log("Post is a duplicate and we're not allowed to add duplicates");
             $this->set_error_msg( sprintf( __("Warning: '%s' does not allow multiple delay values for a single post ID", "e20rsequence"), get_the_title( $sequence_id ) ) );
 
             foreach ( $posts as $p ) {
 
-                $this->dbg_log("add_post_to_sequence(): Delay is different & we can't have repeat posts. Need to remove existing instances of {$post_id} and clear any notices");
+                E20RTools\DBG::log("add_post_to_sequence(): Delay is different & we can't have repeat posts. Need to remove existing instances of {$post_id} and clear any notices");
                 $this->remove_post( $p->id, $p->delay, true );
             }
         }
@@ -1294,7 +1339,7 @@ class Controller
             $member_days = $this->get_membership_days( $current_user->ID );
         }
 
-		$this->dbg_log("add_post_to_sequence() - Loading post {$post_id} from DB using WP_Query");
+		E20RTools\DBG::log("Loading post {$post_id} from DB using WP_Query");
         $tmp = new \WP_Query( array(
             'p' => $post_id,
             'post_type' => apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' )),
@@ -1305,7 +1350,7 @@ class Controller
 
 		$p = $tmp->get_posts();
 
-		$this->dbg_log("add_post_to_sequence() - Loaded " . count($p) . " posts with WP_Query");
+		E20RTools\DBG::log("Loaded " . count($p) . " posts with WP_Query");
 
         $new_post = new \stdClass();
         $new_post->id = $p[0]->ID;
@@ -1322,26 +1367,26 @@ class Controller
 
         wp_reset_postdata();
 
-        $this->dbg_log("add_post_to_sequence() - Found the following sequences for post {$new_post->id}: " . (false === $belongs_to ? 'Not found' : null ) );
-        $this->dbg_log($belongs_to);
+        E20RTools\DBG::log("Found the following sequences for post {$new_post->id}: " . (false === $belongs_to ? 'Not found' : null ) );
+        E20RTools\DBG::log($belongs_to);
 
         if ( ( false === $belongs_to) || (is_array($belongs_to) && !in_array( $sequence_id, $belongs_to)) ) {
 
             if ( false === add_post_meta( $post_id, "_pmpro_sequence_post_belongs_to", $sequence_id ) ) {
-                $this->dbg_log("add_post_to_sequence() - Unable to add/update this post {$post_id} for the sequence {$sequence_id}");
+                E20RTools\DBG::log("Unable to add/update this post {$post_id} for the sequence {$sequence_id}");
             }
         }
 
-        $this->dbg_log("add_post_to_sequence() - Attempting to add delay value {$delay} for post {$post_id} to sequence: {$sequence_id}");
+        E20RTools\DBG::log("Attempting to add delay value {$delay} for post {$post_id} to sequence: {$sequence_id}");
 
         if ( !$this->allow_repetition() ) {
             // TODO: Need to check if the meta/value combination already exists for the post ID.
             if ( false === add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay, true ) ) {
 
-                $this->dbg_log("add_post_to_sequenece() - Couldn't add {$post_id} with delay {$delay}. Attempting update operation" );
+                E20RTools\DBG::log("add_post_to_sequenece() - Couldn't add {$post_id} with delay {$delay}. Attempting update operation" );
 
                 if ( false === update_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay ) ) {
-                    $this->dbg_log("add_post_to_sequence() - Both add and update operations for {$post_id} in sequence {$sequence_id} with delay {$delay} failed!", E20R_DEBUG_SEQ_WARNING);
+                    E20RTools\DBG::log("Both add and update operations for {$post_id} in sequence {$sequence_id} with delay {$delay} failed!", E20R_DEBUG_SEQ_WARNING);
                 }
             }
 
@@ -1350,27 +1395,27 @@ class Controller
 
             $delays = get_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay" );
 
-            $this->dbg_log("add_post_to_sequence() - Checking whether the '{$delay}' delay value is already recorded for this post: {$post_id}");
+            E20RTools\DBG::log("Checking whether the '{$delay}' delay value is already recorded for this post: {$post_id}");
 
             if ( ( false === $delays ) || ( !in_array( $delay, $delays ) ) ) {
 
-                $this->dbg_log( "add_post_to_seuqence() - Not previously added. Now adding delay value meta ({$delay}) to post id {$post_id}");
+                E20RTools\DBG::log( "add_post_to_seuqence() - Not previously added. Now adding delay value meta ({$delay}) to post id {$post_id}");
                 add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay );
             }
             else {
-                $this->dbg_log("add_post_to_sequence() - Post # {$post_id} in sequence {$sequence_id} is already recorded with delay {$delay}");
+                E20RTools\DBG::log("Post # {$post_id} in sequence {$sequence_id} is already recorded with delay {$delay}");
             }
         }
 
         if ( false === get_post_meta( $post_id, "_pmpro_sequence_post_belongs_to" ) ) {
 
-            $this->dbg_log("add_post_to_sequence() - Didn't add {$post_id} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log("Didn't add {$post_id} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
             return false;
         }
 
         if ( false === get_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay" ) ) {
 
-            $this->dbg_log("add_post_to_sequence() - Couldn't add post/delay value(s) for {$post_id}/{$delay} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log("Couldn't add post/delay value(s) for {$post_id}/{$delay} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
             return false;
         }
 
@@ -1379,12 +1424,12 @@ class Controller
            false === $new_post->is_future ||
           (( true === $new_post->is_future) && false === $this->hide_upcoming_posts()) ) {
 
-            $this->dbg_log("add_post_to_sequence() - Adding post to sequence: {$sequence_id}");
+            E20RTools\DBG::log("Adding post to sequence: {$sequence_id}");
             $this->posts[] = $new_post;
         }
         else {
 
-            $this->dbg_log("add_post_to_sequence() - User doesn't have access to the post so not adding it.");
+            E20RTools\DBG::log("User doesn't have access to the post so not adding it.");
             $this->upcoming[] = $new_post;
         }
 
@@ -1402,7 +1447,7 @@ class Controller
 
     public function is_present ( $post_id, $delay ) {
 
-        $this->dbg_log("is_present() - Checking whether post {$post_id} with delay {$delay} is already included in {$this->sequence_id}");
+        E20RTools\DBG::log("Checking whether post {$post_id} with delay {$delay} is already included in {$this->sequence_id}");
 
         if ( empty($this->posts ) ) {
             return false;
@@ -1411,18 +1456,18 @@ class Controller
         foreach( $this->posts as $k => $post ) {
 
             if ( ( $post_id == $post->id ) && ( $delay == $post->delay ) ) {
-                $this->dbg_log("is_present() - Post and delay combination WAS found!");
+                E20RTools\DBG::log("Post and delay combination WAS found!");
                 return $k;
             }
         }
 
-		$this->dbg_log("is_present() - Post {$post_id} and delay {$delay} combination was NOT found.");
+		E20RTools\DBG::log("Post {$post_id} and delay {$delay} combination was NOT found.");
         return false;
     }
 
     public function find_by_id( $post_id, $sequence_id = null ) {
 
-        $this->dbg_log("find_by_id() - Locating post {$post_id}.");
+        E20RTools\DBG::log("Locating post {$post_id}.");
 
         $found = array();
         $posts = array();
@@ -1431,26 +1476,26 @@ class Controller
 
         if ( false ===  $valid_cache) {
 
-            $this->dbg_log("find_by_id() - Cache is invalid. Using load_sequence_post to grab the post(s) by ID: {$post_id}.");
+            E20RTools\DBG::log("Cache is invalid. Using load_sequence_post to grab the post(s) by ID: {$post_id}.");
             $posts = $this->load_sequence_post( $sequence_id, null, $post_id );
 
             if ( empty( $posts ) ) {
 
-                $this->dbg_log("find_by_id() - Couldn't find post based on post ID of {$post_id}. Now loading all posts in sequence");
+                E20RTools\DBG::log("Couldn't find post based on post ID of {$post_id}. Now loading all posts in sequence");
                 $posts = $this->load_sequence_post();
             }
             else {
-                $this->dbg_log("find_by_id() - Returned " . count( $posts ) . " posts from load_sequnce_post() function");
+                E20RTools\DBG::log("Returned " . count( $posts ) . " posts from load_sequnce_post() function");
             }
         }
         else {
 
-            $this->dbg_log("find_by_id() - Have valid cache. Using cached post list to locate post with ID {$post_id}");
+            E20RTools\DBG::log("Have valid cache. Using cached post list to locate post with ID {$post_id}");
             $posts = $this->posts;
         }
 
         if ( empty( $posts )) {
-            $this->dbg_log("find_by_id() - No posts in sequence. Returning empty list.");
+            E20RTools\DBG::log("No posts in sequence. Returning empty list.");
             return array();
         }
 
@@ -1458,7 +1503,7 @@ class Controller
 
             if ( $p->id == $post_id ) {
 
-                $this->dbg_log("find_by_id() - Including post # {$post_id}, delay: {$p->delay}");
+                E20RTools\DBG::log("Including post # {$post_id}, delay: {$p->delay}");
                 $found[] = $p;
             }
         }
@@ -1474,7 +1519,7 @@ class Controller
       * @since 2.4.11
       */
     private function allow_repetition() {
-        $this->dbg_log("allow_repetition() - Returning: " .($this->options->allowRepeatPosts ? 'true' : 'false'));
+        E20RTools\DBG::log("Returning: " .($this->options->allowRepeatPosts ? 'true' : 'false'));
         return $this->options->allowRepeatPosts;
     }
 
@@ -1513,52 +1558,52 @@ class Controller
 
                 $delays = get_post_meta( $post->id, "_pmpro_sequence_{$this->sequence_id}_post_delay" );
 
-                $this->dbg_log("remove_post() - Delay meta_values: ");
-                $this->dbg_log( $delays );
+                E20RTools\DBG::log("Delay meta_values: ");
+                E20RTools\DBG::log( $delays );
 
                 if ( 1 == count( $delays ) ) {
 
-                    $this->dbg_log("remove_post() - A single post associated with this post id: {$post_id}");
+                    E20RTools\DBG::log("A single post associated with this post id: {$post_id}");
 
                     if ( false === delete_post_meta( $post_id, "_pmpro_sequence_{$this->sequence_id}_post_delay", $post->delay ) ) {
 
-                        $this->dbg_log("remove_post() - Unable to remove the delay meta for {$post_id} / {$post->delay}");
+                        E20RTools\DBG::log("Unable to remove the delay meta for {$post_id} / {$post->delay}");
                         return false;
                     }
 
                     if ( false === delete_post_meta( $post_id, "_pmpro_sequence_post_belongs_to", $this->sequence_id ) ) {
 
-                        $this->dbg_log("remove_post() - Unable to remove the sequence meta for {$post_id} / {$this->sequence_id}");
+                        E20RTools\DBG::log("Unable to remove the sequence meta for {$post_id} / {$this->sequence_id}");
                         return false;
                     }
                 }
                 elseif ( 1 < count( $delays ) ) {
 
-                    $this->dbg_log($delays);
-                    $this->dbg_log("remove_post() - Multiple (" . count( $delays ) . ") posts associated with this post id: {$post_id} in sequence {$this->sequence_id}");
+                    E20RTools\DBG::log($delays);
+                    E20RTools\DBG::log("Multiple (" . count( $delays ) . ") posts associated with this post id: {$post_id} in sequence {$this->sequence_id}");
 
                     if ( false == delete_post_meta( $post_id, "_pmpro_sequence_{$this->sequence_id}_post_delay", $post->delay ) ) {
 
-                        $this->dbg_log("remove_post() - Unable to remove the sequence meta for {$post_id} / {$this->sequence_id}");
+                        E20RTools\DBG::log("Unable to remove the sequence meta for {$post_id} / {$this->sequence_id}");
                         return false;
                     };
 
-                    $this->dbg_log("remove_post() - Keeping the sequence info for the post_id");
+                    E20RTools\DBG::log("Keeping the sequence info for the post_id");
                 }
                 else {
-                    $this->dbg_log("remove_post() - ERROR: There are _no_ delay values for post ID {$post_id}????");
+                    E20RTools\DBG::log("ERROR: There are _no_ delay values for post ID {$post_id}????");
                     return false;
                 }
 
-                $this->dbg_log("remove_post() - Removing entry #{$i} from posts array: ");
-                $this->dbg_log($this->posts[$i]);
+                E20RTools\DBG::log("Removing entry #{$i} from posts array: ");
+                E20RTools\DBG::log($this->posts[$i]);
 
                 unset( $this->posts[ $i ] );
             }
 
         }
 
-        $this->dbg_log("remove_post() - Updating cache for sequence {$this->sequence_id}");
+        E20RTools\DBG::log("Updating cache for sequence {$this->sequence_id}");
         $this->set_cache($this->posts, $this->sequence_id);
 
 	    // Remove the post ($post_id) from all cases where a User has been notified.
@@ -1568,7 +1613,7 @@ class Controller
         }
 
 		if (0 >= count($this->posts)) {
-			$this->dbg_log("remove_post() - Nothing left to cache. Cleaning up...");
+			E20RTools\DBG::log("Nothing left to cache. Cleaning up...");
 			$this->delete_cache($this->sequence_id);
 			$this->expires = null;
 		}
@@ -1589,7 +1634,7 @@ class Controller
 
         global $wpdb;
 
-        $this->dbg_log('remove_post_notified_flag() - Preparing SQL. Using sequence ID: ' . $this->sequence_id);
+        E20RTools\DBG::log('Preparing SQL. Using sequence ID: ' . $this->sequence_id);
 
         $error_users = array();
 
@@ -1598,34 +1643,34 @@ class Controller
 
         foreach ( $users as $user ) {
 
-            $this->dbg_log( "remove_post_notified_flag() - Searching for Post ID {$post_id} in notification settings for user with ID: {$user->user_id}" );
+            E20RTools\DBG::log( "Searching for Post ID {$post_id} in notification settings for user with ID: {$user->user_id}" );
 
-            // $userSettings = get_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', true );
+            // $userSettings = get_user_meta( $user->user_id, $wpdb->prefix .  'pmpro_sequence_notices', true );
             $userSettings = $this->load_user_notice_settings( $user->user_id, $this->sequence_id );
 
-            isset( $userSettings->id ) && $userSettings->id == $this->sequence_id ? $this->dbg_log("Notification settings exist for {$this->sequence_id}") : $this->dbg_log('No notification settings found');
+            isset( $userSettings->id ) && $userSettings->id == $this->sequence_id ? E20RTools\DBG::log("Notification settings exist for {$this->sequence_id}") : E20RTools\DBG::log('No notification settings found');
 
             $notifiedPosts = isset( $userSettings->posts ) ? $userSettings->posts : array();
 
             if ( is_array( $notifiedPosts ) &&
                 ($key = array_search( "{$post_id}_{$delay}", $notifiedPosts ) ) !== false ) {
 
-                $this->dbg_log( "remove_post_notified_flag() - Found post # {$post_id} in the notification settings for user_id {$user->user_id} with key: {$key}" );
-                $this->dbg_log( "remove_post_notified_flag() - Found in settings: {$userSettings->posts[ $key ]}");
+                E20RTools\DBG::log( "Found post # {$post_id} in the notification settings for user_id {$user->user_id} with key: {$key}" );
+                E20RTools\DBG::log( "Found in settings: {$userSettings->posts[ $key ]}");
                 unset( $userSettings->posts[ $key ] );
 
                 if ( $this->save_user_notice_settings( $user->user_id, $userSettings, $this->sequence_id ) ) {
 
                     // update_user_meta( $user->user_id, $wpdb->prefix . 'pmpro_sequence_notices', $userSettings );
-                    $this->dbg_log( "remove_post_notified_flag() - Deleted post # {$post_id} in the notification settings for user with id {$user->user_id}", E20R_DEBUG_SEQ_INFO );
+                    E20RTools\DBG::log( "Deleted post # {$post_id} in the notification settings for user with id {$user->user_id}", E20R_DEBUG_SEQ_INFO );
                 }
                 else {
-                    $this->dbg_log( "remove_post_notified_flag() - Unable to remove post # {$post_id} in the notification settings for user with id {$user->user_id}", E20R_DEBUG_SEQ_WARNING );
+                    E20RTools\DBG::log( "Unable to remove post # {$post_id} in the notification settings for user with id {$user->user_id}", E20R_DEBUG_SEQ_WARNING );
                     $error_users[] = $user->user_id;
                 }
             }
             else {
-                $this->dbg_log("remove_post_notified_flag() - Could not find the post_id/delay combination: {$post_id}_{$delay} for user {$user->user_id}");
+                E20RTools\DBG::log("Could not find the post_id/delay combination: {$post_id}_{$delay} for user {$user->user_id}");
             }
         }
 
@@ -1638,6 +1683,7 @@ class Controller
 
     private function get_users_of_sequence() {
 
+        // TODO: Add filter and remove dependency on PMPro for this data.
         global $wpdb;
 
         // Find all users that are active members of this sequence.
@@ -1656,7 +1702,7 @@ class Controller
 
         $users = $wpdb->get_results( $sql );
 
-        $this->dbg_log("get_users_of_sequence() - Fetched " . count($users) . " user records for {$this->sequence_id}");
+        E20RTools\DBG::log("get_users_of_sequence() - Fetched " . count($users) . " user records for {$this->sequence_id}");
         return $users;
     }
 
@@ -1670,21 +1716,21 @@ class Controller
 
         global $wpdb;
 
-        $this->dbg_log("load_user_notice_settings() - Attempting to load user settings for user {$user_id} and {$sequence_id}");
+        E20RTools\DBG::log("Attempting to load user settings for user {$user_id} and {$sequence_id}");
 
         if ( empty( $sequence_id ) && ( empty( $this->sequence_id ) ) ) {
 
-            $this->dbg_log("load_user_notice_settings() - No sequence id defined. returning null", E20R_DEBUG_SEQ_WARNING);
+            E20RTools\DBG::log("No sequence id defined. returning null", E20R_DEBUG_SEQ_WARNING);
             return null;
         }
 
-        $optIn = get_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices", true);
+        $optIn = get_user_meta( $user_id,  "pmpro_sequence_id_{$sequence_id}_notices", true);
 
-        $this->dbg_log("load_user_notice_settings() - V3 user alert settings configured: " . ( isset($optIn->send_notices) ? 'Yes' : 'No') );
+        E20RTools\DBG::log("V3 user alert settings configured: " . ( isset($optIn->send_notices) ? 'Yes' : 'No') );
 
         if ( isset( $optIn->send_notices ) && is_array( $optIn->posts ) && in_array( '_', $optIn->posts )) {
 
-            $this->dbg_log("load_user_notice_settings() - Cleaning up post_id/delay combinations");
+            E20RTools\DBG::log("Cleaning up post_id/delay combinations");
 
             foreach( $optIn->posts as $k => $id ) {
 
@@ -1702,13 +1748,13 @@ class Controller
 
             $optIn->posts = $clean;
 
-            $this->dbg_log("load_user_notice_settings() - Current (clean?) settings: ");
-            $this->dbg_log( $optIn );
+            E20RTools\DBG::log("Current (clean?) settings: ");
+            E20RTools\DBG::log( $optIn );
         }
 
         if ( empty( $optIn ) || ( !isset( $optIn->send_notices ) ) ) {
 
-            $this->dbg_log("load_user_notice_settings() - No settings for user {$user_id} and sequence {$sequence_id} found. Returning defaults.", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log("No settings for user {$user_id} and sequence {$sequence_id} found. Returning defaults.", E20R_DEBUG_SEQ_WARNING );
             $optIn = $this->create_user_notice_defaults();
             $optIn->id = $sequence_id;
         }
@@ -1722,7 +1768,7 @@ class Controller
       */
     private function create_user_notice_defaults() {
 
-        $this->dbg_log("create_user_notice_defaults() - Loading default opt-in settings" );
+        E20RTools\DBG::log("Loading default opt-in settings" );
         $defaults = new \stdClass();
 
         $defaults->id = $this->sequence_id;
@@ -1736,22 +1782,22 @@ class Controller
 
     public function save_user_notice_settings( $user_id, $settings, $sequence_id = null ) {
 
-        $this->dbg_log("save_user_notice_settings() - Attempting to save settings for {$user_id} and sequence {$sequence_id}");
-        // $this->dbg_log( $settings );
+        E20RTools\DBG::log("Attempting to save settings for {$user_id} and sequence {$sequence_id}");
+        // E20RTools\DBG::log( $settings );
 
         if ( is_null( $sequence_id ) && ( empty( $this->sequence_id ) ) ) {
 
-            $this->dbg_log("save_user_notice_settings() - No sequence ID specified. Exiting!", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log("No sequence ID specified. Exiting!", E20R_DEBUG_SEQ_WARNING );
             return false;
         }
 
         if ( is_null( $sequence_id ) && ( $this->sequence_id != 0 ) ) {
 
-            $this->dbg_log("save_user_notice_settings() - No sequence ID specified. Using {$this->sequence_id} ");
+            E20RTools\DBG::log("No sequence ID specified. Using {$this->sequence_id} ");
             $sequence_id = $this->sequence_id;
         }
 
-        $this->dbg_log("save_user_notice_settings() - Save V3 style user notification opt-in settings to usermeta for {$user_id} and sequence {$sequence_id}");
+        E20RTools\DBG::log("Save V3 style user notification opt-in settings to usermeta for {$user_id} and sequence {$sequence_id}");
 
         update_user_meta( $user_id, "pmpro_sequence_id_{$sequence_id}_notices", $settings );
 
@@ -1759,17 +1805,17 @@ class Controller
 
         if ( empty($test) ) {
 
-            $this->dbg_log("save_user_notice_settings() - Error saving V3 style user notification settings for ({$sequence_id}) user ID: {$user_id}", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log("Error saving V3 style user notification settings for ({$sequence_id}) user ID: {$user_id}", E20R_DEBUG_SEQ_WARNING );
             return false;
         }
 
-        $this->dbg_log("save_user_notice_settings() - Saved V3 style user alert settings for {$sequence_id}");
+        E20RTools\DBG::log("Saved V3 style user alert settings for {$sequence_id}");
         return true;
     }
 
     public function has_post_access( $user_id, $post_id, $isAlert = false, $sequence_id = null ) {
 
-		$this->dbg_log("has_post_access() - Checking access to post {$post_id} for user {$user_id} ");
+		E20RTools\DBG::log("Checking access to post {$post_id} for user {$user_id} ");
 
 		$existing_sequence_id = $this->sequence_id;
 		$is_authorized_ajax = (is_admin() || ( false == $this->is_cron ) && ((defined('DOING_AJAX') && DOING_AJAX) && isset($_POST['in_admin_panel'])));
@@ -1777,8 +1823,8 @@ class Controller
 
 		if ( true === $is_authorized_ajax && false === $is_editor ){
 
-			$this->dbg_log("has_post_access() - User ({$user_id}) does not have edit permissions: ");
-			$this->dbg_log("has_post_access() - Editor: " . ($is_editor ? 'true' : 'false') . " AJAX: " . ($is_authorized_ajax ? 'true' : 'false'));
+			E20RTools\DBG::log("User ({$user_id}) does not have edit permissions: ");
+			E20RTools\DBG::log("Editor: " . ($is_editor ? 'true' : 'false') . " AJAX: " . ($is_authorized_ajax ? 'true' : 'false'));
 			// return false;
 		}
 
@@ -1791,7 +1837,7 @@ class Controller
 
         if ( count( $sequence_list ) < count( $sequences ) ) {
 
-            $this->dbg_log("has_post_access() - Saving the pruned array of sequences");
+            E20RTools\DBG::log("Saving the pruned array of sequences");
 
             $this->set_sequences_for_post( $post_id, $sequence_list );
         }
@@ -1801,17 +1847,18 @@ class Controller
             return true;
         }
 
+        // TODO: Remove dependency on PMPro functions in has_post_access()
         // Does the current user have a membership level giving them access to everything?
         $all_access_levels = apply_filters("pmproap_all_access_levels", array(), $user_id, $post_id );
 
-        if ( ! empty( $all_access_levels ) && pmpro_hasMembershipLevel( $all_access_levels, $user_id ) ) {
+        if ( ! empty( $all_access_levels ) && $this->has_membership_level( $all_access_levels, $user_id ) ) {
 
-            $this->dbg_log("has_post_access() - This user ({$user_id}) has one of the 'all access' membership levels");
+            E20RTools\DBG::log("This user ({$user_id}) has one of the 'all access' membership levels");
             return true; //user has one of the all access levels
         }
 
         if ( $is_authorized_ajax ) {
-            $this->dbg_log("has_post_access() - User is in admin panel. Allow access to the post");
+            E20RTools\DBG::log("User is in admin panel. Allow access to the post");
             return true;
         }
 
@@ -1819,13 +1866,13 @@ class Controller
 
 	        if ( !is_null($sequence_id) && !in_array($sequence_id, $sequence_list)) {
 
-				$this->dbg_log("has_post_access() - {$sequence_id} is not one of the sequences managing this ({$post_id}) post: {$sid}");
+				E20RTools\DBG::log("{$sequence_id} is not one of the sequences managing this ({$post_id}) post: {$sid}");
 				continue;
 			}
 
             if ( is_null($sequence_id) && $this->sequence_id != $sid ) {
 
-                $this->dbg_log( "has_post_access(): Loading sequence #{$sid}" );
+                E20RTools\DBG::log( "Loading sequence #{$sid}" );
                 $this->get_options( $sid );
                 $this->load_sequence_post( $sequence_id, null, $post_id );
             }
@@ -1836,13 +1883,22 @@ class Controller
             // Only consider granting access to the post if it is in one of the allowed statuses
             if ( ! in_array( $curr_post_status, $allowed_post_statuses ) ) {
 
-                $this->dbg_log("has_post_access() - Post {$post_id} with status {$curr_post_status} isn't accessible", E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log("Post {$post_id} with status {$curr_post_status} isn't accessible", E20R_DEBUG_SEQ_WARNING );
                 return false;
             }
 
-            $access = pmpro_has_membership_access( $sid, $user_id, true );
-            $this->dbg_log("has_post_access() - Checking sequence access for membership level {$sid}: Access = " .($access[0] ? 'true' : 'false'));
-            // $this->dbg_log($access);
+            /**
+              * Anticipates a return value of a 3 element array:
+              * array(
+              *          0 => boolean (true/false to indicate whether $user_id has access to $sid (sequence id/post id for sequence definition)
+              *          1 => array( numeric list of membership type/level IDs that have access to this sequence id )
+              *          2 => array( string list of membership level names/human readable identifiers that reflect the order of the numeric array in 1 )
+              * )
+            ***/
+            $access = $this->has_membership_access($sid, $user_id, true);
+
+            E20RTools\DBG::log("Checking sequence access for membership level {$sid}: Access = " .($access[0] ? 'true' : 'false'));
+            // E20RTools\DBG::log($access);
 
             // $usersLevels = pmpro_getMembershipLevelsForUser( $user_id );
 
@@ -1852,20 +1908,20 @@ class Controller
 
                 if ( !empty( $s_posts ) ) {
 
-                    $this->dbg_log("has_post_access() - Found " . count( $s_posts ) . " post(s) in sequence {$this->sequence_id} with post ID of {$post_id}");
+                    E20RTools\DBG::log("Found " . count( $s_posts ) . " post(s) in sequence {$this->sequence_id} with post ID of {$post_id}");
 
                     foreach( $s_posts as $post ) {
 
-                        $this->dbg_log("has_post_access() - UserID: {$user_id}, post: {$post->id}, delay: {$post->delay}, Alert: {$isAlert} for sequence: {$sid} - sequence_list: " .print_r( $sequence_list, true));
+                        E20RTools\DBG::log("UserID: {$user_id}, post: {$post->id}, delay: {$post->delay}, Alert: {$isAlert} for sequence: {$sid} - sequence_list: " .print_r( $sequence_list, true));
 
                         if ( $post->id == $post_id ) {
 
                             foreach( $access[1] as $level_id ) {
 
-                                $this->dbg_log("has_post_access() - Processing for membership level ID {$level_id}");
+                                E20RTools\DBG::log("Processing for membership level ID {$level_id}");
 
                                 if ( $this->options->delayType == 'byDays' ) {
-                                    $this->dbg_log("has_post_access() - Sequence {$this->sequence_id} is configured to store sequence by days since startdate");
+                                    E20RTools\DBG::log("Sequence {$this->sequence_id} is configured to store sequence by days since startdate");
 
                                     // Don't add 'preview' value if this is for an alert notice.
                                     if (! $isAlert) {
@@ -1891,13 +1947,13 @@ class Controller
 
                                         // Set users membership Level
                                         $this->e20r_sequence_user_level = $level_id;
-                                        // $this->dbg_log("has_post_access() - using byDays as the delay type, this user is given access to post ID {$post_id}.");
+                                        // E20RTools\DBG::log("has_post_access() - using byDays as the delay type, this user is given access to post ID {$post_id}.");
                                         $retval = true;
                                         break;
                                     }
                                 }
                                 elseif ( $this->options->delayType == 'byDate' ) {
-                                    $this->dbg_log("has_post_access() - Sequence {$this->sequence_id} is configured to store sequence by dates");
+                                    E20RTools\DBG::log("Sequence {$this->sequence_id} is configured to store sequence by dates");
                                     // Don't add 'preview' value if this is for an alert notice.
                                     if (! $isAlert) {
                                         $previewAdd = ((60*60*24) * $this->options->previewOffset);
@@ -1921,7 +1977,7 @@ class Controller
                                     if ( $post->delay <= $today ) {
 
                                         $this->e20r_sequence_user_level = $level_id;
-                                        // $this->dbg_log("has_post_access() - using byDate as the delay type, this user is given access to post ID {$post_id}.");
+                                        // E20RTools\DBG::log("has_post_access() - using byDate as the delay type, this user is given access to post ID {$post_id}.");
                                         $retval = true;
                                         break;
                                     }
@@ -1933,26 +1989,81 @@ class Controller
             }
         }
 
-        $this->dbg_log("has_post_access() - NO access granted to post {$post_id} for user {$user_id}");
+        E20RTools\DBG::log("NO access granted to post {$post_id} for user {$user_id}");
 
         if( $this->sequence_id !== $existing_sequence_id ) {
-            $this->dbg_log("has_post_access() - Resetting sequence info for {$existing_sequence_id}");
+            E20RTools\DBG::log("Resetting sequence info for {$existing_sequence_id}");
             $this->init($existing_sequence_id);
         }
 
         return $retval;
     }
+    /**
+      * @param int|array|null $levels - Array or ID of level(s) to check against
+      * @param int|null $user_id - Id of user to check levels for
+      * @return boolean
+      *
+      * @since 4.2.6
+      */
+    private function has_membership_level( $levels = null, $user_id = null) {
+
+        $has_level = false;
+
+        // TODO: Remove dependency of pmpro_hasMembershipLevel out of the sequences class and into own module
+        if (function_exists('pmpro_hasMembershipLevel')) {
+            $has_level = pmpro_hasMembershipLevel( $levels, $user_id );
+        }
+
+        return apply_filters('e20r-sequence-has-membership-level', $has_level, $levels, $user_id);
+    }
+
+    /**
+      * Decide whether the user ID should have access to the post_id
+      * Anticipates a return value consisting of a 3 element array:
+      * array(
+      *          0 => boolean (true/false to indicate whether $user_id has access to $sid (sequence id/post id for sequence definition)
+      *          1 => array( numeric list of membership type/level IDs that have access to this sequence id )
+      *          2 => array( string list of membership level names/human readable identifiers that reflect the order of the numeric array in 1 )
+      * )
+      * @param int|null $post_id - the post ID to check
+      * @param int|null $user_id - The user ID to check
+      * @param bool $return_membership_levels
+      * @return mixed|boolean
+      *
+      * @since 4.2.6
+      */
+    private function has_membership_access( $post_id = null, $user_id = null, $return_membership_levels = true) {
+
+        // Default is to deny access if there is no membership module to manage it.
+        if ( true === $return_membership_levels ) {
+            $access = array(
+                false,
+                null,
+                'No membership level found'
+            );
+        } else {
+            $access = false;
+        }
+
+        // TODO: Remove pmpro_has_membership_access from e20r-sequences and into own module
+        if (function_exists('pmpro_has_membership_access')) {
+
+            $access = pmpro_has_membership_access($post_id, $user_id, $return_membership_levels);
+        }
+
+        return apply_filters('e20r-sequence-membership-access', $access, $post_id, $user_id, $return_membership_levels);
+    }
 
     public function get_sequences_for_post( $post_id ) {
 
-        $this->dbg_log("get_sequences_for_post() - Check whether we've still got old post_sequences data stored. " . $this->who_called_me() );
+        E20RTools\DBG::log("Check whether we've still got old post_sequences data stored. " . $this->who_called_me() );
 
         $post_sequences = get_post_meta( $post_id, "_post_sequences", true);
 
         if ( !empty($post_sequences) ) {
 
-            $this->dbg_log("get_sequences_for_post() - Need to migrate to V3 sequence list for post ID {$post_id}", E20R_DEBUG_SEQ_WARNING );
-            $this->dbg_log($post_sequences);
+            E20RTools\DBG::log("Need to migrate to V3 sequence list for post ID {$post_id}", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log($post_sequences);
 
             foreach ( $post_sequences as $seq_id ) {
 
@@ -1960,11 +2071,11 @@ class Controller
                     update_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $seq_id );
             }
 
-            $this->dbg_log("get_sequences_for_post() - Removing old sequence list metadata");
+            E20RTools\DBG::log("Removing old sequence list metadata");
             delete_post_meta( $post_id, '_post_sequences' );
         }
 
-        $this->dbg_log("get_sequences_for_post() - Attempting to load sequence list for post {$post_id}", E20R_DEBUG_SEQ_INFO );
+        E20RTools\DBG::log("Attempting to load sequence list for post {$post_id}", E20R_DEBUG_SEQ_INFO );
         $sequence_ids = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
 
         $sequence_count = array_count_values( $sequence_ids );
@@ -1977,7 +2088,7 @@ class Controller
 
                     if ( !add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $s_id, true ) ) {
 
-                        $this->dbg_log("get_sequences_for_post() - Unable to clean up the sequence list for {$post_id}", E20R_DEBUG_SEQ_WARNING );
+                        E20RTools\DBG::log("Unable to clean up the sequence list for {$post_id}", E20R_DEBUG_SEQ_WARNING );
                     }
                 }
             }
@@ -1985,7 +2096,7 @@ class Controller
 
         $sequence_ids = array_unique( $sequence_ids );
 
-        $this->dbg_log("get_sequences_for_post() - Loaded " . count( $sequence_ids ) . " sequences that post # {$post_id} belongs to", E20R_DEBUG_SEQ_INFO );
+        E20RTools\DBG::log("Loaded " . count( $sequence_ids ) . " sequences that post # {$post_id} belongs to", E20R_DEBUG_SEQ_INFO );
 
         return ( empty( $sequence_ids ) ? array() : $sequence_ids );
     }
@@ -2010,15 +2121,15 @@ class Controller
 
     public function set_sequences_for_post( $post_id, $sequence_ids ) {
 
-        $this->dbg_log("set_sequences_for_post() - Adding sequence info to post # {$post_id}");
+        E20RTools\DBG::log("Adding sequence info to post # {$post_id}");
 
         $retval = true;
 
         $seq = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
         if ( is_array( $sequence_ids ) ) {
 
-            $this->dbg_log("set_sequences_for_post() - Received array of sequences to add to post # {$post_id}");
-            $this->dbg_log( $sequence_ids );
+            E20RTools\DBG::log("Received array of sequences to add to post # {$post_id}");
+            E20RTools\DBG::log( $sequence_ids );
 
             $sequence_ids = array_unique( $sequence_ids );
 
@@ -2026,21 +2137,21 @@ class Controller
 
                 if ( ( false === $seq ) || ( !in_array( $id, $seq ) ) ) {
 
-                    $this->dbg_log( "set_sequences_for_post() - Not previously added. Now adding sequence ID meta ({$id}) for post # {$post_id}");
+                    E20RTools\DBG::log( "Not previously added. Now adding sequence ID meta ({$id}) for post # {$post_id}");
                     $retval = $retval && add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $id );
                 }
                 else {
-                    $this->dbg_log("set_sequences_for_post() - Post # {$post_id} is already included in sequence {$id}");
+                    E20RTools\DBG::log("Post # {$post_id} is already included in sequence {$id}");
                 }
             }
         }
         else {
 
-            $this->dbg_log("set_sequences_for_post() - Received sequence id ({$sequence_ids} to add for post # {$post_id}");
+            E20RTools\DBG::log("Received sequence id ({$sequence_ids} to add for post # {$post_id}");
 
             if ( ( false === $seq ) || ( !in_array( $sequence_ids, $seq ) ) ) {
 
-                $this->dbg_log( "set_sequences_for_post() - Not previously added. Now adding sequence ID meta ({$sequence_ids}) for post # {$post_id}");
+                E20RTools\DBG::log( "Not previously added. Now adding sequence ID meta ({$sequence_ids}) for post # {$post_id}");
                 $retval = $retval && add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $sequence_ids );
             }
         }
@@ -2052,7 +2163,7 @@ class Controller
 
         global $current_user;
 
-        $this->dbg_log("set_closest_post() - Received posts: " . count( $post_list ) . " and user ID: " . ( is_null($user_id) ? 'None' : $user_id ));
+        E20RTools\DBG::log("Received posts: " . count( $post_list ) . " and user ID: " . ( is_null($user_id) ? 'None' : $user_id ));
 
         if ( !is_null( $user_id ) ) {
 
@@ -2081,7 +2192,7 @@ class Controller
 
             if ( ( $post->delay == $closest_post->delay ) && ( $post_id == $closest_post->id ) ) {
 
-                $this->dbg_log( "set_closest_post() - Most current post for user {$user_id} found for post id: {$post_id}" );
+                E20RTools\DBG::log( "Most current post for user {$user_id} found for post id: {$post_id}" );
                 $post_list[$key]->closest_post = true;
             }
         }
@@ -2102,7 +2213,7 @@ class Controller
 
         if ( empty( $user_id ) ) {
 
-            $this->dbg_log("find_closest_post() - No user ID specified by callee: " . $this->who_called_me());
+            E20RTools\DBG::log("No user ID specified by callee: " . $this->who_called_me());
 
             global $current_user;
             $user_id = $current_user->ID;
@@ -2117,14 +2228,14 @@ class Controller
             $this->load_sequence_post();
         }
 		*/
-        $this->dbg_log("find_closest_post() - Have " . count($this->posts) . " posts in sequence.");
+        E20RTools\DBG::log("Have " . count($this->posts) . " posts in sequence.");
 
         // Find the post ID in the postList array that has the delay closest to the $membership_day.
         $closest = $this->find_closest_post_by_delay_val( $membership_day, $user_id );
 
         if ( isset( $closest->id ) ) {
 
-            $this->dbg_log("find_closest_post() - For user {$user_id} on day {$membership_day}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})");
+            E20RTools\DBG::log("For user {$user_id} on day {$membership_day}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})");
             return $closest;
         }
 
@@ -2134,7 +2245,7 @@ class Controller
     public function find_posts_by_delay( $delay, $user_id = null ) {
 
         $posts = array();
-        $this->dbg_log("find_posts_by_delay() - Have " . count($this->posts) . " to process");
+        E20RTools\DBG::log("Have " . count($this->posts) . " to process");
 
         foreach( $this->posts as $post ) {
 
@@ -2149,7 +2260,7 @@ class Controller
             $posts = $this->find_closest_post( $user_id );
         }
 
-        $this->dbg_log("find_posts_by_delay() - Returning " . count($posts) . " with delay value <= {$delay}");
+        E20RTools\DBG::log("Returning " . count($posts) . " with delay value <= {$delay}");
         return $posts;
 
     }
@@ -2171,7 +2282,7 @@ class Controller
 
         $distances = array();
 
-        // $this->dbg_log( $postArr );
+        // E20RTools\DBG::log( $postArr );
 
         foreach ( $this->posts as $key => $post ) {
 
@@ -2205,7 +2316,7 @@ class Controller
         foreach( $post_list as $k => $post ) {
 
             if ( ( $k <= $last_key ) && ( $k >= $first_key ) ) {
-                $this->dbg_log("paginate_posts() - Including {$post->id} with delay {$post->delay} in page");
+                E20RTools\DBG::log("Including {$post->id} with delay {$post->delay} in page");
                 $page[] = $post;
             }
         }
@@ -2217,13 +2328,18 @@ class Controller
     private function set_min_max( $pagesize, $page_num, $post_list ) {
 
         $min_key = 0;
-        $max_key = $pagesize - 1;
 
-        $this->dbg_log("set_min_max() - Max key: {$max_key} and min key: {$min_key}");
+        /**
+         * Didn't account for pages < pagesize.
+         * @since 4.4
+        */
+        $max_key = ( count($post_list) >= $pagesize ) ? $pagesize - 1 : count($post_list) - 1;
+
+        E20RTools\DBG::log("Max key: {$max_key} and min key: {$min_key}");
         $min = $post_list[$max_key]->delay;
         $max = $post_list[$min_key]->delay;
 
-        $this->dbg_log("set_min_max() - Gives min/max values: Min: {$min}, Max: {$max}");
+        E20RTools\DBG::log("Gives min/max values: Min: {$min}, Max: {$max}");
 
         return array( $min, $max );
 
@@ -2250,47 +2366,20 @@ class Controller
      */
     public function post_metabox( $object = null, $box = null ) {
 
-        $this->dbg_log("post_metabox() Post metaboxes being configured");
+        E20RTools\DBG::log("Post metaboxes being configured");
         global $load_e20r_sequence_admin_script;
 
         $load_e20r_sequence_admin_script = true;
 
-        foreach( $this->managed_types as $type ) {
+        foreach( $this->managed_types as $type )
+        {
 
-            if ( $type !== 'pmpro_sequence' ) {
-                add_meta_box( 'e20r-seq-post-meta', __( 'Drip Feed Settings', "e20rsequence" ), array( &$this, 'render_post_edit_metabox' ), $type, 'side', 'high' );
+            if ( $type !== 'pmpro_sequence' )
+            {
+                $view = apply_filters('get_sequence_views_class_instance', null);
+                add_meta_box( 'e20r-seq-post-meta', __( 'Drip Feed Settings', "e20rsequence" ), array( $view, 'render_post_edit_metabox' ), $type, 'side', 'high' );
             }
         }
-    }
-
-    /**
-     * Initial load of the metabox for the editor sidebar
-     */
-    public function render_post_edit_metabox() {
-
-        $this->dbg_log( "render_post_edit_metabox() - Metabox for editor" );
-        $metabox = '';
-
-        global $post;
-
-        $seq = apply_filters('get_sequence_class_instance', null);
-
-        $this->dbg_log("render_post_edit_metabox() - Page Metabox being loaded");
-
-        ob_start();
-        ?>
-        <div class="submitbox" id="e20r-seq-postmeta">
-            <div id="minor-publishing">
-                <div id="e20r_seq-configure-sequence">
-                    <?php echo $seq->load_sequence_meta( $post->ID ) ?>
-                </div>
-            </div>
-        </div>
-        <?php
-
-        $metabox = ob_get_clean();
-
-        echo $metabox;
     }
 
     /**
@@ -2302,49 +2391,18 @@ class Controller
     public function define_metaboxes() {
 
         //PMPro box
-        add_meta_box('pmpro_page_meta', __('Require Membership', "e20rsequence"), 'pmpro_page_meta', 'pmpro_sequence', 'side');
+        add_meta_box('pmpro_page_meta', __('Require Membership', "pmpro"), 'pmpro_page_meta', 'pmpro_sequence', 'side');
 
-        $this->dbg_log("Loading post meta boxes");
+        $view = apply_filters('get_sequence_views_class_instance', null);
+
+        E20RTools\DBG::log("Loading sequence settings meta box");
 
         // sequence settings box (for posts & pages)
-        add_meta_box('e20r-sequence-settings', __('Settings for this Sequence', "e20rsequence"), array( &$this, 'settings_meta_box'), 'pmpro_sequence', 'side', 'high');
+        add_meta_box('e20r-sequence-settings', __('Settings for Sequence', "e20rsequence"), array( $view, 'settings' ), 'pmpro_sequence', 'side', 'high');
 
+        E20RTools\DBG::log("Loading sequence post list meta box");
         //sequence meta box
-        add_meta_box('e20r_sequence_meta', __('Posts in this Sequence', "e20rsequence"), array(&$this, "sequence_settings_metabox"), 'pmpro_sequence', 'normal', 'high');
-    }
-
-    /**
-     * Defines the Admin UI interface for adding posts to the sequence
-     *
-     * @access public
-     */
-    public function sequence_settings_metabox() {
-
-        $this->dbg_log("sequence_settings_metabox() - Generating settings metabox for back-end");
-        global $post;
-
-        if ( !isset( $this->sequence_id ) /* || ( $this->sequence_id != $post->ID )  */ ) {
-            $this->dbg_log("sequence_settings_metabox() - Loading the sequence metabox for {$post->ID} and not {$this->sequence_id}");
-
-            $this->get_options( $post->ID );
-
-            if ( !isset( $this->options->lengthVisisble ) ) {
-                echo $this->get_error_msg();
-            }
-        }
-
-        $this->dbg_log('sequence_settings_metabox(): Load the post list meta box');
-
-        // Instantiate the settings & grab any existing settings if they exist.
-     ?>
-        <div id="e20r-seq-error"></div>
-        <div id="e20r_sequence_posts">
-        <?php
-            $box = $this->get_post_list_for_metabox();
-            echo $box['html'];
-        ?>
-        </div>
-        <?php
+        add_meta_box('e20r_sequence_meta', __('Posts in Sequence', "e20rsequence"), array( $view, "sequence_list_metabox" ), 'pmpro_sequence', 'normal', 'high');
     }
 
     /**
@@ -2355,182 +2413,19 @@ class Controller
      */
     public function get_error_msg() {
 
-        $e = apply_filters('get_e20rerror_class_instance', null);
+        // $e = apply_filters('get_e20rerror_class_instance', null);
+        $e = Tools\E20RError::get_instance();
 
-    /*            if ( empty( $this->error ) ) {
-
-            $this->dbg_log("Attempt to load error info");
-
-            // Check if the settings_error string is set:
-            $this->error = $error->get_error( 'error' );
-        }
-    */
         $this->error = $e->get_error( 'error' );
 
         if ( ! empty( $this->error ) ) {
 
-            $this->dbg_log("Error info found: " . print_r( $this->error, true));
+            E20RTools\DBG::log("Error info found: " . print_r( $this->error, true));
             return $this->error;
         }
         else {
             return null;
         }
-    }
-
-    /**
-     * Refreshes the Post list for the sequence
-     *
-     * @access public
-     */
-    public function get_post_list_for_metabox( $force = false) {
-
-        $this->dbg_log("get_post_list_for_metabox() - Generating sequence content metabox for back-end");
-        // global $wpdb;
-
-        //show posts
-        $this->load_sequence_post( null, null, null, '=', null, $force, 'any' );
-        $all_posts = $this->get_posts_from_db();
-
-        // $this->sort_by_delay();
-
-        $this->dbg_log('get_post_list_for_metabox() - Displaying the back-end meta box content');
-
-        ob_start();
-        ?>
-
-        <?php // if(!empty($this->get_error_msg() )) { ?>
-            <?php // $this->display_error(); ?>
-        <?php //} ?>
-        <table id="e20r_sequencetable" class="e20r_sequence_postscroll wp-list-table widefat">
-        <thead>
-            <th><?php _e('Order', "e20rsequence" ); ?></label></th>
-            <th width="50%"><?php _e('Title', "e20rsequence"); ?></th>
-            <?php if ($this->options->delayType == 'byDays'): ?>
-                <th id="e20r_sequence_delaylabel"><?php _e('Delay', "e20rsequence"); ?></th>
-            <?php elseif ( $this->options->delayType == 'byDate'): ?>
-                <th id="e20r_sequence_delaylabel"><?php _e('Avail. On', "e20rsequence"); ?></th>
-            <?php else: ?>
-                <th id="e20r_sequence_delaylabel"><?php _e('Not Defined', "e20rsequence"); ?></th>
-            <?php endif; ?>
-            <th></th>
-            <th></th>
-            <th></th>
-        </thead>
-        <tbody>
-        <?php
-        $count = 1;
-
-        if ( empty($this->posts ) ) {
-            $this->dbg_log('get_post_list_for_metabox() - No Posts found?');
-
-            $this->set_error_msg( __('No posts/pages found', "e20rsequence") );
-        ?>
-        <?php
-        }
-        else {
-            foreach( $this->posts as $post ) {
-            ?>
-                <tr>
-                    <td class="e20r_sequence_tblNumber"><?php echo $count; ?>.</td>
-                    <td class="e20r_sequence_tblPostname"><?php echo ( get_post_status( $post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", "e20rsequence" ) ) : null ) . get_the_title($post->id) . " " . sprintf( __("(ID: %d)", "e20rsequence" ), $post->id); ?></td>
-                    <td class="e20r_sequence_tblNumber"><?php echo $post->delay; ?></td>
-                    <td><?php
-                        if ( true == $this->options->allowRepeatPosts ) { ?>
-                        <a href="javascript:e20r_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Edit',"e20rsequence"); ?></a><?php
-                        }
-                        else { ?>
-                        <a href="javascript:e20r_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Post',"e20rsequence"); ?></a><?php
-                        } ?>
-                    </td>
-                    <td><?php
-                        if ( false == $this->options->allowRepeatPosts ) { ?>
-                        <a href="javascript:e20r_sequence_editEntry( <?php echo "{$post->id}, {$post->delay}" ;?> ); void(0);"><?php _e('Edit', "e20rsequence"); ?></a><?php
-                        } ?>
-                    </td>
-                    <td>
-                        <a href="javascript:e20r_sequence_removeEntry( <?php echo "{$post->id}, {$post->delay}" ?> ); void(0);"><?php _e('Remove', "e20rsequence"); ?></a>
-                    </td>
-                </tr>
-            <?php
-                $count++;
-            }
-        }
-        ?>
-        </tbody>
-        </table>
-
-        <div id="postcustomstuff">
-            <div class="e20r-sequence-float-left"><strong><?php _e('Add/Edit Posts:', "e20rsequence"); ?></strong></div>
-            <div class="e20r-sequence-float-right"><button class="primary-button button e20r-sequences-clear-cache"><?php _e("Clear cache", "e20rsequence");?></button></div>
-            <table id="newmeta">
-                <thead>
-                    <tr>
-                        <th><?php _e('Post/Page', "e20rsequence"); ?></th>
-                        <?php if ($this->options->delayType == 'byDays'): ?>
-                            <th id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Days to delay', "e20rsequence"); ?></label></th>
-                        <?php elseif ( $this->options->delayType == 'byDate'): ?>
-                            <th id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", "e20rsequence"); ?></label></th>
-                        <?php else: ?>
-                            <th id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Not Defined', "e20rsequence"); ?></label></th>
-                        <?php endif; ?>
-                        <th></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>
-                        <select id="e20r_sequencepost" name="e20r_sequencepost">
-                            <option value=""></option>
-                        <?php
-                            if  ( $all_posts !== false ) {
-
-                                foreach( $all_posts as $p ) { ?>
-                                <option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php echo $this->set_post_status( $p->post_status );?>)</option><?php
-                                }
-                            }
-                            else {
-                                $this->set_error_msg( __( 'No posts found in the database!', "e20rsequence" ) );
-                                $this->dbg_log('get_post_list_for_metabox() - Error during database search for relevant posts');
-                            }
-                        ?>
-                        </select>
-                        <style> .select2-container {width: 100%;} </style>
-                        <!-- <script type="text/javascript"> jQuery('#e20r_sequencepost').select2();</script> -->
-                        </td>
-                        <td>
-                            <input id="e20r_sequencedelay" name="e20r_sequencedelay" type="text" value="" size="7" />
-                            <input id="e20r_sequence_id" name="e20r_sequence_id" type="hidden" value="<?php echo $this->sequence_id; ?>" size="7" />
-                            <?php wp_nonce_field('e20r-sequence-add-post', 'e20r_sequence_addpost_nonce'); ?>
-                            <?php wp_nonce_field('e20r-sequence-rm-post', 'e20r_sequence_rmpost_nonce'); ?>
-                        </td>
-                        <td><a class="button" id="e20r_sequencesave" onclick="javascript:e20r_sequence_addEntry(); return false;"><?php _e('Update Sequence', "e20rsequence"); ?></a></td>
-                    </tr>
-                </tbody>
-            </table>
-        </div>
-        <?php
-
-        $html = ob_get_clean();
-
-        $errors = $this->get_error_msg();
-        $status = '';
-
-        if ( !empty( $errors ) ) {
-
-            $this->dbg_log( "get_post_list_for_metabox() - Errors:" . print_r( $errors , true ));
-            foreach( $errors as $e ) {
-                $status .= "{$e['message']}.<br/>";
-            }
-        }
-
-        $status = is_array( $errors ) ? $status : $errors;
-        $success = empty( $errors ) ? true : false;
-
-        return array(
-            'success' => $success,
-            'message' => ( !$success ? $status : null ),
-            'html' => $html,
-        );
     }
 
     /**
@@ -2540,9 +2435,7 @@ class Controller
      *
      * @access private
      */
-    private function get_posts_from_db() {
-
-        global $wpdb;
+    public function get_posts_from_db() {
 
         $post_types = apply_filters("e20r-sequence-managed-post-types", array("post", "page") );
         $status = apply_filters( "e20r-sequence-can-add-post-status", array('publish', 'future', 'pending', 'private') );
@@ -2559,17 +2452,7 @@ class Controller
 
         $all_posts = new \WP_Query($args);
         $posts = $all_posts->get_posts();
-    /*        $sql = "
-                SELECT ID, post_title, post_status
-                FROM {$wpdb->posts}
-                WHERE post_status IN ('" .implode( "', '", $status ). "')
-                AND post_type IN ('" .implode( "', '", $post_types ). "')
-                AND post_title <> ''
-                ORDER BY post_title
-            ";
 
-        $all_posts = $wpdb->get_results( $sql );
-    */
         if ( !empty($posts) ) {
 
             return $posts;
@@ -2581,754 +2464,20 @@ class Controller
 
     }
 
-    /**
-     * Used to label the post list in the metabox
-     *
-     * @param $post_state -- The current post state (Draft, Scheduled, Under Review, Private, other)
-     * @return null|string -- Return the correct postfix for the post
-     *
-     * @access private
-     */
-    private function set_post_status( $post_state )
-    {
-        $txtState = null;
+	/**
+      * Get the sort order variable content
+      *
+	  * @return int - The sort order for the sequence ( SORT_ASC | SORT_DESC )
+      */
+	public function get_sort_order() {
 
-        switch ($post_state)
-        {
-            case 'draft':
-                $txtState = __('-DRAFT', "e20rsequence");
-                break;
+		if ( isset( $this->options->sortOrder) ) {
 
-            case 'future':
-                $txtState = __('-SCHED', "e20rsequence");
-                break;
+			return $this->options->sortOrder;
+		}
 
-            case 'pending':
-                $txtState = __('-REVIEW', "e20rsequence");
-                break;
-
-            case 'private':
-                $txtState = __('-PRIVT', "e20rsequence");
-                break;
-
-            default:
-                $txtState = '';
-        }
-
-        return $txtState;
-    }
-
-    /**
-     * Defines the metabox for the Sequence Settings (per sequence page/list) on the Admin page
-     *
-     * @param $object -- The class object (sequence class)
-     * @param $box -- The metabox object
-     *
-     * @access public
-     *
-     */
-    public function settings_meta_box( $object, $box ) {
-
-        global $post;
-        global $current_screen;
-
-        $new_post = false;
-
-        $this->dbg_log("settings_meta_box() - Post ID: {$post->ID} and Sequence ID: {$this->sequence_id}");
-
-        if ( ( !isset( $this->sequence_id )  ) || ( $this->sequence_id != $post->ID ) ) {
-
-            $this->dbg_log("settings_meta_box() - Using the post ID as the sequence ID {$post->ID} vs {$this->sequence_id}");
-            $this->get_options( $post->ID );
-
-            if ( !isset( $this->options->lengthVisible ) ) {
-                $this->dbg_log("settings_meta_box() - Unable to load options/settings for {$post->ID}");
-                return;
-            }
-        }
-         else {
-            $this->dbg_log('Not a valid Sequence ID, cannot load options');
-            $this->set_error_msg( __('Invalid drip-feed sequence specified', "e20rsequence") );
-            return;
-        }
-
-        if( ( 'pmpro_sequence' == $current_screen->post_type ) && ( $current_screen->action == 'add' )) {
-            $this->dbg_log("Adding a new post so hiding the 'Send' for notification alerts");
-            $new_post = true;
-        }
-        // Buffer the HTML so we can pick it up in a variable.
-        ob_start();
-
-        ?>
-        <div class="submitbox" id="e20r_sequence_meta">
-            <div id="minor-publishing">
-                <input type="hidden" name="e20r_sequence_settings_noncename" id="e20r_sequence_settings_noncename" value="<?php echo wp_create_nonce( plugin_basename(__FILE__) )?>" />
-                <input type="hidden" name="e20r_sequence_settings_hidden_delay" id="e20r_sequence_settings_hidden_delay" value="<?php echo esc_attr($this->options->delayType); ?>"/>
-                <input type="hidden" name="hidden_e20r_seq_wipesequence" id="hidden_e20r_seq_wipesequence" value="0"/>
-                <div id="e20r-sequences-settings-metabox" class="e20r-sequences-settings-table">
-                    <!-- Checkbox rows: Hide, preview & membership length -->
-                     <div class="e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
-                            <div class="e20r-sequence-setting-col-1">
-                                <input type="checkbox" value="1" id="e20r_sequence_hidden" name="e20r_sequence_hidden" title="<?php _e('Hide unpublished / future posts for this sequence', "e20rsequence"); ?>" <?php checked( $this->options->hidden, 1); ?> />
-                                <input type="hidden" name="hidden_e20r_seq_future" id="hidden_e20r_seq_future" value="<?php echo esc_attr($this->options->hidden); ?>" >
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <label class="selectit e20r-sequence-setting-col-2"><?php _e('Hide all future posts', "e20rsequence"); ?></label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3"></div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
-                            <div class="e20r-sequence-setting-col-1">
-                                <input type="checkbox" value="1" id="e20r_sequence_allowRepeatPosts" name="e20r_sequence_allowRepeatPosts" title="<?php _e('Allow the admin to repeat the same post/page with different delay values', "e20rsequence"); ?>" <?php checked( $this->options->allowRepeatPosts, 1); ?> />
-                                <input type="hidden" name="hidden_e20r_seq_allowRepeatPosts" id="hidden_e20r_seq_allowRepeatPosts" value="<?php echo esc_attr($this->options->allowRepeatPosts); ?>" >
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <label class="selectit"><?php _e('Allow repeat posts/pages', "e20rsequence"); ?></label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3"></div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
-                            <div class="e20r-sequence-setting-col-1">
-                                <input type="checkbox" value="1" id="e20r_sequence_offsetchk" name="e20r_sequence_offsetchk" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', "e20rsequence"); ?>" <?php echo ( $this->options->previewOffset != 0 ? ' checked="checked"' : ''); ?> />
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <label class="selectit"><?php _e('Allow "preview" of sequence', "e20rsequence"); ?></label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3"></div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-offset e20r-sequence-hidden e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-offset">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-offset"><?php _e('Days of preview:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-offset-status" class="e20r-sequence-status"><?php echo ( $this->options->previewOffset == 0 ? 'None' : $this->options->previewOffset ); ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-offset" class="e20r-seq-edit">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Change the number of days to preview', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-offset e20r-sequence-settings-input e20r-sequence-hidden clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-offset e20r-sequence-full-row">
-                            <div id="e20r-seq-offset-select">
-                                <input type="hidden" name="hidden_e20r_seq_offset" id="hidden_e20r_seq_offset" value="<?php echo esc_attr($this->options->previewOffset); ?>" >
-                                <label for="e20r_sequence_offset"></label>
-                                <select name="e20r_sequence_offset" id="e20r_sequence_offset">
-                                <option value="0">None</option>
-                                <?php foreach (range(1, 5) as $previewOffset) { ?>
-                                    <option value="<?php echo esc_attr($previewOffset); ?>" <?php selected( intval($this->options->previewOffset), $previewOffset); ?> ><?php echo $previewOffset; ?></option>
-                                <?php } ?>
-                            </select>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-offset e20r-sequence-full-row">
-                            <p class="e20r-seq-offset">
-                                <a href="#" id="ok-e20r-seq-offset" class="save-pmproseq-offset button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-offset" class="cancel-pmproseq-offset button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1">
-                                <input type="checkbox"  value="1" id="e20r_sequence_lengthvisible" name="e20r_sequence_lengthvisible" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text', "e20rsequence"); ?>" <?php checked( $this->options->lengthVisible, 1); ?> />
-                                <input type="hidden" name="hidden_e20r_seq_lengthvisible" id="hidden_e20r_seq_lengthvisible" value="<?php echo esc_attr($this->options->lengthVisible); ?>" >
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <label class="selectit"><?php _e("Show user membership length", "e20rsequence"); ?></label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3"></div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequences-settings-row e20r-sequence-full-row">
-                        <hr style="width: 100%;"/>
-                    </div>
-                    <!-- Sort order, Delay type & Availability -->
-                    <div class="e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-sortorder e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-sort"><?php _e('Sort order:', "e20rsequence"); ?></label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-sort-status" class="e20r-sequence-status"><?php echo ( $this->options->sortOrder == SORT_ASC ? __('Ascending', "e20rsequence") : __('Descending', "e20rsequence") ); ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-sort" class="e20r-seq-edit e20r-sequence-setting-col-3">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Edit the list sort order', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-sortorder e20r-sequence-full-row">
-                            <div id="e20r-seq-sort-select">
-                                <input type="hidden" name="hidden_e20r_seq_sortorder" id="hidden_e20r_seq_sortorder" value="<?php echo ($this->options->sortOrder == SORT_ASC ? SORT_ASC : SORT_DESC); ?>" >
-                                <label for="e20r_sequence_sortorder"></label>
-                                <select name="e20r_sequence_sortorder" id="e20r_sequence_sortorder">
-                                    <option value="<?php echo esc_attr(SORT_ASC); ?>" <?php selected( intval($this->options->sortOrder), SORT_ASC); ?> > <?php _e('Ascending', "e20rsequence"); ?></option>
-                                    <option value="<?php echo esc_attr(SORT_DESC); ?>" <?php selected( intval($this->options->sortOrder), SORT_DESC); ?> ><?php _e('Descending', "e20rsequence"); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-sortorder e20r-sequence-full-row">
-                            <p class="e20r-seq-btns">
-                                <a href="#" id="ok-e20r-seq-sort" class="save-pmproseq-sortorder button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-sort" class="cancel-pmproseq-sortorder button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div><!-- end of row -->
-                    </div>
-                    <div class="e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-delaytype e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-delay"><?php _e('Delay type:', "e20rsequence"); ?></label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-delay-status" class="e20r-sequence-status"><?php echo ($this->options->delayType == 'byDate' ? __('A date', "e20rsequence") : __('Days after sign-up', "e20rsequence") ); ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-delay" class="e20r-seq-edit">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Edit the delay type for this sequence', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-delaytype e20r-sequence-settings e20r-sequence-full-row">
-                            <div id="e20r-seq-delay-select">
-                                <input type="hidden" name="hidden_e20r_seq_delaytype" id="hidden_e20r_seq_delaytype" value="<?php echo ($this->options->delayType != '' ? esc_attr($this->options->delayType): 'byDays'); ?>" >
-                                <label for="e20r_sequence_delaytype"></label>
-                                <!-- onchange="e20r_sequence_delayTypeChange(<?php echo esc_attr( $this->sequence_id ); ?>); return false;" -->
-                                <select name="e20r_sequence_delaytype" id="e20r_sequence_delaytype">
-                                    <option value="byDays" <?php selected( $this->options->delayType, 'byDays'); ?> ><?php _e('Days after sign-up', "e20rsequence"); ?></option>
-                                    <option value="byDate" <?php selected( $this->options->delayType, 'byDate'); ?> ><?php _e('A date', "e20rsequence"); ?></option>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-seq-delaytype e20r-sequence-settings e20r-sequence-full-row">
-                            <div id="e20r-seq-delay-btns">
-                                <p class="e20r-seq-btns">
-                                    <a href="#" id="ok-e20r-seq-delay" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                    <a href="#" id="cancel-e20r-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-seq-showdelayas e20r-sequence-settings">
-                        <div class="e20r-sequence-setting-col-1">
-                            <label class="e20r-sequence-label" for="e20r-seq-showdelayas"><?php _e("Show availability as:", "e20rsequence"); ?></label>
-                        </div>
-                        <div class="e20r-sequence-setting-col-2">
-                            <span id="e20r-seq-showdelayas-status" class="e20r-sequence-status"><?php echo ($this->options->showDelayAs == E20R_SEQ_AS_DATE ? __('Calendar date', "e20rsequence") : __('Day of membership', "e20rsequence") ); ?></span>
-                        </div>
-                        <div class="e20r-sequence-setting-col-3">
-                            <a href="#" id="e20r-seq-edit-showdelayas" class="e20r-seq-edit e20r-sequence-setting-col-3">
-                                <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                <span class="screen-reader-text"><?php _e('How to indicate when the post will be available to the user. Select either "Calendar date" or "day of membership")', "e20rsequence"); ?></span>
-                            </a>
-                        </div>
-                    </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-seq-showdelayas e20r-sequence-settings e20r-sequence-full-row">
-                            <!-- Only show this if 'hidden_e20r_seq_delaytype' == 'byDays' -->
-                            <input type="hidden" name="hidden_e20r_seq_showdelayas" id="hidden_e20r_seq_showdelayas" value="<?php echo ($this->options->showDelayAs == E20R_SEQ_AS_DATE ? E20R_SEQ_AS_DATE : E20R_SEQ_AS_DAYNO ); ?>" >
-                            <label for="e20r_sequence_showdelayas"></label>
-                            <select name="e20r_sequence_showdelayas" id="e20r_sequence_showdelayas">
-                                <option value="<?php echo E20R_SEQ_AS_DAYNO; ?>" <?php selected( $this->options->showDelayAs, E20R_SEQ_AS_DAYNO); ?> ><?php _e('Day of membership', "e20rsequence"); ?></option>
-                                <option value="<?php echo E20R_SEQ_AS_DATE; ?>" <?php selected( $this->options->showDelayAs, E20R_SEQ_AS_DATE); ?> ><?php _e('Calendar date', "e20rsequence"); ?></option>
-                            </select>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-seq-showdelayas e20r-sequence-settings e20r-sequence-full-row">
-                            <div id="e20r-seq-delay-btns">
-                                <p class="e20r-seq-btns">
-                                    <a href="#" id="ok-e20r-seq-delay" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                    <a href="#" id="cancel-e20r-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                                </p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row">
-                        <div class="e20r-seq-alert-hl"><?php _e('New content alerts', "e20rsequence"); ?></div>
-                        <hr style="width: 100%;" />
-                    </div><!-- end of row -->
-                    <!--Email alerts -->
-                    <div class="e20r-sequence-settings-display clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-alerts e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1">
-                                <input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', "e20rsequence"); ?>" id="e20r_sequence_sendnotice" name="e20r_sequence_sendnotice" <?php checked($this->options->sendNotice, 1); ?> />
-                                <input type="hidden" name="hidden_e20r_seq_sendnotice" id="hidden_e20r_seq_sendnotice" value="<?php echo esc_attr($this->options->sendNotice); ?>" >
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <label class="selectit" for="e20r_sequence_sendnotice"><?php _e('Send email alerts', "e20rsequence"); ?></label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">&nbsp;</div>
-                        </div>
-                    </div> <!-- end of row -->
-                    <!-- Send now -->
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after <?php echo ( $new_post ? 'e20r-sequence-hidden' : null ); ?>">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-sendnowbtn e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1"><label for="e20r_seq_send"><?php _e('Send alerts now', "e20rsequence"); ?></label></div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <?php wp_nonce_field('e20r-sequence-sendalert', 'e20r_sequence_sendalert_nonce'); ?>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" class="e20r-seq-settings-send e20r-seq-edit" id="e20r_seq_send">
-                                    <span aria-hidden="true"><?php _e('Send', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php echo sprintf( __( 'Manually trigger sending of alert notices for the %s sequence', "e20rsequence"), get_the_title( $this->sequence_id) ); ?></span>
-                                </a>
-                            </div>
-                        </div><!-- end of row -->
-                    </div>
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row">
-                            <p class="e20r-seq-email-hl"><?php _e("Alert settings:", "e20rsequence"); ?></p>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-replyto e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-replyto"><?php _e('Email:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-replyto-status" class="e20r-sequence-status"><?php echo ( $this->options->replyto != '' ? esc_attr($this->options->replyto) : e20r_getOption("from_email") ); ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-replyto" class="e20r-seq-edit">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Enter the email address to use as the sender of the alert', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div><!-- end of row -->
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-email e20r-sequence-replyto e20r-sequence-full-row">
-                            <div id="e20r-seq-email-input">
-                                <input type="hidden" name="hidden_e20r_seq_replyto" id="hidden_e20r_seq_replyto" value="<?php echo ($this->options->replyto != '' ? esc_attr($this->options->replyto) : e20r_getOption("from_email") ); ?>" />
-                                <label for="e20r_sequence_replyto"></label>
-                                <input type="text" name="e20r_sequence_replyto" id="e20r_sequence_replyto" value="<?php echo ($this->options->replyto != '' ? esc_attr($this->options->replyto) : e20r_getOption("from_email")); ?>"/>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-email e20r-sequence-settings e20r-sequence-full-row">
-                            <p class="e20r-seq-btns">
-                                <a href="#" id="ok-e20r-seq-email" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div><!-- end of row -->
-                    </div>
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-fromname e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-fromname"><?php _e('Name:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-fromname-status" class="e20r-sequence-status"><?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : e20r_getOption("from_name") ); ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-fromname" class="e20r-seq-edit e20r-sequence-setting-col-3">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Enter the name to use for the sender of the alert', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div><!-- end of row -->
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-replyto e20r-sequence-full-row">
-                            <div id="e20r-seq-email-input">
-                                <label for="e20r_sequence_fromname"></label>
-                                <input type="text" name="e20r_sequence_fromname" id="e20r_sequence_fromname" value="<?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : e20r_getOption("from_name") ); ?>"/>
-                                <input type="hidden" name="hidden_e20r_seq_fromname" id="hidden_e20r_seq_fromname" value="<?php echo ($this->options->fromname != '' ? esc_attr($this->options->fromname) : e20r_getOption("from_name")); ?>" />
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-full-row">
-                            <p class="e20r-seq-btns">
-                                <a href="#" id="ok-e20r-seq-email" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div><!-- end of row -->
-                    </div>
-                    <div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row e20r-sequence-email clear-after">
-                        <hr width="80%"/>
-                    </div><!-- end of row -->
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-sendas e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-sendas"><?php _e('Transmit:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-sendas-status" class="e20r-sequence-status e20r-sequence-setting-col-2"><?php
-
-                                switch($this->options->noticeSendAs) {
-                                    case E20R_SEQ_SEND_AS_SINGLE:
-                                        _e('One alert per post', "e20rsequence");
-                                        break;
-
-                                    case E20R_SEQ_SEND_AS_LIST:
-                                        _e('Digest of posts', "e20rsequence");
-                                        break;
-                                } ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-sendas" class="e20r-seq-edit e20r-sequence-setting-col-3">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Select the format of the alert notice when posting new content for this sequence', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-sendas e20r-sequence-full-row">
-                            <div id="e20r-seq-sendas-select">
-                                <input type="hidden" name="hidden_e20r_seq_sendas" id="hidden_e20r_seq_sendas" value="<?php echo esc_attr($this->options->noticeSendAs); ?>" >
-                                <label for="e20r_sequence_sendas"></label>
-                                <select name="e20r_sequence_sendas" id="e20r_sequence_sendas">
-                                    <option value="<?php echo E20R_SEQ_SEND_AS_SINGLE; ?>" <?php selected( $this->options->noticeSendAs, E20R_SEQ_SEND_AS_SINGLE ); ?> ><?php _e('One alert per post', "e20rsequence"); ?></option>
-                                    <option value="<?php echo E20R_SEQ_SEND_AS_LIST; ?>" <?php selected( $this->options->noticeSendAs, E20R_SEQ_SEND_AS_LIST ); ?> ><?php _e('Digest of post links', "e20rsequence"); ?></option>
-                                </select>
-                                <p class="e20r-seq-btns">
-                                    <a href="#" id="ok-e20r-seq-sendas" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                    <a href="#" id="cancel-e20r-seq-sendas" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                                </p>
-                            </div>
-                        </div>
-                    </div><!-- end of row -->
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-template e20r-sequence-settings">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-template"><?php _e('Template:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-template-status" class="e20r-sequence-status"><?php echo esc_attr( $this->options->noticeTemplate ); ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-template" class="e20r-seq-edit">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Select the template to use when posting new content in this sequence', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r_sequence_fromname e20r-sequence-settings e20r-sequence-full-row">
-                            <div id="e20r-seq-template-select">
-                                <input type="hidden" name="hidden_e20r_seq_noticetemplate" id="hidden_e20r_seq_noticetemplate" value="<?php echo esc_attr($this->options->noticeTemplate); ?>" >
-                                <label for="e20r_sequence_template"></label>
-                                <select name="e20r_sequence_template" id="e20r_sequence_template">
-                                    <?php echo $this->get_email_templates(); ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r_sequence_fromname e20r-sequence-settings e20r-sequence-full-row">
-                            <p class="e20r-seq-btns">
-                                <a href="#" id="ok-e20r-seq-template" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-template" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div> <!-- end of row -->
-                    </div>
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row e20r-sequence-settings clear-after e20r-sequence-noticetime e20r-sequence-email">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-noticetime"><?php _e('When:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-noticetime-status" class="e20r-sequence-status"><?php echo esc_attr($this->options->noticeTime); ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-noticetime" class="e20r-seq-edit">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-noticetime e20r-sequence-settings e20r-sequence-full-row">
-                            <div id="e20r-seq-noticetime-select">
-                                <input type="hidden" name="hidden_e20r_seq_noticetime" id="hidden_e20r_seq_noticetime" value="<?php echo esc_attr($this->options->noticeTime); ?>" >
-                                <label for="e20r_sequence_noticetime"></label>
-                                <select name="e20r_sequence_noticetime" id="e20r_sequence_noticetime">
-                                    <?php echo $this->load_time_options(); ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-noticetime e20r-sequence-settings e20r-sequence-full-row">
-                            <p class="e20r-seq-btns">
-                                <a href="#" id="ok-e20r-seq-noticetime" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-noticetime" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div>
-                    </div> <!-- end of setting -->
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row e20r-sequence-settings clear-after e20r-sequence-timezone-setting">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-noticetime"><?php _e('Timezone:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span class="e20r-sequence-status" id="e20r-seq-noticetimetz-status"><?php echo get_option('timezone_string'); ?></span>
-                            </div>
-                        </div>
-                    </div><!-- end of setting -->
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row e20r-sequence-settings clear-after e20r-sequence-subject">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-subject"><?php _e("Subject", "e20rsequence"); ?></label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-subject-status" class="e20r-sequence-status"><?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', "e20rsequence") ); ?></span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-subject" class="e20r-seq-edit">
-                                    <span aria-hidden="true"><?php _e("Edit", "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e("Update/Edit the Prefix for the subject of the new content alert", "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-subject e20r-sequence-settings e20r-sequence-full-row">
-                            <div id="e20r-seq-subject-input">
-                                <input type="hidden" name="hidden_e20r_seq_subject" id="hidden_e20r_seq_subject" value="<?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', "e20rsequence") ); ?>" />
-                                <label for="e20r_sequence_subject"></label>
-                                <input type="text" name="e20r_sequence_subject" id="e20r_sequence_subject" value="<?php echo ( $this->options->subject != '' ? esc_attr($this->options->subject) : __('New Content', "e20rsequence") ); ?>"/>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-subject e20r-sequence-settings e20r-sequence-full-row">
-                            <p class="e20r-seq-btns">
-                                <a href="#" id="ok-e20r-seq-subject" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-subject" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div>
-                    </div><!-- end of setting -->
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row e20r-sequence-settings e20r-sequence-excerpt">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-excerpt"><?php _e('Intro:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-excerpt-status" class="e20r-sequence-status">"<?php echo ( $this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', "e20rsequence") ); ?>"</span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-excerpt" class="e20r-seq-edit">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Update/Edit the introductory paragraph for the new content excerpt', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-excerpt e20r-sequence-settings e20r-sequence-full-row">
-                            <div id="e20r-seq-excerpt-input">
-                                <input type="hidden" name="hidden_e20r_seq_excerpt" id="hidden_e20r_seq_excerpt" value="<?php echo ($this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', "e20rsequence") ); ?>" />
-                                <label for="e20r_sequence_excerpt"></label>
-                                <input type="text" name="e20r_sequence_excerpt" id="e20r_sequence_excerpt" value="<?php echo ($this->options->excerpt_intro != '' ? esc_attr($this->options->excerpt_intro) : __('A summary for the new content follows:', "e20rsequence") ); ?>"/>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-excerpt e20r-sequence-settings e20r-sequence-full-row">
-                            <p class="e20r-seq-btns">
-                                <a href="#" id="ok-e20r-seq-excerpt" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-excerpt" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div>
-                    </div> <!-- end of setting -->
-                    <div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row e20r-sequence-settings e20r-sequence-dateformat">
-                            <div class="e20r-sequence-setting-col-1">
-                                <label class="e20r-sequence-label" for="e20r-seq-dateformat"><?php _e('Date type:', "e20rsequence"); ?> </label>
-                            </div>
-                            <div class="e20r-sequence-setting-col-2">
-                                <span id="e20r-seq-dateformat-status" class="e20r-sequence-status">"<?php echo ( trim($this->options->dateformat) == false ? __('m-d-Y', "e20rsequence") : esc_attr($this->options->dateformat) ); ?>"</span>
-                            </div>
-                            <div class="e20r-sequence-setting-col-3">
-                                <a href="#" id="e20r-seq-edit-dateformat" class="e20r-seq-edit">
-                                    <span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-                                    <span class="screen-reader-text"><?php _e('Update/Edit the format of the !!today!! placeholder (a valid PHP date() format)', "e20rsequence"); ?></span>
-                                </a>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-dateformat e20r-sequence-settings e20r-sequence-full-row">
-                            <div id="e20r-seq-dateformat-select">
-                                <input type="hidden" name="hidden_e20r_seq_dateformat" id="hidden_e20r_seq_dateformat" value="<?php echo ( trim($this->options->dateformat) == false ? __('m-d-Y', "e20rsequence") : esc_attr($this->options->dateformat) ); ?>" />
-                                <label for="e20r_e20r_sequence_dateformat"></label>
-                                <select name="e20r_sequence_dateformat" id="e20r_sequence_dateformat">
-                                    <?php echo $this->list_date_formats(); ?>
-                                </select>
-                            </div>
-                        </div>
-                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-dateformat e20r-sequence-settings e20r-sequence-full-row">
-                            <p class="e20r-seq-btns">
-                                <a href="#" id="ok-e20r-seq-dateformat" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-                                <a href="#" id="cancel-e20r-seq-dateformat" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
-                            </p>
-                        </div>
-                    </div> <!-- end of setting -->
-<!--                        <div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row">
-                        <hr style="width: 100%;" />
-                    </div> --><!-- end of row -->
-<!--                         <div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row">
-                        <a class="button button-primary button-large" class="e20r-seq-settings-save" id="e20r_settings_save" onclick="e20r_sequence_saveSettings(<?php echo $this->sequence_id;?>) ; return false;"><?php _e('Update Settings', "e20rsequence"); ?></a>
-                        <?php wp_nonce_field('e20r-sequence-save-settings', 'e20r_sequence_settings_nonce'); ?>
-                        <div class="seq_spinner"></div>
-                    </div>--><!-- end of row -->
-
-                </div><!-- End of sequences settings table -->
-            <!-- TODO: Enable and implement
-                <tr id="e20r_sequenceseq_start_0" style="display: none;">
-                    <td>
-                        <input id='e20r_sequence_enablestartwhen' type="checkbox" value="1" title="<?php _e('Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out.', "e20rsequence"); ?>" name="e20r_sequence_enablestartwhen" <?php echo ($this->options->startWhen != 0) ? 'checked="checked"' : ''; ?> />
-                    </td>
-                    <td><label class="selectit"><?php _e('Sequence starts', "e20rsequence"); ?></label></td>
-                </tr>
-                <tr id="e20r_sequence_seq_start_1" style="display: none; height: 1px;">
-                    <td colspan="2">
-                        <label class="screen-reader-text" for="e20r_sequence_startwhen">Day 1 Starts</label>
-                    </td>
-                </tr>
-                <tr id="e20r_sequence_seq_start_2" style="display: none;" id="e20r_sequence_selectWhen">
-                    <td colspan="2">
-                        <select name="e20r_sequence_startwhen" id="e20r_sequence_startwhen">
-                            <option value="0" <?php selected( intval($this->options->startWhen), '0'); ?> >Immediately</option>
-                            <option value="1" <?php selected( intval($this->options->startWhen), '1'); ?> >24 hours after membership started</option>
-                            <option value="2" <?php selected( intval($this->options->startWhen), '2'); ?> >At midnight, immediately after membership started</option>
-                            <option value="3" <?php selected( intval($this->options->startWhen), '3'); ?> >At midnight, 24+ hours after membership started</option>
-                        </select>
-                    </td>
-                </tr>
-
-            </table> -->
-            </div> <!-- end of minor-publishing div -->
-        </div> <!-- end of e20r_sequence_meta -->
-    <?php
-        $metabox = ob_get_clean();
-
-        $this->dbg_log('settings_meta_box() - Display the settings meta.');
-        // Display the metabox (print it)
-        echo $metabox;
-    }
-
-    /**
-     * List all template files in email directory for this plugin.
-     *
-     * @param $settings (stdClass) - The settings for the sequence.
-     * @return bool| mixed - HTML containing the Option list
-     *
-     * @access private
-     */
-    private function get_email_templates()
-    {
-        ob_start();
-
-        ?>
-        <!-- Default template (blank) -->
-        <option value=""></option>
-        <?php
-
-        // $this->dbg_log('Directory containing templates: ' . E20R_SEQUENCE_PLUGIN_DIR . "/email/" );
-
-        $templ_dir = apply_filters( 'e20r-sequence-email-alert-template-path', E20R_SEQUENCE_PLUGIN_DIR . "/email/" );
-
-        $this->dbg_log( "Directory containing templates: {$templ_dir}");
-
-        chdir($templ_dir);
-
-        foreach ( glob('*.html') as $file) {
-
-            echo('<option value="' . sanitize_file_name($file) . '" ' . selected( esc_attr( $this->options->noticeTemplate), sanitize_file_name($file) ) . ' >' . sanitize_file_name($file) .'</option>');
-        }
-
-        $selectList = ob_get_clean();
-
-        return $selectList;
-    }
-
-    /**
-     * Create list of options for time.
-     *
-     * @param $settings -- (array) Sequence specific settings
-     * @return bool| mixed - HTML containing the Option list
-     *
-     * @access private
-     */
-    private function load_time_options( )
-    {
-
-        $prepend    = array('00','01','02','03','04','05','06','07','08','09');
-        $hours      = array_merge($prepend,range(10, 23));
-        $minutes     = array('00', '30');
-
-        // $prepend_mins    = array('00','30');
-        // $minutes    = array_merge($prepend_mins, range(10, 55, 5)); // For debug
-        // $selTime = preg_split('/\:/', $settings->noticeTime);
-
-        ob_start();
-
-        foreach ($hours as $hour) {
-            foreach ($minutes as $minute) {
-                ?>
-                <option value="<?php echo( $hour . ':' . $minute ); ?>"<?php selected( $this->options->noticeTime, $hour . ':' . $minute ); ?> ><?php echo( $hour . ':' . $minute ); ?></option>
-            <?php
-            }
-        }
-
-        $selectList = ob_get_clean();
-
-        return $selectList;
-    }
-
-    /**
-     * List the available date formats to select from.
-     *
-     * key = valid dateformat
-     * value = dateformat example.
-     *
-     * @param $settings -- Settings for the sequence
-     * @return bool| mixed - HTML containing the Option list
-     *
-     * @access private
-     */
-    private function list_date_formats() {
-
-        ob_start();
-
-        $formats = array(
-            "l, F jS, Y" => "Sunday January 25th, 2014",
-            "l, F jS," => "Sunday, January 25th,",
-            "l \\t\\h\\e jS" => "Sunday the 25th",
-            "M. js, " => "Jan. 24th",
-            "M. js, Y" => "Jan. 24th, 2014",
-            "M. js, 'y" => "Jan. 24th, '14",
-            "m-d-Y" => "01-25-2014",
-            "m/d/Y" => "01/25/2014",
-            "m-d-y" => "01-25-14",
-            "m/d/y" => "01/25/14",
-            "d-m-Y" => "25-01-2014",
-            "d/m/Y" => "25/01/2014",
-            "d-m-y" => "25-01-14",
-            "d/m/y" => "25/01/14",
-        );
-
-        foreach ( $formats as $key => $val)
-        {
-            echo('<option value="' . esc_attr($key) . '" ' . selected( esc_attr( $this->options->dateformat), esc_attr($key) ) . ' >' . esc_attr($val) .'</option>');
-        }
-
-        $selectList = ob_get_clean();
-
-        return $selectList;
-    }
+		return SORT_ASC;
+	}
 
     /**
      * Show list of sequence posts at the bottom of the specific sequenc post.
@@ -3346,13 +2495,13 @@ class Controller
             return $content;
         }
 
-        if ( ( "pmpro_sequence" == $post->post_type ) && pmpro_has_membership_access() ) {
+        if ( ( 'pmpro_sequence' == $post->post_type ) && $this->has_membership_access() ) {
 
             global $load_e20r_sequence_script;
 
             $load_e20r_sequence_script = true;
 
-            $this->dbg_log( "display_sequence_content() - E20R Sequence display {$post->ID} - " . get_the_title( $post->ID ) . " : " . $this->who_called_me() . ' and page base: ' . $pagenow );
+            E20RTools\DBG::log( "E20R Sequence display {$post->ID} - " . get_the_title( $post->ID ) . " : " . $this->who_called_me() . ' and page base: ' . $pagenow );
 
             if ( !$this->init( $post->ID ) ) {
                 return $this->display_error() . $content;
@@ -3380,21 +2529,27 @@ class Controller
      */
     public function init( $id = null ) {
 
+        global $current_user;
+
         if ( !is_null( $id ) ) {
 
             $this->sequence = get_post( $id );
-            $this->dbg_log('init() - Loading the "' . get_the_title($id) . '" sequence settings');
+            E20RTools\DBG::log('init() - Loading the "' . get_the_title($id) . '" sequence settings');
 
             // Set options for the sequence
             $this->get_options( $id );
-            $this->load_sequence_post();
+
+            if ( 0 != $current_user->ID || $this->is_cron ) {
+                E20RTools\DBG::log('init() - Loading the "' . get_the_title($id) . '" sequence posts');
+                $this->load_sequence_post();
+            }
 
             if ( empty( $this->posts ) && ( !$this->is_converted( $id ) ) ) {
 
-                $this->dbg_log("init() - Need to convert sequence with ID {$id } to version 3 format!");
+                E20RTools\DBG::log("init() - Need to convert sequence with ID {$id } to version 3 format!");
             }
 
-            $this->dbg_log( 'init() -- Done.' );
+            E20RTools\DBG::log( 'init() -- Done.' );
 
             return $this->sequence_id;
         }
@@ -3411,13 +2566,13 @@ class Controller
      */
     public function display_error() {
 
-        $this->dbg_log("Display error messages, if there are any");
+        E20RTools\DBG::log("Display error messages, if there are any");
         global $current_screen;
 
         $msg = $this->get_error_msg();
 
         if ( ! empty( $msg ) ){
-            $this->dbg_log("Display error for Drip Feed operation(s)");
+            E20RTools\DBG::log("Display error for Drip Feed operation(s)");
             ?><div id="e20r-seq-error" class="error"><?php settings_errors('e20r_seq_errors'); ?></div><?php
 
         }
@@ -3433,16 +2588,17 @@ class Controller
      */
     public function get_post_list_as_html($echo = false) {
 
-        $this->dbg_log("get_post_list_as_html() - Generate HTML list of posts for sequence #: {$this->sequence_id}");
+        E20RTools\DBG::log("get_post_list_as_html() - Generate HTML list of posts for sequence #: {$this->sequence_id}");
 
         //global $current_user;
         $this->load_sequence_post();
 
         if ( ! empty( $this->posts ) ) {
 
-            // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
+            $view = apply_filters('get_sequence_views_class_instance', false);
 
-            $content = $this->create_sequence_list( true, 30, true, null, false	);
+            // TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
+            $content = $view->create_sequence_list( true, 30, true, null, false	);
 
             if ( $echo ) {
 
@@ -3453,289 +2609,6 @@ class Controller
         }
 
         return false;
-    }
-
-    /**
-     * Create a list of posts/pages/cpts that are included in the specified sequence (or all sequences, if needed)
-     *
-     * @param bool $highlight -- Whether to highlight the Post that is the closest to the users current membership day
-     * @param int $pagesize -- The size of each page (number of posts per page)
-     * @param bool $button -- Whether to display a "Available Now" button or not.
-     * @param string $title -- The title of the sequence list. Default is the title of the sequence.
-     * @return string -- The HTML we generated.
-     */
-    public function create_sequence_list( $highlight = false, $pagesize = 0, $button = false, $title = null, $scrollbox = false ) {
-
-        global $wpdb, $current_user, $id, $post;
-        $html = '';
-
-        $savePost = $post;
-
-        // Set a default page size.
-        if ($pagesize == 0) {
-            $pagesize = 30;
-        }
-
-        $this->dbg_log( "create_sequence_list() - Loading posts with pagination enabled. Expecing \\WP_Query result" );
-        list( $seqList, $max_num_pages ) = $this->load_sequence_post( null, null, null, '=', $pagesize, true );
-
-        // $sequence_posts = $this->posts;
-        $memberDayCount = $this->get_membership_days();
-
-        $this->dbg_log( "Sequence {$this->sequence_id} has " . count( $this->posts ) . " posts. Current user has been a member for {$memberDayCount} days" );
-
-        if ( ! $this->has_post_access( $current_user->ID, $this->sequence_id ) ) {
-            $this->dbg_log( 'No access to sequence ' . $this->sequence_id . ' for user ' . $current_user->ID );
-            return '';
-        }
-
-        /* Get the ID of the post in the sequence who's delay is the closest
-         *  to the members 'days since start of membership'
-         */
-        $closestPost = apply_filters( 'e20r-sequence-found-closest-post', $this->find_closest_post( $current_user->ID ) );
-
-        // Image to bring attention to the closest post item
-        $closestPostImg = '<img src="' . plugins_url( '/../images/most-recent.png', __FILE__ ) . '" >';
-
-        $listed_postCnt   = 0;
-
-        $this->dbg_log( "create_sequence_list() - Loading posts for the sequence_list shortcode...");
-        ob_start();
-        ?>
-
-        <!-- Preface the table of links with the title of the sequence -->
-        <div id="e20r_sequence-<?php echo $this->sequence_id; ?>" class="e20r_sequence_list">
-
-        <?php echo apply_filters( 'e20r-sequence-list-title',  $this->set_title_in_shortcode( $title ) ); ?>
-
-        <!-- Add opt-in to the top of the shortcode display. -->
-        <?php echo $this->view_user_notice_opt_in(); ?>
-
-        <!-- List of sequence entries (paginated as needed) -->
-        <?php
-
-        if ( count( $seqList ) == 0 ) {
-        // if ( 0 == count( $this->posts ) ) {
-            echo '<span style="text-align: center;">' . __( "There is <em>no content available</em> for you at this time. Please check back later.", "e20rsequence" ) . "</span>";
-
-        } else {
-            if ( $scrollbox ) { ?>
-                <div id="e20r-seq-post-list">
-                <table class="e20r_sequence_postscroll e20r_seq_linklist">
-            <?php } else { ?>
-                <div>
-                <table class="e20r_seq_linklist">
-            <?php };
-
-            // Loop through all of the posts in the sequence
-
-            // $posts = $seqList->get_posts();
-
-            foreach( $seqList as $p ) {
-
-                if ( ( false === $p->is_future ) ) {
-                    $this->dbg_log("create_sequence_list() - Adding post {$p->id} with delay {$p->delay}");
-                    $listed_postCnt++;
-
-                    if ( ( true === $p->closest_post ) && ( $highlight ) ) {
-
-                        $this->dbg_log( 'create_sequence_list() - The most recently available post for user #' . $current_user->ID . ' is post #' . $p->id );
-
-                        // Show the highlighted post info
-                        ?>
-                        <tr id="e20r-seq-selected-post">
-                            <td class="e20r-seq-post-img"><?php echo apply_filters( 'e20r-sequence-closest-post-indicator-image', $closestPostImg ); ?></td>
-                            <td class="e20r-seq-post-hl">
-                                <a href="<?php echo $p->permalink; ?>" title="<?php echo $p->title; ?>"><strong><?php echo $p->title; ?></strong>&nbsp;&nbsp;<em>(Current)</em></a>
-                            </td>
-                            <td <?php echo( $button ? 'class="e20r-seq-availnow-btn"' : '' ); ?>><?php
-
-                                if ( $button ) {
-                                    ?>
-                                <a class="e20r_btn e20r_btn-primary" href="<?php echo $p->permalink; ?>"> <?php _e( "Available Now", "e20rsequence" ); ?></a><?php
-                                } ?>
-                            </td>
-                        </tr> <?php
-                    } else {
-                        ?>
-                        <tr id="e20r-seq-post">
-                            <td class="e20r-seq-post-img">&nbsp;</td>
-                            <td class="e20r-seq-post-fade">
-                                <a href="<?php echo $p->permalink; ?>" title="<?php echo $p->title; ?>"><?php echo $p->title; ?></a>
-                            </td>
-                            <td<?php echo( $button ? ' class="e20r-seq-availnow-btn">' : '>' );
-                            if ( $button ) {
-                                ?>
-                            <a class="e20r_btn e20r_btn-primary" href="<?php echo $p->permalink; ?>"> <?php _e( "Available Now", "e20rsequence" ); ?></a><?php
-                            } ?>
-                            </td>
-                        </tr>
-                    <?php
-                    }
-                } elseif ( ( true == $p->is_future ) /* &&
-                    ( false === $this->hide_upcoming_posts() ) */ ) {
-
-                    $listed_postCnt++;
-
-                    // Do we need to highlight the (not yet available) post?
-                    // if ( ( $p->ID == $closestPost->id ) && ( $p->delay == $closestPost->delay ) && $highlight ) {
-                    if ( ( true === $p->closest_post ) && ( $highlight ) ) {
-                        ?>
-
-                        <tr id="e20r-seq-post">
-                            <td class="e20r-seq-post-img">&nbsp;</td>
-                            <td id="e20r-seq-post-future-hl">
-                                <?php $this->dbg_log( "Highlight post #: {$p->id} with future availability" ); ?>
-                                <span class="e20r_sequence_item-title">
-                                        <?php echo $p->title; ?>
-                                    </span>
-                                    <span class="e20r_sequence_item-unavailable">
-                                        <?php echo sprintf( __( 'available on %s', "e20rsequence" ),
-                                            ( $this->options->delayType == 'byDays' &&
-                                                $this->options->showDelayAs == E20R_SEQ_AS_DAYNO ) ?
-                                                __( 'day', "e20rsequence" ) : '' ); ?>
-                                        <?php echo $this->display_proper_delay( $p->delay ); ?>
-                                    </span>
-                            </td>
-                            <td></td>
-                        </tr>
-                    <?php
-                    } else {
-                        ?>
-                        <tr id="e20r-seq-post">
-                            <td class="e20r-seq-post-img">&nbsp;</td>
-                            <td>
-                                <span class="e20r_sequence_item-title"><?php echo $p->post_title; ?></span>
-                                    <span class="e20r_sequence_item-unavailable">
-                                        <?php echo sprintf( __( 'available on %s', "e20rsequence" ),
-                                            ( $this->options->delayType == 'byDays' &&
-                                                $this->options->showDelayAs == E20R_SEQ_AS_DAYNO ) ?
-                                                __( 'day', "e20rsequence" ) : '' ); ?>
-                                        <?php echo $this->display_proper_delay( $p->delay ); ?>
-                                    </span>
-                            </td>
-                            <td></td>
-                        </tr> <?php
-                    }
-                } else {
-                    if ( ( count( $seqList ) > 0 ) && ( $listed_postCnt > 0 ) ) {
-                        ?>
-                        <tr id="e20r-seq-post">
-                            <td>
-                                <span style="text-align: center;">There is <em>no content available</em> for you at this time. Please check back later.</span>
-                            </td>
-                        </tr><?php
-                    }
-                }
-            }
-
-            ?></table>
-            </div>
-            <div class="clear"></div>
-            <?php
-
-
-            echo apply_filters( 'e20r-sequence-list-pagination-code', $this->post_paging_nav( ceil( count( $this->posts ) / $pagesize ) ) );
-            // echo apply_filters( 'e20r-sequence-list-pagination-code', $this->post_paging_nav( $max_num_pages ) );
-           // wp_reset_postdata();
-        }
-        ?>
-        </div><?php
-
-        $post = $savePost;
-
-        $html .= ob_get_contents();
-        ob_end_clean();
-
-        $this->dbg_log("create_sequence_list() - Returning the - possibly filtered - HTML for the sequence_list shortcode");
-
-        return apply_filters( 'e20r-sequence-list-html', $html );
-
-    }
-
-    /**
-     * Formats the title (unless its empty, then we set it to the post title for the current sequence)
-     *
-     * @param string|null $title -- A string (title) to apply formatting to & return
-     *
-     * @return null|string - The title string
-     */
-    private function set_title_in_shortcode( $title = null ) {
-
-        // Process the title attribute (default values, can apply filter if needed/wanted)
-        if ( ( $title == '' ) && ( $this->sequence_id != 0 ) ) {
-
-            $title = '<h3>' . get_the_title( $this->sequence_id ) . '</h3>';
-        }
-        elseif ( ( $this->sequence_id == 0 ) && ( $title == '' ) ) {
-
-            $title = "<h3>" . _e("Available posts", "e20rsequence") . "</h3>";
-        }
-        elseif ( $title == '' ) {
-
-            $title = '';
-        }
-        else {
-
-            $title = "<h3>{$title}</h3>";
-        }
-
-        return $title;
-    }
-
-    /**
-     * Adds notification opt-in to list of posts/pages in sequence.
-     *
-     * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
-     *
-     * @access public
-     */
-    public function view_user_notice_opt_in() {
-
-        $optinForm = '';
-
-        global $current_user;
-
-        // $meta_key = $wpdb->prefix . "pmpro_sequence_notices";
-
-        $this->dbg_log('view_user_notice_opt_in() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
-
-        if ( isset( $this->options->sendNotice ) && ( $this->options->sendNotice == 1 ) ) {
-
-            $this->dbg_log("view_user_notice_opt_in() - Allow user to opt out of email notices");
-            $optIn = $this->load_user_notice_settings( $current_user->ID, $this->sequence_id );
-
-            $this->dbg_log('view_user_notice_opt_in() - Fetched Meta: ' . print_r( $optIn, true));
-
-            $noticeVal = isset( $optIn->send_notices ) && ( $optIn->send_notices == 1 ) ? $optIn->send_notices : 0;
-
-            /* Add form information */
-            ob_start();
-            ?>
-            <div class="e20r-seq-centered">
-                <div class="e20r_sequence_useroptin">
-                    <div class="seq_spinner"></div>
-                    <form class="e20r-sequence" action="<?php echo admin_url('admin-ajax.php'); ?>" method="post">
-                        <input type="hidden" name="hidden_e20r_seq_useroptin" id="hidden_e20r_seq_useroptin" value="<?php echo $noticeVal; ?>" >
-                        <input type="hidden" name="hidden_e20r_seq_id" id="hidden_e20r_seq_id" value="<?php echo $this->sequence_id; ?>" >
-                        <input type="hidden" name="hidden_e20r_seq_uid" id="hidden_e20r_seq_uid" value="<?php echo $current_user->ID; ?>" >
-                        <?php wp_nonce_field('e20r-sequence-user-optin', 'e20r_sequence_optin_nonce'); ?>
-                        <span>
-                            <input type="checkbox" value="1" id="e20r_sequence_useroptin" name="e20r_sequence_useroptin" onclick="javascript:e20r_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', "e20rsequence"); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
-                            <label for="e20r-seq-useroptin"><?php _e('Yes, please send me email reminders!', "e20rsequence"); ?></label>
-                        </span>
-                    </form>
-                </div>
-            </div>
-
-            <?php
-            $optinForm = ob_get_clean();
-        }
-        else {
-            $this->dbg_log("view_user_notice_opt_in() - Not configured to allow sending of notices. {$this->options->sendNotice}");
-        }
-
-        return $optinForm;
     }
 
     /**
@@ -3751,10 +2624,10 @@ class Controller
         if ( $this->options->showDelayAs == E20R_SEQ_AS_DATE) {
             // Convert the delay to a date
 
-            $memberDays = round(pmpro_getMemberDays(), 0);
+            $memberDays = round($this->get_membership_days(), 0);
 
             $delayDiff = ($delay - $memberDays);
-            $this->dbg_log('display_proper_delay() - Delay: ' .$delay . ', memberDays: ' . $memberDays . ', delayDiff: ' . $delayDiff);
+            E20RTools\DBG::log('Delay: ' .$delay . ', memberDays: ' . $memberDays . ', delayDiff: ' . $delayDiff);
 
             return strftime('%x', strtotime("+" . $delayDiff ." days"));
         }
@@ -3826,7 +2699,7 @@ class Controller
 
         if ( !empty( $current_user ) && ( !empty( $post ) ) ) {
 
-            $this->dbg_log("text_filter() - Current sequence ID: {$this->sequence_id} vs Post ID: {$post->ID}" );
+            E20RTools\DBG::log("text_filter() - Current sequence ID: {$this->sequence_id} vs Post ID: {$post->ID}" );
 
             // if ( ! $this->has_access( $current_user->ID, $post->ID ) ) {
 
@@ -3840,11 +2713,11 @@ class Controller
 
             foreach ( $post_sequences as $ps ) {
 
-                $this->dbg_log("text_filter() - Checking access to {$ps}");
+                E20RTools\DBG::log("text_filter() - Checking access to {$ps}");
 
                 if ( $this->has_sequence_access( $current_user->ID, $ps ) ) {
 
-                    $this->dbg_log("text_filter() - It's possible user has access to sequence: {$ps} ");
+                    E20RTools\DBG::log("text_filter() - It's possible user has access to sequence: {$ps} ");
                     $insequence = $ps;
 
                     if ( !$this->init( $ps ) ) {
@@ -3942,13 +2815,13 @@ class Controller
             return true;
         }
 
-        if ( ( !empty( $sequecne_id ) ) && ( 'pmpro_sequence' != get_post_type( $sequence_id ) ) ){
+        if ( ( !empty( $sequence_id ) ) && ( 'pmpro_sequence' != get_post_type( $sequence_id ) ) ){
 
             // Not a E20R Sequence CPT post_id
             return true;
         }
 
-        $results = pmpro_has_membership_access( $sequence_id, $user_id, true );
+        $results = $this->has_membership_access( $sequence_id, $user_id, true );
 
         if ( $results[0] ) {
             return true;
@@ -3972,14 +2845,14 @@ class Controller
         // for compatibility
         if ( ! isset( $this->options->previewOffset ) ) {
 
-            $this->dbg_log("is_after_delay() - the previewOffset value doesn't exist yet {$this->options->previewOffset}. Fixing now.");
+            E20RTools\DBG::log("is_after_delay() - the previewOffset value doesn't exist yet {$this->options->previewOffset}. Fixing now.");
             $this->options->previewOffset = 0;
             $this->save_sequence_meta(); // Save the settings (only the first when this variable is empty)
 
         }
 
         $offset = $this->options->previewOffset;
-        // $this->dbg_log('is_after_delay() - Preview enabled and set to: ' . $offset);
+        // E20RTools\DBG::log('is_after_delay() - Preview enabled and set to: ' . $offset);
 
         if ( $this->is_valid_date( $delay ) ) {
             // Fixed: Now supports DST changes (i.e. no "early or late availability" in DST timezones
@@ -3988,7 +2861,7 @@ class Controller
 
             // TODO: Add support for startWhen options (once the plugin supports differentiating on when the drip starts)
             $delayTime = strtotime( $delay . ' 00:00:00.0 ' . get_option( 'timezone_string' ) );
-            // $this->dbg_log('is_after_delay() - Now = ' . $now . ' and delay time = ' . $delayTime );
+            // E20RTools\DBG::log('is_after_delay() - Now = ' . $now . ' and delay time = ' . $delayTime );
 
             return ( $now >= $delayTime ? true : false ); // a date specified as the $delay
         }
@@ -4015,7 +2888,7 @@ class Controller
 
         if (($sequence_id != 0) && ($sequence_id != $this->sequence_id)) {
 
-            $this->dbg_log( 'save_sequence_meta() - Unknown sequence ID. Need to instantiate the correct sequence first!' );
+            E20RTools\DBG::log( 'save_sequence_meta() - Unknown sequence ID. Need to instantiate the correct sequence first!' );
             return false;
         }
 
@@ -4025,11 +2898,11 @@ class Controller
             update_post_meta($this->sequence_id, '_pmpro_sequence_settings', $settings );
 
             // Preserve the settings in memory / class context
-            $this->dbg_log('save_sequence_meta(): Saved Sequence Settings for ' . $this->sequence_id);
+            E20RTools\DBG::log('save_sequence_meta(): Saved Sequence Settings for ' . $this->sequence_id);
         }
         catch (Exception $e) {
 
-            $this->dbg_log('save_sequence_meta() - Error saving sequence settings for ' . $this->sequence_id . ' Msg: ' . $e->getMessage());
+            E20RTools\DBG::log('save_sequence_meta() - Error saving sequence settings for ' . $this->sequence_id . ' Msg: ' . $e->getMessage());
             return false;
         }
 
@@ -4062,7 +2935,7 @@ class Controller
         $now->setTimezone( new \DateTimeZone( $serverTZ ) );
         $seconds = $now->format( 'U' );
 
-        $this->dbg_log("calculateOffsetSecs() - Offset Days: {$days} = When (in seconds): {$seconds}", E20R_DEBUG_SEQ_INFO );
+        E20RTools\DBG::log("calculateOffsetSecs() - Offset Days: {$days} = When (in seconds): {$seconds}", E20R_DEBUG_SEQ_INFO );
         return $seconds;
     }
 
@@ -4108,7 +2981,7 @@ class Controller
 
         //See if the user has access to the specific post
         if ( !$this->is_managed($post->ID)) {
-            $this->dbg_log("has_membership_access_filter() - Post {$post->ID} is not managed by a sequence (it is one?). Returning original access value: " . ($hasaccess ? 'true' : 'false'));
+            E20RTools\DBG::log("has_membership_access_filter() - Post {$post->ID} is not managed by a sequence (it is one?). Returning original access value: " . ($hasaccess ? 'true' : 'false'));
             return $hasaccess;
         }
 
@@ -4128,7 +3001,7 @@ class Controller
 
     public function is_managed( $post_id ) {
 
-        $this->dbg_log("is_managed() - Check whether post ID {$post_id} is managed by a sequence: " . $this->who_called_me());
+        E20RTools\DBG::log("is_managed() - Check whether post ID {$post_id} is managed by a sequence: " . $this->who_called_me());
 
         $is_sequence = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
         $retval = empty($is_sequence) ? false : true;
@@ -4154,23 +3027,24 @@ class Controller
 
         if ( $settings->optin_at != -1) {
 
-            $this->dbg_log( 'is_after_opt_in() -- User: ' . $user_id . ' Optin TS: ' . $settings->optin_at .
+            E20RTools\DBG::log( 'User: ' . $user_id . ' Optin TS: ' . $settings->optin_at .
                 ', Optin Date: ' . date( 'Y-m-d', $settings->optin_at )
             );
 
             $delay_ts = $this->delay_as_timestamp( $post->delay, $user_id );
+            E20RTools\DBG::log("Timestamp for delay value: {$delay_ts}");
 
             // Compare the Delay to the optin (subtract 24 hours worth of time from the opt-in TS)
-            if ( $delay_ts >= ( $settings->last_notice_sent - (3600 * 24)) ) {
+            if ( $delay_ts >= ( $settings->last_notice_sent - DAY_IN_SECONDS ) ) {
 
-                $this->dbg_log('is_after_opt_in() - This post SHOULD be allowed to be alerted on');
+                E20RTools\DBG::log('This post SHOULD be allowed to be alerted on');
                 return true;
             } else {
-                $this->dbg_log('is_after_opt_in() - This post should NOT be allowed to be alerted on');
+                E20RTools\DBG::log('This post should NOT be allowed to be alerted on');
                 return false;
             }
         } else {
-            $this->dbg_log('is_after_opt_in() - Negative opt-in timestamp value. The user  (' . $user_id . ') does not want to receive alerts');
+            E20RTools\DBG::log('Negative opt-in timestamp value. The user  (' . $user_id . ') does not want to receive alerts');
             return false;
         }
     }
@@ -4189,17 +3063,17 @@ class Controller
 
         $delayTS = current_time('timestamp', true); // Default is 'now'
 
-        $startTS = pmpro_getMemberStartdate($user_id, $level_id);
+        $startTS = $this->get_user_startdate($user_id, $level_id);
 
         switch ($this->options->delayType) {
             case 'byDays':
                 $delayTS = strtotime( '+' . $delay . ' days', $startTS);
-                $this->dbg_log('delay_as_timestamp() -  byDays:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
+                E20RTools\DBG::log('delay_as_timestamp() -  byDays:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
                 break;
 
             case 'byDate':
                 $delayTS = strtotime( $delay );
-                $this->dbg_log('delay_as_timestamp() -  byDate:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
+                E20RTools\DBG::log('delay_as_timestamp() -  byDate:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
                 break;
         }
 
@@ -4231,18 +3105,22 @@ class Controller
         return array();
     }
 
-    private function prepare_mailobj( $post, $user, $template ) {
+    private function prepare_mail_obj( $post, $user, $template ) {
 
-        $email = new \PMProEmail();
+        E20RTools\DBG::log("Attempting to load email class...");
 
-        $user_started = (pmpro_getMemberStartdate($user->ID) - DAY_IN_SECONDS) + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS);
+        $email = new Tools\e20rMail();
 
-        $email->from = $this->options->replyto; // = pmpro_getOption('from_email');
+        E20RTools\DBG::log("Loaded " . get_class($email));
+
+        $user_started = ($this->get_user_startdate($user->ID) - DAY_IN_SECONDS) + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS);
+
+        $email->from = $this->get_option_by_name('replyto');
         $email->template = $template;
-        $email->fromname = $this->options->fromname; // = pmpro_getOption('from_name');
-        $email->email = $user->user_email;
-        $email->subject = sprintf('%s: %s (%s)', $this->options->subject, $post->post_title, strftime("%x", $user_started));
-        $email->dateformat = $this->options->dateformat;
+        $email->fromname = $this->get_option_by_name('fromname');
+        $email->to = $user->user_email;
+        $email->subject = sprintf('%s: %s (%s)', $this->get_option_by_name('subject'), $post->title, strftime("%x", $user_started));
+        $email->dateformat = $this->get_option_by_name('dateformat');
 
         return $email;
 
@@ -4259,21 +3137,21 @@ class Controller
      *
      * TODO: Fix email body to be correct (standards compliant) MIME encoded HTML mail or text mail.
      */
-    public function send_notice($posts, $user_id, $seq_id) {
-
+    public function send_notice($posts, $user_id, $seq_id)
+    {
         // Make sure the email class is loaded.
-        if ( ! class_exists( '\\PMProEmail' ) ) {
-            $this->dbg_log("send_notice() - PMProEmail class is missing??");
+        if ( ! class_exists( 'E20R\\Sequences\\Tools\\e20rMail' ) ) {
+            E20RTools\DBG::log("Tools\\e20rMail class is missing??");
             return;
         }
 
-        if ( !is_array( $posts ) ) {
+        if ( ! is_array( $posts ) ) {
 
             $posts = array( $posts );
         }
 
         $user = get_user_by('id', $user_id);
-        $templ = preg_split('/\./', $this->options->noticeTemplate); // Parse the template name
+        $templ = preg_split('/\./', $this->get_option_by_name('noticeTemplate')); // Parse the template name
 
         $emails = array();
 
@@ -4281,17 +3159,17 @@ class Controller
         $excerpt = '';
         $ga_tracking = '';
 
-        $this->dbg_log("send_notice() - Preparing to send " . count( $posts ) . " post alerts for user {$user_id} regarding sequence {$seq_id}");
-        $this->dbg_log($templ);
+        E20RTools\DBG::log("Preparing to send " . count( $posts ) . " post alerts for user {$user_id} regarding sequence {$seq_id}");
+        E20RTools\DBG::log($templ);
 
         // Add data/img entry for google analytics.
+        $track_with_ga = $this->get_option_by_name('trackGoogleAnalytics');
 
-        if ( isset( $this->options->track_google_analytics ) &&
-            ( true === $this->options->track_google_analytics ) ) {
+        if ( ! empty( $track_with_ga) && ( true === $track_with_ga ) ) {
 
             // FIXME: get_google_analytics_client_id() can't work since this isn't being run during a user session!
             $cid = esc_html( $this->ga_getCid() );
-            $tid = esc_html( $this->options->ga_tid );
+            $tid = esc_html( $this->options->gaTid );
             $post = get_post( $this->sequence_id );
             $campaign = esc_html( $post->post_title );
 
@@ -4311,97 +3189,121 @@ class Controller
 
         if (false === ($template_content = file_get_contents( $this->email_template_path() ) ) ) {
 
-            $this->dbg_log('send_notice() - ERROR: Could not read content from template file: '. $this->options->noticeTemplate);
+            E20RTools\DBG::log('ERROR: Could not read content from template file: '. $this->get_option_by_name('noticeTemplate'));
             return false;
         }
 
-        $user_started = (pmpro_getMemberStartdate($user_id) - DAY_IN_SECONDS);
+        $user_started = ($this->get_user_startdate($user_id) - DAY_IN_SECONDS);
+
+        $send_as = $this->get_option_by_name('noticeSendAs');
+
+        if ( empty($send_as) ) {
+
+            E20RTools\DBG::log("WARNING: Have to update the noticeSendAs setting!");
+            $this->set_option_by_name('noticeSendAs', E20R_SEQ_SEND_AS_SINGLE );
+            $this->save_settings($seq_id);
+        }
 
         foreach( $posts as $post ) {
 
-            // $post = get_post($p->id);
             $as_list = false;
 
-            $post_date = date($this->options->dateformat, ($user_started + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS)));
+            $post_date = date($this->get_option_by_name('dateformat'), ($user_started + ($this->normalize_delay($post->delay) * DAY_IN_SECONDS)));
 
             // Send all of the links to new content in a single email message.
-            if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
+            if ( E20R_SEQ_SEND_AS_LIST == $send_as ) {
 
                 $idx = 0;
-                $post_links .= "<li><a href=\"{$post->permalink}\" title=\"{$post->title}\">{$post->title}</a></li>\n";
+				$post_links .= '<li><a href="'. wp_login_url($post->permalink) . '" title="' . $post->title . '">' . $post->title . '</a></li>\n';
 
                 if (false === $as_list) {
 
                     $as_list = true;
-                    $emails[$idx] = $this->prepare_mailobj($post, $user, $templ[0]);
+                    $emails[$idx] = $this->prepare_mail_obj( $post, $user, $this->get_option_by_name('noticeTemplate') );
                     $emails[$idx]->body = $template_content;
 
-                    $emails[$idx]->data = array(
-                        "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
-                        "sitename" => get_option("blogname"),
-                        "today" => $post_date,
-                        "excerpt" => '',
-                        "ptitle" => $post->title
+                    $data = array(
+                                        // Options could be: display_name, first_name, last_name, nickname
+                        "name"      => apply_filters( 'e20r-sequence-alert-message-name', $user->user_firstname ),
+                        "sitename"  => apply_filters('e20r-sequence-site-name', get_option("blogname")),
+                        "today"     => apply_filters( 'e20r-sequence-alert-message-date', $post_date ),
+                        "excerpt"   => apply_filters( 'e20r-sequence-alert-message-excerpt-intro', $post->excerpt ),
+                        "post_link" => apply_filters( 'e20r-sequence-alert-message-link-href-element', $post_links ),
+                        "ptitle"    => apply_filters( 'e20r-sequence-alert-message-title', $post->title ),
                     );
 
                     if ( isset( $this->options->track_google_analytics ) && ( true == $this->options->track_google_analytics) ) {
-                       $emails[$idx]->data['google_analytics'] = $ga_tracking;
+                       $data['google_analytics'] = $ga_tracking;
                     }
+
+                    $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
                 }
             }
-
-            if ( E20R_SEQ_SEND_AS_SINGLE == $this->options->noticeSendAs ) {
+            elseif ( E20R_SEQ_SEND_AS_SINGLE == $send_as ) {
 
                 // Send one email message per piece of new content.
-                $emails[] = $this->prepare_mailobj($post, $user, $templ[0]);
+                $emails[] = $this->prepare_mail_obj($post, $user, $templ[0]);
 
                 // super defensive programming...
                 $idx = ( empty( $emails ) ? 0 : count($emails) - 1);
 
                 if ( !empty( $post->excerpt ) ) {
 
-                    $this->dbg_log("send_notice() - Adding the post excerpt to email notice");
+                    E20RTools\DBG::log("Adding the post excerpt to email notice");
 
-                    if ( empty( $this->options->excerpt_intro ) ) {
-                        $this->options->excerpt_intro = __('A summary:', "e20rsequence");
+                    if ( empty( $this->options->excerptIntro ) ) {
+                        $this->options->excerptIntro = __('A summary:', "e20rsequence");
                     }
 
-                    $excerpt = '<p>' . $this->options->excerpt_intro . '</p><p>' . $post->excerpt . '</p>';
+                    $excerpt = '<p>' . $this->options->excerptIntro . '</p><p>' . $post->excerpt . '</p>';
                 }
 
-                $post_links = "<a href=\"{$post->permalink}\" title=\"{$post->title}\">{$post->title}</a>";
+                $post_links = '<a href="'. wp_login_url($post->permalink) . '" title="' . $post->title . '">' . $post->title . '</a>';
+				$post_url = wp_login_url($post->permalink);
 
                 $emails[$idx]->body = $template_content;
 
-                $emails[$idx]->data = array(
-                    "name" => $user->user_firstname, // Options are: display_name, first_name, last_name, nickname
-                    "sitename" => get_option("blogname"),
-                    "post_link" => $post_links,
-                    "today" => $post_date,
-                    "excerpt" => $excerpt,
-                    "ptitle" => $post->title
-                );
-
-                if ( isset( $this->options->track_google_analytics ) && ( true == $this->options->track_google_analytics) ) {
-                   $emails[$idx]->data['google_analytics'] = $ga_tracking;
+                if ( isset( $this->options->trackGoogleAnalytics ) && ( true == $this->options->trackGoogleAnalytics) ) {
+                   $data['google_analytics'] = $ga_tracking;
                 }
 
+                $data = array(
+                    "name"          => apply_filters( 'e20r-sequence-alert-message-name', $user->user_firstname ), // Options could be: display_name, first_name, last_name, nickname
+                    "sitename"      => apply_filters( 'e20r-sequence-site-name', get_option("blogname")),
+                    "post_link"     => apply_filters( 'e20r-sequence-alert-message-link-href-element', $post_links ),
+                    'post_url'      => apply_filters( 'e20r-sequence-alert-message-post-permalink', $post_url ),
+                    "today"         => apply_filters( 'e20r-sequence-alert-message-date', $post_date ),
+                    "excerpt"       => apply_filters( 'e20r-sequence-alert-message-excerpt-intro', $post->excerpt ),
+                    "ptitle" => apply_filters( 'e20r-sequence-alert-message-title', $post->title ),
+                );
+
+                $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
             }
 
-            // Append the post_link ul/li element list when asking to send as list.
-            if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
-                $emails[$idx]->data['post_link'] = "<ul>\n" . $post_links . "</ul>\n";
-            }
 
         }
 
-        $this->dbg_log("send_notice() - Have prepared " . count($emails) . " email notices for user {$user_id}");
+        // Append the post_link ul/li element list when asking to send as list.
+        if ( E20R_SEQ_SEND_AS_LIST == $this->options->noticeSendAs ) {
+
+            E20RTools\DBG::log('Set link variable for list of link format');
+            $emails[(count($emails) - 1)]->post_link = "<ul>\n" . $post_links . "</ul>\n";
+        }
+
+        $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
+
+        E20RTools\DBG::log("Have prepared " . count($emails) . " email notices for user {$user_id}");
+
+        $user = get_user_by( 'id', $user_id );
 
         // Send the configured email messages
         foreach ( $emails as $email ) {
 
-            $this->dbg_log('send_notice() - Substitutions are: ' . print_r($email->data, true));
-            $email->sendEmail();
+            E20RTools\DBG::log('Email object: ' . get_class($email));
+            if ( false == $email->send() ) {
+
+                E20RTools\DBG::log("ERROR - Failed to send new sequence content email to {$user->user_email}! ");
+            }
         }
 
         // wp_reset_postdata();
@@ -4410,31 +3312,31 @@ class Controller
     }
 
     /**
-     * Check the theme/child-theme/PMPro Sequence plugin directory for the specified notice template.
+     * Check the theme/child-theme/Sequence plugin directory for the specified notice template.
      *
      * @return null|string -- Path to the selected template for the email alert notice.
      */
     private function email_template_path() {
 
-        if ( file_exists( get_stylesheet_directory() . "/sequence-email-alerts/{$this->options->noticeTemplate}")) {
+        if ( file_exists( get_stylesheet_directory() . "/sequence-email-alerts/" . $this->get_option_by_name('noticeTemplate') ) ) {
 
-            $template_path = get_stylesheet_directory() . "/sequence-email-alerts/{$this->options->noticeTemplate}";
+            $template_path = get_stylesheet_directory() . "/sequence-email-alerts/" . $this->get_option_by_name('noticeTemplate');
 
         }
-        elseif ( file_exists( get_template_directory() . "/sequence-email-alerts/{$this->options->noticeTemplate}" ) ) {
+        elseif ( file_exists( get_template_directory() . "/sequence-email-alerts/" . $this->get_option_by_name('noticeTemplate') ) ) {
 
-            $template_path = get_template_directory() . "/sequence-email-alerts/{$this->options->noticeTemplate}";
+            $template_path = get_template_directory() . "/sequence-email-alerts/" . $this->get_option_by_name('noticeTemplate');
         }
-        elseif ( file_exists( E20R_SEQUENCE_PLUGIN_DIR . "/email/{$this->options->noticeTemplate}" ) ) {
+        elseif ( file_exists( E20R_SEQUENCE_PLUGIN_DIR . "email/" . $this->get_option_by_name('noticeTemplate') ) ) {
 
-            $template_path = E20R_SEQUENCE_PLUGIN_DIR . "/email/{$this->options->noticeTemplate}";
+            $template_path = E20R_SEQUENCE_PLUGIN_DIR . "email/" . $this->get_option_by_name('noticeTemplate');
         }
         else {
 
             $template_path = null;
         }
 
-        $this->dbg_log("email_template_path() - Using path: {$template_path}");
+        E20RTools\DBG::log("email_template_path() - Using path: {$template_path}");
         return $template_path;
     }
 
@@ -4450,15 +3352,15 @@ class Controller
 
         global $wpdb;
 
-        $this->dbg_log("reset_user_alerts() - Attempting to delete old-style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
-        $old_style = delete_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence_notices' );
+        E20RTools\DBG::log("reset_user_alerts() - Attempting to delete old-style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
+        $old_style = delete_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence' . '_notices' );
 
-        $this->dbg_log("reset_user_alerts() - Attempting to delete v3 style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
+        E20RTools\DBG::log("reset_user_alerts() - Attempting to delete v3 style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
         $v3_style = delete_user_meta( $userId, "pmpro_sequence_id_{$sequenceId}_notices" );
 
         if ( $old_style || $v3_style ) {
 
-            $this->dbg_log("reset_user_alerts() - Successfully delted user notice settings for user {$userId}");
+            E20RTools\DBG::log("reset_user_alerts() - Successfully delted user notice settings for user {$userId}");
             return true;
         }
 
@@ -4470,11 +3372,11 @@ class Controller
 
                 if ( $seqId == $sequenceId ) {
 
-                    $this->dbg_log("Deleting user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
+                    E20RTools\DBG::log("Deleting user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
 
                     unset($notices->sequences[$seqId]);
                     //  Use $this->save_user_notice_settings( $userId, $notices, $sequenceId )
-                    return update_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence_notices', $notices );
+                    return update_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence' . '_notices', $notices );
                 }
             }
         }
@@ -4495,7 +3397,7 @@ class Controller
      */
     public function email_body( $phpmailer ) {
 
-        $this->dbg_log('email_body() action: Update body of message if it is sent by PMPro Sequence');
+        E20RTools\DBG::log('email_body() action: Update body of message if it is sent by PMPro Sequence');
 
         if ( isset( $phpmailer->excerpt_intro ) ) {
             $phpmailer->Body = apply_filters( 'e20r-sequence-alert-message-excerpt-intro', str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body ) );
@@ -4514,7 +3416,7 @@ class Controller
       */
     public function dbgOut( $msg, $lvl = E20R_DEBUG_SEQ_INFO ) {
 
-        $this->dbg_log( $msg, $lvl );
+        E20RTools\DBG::log( $msg, $lvl );
     }
 
     /**
@@ -4529,22 +3431,22 @@ class Controller
         global $current_user, $post;
 
         if ( !isset( $post->post_type) ) {
-            $this->dbg_log("post_save_action() - No post type defined for {$post_id}", E20R_DEBUG_SEQ_WARNING);
+            E20RTools\DBG::log("post_save_action() - No post type defined for {$post_id}", E20R_DEBUG_SEQ_WARNING);
             return;
         }
 
         if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-            $this->dbg_log("Exit during autosave");
+            E20RTools\DBG::log("Exit during autosave");
             return;
         }
 
         if ( wp_is_post_revision( $post_id ) !== false ) {
-            $this->dbg_log("post_save_action() - Not saving revisions ({$post_id}) to sequence");
+            E20RTools\DBG::log("post_save_action() - Not saving revisions ({$post_id}) to sequence");
             return;
         }
 
         if ( ! in_array( $post->post_type, $this->managed_types ) ) {
-            $this->dbg_log("post_save_action() - Not saving delay info for {$post->post_type}");
+            E20RTools\DBG::log("post_save_action() - Not saving delay info for {$post->post_type}");
             return;
         }
 
@@ -4552,7 +3454,7 @@ class Controller
             return;
         }
 
-        $this->dbg_log("post_save_action() - Sequences & Delays have been configured for page save. " . $this->who_called_me());
+        E20RTools\DBG::log("post_save_action() - Sequences & Delays have been configured for page save. " . $this->who_called_me());
 
         if ( isset( $_POST['e20r_seq-sequences'] ) ) {
             $seq_ids = is_array( $_POST['e20r_seq-sequences'] ) ? array_map( 'esc_attr', $_POST['e20r_seq-sequences']) : null;
@@ -4569,10 +3471,10 @@ class Controller
             $delays = array();
         }
 
-        if ( empty( $delays ) ) {
+        if ( empty( $delays ) && (!in_array(0, $delays)) ) {
 
             $this->set_error_msg( __( "Error: No delay value(s) received", "e20rsequence") );
-            $this->dbg_log( "post_save_action() - Error: delay not specified! ", E20R_DEBUG_SEQ_CRITICAL );
+            E20RTools\DBG::log( "post_save_action() - Error: delay not specified! ", E20R_DEBUG_SEQ_CRITICAL );
             return;
         }
 
@@ -4581,11 +3483,11 @@ class Controller
         // $already_in = $this->get_sequences_for_post( $post_id );
         // $already_in = get_post_meta( $post_id, "_post_sequences", true );
 
-        $this->dbg_log( "post_save_action() - Saved received variable values...");
+        E20RTools\DBG::log( "post_save_action() - Saved received variable values...");
 
         foreach ($seq_ids as $key => $id ) {
 
-            $this->dbg_log("post_save_action() - Processing for sequence {$id}");
+            E20RTools\DBG::log("post_save_action() - Processing for sequence {$id}");
 
             if ( $id == 0 ) {
                 continue;
@@ -4594,7 +3496,7 @@ class Controller
             if ( $id != $this->sequence_id ) {
 
                 if ( !$this->get_options( $id ) ) {
-                    $this->dbg_log("post_save_action() - Unable to load settings for sequence with ID: {$id}");
+                    E20RTools\DBG::log("post_save_action() - Unable to load settings for sequence with ID: {$id}");
                     return;
                 }
             }
@@ -4604,23 +3506,22 @@ class Controller
             if (! $user_can ) {
 
                 $this->set_error_msg( __( 'Incorrect privileges for this operation', "e20rsequence" ) );
-                $this->dbg_log("post_save_action() - User lacks privileges to edit", E20R_DEBUG_SEQ_WARNING);
+                E20RTools\DBG::log("post_save_action() - User lacks privileges to edit", E20R_DEBUG_SEQ_WARNING);
                 return;
             }
 
             if ( $id == 0 ) {
 
-                $this->dbg_log("post_save_action() - No specified sequence or it's set to 'nothing'");
-
+                E20RTools\DBG::log("post_save_action() - No specified sequence or it's set to 'nothing'");
             }
-            elseif ( empty( $delays[$key] ) ) {
+            elseif ( is_null($delays[$key]) ||  (empty( $delays[$key] ) && !is_numeric($delays[$key]) ) ) {
 
-                $this->dbg_log("post_save_action() - Not a valid delay value...: " . $delays[$key], E20R_DEBUG_SEQ_CRITICAL);
+                E20RTools\DBG::log("post_save_action() - Not a valid delay value...: " . $delays[$key], E20R_DEBUG_SEQ_CRITICAL);
                 $this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", "e20rsequence"), get_the_title( $id ) ) );
             }
             else {
 
-                $this->dbg_log( "post_save_action() - Processing post {$post_id} for sequence {$this->sequence_id} with delay {$delays[$key]}" );
+                E20RTools\DBG::log( "post_save_action() - Processing post {$post_id} for sequence {$this->sequence_id} with delay {$delays[$key]}" );
                 $this->add_post( $post_id, $delays[ $key ] );
             }
         }
@@ -4640,7 +3541,7 @@ class Controller
         if ( ( user_can( $user_id, 'publish_pages' ) ) ||
             ( user_can( $user_id, 'publish_posts' ) ) ) {
 
-            $this->dbg_log("user_can_edit() - User with ID {$user_id} has permission to update/edit this sequence");
+            E20RTools\DBG::log("user_can_edit() - User with ID {$user_id} has permission to update/edit this sequence");
             return true;
         }
         else {
@@ -4659,11 +3560,11 @@ class Controller
      */
     public function add_post( $post_id, $delay )
     {
-        $this->dbg_log("add_post() for sequence {$this->sequence_id}: " . $this->who_called_me() );
+        E20RTools\DBG::log("add_post() for sequence {$this->sequence_id}: " . $this->who_called_me() );
 
 /*        if (! $this->is_valid_delay($delay) )
         {
-            $this->dbg_log('add_post(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
+            E20RTools\DBG::log('add_post(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
             $this->set_error_msg( sprintf(__('Invalid delay value - %s', "e20rsequence"), ( empty($delay) ? 'blank' : $delay ) ) );
             return false;
         }
@@ -4671,23 +3572,23 @@ class Controller
         if(empty($post_id) || !isset($delay))
         {
             $this->set_error_msg( __("Please enter a value for post and delay", "e20rsequence") );
-            $this->dbg_log('add_post(): No Post ID or delay specified');
+            E20RTools\DBG::log('add_post(): No Post ID or delay specified');
             return false;
         }
 
-        $this->dbg_log('add_post(): Post ID: ' . $post_id . ' and delay: ' . $delay);
+        E20RTools\DBG::log('add_post(): Post ID: ' . $post_id . ' and delay: ' . $delay);
 
         if ( $post = get_post($post_id) === null ) {
 
             $this->set_error_msg( __("A post with that id does not exist", "e20rsequence") );
-            $this->dbg_log('add_post(): No Post with ' . $post_id . ' found');
+            E20RTools\DBG::log('add_post(): No Post with ' . $post_id . ' found');
 
             return false;
         }
 
 /*        if ( $this->is_present( $post_id, $delay ) ) {
 
-            $this->dbg_log("add_post() - Post {$post_id} with delay {$delay} is already present in sequence {$this->sequence_id}");
+            E20RTools\DBG::log("add_post() - Post {$post_id} with delay {$delay} is already present in sequence {$this->sequence_id}");
             return true;
         }
 */
@@ -4695,22 +3596,22 @@ class Controller
 
         if (current_time('timestamp') >= $this->expires && !empty($this->posts)) {
 
-            $this->dbg_log("add_post(): Refreshing post list for sequence #{$this->sequence_id}");
+            E20RTools\DBG::log("add_post(): Refreshing post list for sequence #{$this->sequence_id}");
             $this->load_sequence_post();
         }
 
         // Add this post to the current sequence.
 
-        $this->dbg_log( "add_post() - Adding post {$post_id} with delay {$delay} to sequence {$this->sequence_id}");
+        E20RTools\DBG::log( "add_post() - Adding post {$post_id} with delay {$delay} to sequence {$this->sequence_id}");
         if (! $this->add_post_to_sequence( $this->sequence_id, $post_id, $delay) ) {
 
-            $this->dbg_log("add_post() - ERROR: Unable to add post {$post_id} to sequence {$this->sequence_id} with delay {$delay}", E20R_DEBUG_SEQ_WARNING);
+            E20RTools\DBG::log("add_post() - ERROR: Unable to add post {$post_id} to sequence {$this->sequence_id} with delay {$delay}", E20R_DEBUG_SEQ_WARNING);
             $this->set_error_msg(sprintf(__("Error adding %s to %s", "e20rsequence"), get_the_title($post_id), get_the_title($this->sequence_id)));
             return false;
         }
 
         //sort
-        $this->dbg_log('add_post(): Sorting the sequence posts by delay value(s)');
+        E20RTools\DBG::log('add_post(): Sorting the sequence posts by delay value(s)');
         usort( $this->posts, array( $this, 'sort_posts_by_delay' ) );
 
         // Save the sequence list for this post id
@@ -4718,7 +3619,7 @@ class Controller
         /* $this->set_sequences_for_post( $post_id, $post_in_sequences ); */
         // update_post_meta( $post_id, "_post_sequences", $post_in_sequences );
 
-        $this->dbg_log('add_post(): Post/Page list updated and saved');
+        E20RTools\DBG::log('add_post(): Post/Page list updated and saved');
 
         return true;
     }
@@ -4733,23 +3634,23 @@ class Controller
      */
     private function is_valid_delay( $delay )
     {
-        $this->dbg_log( "is_valid_delay(): Delay value is: {$delay} for setting: {$this->options->delayType}" );
+        E20RTools\DBG::log( "is_valid_delay(): Delay value is: {$delay} for setting: {$this->options->delayType}" );
 
         switch ($this->options->delayType)
         {
             case 'byDays':
-                $this->dbg_log('is_valid_delay(): Delay configured as "days since membership start"');
+                E20RTools\DBG::log('is_valid_delay(): Delay configured as "days since membership start"');
                 return ( is_numeric( $delay ) ? true : false);
                 break;
 
             case 'byDate':
-                $this->dbg_log('is_valid_delay(): Delay configured as a date value');
+                E20RTools\DBG::log('is_valid_delay(): Delay configured as a date value');
                 return ( apply_filters( 'e20r-sequence-check-valid-date', $this->is_valid_date( $delay ) ) ? true : false);
                 break;
 
             default:
-                $this->dbg_log('is_valid_delay(): NOT a valid delay value, based on config');
-                $this->dbg_log("is_valid_delay() - options Array: " . print_r( $this->options, true ) );
+                E20RTools\DBG::log('is_valid_delay(): NOT a valid delay value, based on config');
+                E20RTools\DBG::log("is_valid_delay() - options Array: " . print_r( $this->options, true ) );
                 return false;
         }
     }
@@ -4769,7 +3670,7 @@ class Controller
         // Check that the function was called correctly. If not, just return
         if ( empty( $post_id ) ) {
 
-            $this->dbg_log('save_post_meta(): No post ID supplied...', E20R_DEBUG_SEQ_WARNING);
+            E20RTools\DBG::log('save_post_meta(): No post ID supplied...', E20R_DEBUG_SEQ_WARNING);
             return false;
         }
 
@@ -4780,7 +3681,7 @@ class Controller
             return $post_id;
         }
 
-        if ( ! isset( $post->post_type) || ( $post->post_type != 'pmpro_sequence' ) ) {
+        if ( ! isset( $post->post_type) || ( 'pmpro_sequence' != $post->post_type ) ) {
             return $post_id;
         }
 
@@ -4792,13 +3693,13 @@ class Controller
             return;
         }
 
-        $this->dbg_log('save_post_meta(): Saving settings for sequence ' . $post_id);
-        // $this->dbg_log('From Web: ' . print_r($_REQUEST, true));
+        E20RTools\DBG::log('save_post_meta(): Saving settings for sequence ' . $post_id);
+        // E20RTools\DBG::log('From Web: ' . print_r($_REQUEST, true));
 
         // OK, we're authenticated: we need to find and save the data
         if ( isset($_POST['e20r_sequence_settings_noncename']) ) {
 
-            $this->dbg_log( 'save_post_meta() - Have to load new instance of Sequence class' );
+            E20RTools\DBG::log( 'save_post_meta() - Have to load new instance of Sequence class' );
 
             if ( ! $this->options ) {
                 $this->options = $this->default_options();
@@ -4806,7 +3707,7 @@ class Controller
 
             if ( ($retval = $this->save_settings( $post_id, $this )) === true ) {
 
-                $this->dbg_log( "save_post_meta(): Saved metadata for sequence #{$post_id} and clearing the cache");
+                E20RTools\DBG::log( "save_post_meta(): Saved metadata for sequence #{$post_id} and clearing the cache");
                 $this->delete_cache($post_id);
 
                 return true;
@@ -4819,6 +3720,48 @@ class Controller
         return false; // Default
     }
 
+	public function sanitize( $field ) {
+
+        if ( ! is_numeric( $field ) ) {
+
+            if ( is_array( $field ) ) {
+
+                foreach( $field as $key => $val ) {
+                    $field[$key] = $this->sanitize( $val );
+                }
+            }
+
+            if ( is_object( $field ) ) {
+
+                foreach( $field as $key => $val ) {
+                    $field->{$key} = $this->sanitize( $val );
+                }
+            }
+
+            if ( (! is_array( $field ) ) && ctype_alpha( $field ) ||
+                 ( (! is_array( $field ) ) && strtotime( $field ) ) ||
+                 ( (! is_array( $field ) ) && is_string( $field ) ) ) {
+
+                $field = sanitize_text_field( $field ) ;
+            }
+
+        }
+        else {
+
+            if ( is_float( $field + 1 ) ) {
+
+                $field = sanitize_text_field( $field );
+            }
+
+            if ( is_int( $field + 1 ) ) {
+
+                $field = intval( $field );
+            }
+        }
+
+        return $field;
+    }
+
     /**
      * Save the settings for a sequence ID as post_meta for that Sequence CPT
      *
@@ -4827,14 +3770,13 @@ class Controller
      */
     public function save_settings( $sequence_id )
     {
-
         $settings = $this->options;
-        $this->dbg_log('save_settings() - Saving settings for Sequence w/ID: ' . $sequence_id);
-        // $this->dbg_log($_POST);
+        E20RTools\DBG::log('Saving settings for Sequence w/ID: ' . $sequence_id);
+        // E20RTools\DBG::log($_POST);
 
         // Check that the function was called correctly. If not, just return
         if(empty($sequence_id)) {
-            $this->dbg_log('save_settings(): No sequence ID supplied...');
+            E20RTools\DBG::log('save_settings(): No sequence ID supplied...');
             $this->set_error_msg( __('No sequence provided', "e20rsequence"));
             return false;
         }
@@ -4846,85 +3788,127 @@ class Controller
         }
 
         // Verify that we're allowed to update the sequence data
+        // TODO: Use "has access" or something similar!
         if ( !current_user_can( 'edit_post', $sequence_id ) ) {
-            $this->dbg_log('save_settings(): User is not allowed to edit this post type', E20R_DEBUG_SEQ_CRITICAL);
+            E20RTools\DBG::log('save_settings(): User is not allowed to edit this post type', E20R_DEBUG_SEQ_CRITICAL);
             $this->set_error_msg( __('User is not allowed to change settings', "e20rsequence"));
             return false;
         }
 
-        if ( isset( $_POST['hidden_e20r_seq_wipesequence'] ) &&  ( 1 == intval( $_POST['hidden_e20r_seq_wipesequence'] ) ) ) {
+        if ( isset( $_POST['hidden-e20r-sequence_wipesequence'] ) &&  ( 1 == intval( $_POST['hidden-e20r-sequence_wipesequence'] ) ) ) {
 
-            $this->dbg_log("save_settings() - Admin requested change of delay type configuration. Resetting the sequence!", E20R_DEBUG_SEQ_WARNING );
+            E20RTools\DBG::log("Admin requested change of delay type configuration. Resetting the sequence!", E20R_DEBUG_SEQ_WARNING );
 
             if ( $sequence_id == $this->sequence_id ) {
 
                 if ( !$this->delete_post_meta_for_sequence( $sequence_id ) ) {
 
-                    $this->dbg_log( 'save_settings() - Unable to delete the posts in sequence # ' . $sequence_id, E20R_DEBUG_SEQ_CRITICAL );
+                    E20RTools\DBG::log( 'Unable to delete the posts in sequence # ' . $sequence_id, E20R_DEBUG_SEQ_CRITICAL );
                     $this->set_error_msg( __('Unable to wipe existing posts', "e20rsequence") );
                 }
                 else {
-                    $this->dbg_log( 'save_settings() - Reloading sequence info');
+                    E20RTools\DBG::log( 'Reloading sequence info');
                     $this->init( $sequence_id );
                 }
             }
             else {
-                $this->dbg_log("save_settings() - the specified sequence id and the current sequence id were different!", E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log("the specified sequence id and the current sequence id were different!", E20R_DEBUG_SEQ_WARNING );
             }
         }
 
-        if (!isset($this->options->hidden)) {
-            $this->options = $this->default_options();
+        $new_options = $this->get_options();
+
+        if ( false === $new_options->loaded )  {
+
+            E20RTools\DBG::log("No settings loaded/set. Using default settings.");
         }
 
-        if ( isset($_POST['hidden_e20r_seq_allowRepeatPosts']) )
+        $form_checkboxes = array(
+            'hideFuture', 'allowRepeatPosts', 'previewOffset',
+            'lengthVisible', 'sendNotice',
+        );
+
+		foreach( $this->options as $field => $value )
+		{
+            if ( $field == 'loaded' ) {
+                continue;
+            }
+
+			$tmp = isset( $_POST["e20r-sequence_{$field}"] ) ? $this->sanitize( $_POST["e20r-sequence_{$field}"] ) : null;
+
+			E20RTools\DBG::log("Being saved: {$field} => {$tmp}");
+
+			if ( empty( $tmp ) ) {
+				$tmp = $this->options->{$field};
+			}
+
+			$this->options->{$field} = $tmp;
+
+            if ( 'noticeTime' == $field ) {
+                $this->options->noticeTimestamp = $this->calculate_timestamp($this->options->{$field});
+            }
+
+            if ( in_array($field, $form_checkboxes ) ) {
+                $this->options->{$field} = ( !isset($_POST["e20r-sequence_{$field}"]) ? false : true);
+            }
+		}
+
+        E20RTools\DBG::log("Trying to save... : " . print_r($this->options, true ));
+
+		if ( $this->options->sendNotice == 0 ) {
+
+                Tools\Cron::stop_sending_user_notices( $this->sequence_id );
+        }
+
+/*
+        if ( isset($_POST['hidden-e20r-sequence_allowRepeatPosts']) )
         {
             $this->options->allowRepeatPosts = intval( $_POST['hidden_e20r_seq_allowRepeatPosts'] ) == 0 ? false : true;
-            $this->dbg_log('save_settings(): POST value for settings->allowRepeatPost: ' . intval($_POST['hidden_e20r_seq_allowRepeatPosts']) );
+            E20RTools\DBG::log('save_settings(): POST value for settings->allowRepeatPost: ' . intval($_POST['hidden_e20r_seq_allowRepeatPosts']) );
         }
         elseif (empty($this->options->allowRepeatPosts))
             $this->options->allowRepeatPosts = false;
 
-        if ( isset($_POST['e20r_sequence_hidden']) )
+        if ( isset($_POST['hidden_e20r_seq_future']) )
         {
-            $this->options->hidden = intval( $_POST['e20r_sequence_hidden'] ) == 0 ? false : true;
-            $this->dbg_log('save_settings(): POST value for settings->hidden: ' . intval($_POST['e20r_sequence_hidden']) );
+            $this->options->hideFuture = intval( $_POST['hidden_e20r_seq_future'] ) == 0 ? false : true;
+            E20RTools\DBG::log('save_settings(): POST value for settings->hideFuture: ' . intval($_POST['hidden_e20r_seq_future']) );
         }
-        elseif (empty($this->options->hidden))
-            $this->options->hidden = false;
+        elseif (empty($this->options->hideFuture))
+            $this->options->hideFuture = false;
 
-        // Checkbox - not included during post/save if unchecked
-        if ( isset($_POST['e20r_seq_future']) )
+       // Checkbox - not included during post/save if unchecked
+        if ( isset($_POST['hidden_e20r_seq_future']) )
         {
-            $this->options->hidden = intval($_POST['e20r_seq_future']);
-            $this->dbg_log('save_settings(): POST value for settings->hidden: ' . $_POST['e20r_seq_future'] );
+            $this->options->hideFuture = intval($_POST['e20r_seq_future']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->hideFuture: ' . $_POST['hidden_e20r_seq_future'] );
         }
-        elseif ( empty($this->options->hidden) )
-            $this->options->hidden = 0;
+        elseif ( empty($this->options->hideFuture) )
+            $this->options->hideFuture = 0;
 
         // Checkbox - not included during post/save if unchecked
         if (isset($_POST['hidden_e20r_seq_lengthvisible']) )
         {
             $this->options->lengthVisible = intval($_POST['hidden_e20r_seq_lengthvisible']);
-            $this->dbg_log('save_settings(): POST value for settings->lengthVisible: ' . $_POST['hidden_e20r_seq_lengthvisible']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->lengthVisible: ' . $_POST['hidden_e20r_seq_lengthvisible']);
         }
         elseif (empty($this->options->lengthVisible)) {
-            $this->dbg_log('Setting lengthVisible to default value (checked)');
+            E20RTools\DBG::log('Setting lengthVisible to default value (checked)');
             $this->options->lengthVisible = 1;
         }
 
         if ( isset($_POST['hidden_e20r_seq_sortorder']) )
         {
             $this->options->sortOrder = intval($_POST['hidden_e20r_seq_sortorder']);
-            $this->dbg_log('save_settings(): POST value for settings->sortOrder: ' . $_POST['hidden_e20r_seq_sortorder'] );
+            E20RTools\DBG::log('save_settings(): POST value for settings->sortOrder: ' . $_POST['hidden_e20r_seq_sortorder'] );
         }
         elseif (empty($this->options->sortOrder))
             $this->options->sortOrder = SORT_ASC;
 
         if ( isset($_POST['hidden_e20r_seq_delaytype']) )
         {
-            $this->options->delayType = esc_attr($_POST['hidden_e20r_seq_delaytype']);
-            $this->dbg_log('save_settings(): POST value for settings->delayType: ' . esc_attr($_POST['hidden_e20r_seq_delaytype']) );
+            $this->options->delayType = sanitize_text_field($_POST['hidden_e20r_seq_delaytype']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->delayType: ' . sanitize_text_field($_POST['hidden_e20r_seq_delaytype']) );
         }
         elseif (empty($this->options->delayType))
             $this->options->delayType = 'byDays';
@@ -4932,24 +3916,24 @@ class Controller
         // options->showDelayAs
         if ( isset($_POST['hidden_e20r_seq_showdelayas']) )
         {
-            $this->options->showDelayAs = esc_attr($_POST['hidden_e20r_seq_showdelayas']);
-            $this->dbg_log('save_settings(): POST value for settings->showDelayAs: ' . esc_attr($_POST['hidden_e20r_seq_showdelayas']) );
+            $this->options->showDelayAs = sanitize_text_field($_POST['hidden_e20r_seq_showdelayas']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->showDelayAs: ' . sanitize_text_field($_POST['hidden_e20r_seq_showdelayas']) );
         }
         elseif (empty($this->options->showDelayAs))
             $this->options->delayType = E20R_SEQ_AS_DAYNO;
 
         if ( isset($_POST['hidden_e20r_seq_offset']) )
         {
-            $this->options->previewOffset = esc_attr($_POST['hidden_e20r_seq_offset']);
-            $this->dbg_log('save_settings(): POST value for settings->previewOffset: ' . esc_attr($_POST['hidden_e20r_seq_offset']) );
+            $this->options->previewOffset = sanitize_text_field($_POST['hidden_e20r_seq_offset']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->previewOffset: ' . sanitize_text_field($_POST['hidden_e20r_seq_offset']) );
         }
         elseif (empty($this->options->previewOffset))
             $this->options->previewOffset = 0;
 
         if ( isset($_POST['hidden_e20r_seq_startwhen']) )
         {
-            $this->options->startWhen = esc_attr($_POST['hidden_e20r_seq_startwhen']);
-            $this->dbg_log('save_settings(): POST value for settings->startWhen: ' . esc_attr($_POST['hidden_e20r_seq_startwhen']) );
+            $this->options->startWhen = sanitize_text_field($_POST['hidden_e20r_seq_startwhen']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->startWhen: ' . sanitize_text_field($_POST['hidden_e20r_seq_startwhen']) );
         }
         elseif (empty($this->options->startWhen))
             $this->options->startWhen = 0;
@@ -4964,7 +3948,7 @@ class Controller
                 Tools\Cron::stop_sending_user_notices( $this->sequence_id );
             }
 
-            $this->dbg_log('save_settings(): POST value for settings->sendNotice: ' . intval($_POST['e20r_sequence_sendnotice']) );
+            E20RTools\DBG::log('save_settings(): POST value for settings->sendNotice: ' . intval($_POST['e20r_sequence_sendnotice']) );
         }
         elseif (empty($this->options->sendNotice)) {
             $this->options->sendNotice = 1;
@@ -4972,92 +3956,109 @@ class Controller
 
         if ( isset($_POST['hidden_e20r_seq_sendas']) )
         {
-            $this->options->noticeSendAs = esc_attr($_POST['hidden_e20r_seq_sendas']);
-            $this->dbg_log('save_settings(): POST value for settings->noticeSendAs: ' . esc_attr($_POST['hidden_e20r_seq_sendas']) );
+            $this->options->noticeSendAs = sanitize_text_field($_POST['hidden_e20r_seq_sendas']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->noticeSendAs: ' . sanitize_text_field($_POST['hidden_e20r_seq_sendas']) );
         }
         else
             $this->options->noticeSendAs = E20R_SEQ_SEND_AS_SINGLE;
 
         if ( isset($_POST['hidden_e20r_seq_noticetemplate']) )
         {
-            $this->options->noticeTemplate = esc_attr($_POST['hidden_e20r_seq_noticetemplate']);
-            $this->dbg_log('save_settings(): POST value for settings->noticeTemplate: ' . esc_attr($_POST['hidden_e20r_seq_noticetemplate']) );
+            $this->options->noticeTemplate = sanitize_text_field($_POST['hidden_e20r_seq_noticetemplate']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->noticeTemplate: ' . sanitize_text_field($_POST['hidden_e20r_seq_noticetemplate']) );
         }
         else
             $this->options->noticeTemplate = 'new_content.html';
 
         if ( isset($_POST['hidden_e20r_seq_noticetime']) )
         {
-            $this->options->noticeTime = esc_attr($_POST['hidden_e20r_seq_noticetime']);
-            $this->dbg_log('save_settings() - noticeTime in settings: ' . $this->options->noticeTime);
+            $this->options->noticeTime = sanitize_text_field($_POST['hidden_e20r_seq_noticetime']);
+            E20RTools\DBG::log('noticeTime in settings: ' . $this->options->noticeTime);
 
-            /* Calculate the timestamp value for the noticeTime specified (noticeTime is in current timezone) */
+            // Calculate the timestamp value for the noticeTime specified (noticeTime is in current timezone)
             $this->options->noticeTimestamp = $this->calculate_timestamp($settings->noticeTime);
 
-            $this->dbg_log('save_settings(): POST value for settings->noticeTime: ' . esc_attr($_POST['hidden_e20r_seq_noticetime']) );
+            E20RTools\DBG::log('save_settings(): POST value for settings->noticeTime: ' . sanitize_text_field($_POST['hidden_e20r_seq_noticetime']) );
+            E20RTools\DBG::log('save_settings(): Which translates to a timestamp value of: ' . $this->options->noticeTimestamp );
         }
         else
             $this->options->noticeTime = '00:00';
 
         if ( isset($_POST['hidden_e20r_seq_excerpt']) )
         {
-            $this->options->excerpt_intro = esc_attr($_POST['hidden_e20r_seq_excerpt']);
-            $this->dbg_log('save_settings(): POST value for settings->excerpt_intro: ' . esc_attr($_POST['hidden_e20r_seq_excerpt']) );
+            $this->options->excerpt_intro = sanitize_text_field($_POST['hidden_e20r_seq_excerpt']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->excerpt_intro: ' . sanitize_text_field($_POST['hidden_e20r_seq_excerpt']) );
         }
         else
             $this->options->excerpt_intro = 'A summary of the post follows below:';
 
         if ( isset($_POST['hidden_e20r_seq_fromname']) )
         {
-            $this->options->fromname = esc_attr($_POST['hidden_e20r_seq_fromname']);
-            $this->dbg_log('save_settings(): POST value for settings->fromname: ' . esc_attr($_POST['hidden_e20r_seq_fromname']) );
+            $this->options->fromname = sanitize_text_field($_POST['hidden_e20r_seq_fromname']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->fromname: ' . sanitize_text_field($_POST['hidden_e20r_seq_fromname']) );
         }
         else
-            $this->options->fromname = e20r_getOption('from_name');
+            $this->options->fromname = $this->get_membership_setting( 'from_name' );
 
         if ( isset($_POST['hidden_e20r_seq_dateformat']) )
         {
-            $this->options->dateformat = esc_attr($_POST['hidden_e20r_seq_dateformat']);
-            $this->dbg_log('save_settings(): POST value for settings->dateformat: ' . esc_attr($_POST['hidden_e20r_seq_dateformat']) );
+            $this->options->dateformat = sanitize_text_field($_POST['hidden_e20r_seq_dateformat']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->dateformat: ' . sanitize_text_field($_POST['hidden_e20r_seq_dateformat']) );
         }
         else
             $this->options->dateformat = __('m-d-Y', "e20rsequence"); // Default is MM-DD-YYYY (if translation supports it)
 
         if ( isset($_POST['hidden_e20r_seq_replyto']) )
         {
-            $this->options->replyto = esc_attr($_POST['hidden_e20r_seq_replyto']);
-            $this->dbg_log('save_settings(): POST value for settings->replyto: ' . esc_attr($_POST['hidden_e20r_seq_replyto']) );
+            $this->options->replyto = sanitize_text_field($_POST['hidden_e20r_seq_replyto']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->replyto: ' . sanitize_text_field($_POST['hidden_e20r_seq_replyto']) );
         }
         else
-            $this->options->replyto = e20r_getOption('from_email');
+            $this->options->replyto = $this->get_membership_setting('from_email');
 
         if ( isset($_POST['hidden_e20r_seq_subject']) )
         {
-            $this->options->subject = esc_attr($_POST['hidden_e20r_seq_subject']);
-            $this->dbg_log('save_settings(): POST value for settings->subject: ' . esc_attr($_POST['hidden_e20r_seq_subject']) );
+            $this->options->subject = sanitize_text_field($_POST['hidden_e20r_seq_subject']);
+            E20RTools\DBG::log('save_settings(): POST value for settings->subject: ' . sanitize_text_field($_POST['hidden_e20r_seq_subject']) );
         }
         else
             $this->options->subject = __('New Content ', "e20rsequence");
 
-        // $sequence->options = $settings;
+*/
+        // Schedule cron jobs if the user wants us to send notices.
         if ( $this->options->sendNotice == 1 ) {
 
-            $this->dbg_log( 'save_settings(): Updating the cron job for sequence ' . $this->sequence_id );
+            E20RTools\DBG::log( 'Updating the cron job for sequence ' . $this->sequence_id );
 
             if (!Tools\Cron::update_user_notice_cron())
             {
-                $this->dbg_log('save_settings() - Error configuring cron() system for sequence ' . $this->sequence_id, E20R_DEBUG_SEQ_CRITICAL);
+                E20RTools\DBG::log('Error configuring cron() system for sequence ' . $this->sequence_id, E20R_DEBUG_SEQ_CRITICAL);
             }
         }
 
-        $this->dbg_log("save_settings() - Flush the cache for {$this->sequence_id}");
+        E20RTools\DBG::log("Flush the cache for {$this->sequence_id}");
         $this->delete_cache($this->sequence_id);
 
         // Save settings to WPDB
         return $this->save_sequence_meta($this->options, $sequence_id);
     }
 
-    private function delete_post_meta_for_sequence( $sequence_id ) {
+    /**
+      * Delete all post meta for sequence (can be used by delete_post action).
+      * @param null $sequence_id - Id of sequence to delete metadata for (optional)
+      * @return bool - True if successful, false on error
+      */
+    public function delete_post_meta_for_sequence( $sequence_id = null) {
+
+        if (is_null( $sequence_id))
+        {
+            global $post;
+
+            if (isset($post->ID) && !empty($post->ID) && 'pmpro_sequence' == $post->post_type )
+            {
+                $sequence_id = $post->ID;
+            }
+        }
 
         $retval = false;
 
@@ -5073,12 +4074,24 @@ class Controller
 
             if ( $retval != true ) {
 
-                $this->dbg_log("delete_post_meta_for_sequence() - ERROR deleting sequence metadata for post {$post->id}: ", E20R_DEBUG_SEQ_CRITICAL );
+                E20RTools\DBG::log("ERROR deleting sequence metadata for post {$post->id}: ", E20R_DEBUG_SEQ_CRITICAL );
             }
         }
 
 
         return $retval;
+    }
+
+    public function get_membership_setting( $option_name )
+    {
+        $val = '';
+
+        if ( function_exists('pmpro_getOption')) {
+
+            $val = pmpro_getOption($option_name);
+        }
+
+        return apply_filters( 'e20r-sequence-get-membership-setting', $val, $option_name);
     }
 
     /**
@@ -5098,42 +4111,71 @@ class Controller
 
         // Use local time (not UTC) for 'current time' at server location
         // This is what Wordpress apparently uses (at least in v3.9) for wp-cron.
-        $timestamp = current_time('timestamp');
+        $timezone = get_option('timezone_string');
+
+        $saved_tz = ini_get('date.timezone');
+        E20RTools\DBG::log("PHP Configured timezone: {$saved_tz} vs wordpress: {$timezone}");
+
+        // Verify the timezone to use (the Wordpress timezone)
+        if ($timezone != $saved_tz) {
+
+            if (!ini_set("date.timezone", $timezone)) {
+                E20RTools\DBG::log("WARNING: Unable to set the timezone value to: {$timezone}!");
+            }
+
+            $saved_tz = ini_get('date.timezone');
+        }
+
+        $tz =  get_option('gmt_offset');
+
+        // Now in the Wordpress local timezone
+        $now = current_time('timestamp', true);
+        $time = "today {$timeString} {$saved_tz}";
+
+        E20RTools\DBG::log("Using time string for strtotime(): {$time}");
+        $req = strtotime($time);
+
+        E20RTools\DBG::log("Current time: {$now} when using UTC vs {$req} in {$saved_tz}");
 
         try {
+
             /* current time & date */
-            $schedHour = date_i18n( 'H', strtotime($timeString));
-            $schedMin = date_i18n('i', strtotime($timeString));
+            $schedHour = date_i18n( 'H', $req );
+            $nowHour = date_i18n('H', $now);
 
-            $nowHour = date_i18n('H', $timestamp);
-            $nowMin = date_i18n('i', $timestamp);
+            E20RTools\DBG::log("calculate_timestamp() - Timestring: {$timeString}, scheduled Hour: {$schedHour} and current Hour: {$nowHour}" );
 
-            $this->dbg_log('calculate_timestamp() - Timestring: ' . $timeString . ', scheduled Hour: ' . $schedHour . ' and current Hour: ' .$nowHour );
+            $timestamp = strtotime("today {$timeString} {$saved_tz}");
 
-            /*
-             *  Using these to decide whether or not to assume 'today' or 'tomorrow' for initial schedule for
-             * this cron() job.
-             *
-             * If the admin attempts to schedule a job that's less than 30 minutes away, we'll schedule it for tomorrow.
-             */
+            E20RTools\DBG::log("calculate_timestamp() - {$timeString} will be ({$timestamp}) vs. " . current_time('timestamp', true));
+
+            if ($timestamp < (current_time('timestamp', true) + 15*60)) {
+                $timestamp = strtotime("+1 day", $timestamp);
+            }
+
+
+
+/*
             $hourDiff = $schedHour - $nowHour;
             $hourDiff += ( ( ($hourDiff == 0) && (($schedMin - $nowMin) <= 0 )) ? 0 : 1);
 
             if ( $hourDiff >= 1 ) {
-                $this->dbg_log('calculate_timestamp() - Assuming current day');
+                E20RTools\DBG::log('calculate_timestamp() - Assuming current day');
                 $when = ''; // Today
             }
             else {
-                $this->dbg_log('calculate_timestamp() - Assuming tomorrow');
+                E20RTools\DBG::log('calculate_timestamp() - Assuming tomorrow');
                 $when = 'tomorrow ';
             }
-            /* Create the string we'll use to generate a timestamp for cron() */
+
+            // Create the string we'll use to generate a timestamp for cron()
             $timeInput = $when . $timeString . ' ' . get_option('timezone_string');
             $timestamp = strtotime($timeInput);
+*/
         }
         catch (Exception $e)
         {
-            $this->dbg_log('calculate_timestamp() -- Error calculating timestamp: : ' . $e->getMessage());
+            E20RTools\DBG::log('calculate_timestamp() -- Error calculating timestamp: : ' . $e->getMessage());
         }
 
         return $timestamp;
@@ -5141,7 +4183,7 @@ class Controller
 
     public function remove_post_alert_callback() {
 
-        $this->dbg_log("remove_post_alert_callback() - Attempting to remove the alerts for a post");
+        E20RTools\DBG::log("remove_post_alert_callback() - Attempting to remove the alerts for a post");
         check_ajax_referer('e20r-sequence-post-meta', 'e20r_sequence_postmeta_nonce');
 
         // Fetch the ID of the sequence to add the post to
@@ -5162,14 +4204,14 @@ class Controller
             }
         }
 
-        $this->dbg_log( "remove_post_alert_callback() - We received sequence ID: {$sequence_id} and post ID: {$post_id}");
+        E20RTools\DBG::log( "remove_post_alert_callback() - We received sequence ID: {$sequence_id} and post ID: {$post_id}");
 
         if ( !is_null( $sequence_id ) && !is_null($post_id) && is_admin() ) {
 
-            $this->dbg_log("remove_post_alert_callback() - Loading settings for sequence {$sequence_id} ");
+            E20RTools\DBG::log("remove_post_alert_callback() - Loading settings for sequence {$sequence_id} ");
             $this->get_options( $sequence_id );
 
-            $this->dbg_log("remove_post_alert_callback() - Requesting removal of alert notices for post {$post_id} with delay {$delay} in sequence {$sequence_id} ");
+            E20RTools\DBG::log("remove_post_alert_callback() - Requesting removal of alert notices for post {$post_id} with delay {$delay} in sequence {$sequence_id} ");
             $result = $this->remove_post_notified_flag( $post_id, $delay );
 
             if ( is_array( $result ) ) {
@@ -5206,7 +4248,7 @@ class Controller
             }
             else {
 
-                $this->dbg_log( 'No sequence number specified. Ignoring settings for user', E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log( 'No sequence number specified. Ignoring settings for user', E20R_DEBUG_SEQ_WARNING );
 
                 wp_send_json_error( __('Unable to save your settings', "e20rsequence") );
             }
@@ -5214,15 +4256,15 @@ class Controller
             if ( isset($_POST['hidden_e20r_seq_uid'])) {
 
                 $user_id = intval($_POST['hidden_e20r_seq_uid']);
-                $this->dbg_log('Updating user settings for user #: ' . $user_id);
+                E20RTools\DBG::log('Updating user settings for user #: ' . $user_id);
 
                 // Grab the metadata from the database
-                // $usrSettings = get_user_meta($user_id, $wpdb->prefix . 'pmpro_sequence_notices', true);
+                // $usrSettings = get_user_meta($user_id, $wpdb->prefix . 'pmpro_sequence' . '_notices', true);
                 $usrSettings = $this->load_user_notice_settings( $user_id, $seqId );
 
             }
             else {
-                $this->dbg_log( 'No user ID specified. Ignoring settings!', E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log( 'No user ID specified. Ignoring settings!', E20R_DEBUG_SEQ_WARNING );
 
                 wp_send_json_error( __('Unable to save your settings', "e20rsequence") );
             }
@@ -5232,11 +4274,11 @@ class Controller
                 wp_send_json_error( $this->get_error_msg() );
             }
 
-            $this->dbg_log('Updating user settings for sequence #: ' . $this->sequence_id);
+            E20RTools\DBG::log('Updating user settings for sequence #: ' . $this->sequence_id);
 
             if ( isset( $usrSettings->id ) && ( $usrSettings->id !== $this->sequence_id ) ) {
 
-                $this->dbg_log('No user specific settings found for this sequence. Creating defaults');
+                E20RTools\DBG::log('No user specific settings found for this sequence. Creating defaults');
 
 /*
                 // Create new opt-in settings for this user
@@ -5245,7 +4287,7 @@ class Controller
                 else // Saves existing settings
                     $new = $usrSettings;
 */
-                $this->dbg_log('Using default setting for user ' . $current_user->ID . ' and sequence ' . $this->sequence_id);
+                E20RTools\DBG::log('Using default setting for user ' . $current_user->ID . ' and sequence ' . $this->sequence_id);
 
                 $usrSettings = $this->create_user_notice_defaults();
             }
@@ -5285,17 +4327,17 @@ class Controller
             /* Save the user options we just defined */
             if ( $user_id == $current_user->ID ) {
 
-                $this->dbg_log('Opt-In Timestamp is: ' . $usrSettings->last_notice_sent);
-                $this->dbg_log('Saving user_meta for UID ' . $user_id . ' Settings: ' . print_r($usrSettings, true));
+                E20RTools\DBG::log('Opt-In Timestamp is: ' . $usrSettings->last_notice_sent);
+                E20RTools\DBG::log('Saving user_meta for UID ' . $user_id . ' Settings: ' . print_r($usrSettings, true));
 
                 $this->save_user_notice_settings( $user_id, $usrSettings, $seqId );
-                // update_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence_notices', $usrSettings );
+                // update_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence' . '_notices', $usrSettings );
                 $status = true;
                 $this->set_error_msg(null);
             }
             else {
 
-                $this->dbg_log('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID, E20R_DEBUG_SEQ_CRITICAL);
+                E20RTools\DBG::log('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID, E20R_DEBUG_SEQ_CRITICAL);
                 $this->set_error_msg( __( 'Unable to save your settings', "e20rsequence" ) );
                 $status = false;
             }
@@ -5303,7 +4345,7 @@ class Controller
         catch (Exception $e) {
             $this->set_error_msg( sprintf( __('Error: %s', "e20rsequence" ), $e->getMessage() ) );
             $status = false;
-            $this->dbg_log('optin_save() - Exception error: ' . $e->getMessage(), E20R_DEBUG_SEQ_CRITICAL);
+            E20RTools\DBG::log('optin_save() - Exception error: ' . $e->getMessage(), E20R_DEBUG_SEQ_CRITICAL);
         }
 
         if ($status)
@@ -5315,7 +4357,7 @@ class Controller
 
     private function fix_user_alert_settings( $v3, $post_list, $member_days ) {
 
-        $this->dbg_log("fix_user_alert_settings() - Checking whether to convert the post notification flags for {$v3->id}");
+        E20RTools\DBG::log("fix_user_alert_settings() - Checking whether to convert the post notification flags for {$v3->id}");
 
         $need_to_fix = false;
 
@@ -5323,20 +4365,20 @@ class Controller
 
             if ( false === strpos( $id, '_' ) ) {
 
-                $this->dbg_log("fix_user_alert_settings() - Should to fix Post/Delay id {$id}");
+                E20RTools\DBG::log("fix_user_alert_settings() - Should to fix Post/Delay id {$id}");
                 $need_to_fix = true;
             }
         }
 
         if ( count( $v3->posts ) < count( $post_list ) )  {
 
-            $this->dbg_log("fix_user_alert_settings() - Not enough alert IDs (" . count( $v3->posts ) . ") as compared to the posts in the sequence (". count( $post_list ). ")");
+            E20RTools\DBG::log("fix_user_alert_settings() - Not enough alert IDs (" . count( $v3->posts ) . ") as compared to the posts in the sequence (". count( $post_list ). ")");
             $need_to_fix = true;
         }
 
         if ( true === $need_to_fix ) {
 
-            $this->dbg_log("fix_user_alert_settings() - The number of posts with a delay value less than {$member_days} is: " . count( $post_list ));
+            E20RTools\DBG::log("fix_user_alert_settings() - The number of posts with a delay value less than {$member_days} is: " . count( $post_list ));
 
             if ( !empty( $v3->posts ) ) {
 
@@ -5349,12 +4391,12 @@ class Controller
                         // Do we have a post ID as the identifier (and not a postID_delay flag)
                         if ( $p->id == $id ) {
 
-                            $this->dbg_log("fix_user_alert_settings() - Replacing: {$p->id} -> {$flag_value}");
+                            E20RTools\DBG::log("fix_user_alert_settings() - Replacing: {$p->id} -> {$flag_value}");
                             $v3->posts[$k] = $flag_value;
                         }
                         elseif ( !in_array( $flag_value, $v3->posts) ) {
 
-                            $this->dbg_log("fix_user_alert_settings() - Should be in array, but isn't. Adding as 'already alerted': {$flag_value}");
+                            E20RTools\DBG::log("fix_user_alert_settings() - Should be in array, but isn't. Adding as 'already alerted': {$flag_value}");
                             $v3->posts[] = $flag_value;
                         }
                     }
@@ -5366,7 +4408,7 @@ class Controller
 
                     $flag_value = "{$p->id}_" . $this->normalize_delay( $p->delay );
 
-                    $this->dbg_log("fix_user_alert_settings() - Should be in array, but isn't. Adding as 'already alerted': {$flag_value}");
+                    E20RTools\DBG::log("fix_user_alert_settings() - Should be in array, but isn't. Adding as 'already alerted': {$flag_value}");
                     $v3->posts[] = $flag_value;
                 }
             }
@@ -5384,16 +4426,16 @@ class Controller
      */
     public function sendalert_callback() {
 
-        $this->dbg_log('sendalert() - Processing the request to send alerts manually');
+        E20RTools\DBG::log('sendalert() - Processing the request to send alerts manually');
 
         check_ajax_referer('e20r-sequence-sendalert', 'e20r_sequence_sendalert_nonce');
 
-        $this->dbg_log('Nonce is OK');
+        E20RTools\DBG::log('Nonce is OK');
 
         if ( isset( $_POST['e20r_sequence_id'] ) ) {
 
             $sequence_id = intval($_POST['e20r_sequence_id']);
-            $this->dbg_log('sendalert() - Will send alerts for sequence #' . $sequence_id);
+            E20RTools\DBG::log('sendalert() - Will send alerts for sequence #' . $sequence_id);
 
 //                $sequence = apply_filters('get_sequence_class_instance', null);
 //                $sequence->sequence_id = $sequence_id;
@@ -5401,7 +4443,7 @@ class Controller
 
             do_action( 'e20r_sequence_cron_hook', array( $sequence_id ));
 
-            $this->dbg_log('sendalert() - Completed action for sequence');
+            E20RTools\DBG::log('sendalert() - Completed action for sequence');
         }
     }
 
@@ -5415,6 +4457,7 @@ class Controller
 
         /** @noinspection PhpUnusedLocalVariableInspection */
         $result = '';
+        $view = apply_filters('get_sequence_views_class_instance', null);
 
         // Clear the sequence metadata if the sequence type (by date or by day count) changed.
         if (isset($_POST['e20r_sequence_clear']))
@@ -5427,16 +4470,16 @@ class Controller
                     wp_send_json_error( $this->get_error_msg() );
                 }
 
-                $this->dbg_log('sequence_clear_callback() - Deleting all entries in sequence # ' .$sequence_id);
+                E20RTools\DBG::log('sequence_clear_callback() - Deleting all entries in sequence # ' .$sequence_id);
 
                 if ( !$this->delete_post_meta_for_sequence($sequence_id) )
                 {
-                    $this->dbg_log('Unable to delete the posts in sequence # ' . $sequence_id, E20R_DEBUG_SEQ_CRITICAL);
+                    E20RTools\DBG::log('Unable to delete the posts in sequence # ' . $sequence_id, E20R_DEBUG_SEQ_CRITICAL);
                     $this->set_error_msg( __('Could not delete posts from this sequence', "e20rsequence"));
 
                 }
                 else {
-                    $result = $this->get_post_list_for_metabox();
+                    $result = $view->get_post_list_for_metabox();
                 }
 
             }
@@ -5466,11 +4509,11 @@ class Controller
      */
     public function rm_post_callback() {
 
-        $this->dbg_log("rm_post_callback() - Attempting to remove post from sequence.");
+        E20RTools\DBG::log("rm_post_callback() - Attempting to remove post from sequence.");
 
         global $current_user;
 
-        check_ajax_referer('e20r-sequence-rm-post', 'e20r_sequence_rmpost_nonce');
+        check_ajax_referer('e20r-sequence-post', 'e20r_sequence_post_nonce');
 
         /** @noinspection PhpUnusedLocalVariableInspection */
         $result = '';
@@ -5481,6 +4524,8 @@ class Controller
         $sequence_id = ( isset( $_POST['e20r_sequence_id']) && '' != $_POST['e20r_sequence_id'] ? intval($_POST['e20r_sequence_id']) : null );
         $seq_post_id = ( isset( $_POST['e20r_seq_post']) && '' != $_POST['e20r_seq_post'] ? intval($_POST['e20r_seq_post']) : null );
         $delay = ( isset( $_POST['e20r_seq_delay']) && '' != $_POST['e20r_seq_delay'] ? intval($_POST['e20r_seq_delay']) : null );
+
+        $view = apply_filters('get_sequence_views_class_instance', null);
 
         if ( ! $this->init( $sequence_id ) ) {
 
@@ -5503,11 +4548,11 @@ class Controller
         }
 
         // Return the content for the new listbox (sans the deleted item)
-        $result = $this->get_post_list_for_metabox(true);
+        $result = $view->get_post_list_for_metabox(true);
 
 /*
         if ( is_null( $result['message'] ) && is_null( $this->get_error_msg() ) && ($success)) {
-            $this->dbg_log('rm_post_callback() - Returning success to calling javascript');
+            E20RTools\DBG::log('rm_post_callback() - Returning success to calling javascript');
             wp_send_json_success( $result['html'] );
         }
         else
@@ -5524,11 +4569,12 @@ class Controller
 
         /** @noinspection PhpUnusedLocalVariableInspection */
         $success = false;
+        $view = apply_filters('get_sequence_views_class_instance', null);
 
-        // $this->dbg_log("In rm_sequence_from_post()");
+        // E20RTools\DBG::log("In rm_sequence_from_post()");
         check_ajax_referer('e20r-sequence-post-meta', 'e20r_sequence_postmeta_nonce');
 
-        $this->dbg_log("rm_sequence_from_post_callback() - NONCE is OK for e20r_sequence_rm");
+        E20RTools\DBG::log("NONCE is OK for e20r_sequence_rm");
 
         $sequence_id = ( isset( $_POST['e20r_sequence_id'] ) && ( intval( $_POST['e20r_sequence_id'] ) != 0 ) ) ? intval( $_POST['e20r_sequence_id'] ) : null;
         $post_id = isset( $_POST['e20r_seq_post_id'] ) ? intval( $_POST['e20r_seq_post_id'] ) : null;
@@ -5543,7 +4589,7 @@ class Controller
         // Remove the post (if the user is allowed to)
         if ( current_user_can( 'edit_posts' ) && ( ! is_null( $post_id ) ) && ( ! is_null( $sequence_id ) ) ) {
 
-            $this->dbg_log("Removing post # {$post_id} with delay {$delay} from sequence {$sequence_id}");
+            E20RTools\DBG::log("Removing post # {$post_id} with delay {$delay} from sequence {$sequence_id}");
             $this->remove_post( $post_id, $delay, true );
             //$result = __('The post has been removed', "e20rsequence");
             $success = true;
@@ -5553,181 +4599,16 @@ class Controller
             $this->set_error_msg( __( 'Incorrect privileges to remove posts from this sequence', "e20rsequence" ) );
         }
 
-        $result = $this->load_sequence_meta( $post_id, $sequence_id );
+        $result = $view->load_sequence_list_meta( $post_id, $sequence_id );
 
         if ( ! empty( $result ) && is_null( $this->get_error_msg() ) && ( $success ) ) {
 
-            $this->dbg_log( 'Returning success to caller' );
+            E20RTools\DBG::log( 'Returning success to caller' );
             wp_send_json_success( $result );
         } else {
 
             wp_send_json_error( ( ! is_null( $this->get_error_msg() ) ? $this->get_error_msg() : 'Error clearing the sequence from this post' ) );
         }
-    }
-
-    /**
-     * Loads metabox content for the post/page/CPT editor metabox (sidebar)
-     *
-     * @param int|null $post_id -- ID of Post being edited
-     * @param int $seq_id -- ID of the sequence being added/edited.
-     *
-     * @return string - HTML of metabox content
-     */
-    public function load_sequence_meta( $post_id = null, $seq_id = 0) {
-
-        $this->dbg_log("load_sequence_meta() - Generating sequence metabox for post editor page");
-        $this->dbg_log("load_sequence_meta() - Parameters for load_sequence_meta() {$post_id} and {$seq_id}.");
-        $belongs_to = array();
-        $processed_ids = array();
-
-        /* Fetch all Sequence posts */
-        $sequence_list = $this->get_all_sequences( 'any' );
-
-        $this->dbg_log("load_sequence_meta() - Loading Sequences (count: " . count($sequence_list) . ")");
-
-        // Post ID specified so we need to look for any sequence related metadata for this post
-
-        if ( empty( $post_id ) ) {
-
-            global $post;
-            $post_id = $post->ID;
-        }
-
-        $this->dbg_log("load_sequence_meta() - Loading sequence ID(s) from DB");
-
-        $belongs_to = $this->get_sequences_for_post( $post_id );
-
-        // Check that all of the sequences listed for the post actually exist.
-        // If not, clean up the $belongs_to array.
-        if ( !empty( $belongs_to ) ) {
-
-            $this->dbg_log("load_sequence_meta() - Belongs to " . count($belongs_to) . " sequence(s)");
-
-            foreach ( $belongs_to as $cId ) {
-
-                if ( ! $this->sequence_exists( $cId ) ) {
-
-                    $this->dbg_log( "load_sequence_meta() - Sequence {$cId} does not exist. Remove it (post id: {$post_id})." );
-
-                    if ( ( $key = array_search( $cId, $belongs_to ) ) !== false ) {
-
-                        $this->dbg_log( "load_sequence_meta() - Sequence ID {$cId} being removed", E20R_DEBUG_SEQ_INFO );
-                        unset( $belongs_to[ $key ] );
-                    }
-                }
-            }
-        }
-
-        if ( !empty( $belongs_to ) ) { // get_post_meta( $post_id, "_post_sequences", true ) ) {
-
-            if ( is_array( $belongs_to ) && ( $seq_id != 0 ) &&
-                ( ( ( false == $this->options->allowRepeatPosts ) && !in_array( $seq_id, $belongs_to ) ) ||
-                ( true == $this->options->allowRepeatPosts ) && ( in_array( $seq_id, $belongs_to ) ) ) ) {
-
-                $this->dbg_log("load_sequence_meta() - Adding the new sequence ID to the existing array of sequences");
-                // array_push( $belongs_to, $seq_id );
-                $belongs_to[] = $seq_id;
-            }
-        }
-        elseif ( empty( $belongs_to ) && ( $seq_id != 0 ) ) {
-
-            $this->dbg_log("load_sequence_meta() - This post has never belonged to a sequence. Adding it to one now");
-            $belongs_to = array( $seq_id );
-        }
-        else {
-            // Empty array
-            $belongs_to = array();
-        }
-
-        // Make sure there's at least one row in the Metabox.
-
-        // array_push( $belongs_to, 0 );
-        if ( empty( $belongs_to ) ) {
-
-            $this->dbg_log("load_sequence_meta() - Ensure there's at least one entry in the table. Sequence ID: {$seq_id}");
-            $belongs_to[] = 0;
-        }
-
-
-        $this->dbg_log("load_sequence_meta() - Post belongs to # of sequence(s): " . count( $belongs_to ) . ", content: " . print_r( $belongs_to, true ) );
-        ob_start();
-        ?>
-        <?php wp_nonce_field('e20r-sequence-post-meta', 'e20r_sequence_postmeta_nonce');?>
-        <div class="seq_spinner vt-alignright"></div>
-        <table style="width: 100%;" id="e20r-seq-metatable">
-            <tbody><?php
-
-            $sequence_value_matrix = array_count_values( $belongs_to );
-
-            $this->dbg_log("load_sequence_meta() - The matrix of sequence values: ");
-            $this->dbg_log( $sequence_value_matrix);
-
-            foreach( $belongs_to as $active_id ) {
-
-                if ( in_array( $active_id, $processed_ids ) ) {
-                    $this->dbg_log("load_sequence_meta() - Skipping {$active_id} since it's already added to the metabox");
-                    continue;
-                }
-
-                // Figure out the correct delay type and load the value for this post if it exists.
-                if ( $active_id != 0 ) {
-
-                    $this->dbg_log("load_sequence_meta() - Loading options and posts for {$active_id}");
-                    $this->get_options( $active_id );
-                    // $this->load_sequence_post( null, null, null, '=', null, true );
-                }
-                else {
-
-                    $this->sequence_id = 0;
-                    $this->options = $this->default_options();
-                }
-
-                $this->dbg_log("load_sequence_meta() - Loading all delay values for for {$post_id}");
-                $d_posts = $this->get_delay_for_post( $post_id, false );
-
-                if ( $this->sequence_id != 0 ) {
-
-                    foreach( $d_posts as $delay ) {
-
-                        if ( isset( $delay->delay ) && !empty( $delay->delay ) ) {
-
-                            $this->dbg_log( "load_sequence_meta() - Delay Value: {$delay->delay}" );
-                            $delayVal = " value='{$delay->delay}' ";
-
-                            list( $label, $inputHTML ) = $this->set_delay_input( $delayVal, $active_id );
-                            echo $this->print_sequence_header( $active_id );
-                            echo $this->print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label );
-
-                        }
-                    }
-
-                    // $delays = array();
-                }
-
-                if ( empty( $d_posts ) ) {
-
-                    $delayVal = "value=''";
-                    list( $label, $inputHTML ) = $this->set_delay_input( $delayVal, $active_id );
-                    echo $this->print_sequence_header( $active_id );
-                    echo $this->print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label );
-                }
-
-                $processed_ids[] = $active_id;
-
-                // $this->dbg_log(" Label: " . print_r( $label, true ) );
-            } // Foreach ?>
-            </tbody>
-        </table>
-        <div id="e20r-seq-new">
-            <hr class="e20r-seq-hr" />
-            <a href="#" id="e20r-seq-new-meta" class="button-primary"><?php _e( "New Sequence", "e20rsequence" ); ?></a>
-            <a href="#" id="e20r-seq-new-meta-reset" class="button"><?php _e( "Reset", "e20rsequence" ); ?></a>
-        </div>
-        <?php
-
-        $html = ob_get_clean();
-
-        return $html;
     }
 
     /**
@@ -5738,7 +4619,7 @@ class Controller
      * @return   bool          True if the post exists; otherwise, false.
      * @since    1.0.0
      */
-    private function sequence_exists( $id ) {
+    public function sequence_exists( $id ) {
 
         return is_string( get_post_status( $id ) );
     }
@@ -5754,11 +4635,11 @@ class Controller
      */
     public function get_delay_for_post( $post_id, $normalize = true ) {
 
-        $this->dbg_log("get_delay_for_post() - Loading post# {$post_id}");
+        E20RTools\DBG::log("Loading post# {$post_id}");
 
         $posts = $this->find_by_id( $post_id );
 
-        $this->dbg_log("get_delay_for_post() - Found " . count($posts) . " posts.");
+        E20RTools\DBG::log("Found " . count($posts) . " posts.");
 
         if ( empty( $posts ) ) {
             $posts = array();
@@ -5773,92 +4654,10 @@ class Controller
                 $posts[$k]->delay = $this->normalize_delay( $post->delay );
             }
 
-            $this->dbg_log("get_delay_for_post(): Delay for post with id = {$post_id} is {$posts[$k]->delay}");
+            E20RTools\DBG::log("get_delay_for_post(): Delay for post with id = {$post_id} is {$posts[$k]->delay}");
         }
 
         return $posts;
-    }
-
-    private function set_delay_input( $input_value, $active_id ) {
-
-        switch ( $this->options->delayType ) {
-
-            case 'byDate':
-
-                $this->dbg_log("Configured to track delays by Date");
-                $delayFormat = __( 'Date', "e20rsequence" );
-                $starts = date_i18n( "Y-m-d", current_time('timestamp') );
-
-                if ( empty( $input_value ) ) {
-                    // $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' min='{$starts}' name='e20r_seq-delay[]' id='e20r_seq-delay_{$active_id}'>";
-                    $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' min='{$starts}' name='e20r_seq-delay[]'>";
-                }
-                else {
-                    // $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' name='e20r_seq-delay[]' id='e20r_seq-delay_{$active_id}' {$input_value}>";
-                    $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' name='e20r_seq-delay[]' {$input_value}>";
-                }
-
-                break;
-
-            default:
-
-                $this->dbg_log("Configured to track delays by Day count: {$active_id}");
-                $delayFormat = __('Day count', "e20rsequence");
-                // $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-days' type='text' id='e20r_seq-delay_{$active_id}' name='e20r_seq-delay[]' {$input_value}>";
-                $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-days' type='text' name='e20r_seq-delay[]' {$input_value}>";
-
-        }
-
-        $label = sprintf( __("Delay (Format: %s)", "e20rsequence"), $delayFormat );
-
-        return array( $label, $inputHTML );
-    }
-
-    private function print_sequence_header( $active_id ) {
-
-        ob_start(); ?>
-        <fieldset>
-                <tr class="select-row-label sequence-select-label<?php // echo ( $active_id == 0 ? ' new-sequence-select-label' : ' sequence-select-label' ); ?>">
-                    <td>
-                        <label for="e20r_seq-memberof-sequences"><?php _e("Managed by (drip content feed)", "e20rsequence"); ?></label>
-                    </td>
-                </tr>
-        <?php
-        $html = ob_get_clean();
-        return $html;
-    }
-
-    private function print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label ) {
-        ob_start(); ?>
-        <tr class="select-row-input sequence-select<?php // echo ( $active_id == 0 ? ' new-sequence-select' : ' sequence-select' ); ?>">
-            <td class="sequence-list-dropdown">
-                <select class="e20r_seq-memberof-sequences<?php // echo ( $active_id == 0 ? 'new-sequence-select' : 'e20r_seq-memberof-sequences'); ?>" name="e20r_seq-sequences[]">
-                    <option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected' : '' ); ?>><?php _e("Not managed", "e20rsequence"); ?></option><?php
-                    // Loop through all of the sequences & create an option list
-                    foreach ( $sequence_list as $sequence ) {
-
-                    ?><option value="<?php echo $sequence->ID; ?>" <?php echo selected( $sequence->ID, $active_id ); ?>><?php echo $sequence->post_title; ?></option><?php
-                    } ?>
-                </select>
-            </td>
-        </tr>
-        <tr class="delay-row-label sequence-delay-label">
-            <td>
-                <label for="e20r_seq-delay_<?php echo $active_id; ?>"> <?php echo $label; ?> </label>
-            </td>
-        </tr>
-        <tr class="delay-row-input sequence-delay">
-            <td>
-                <?php echo $inputHTML; ?>
-                <label for="remove-sequence_<?php echo $active_id; ?>" ><?php _e('Remove: ', "e20rsequence"); ?></label>
-                <input type="checkbox" name="remove-sequence" class="e20r_seq-remove-seq" value="<?php echo $active_id; ?>">
-                <button class="button-secondary e20r-sequence-remove-alert"><?php _e("Clear alerts", "e20rsequence");?></button>
-            </td>
-        </tr>
-        </fieldset>
-        <?php
-        $html = ob_get_clean();
-        return $html;
     }
 
     /**
@@ -5868,22 +4667,23 @@ class Controller
      */
     public function update_delay_post_meta_callback() {
 
-        $this->dbg_log("update_delay_post_meta_callback() - Update the delay input for the post/page meta");
+        E20RTools\DBG::log("Update the delay input for the post/page meta");
 
         check_ajax_referer('e20r-sequence-post-meta', 'e20r_sequence_postmeta_nonce');
 
-        $this->dbg_log("update_delay_post_meta_callback() - Nonce Passed for postmeta AJAX call");
+        E20RTools\DBG::log("Nonce Passed for postmeta AJAX call");
 
         $seq_id = isset( $_POST['e20r_sequence_id'] ) ? intval( $_POST['e20r_sequence_id'] ) : null;
         $post_id = isset( $_POST['e20r_sequence_post_id']) ? intval( $_POST['e20r_sequence_post_id'] ) : null;
 
-        $this->dbg_log("update_delay_post_meta_callback() - Sequence: {$seq_id}, Post: {$post_id}" );
+        E20RTools\DBG::log("Sequence: {$seq_id}, Post: {$post_id}" );
 
         if ( ! $this->init( $seq_id ) ) {
             wp_send_json_error( $this->get_error_msg() );
         }
 
-        $html = $this->load_sequence_meta( $post_id, $seq_id );
+        $view = apply_filters('get_sequence_views_class_instance', null);
+        $html = $view->load_sequence_list_meta( $post_id, $seq_id );
 
         wp_send_json_success( $html );
     }
@@ -5895,7 +4695,7 @@ class Controller
      */
     public function add_post_callback() {
 
-        check_ajax_referer('e20r-sequence-add-post', 'e20r_sequence_addpost_nonce');
+        check_ajax_referer('e20r-sequence-post', 'e20r_sequence_post_nonce');
 
         global $current_user;
 
@@ -5903,7 +4703,9 @@ class Controller
         $sequence_id = isset( $_POST['e20r_sequence_id'] ) && !empty( $_POST['e20r_sequence_id'] ) ? intval($_POST['e20r_sequence_id']) : null;
         $seq_post_id = isset( $_POST['e20r_sequence_post'] ) && !empty( $_POST['e20r_sequence_post'] ) ? intval( $_REQUEST['e20r_sequence_post'] ) : null;
 
-        $this->dbg_log( "add_post_callback() - We received sequence ID: {$sequence_id}");
+        $view = apply_filters('get_sequence_views_class_instance', null);
+
+        E20RTools\DBG::log( "add_post_callback() - We received sequence ID: {$sequence_id}");
 
         if ( !empty( $sequence_id ) ) {
 
@@ -5915,26 +4717,26 @@ class Controller
 
             if ( isset( $_POST['e20r_sequence_delay'] ) && ( 'byDate' == $this->options->delayType ) ) {
 
-                $this->dbg_log("add_post_callback() - Could be a date we've been given ({$_POST['e20r_sequence_delay']}), so...");
+                E20RTools\DBG::log("add_post_callback() - Could be a date we've been given ({$_POST['e20r_sequence_delay']}), so...");
 
                 if ( ( 'byDate' == $this->options->delayType ) && ( false != strtotime( $_POST['e20r_sequence_delay']) ) ) {
 
-                    $this->dbg_log("add_post_callback() - Validated that Delay value is a date.");
+                    E20RTools\DBG::log("add_post_callback() - Validated that Delay value is a date.");
                     $delayVal = isset( $_POST['e20r_sequence_delay'] ) ? sanitize_text_field( $_POST['e20r_sequence_delay'] ) : null;
                 }
             }
             else {
 
-                $this->dbg_log("add_post_callback() - Validated that Delay value is probably a day nunmber.");
+                E20RTools\DBG::log("add_post_callback() - Validated that Delay value is probably a day nunmber.");
                 $delayVal = isset( $_POST['e20r_sequence_delay'] ) ? intval( $_POST['e20r_sequence_delay'] ) : null ;
             }
 
-            $this->dbg_log( 'add_post_callback() - Checking whether delay value is correct' );
+            E20RTools\DBG::log( 'add_post_callback() - Checking whether delay value is correct' );
             $delay = $this->validate_delay_value( $delayVal );
 
             if ( $this->is_present( $seq_post_id, $delay ) ) {
 
-                $this->dbg_log("add_post_callback() - Post {$seq_post_id} with delay {$delay} is already present in sequence {$sequence_id}");
+                E20RTools\DBG::log("add_post_callback() - Post {$seq_post_id} with delay {$delay} is already present in sequence {$sequence_id}");
                 $this->set_error_msg( __( 'Not configured to allow multiple delays for the same post/page', "e20rsequence" ) );
 
                 wp_send_json_error( $this->get_error_msg() );
@@ -5948,7 +4750,7 @@ class Controller
 
                 if ( $user_can && ! is_null( $seq_post_id ) ) {
 
-                    $this->dbg_log( 'add_post_callback() - Adding post ' . $seq_post_id . ' to sequence ' . $this->sequence_id );
+                    E20RTools\DBG::log( 'add_post_callback() - Adding post ' . $seq_post_id . ' to sequence ' . $this->sequence_id );
 
                     if ( $this->add_post( $seq_post_id, $delay ) ) {
 
@@ -5967,7 +4769,7 @@ class Controller
 
             } else {
 
-                $this->dbg_log( 'e20r_sequence_add_post_callback(): Delay value was not specified. Not adding the post: ' . esc_attr( $_POST['e20r_sequencedelay'] ) );
+                E20RTools\DBG::log( 'e20r_sequence_add_post_callback(): Delay value was not specified. Not adding the post: ' . esc_attr( $_POST['e20r_sequencedelay'] ) );
 
                 if ( empty( $seq_post_id ) && ( $this->get_error_msg() == null ) ) {
 
@@ -5996,24 +4798,24 @@ class Controller
                 $this->set_error_msg( sprintf( __( 'This sequence was not found on the server!', "e20rsequence" ) ) );
             }
 
-            $result = $this->get_post_list_for_metabox(true);
+            $result = $view->get_post_list_for_metabox(true);
 
-            // $this->dbg_log("e20r_sequence_add_post_callback() - Data added to sequence. Returning to calling JS script");
+            // E20RTools\DBG::log("e20r_sequence_add_post_callback() - Data added to sequence. Returning to calling JS script");
 
             if ( $result['success'] && $success ) {
-                $this->dbg_log( 'e20r_sequence_add_post_callback() - Returning success to javascript frontend' );
+                E20RTools\DBG::log( 'e20r_sequence_add_post_callback() - Returning success to javascript frontend' );
 
                 wp_send_json_success( $result );
 
             }
             else {
 
-                $this->dbg_log( 'e20r_sequence_add_post_callback() - Returning error to javascript frontend' );
+                E20RTools\DBG::log( 'e20r_sequence_add_post_callback() - Returning error to javascript frontend' );
                 wp_send_json_error( $result );
             }
         }
         else {
-            $this->dbg_log( "Sequence ID was 0. That's a 'blank' sequence" );
+            E20RTools\DBG::log( "Sequence ID was 0. That's a 'blank' sequence" );
             wp_send_json_error( array( array('message' => __('No sequence specified. Did you remember to save this page first?', 'e20rsequence'))) );
         }
     }
@@ -6034,22 +4836,22 @@ class Controller
             // Check that the provided delay format matches the configured value.
             if ( $this->is_valid_delay( $delay ) ) {
 
-                $this->dbg_log( 'validate_delay_value(): Delay value is recognizable' );
+                E20RTools\DBG::log( 'validate_delay_value(): Delay value is recognizable' );
 
                 if ( $this->is_valid_date( $delay ) ) {
 
-                    $this->dbg_log( 'validate_delay_value(): Delay specified as a valid date format' );
+                    E20RTools\DBG::log( 'validate_delay_value(): Delay specified as a valid date format' );
 
                 } else {
 
-                    $this->dbg_log( 'validate_delay_value(): Delay specified as the number of days' );
+                    E20RTools\DBG::log( 'validate_delay_value(): Delay specified as the number of days' );
                 }
             } else {
                 // Ignore this post & return error message to display for the user/admin
                 // NOTE: Format of date is not translatable
                 $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __( 'date: YYYY-MM-DD', "e20rsequence" ) : __( 'number: Days since membership started', "e20rsequence" );
 
-                $this->dbg_log( 'validate_delay_value(): Invalid delay value specified, not adding the post. Delay is: ' . $delay );
+                E20RTools\DBG::log( 'validate_delay_value(): Invalid delay value specified, not adding the post. Delay is: ' . $delay );
                 $this->set_error_msg( sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', "e20rsequence" ), $delay, $expectedDelay ) );
 
                 $delay = false;
@@ -6061,7 +4863,7 @@ class Controller
 
         } else {
 
-            $this->dbg_log( 'validate_delay_value(): Delay value was not specified. Not adding the post. Delay is: ' . esc_attr( $delay ) );
+            E20RTools\DBG::log( 'validate_delay_value(): Delay value was not specified. Not adding the post. Delay is: ' . esc_attr( $delay ) );
 
             if ( empty( $delay ) ) {
 
@@ -6093,7 +4895,7 @@ class Controller
         */
 
         // Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
-        $seqs = \WP_Query( array( 'post_type' => 'pmpro_sequence') );
+        $seqs = \WP_Query( array( 'post_type' => 'pmpro_sequence' ) );
 
         // Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
         foreach($seqs as $s) {
@@ -6110,7 +4912,7 @@ class Controller
 
                 Tools\Cron::stop_sending_user_notices( $s->ID );
 
-                $this->dbg_log('Deactivated email alert(s) for sequence ' . $s->ID);
+                E20RTools\DBG::log('Deactivated email alert(s) for sequence ' . $s->ID);
             }
         }
 
@@ -6146,11 +4948,11 @@ class Controller
         $sequence = apply_filters('get_sequence_class_instance', null);
         $sequences = $sequence->get_all_sequences();
 
-        $sequence->dbg_log("activation() - Found " . count( $sequences ) . " to convert");
+        E20RTools\DBG::log("activation() - Found " . count( $sequences ) . " to convert");
 
         foreach( $sequences as $seq ) {
 
-            $sequence->dbg_log("activation() - Converting postmeta to v3 format for {$seq->ID}" );
+            E20RTools\DBG::log("activation() - Converting postmeta to v3 format for {$seq->ID}" );
 
             if ( !$sequence->is_converted( $seq->ID ) ) {
 
@@ -6200,14 +5002,14 @@ class Controller
             'not_found_in_trash' => __( 'No Sequence Found In Trash', "e20rsequence" )
         );
 
-        $error = register_post_type('pmpro_sequence',
+        $error = register_post_type( 'pmpro_sequence',
             array( 'labels' => apply_filters( 'e20r-sequence-cpt-labels', $labels ),
                 'public' => true,
                 'show_ui' => true,
                 'show_in_menu' => true,
                 'publicly_queryable' => true,
                 'hierarchical' => true,
-                'supports' => array('title','editor','thumbnail','custom-fields','author'),
+                'supports' => array('title','editor','thumbnail','custom-fields','author', 'excerpt'),
                 'can_export' => true,
                 'show_in_nav_menus' => true,
                 'rewrite' => array(
@@ -6221,7 +5023,7 @@ class Controller
         if (! is_wp_error($error) )
             return true;
         else {
-            Sequence\Controller::dbg_log('Error creating post type: ' . $error->get_error_message(), E20R_DEBUG_SEQ_CRITICAL);
+            E20RTools\DBG::log('Error creating post type: ' . $error->get_error_message(), E20R_DEBUG_SEQ_CRITICAL);
             wp_die($error->get_error_message());
             return false;
         }
@@ -6240,7 +5042,7 @@ class Controller
 
         $sequence_list = new \WP_Query( $query );
 
-        $this->dbg_log( "convert_user_notifications() - Found " . count($sequence_list) . " sequences to process for alert conversion" );
+        E20RTools\DBG::log( "convert_user_notifications() - Found " . count($sequence_list) . " sequences to process for alert conversion" );
 
         while ( $sequence_list->have_posts() ) {
 
@@ -6259,26 +5061,26 @@ class Controller
                 // No V3 formatted settings found. Will convert from V2 (if available)
                 if ( empty( $userSettings ) || ( !isset( $userSettings->send_notices ) ) ) {
 
-                    $this->dbg_log("convert_user_notifications() - Converting notification settings for user with ID: {$user->user_id}" );
-                    $this->dbg_log("convert_user_notifications() - Loading V2 meta: {$wpdb->prefix}pmpro_sequence_notices for user ID: {$user->user_id}");
+                    E20RTools\DBG::log("convert_user_notifications() - Converting notification settings for user with ID: {$user->user_id}" );
+                    E20RTools\DBG::log("convert_user_notifications() - Loading V2 meta: {$wpdb->prefix}pmpro_sequence_notices for user ID: {$user->user_id}");
 
-                    $v2 = get_user_meta( $user->user_id, "{$wpdb->prefix}pmpro_sequence_notices", true );
+                    $v2 = get_user_meta( $user->user_id, "{$wpdb->prefix}"  . "pmpro_sequence_notices", true );
 
-                    // $this->dbg_log($old_optIn);
+                    // E20RTools\DBG::log($old_optIn);
 
                     if ( !empty( $v2 ) ) {
 
-                        $this->dbg_log("convert_user_notifications() - V2 settings found. They are: ");
-                        $this->dbg_log( $v2 );
+                        E20RTools\DBG::log("convert_user_notifications() - V2 settings found. They are: ");
+                        E20RTools\DBG::log( $v2 );
 
-                        $this->dbg_log("convert_user_notifications() - Found old-style notification settings for user {$user->user_id}. Attempting to convert", E20R_DEBUG_SEQ_WARNING );
+                        E20RTools\DBG::log("convert_user_notifications() - Found old-style notification settings for user {$user->user_id}. Attempting to convert", E20R_DEBUG_SEQ_WARNING );
 
                         // Loop through the old-style array of sequence IDs
                         $count = 1;
 
                         foreach( $v2->sequence as $sId => $data ) {
 
-                            $this->dbg_log("convert_user_notification() - Converting sequence notices for {$sId} - Number {$count} of " . count($v2->sequence));
+                            E20RTools\DBG::log("convert_user_notification() - Converting sequence notices for {$sId} - Number {$count} of " . count($v2->sequence));
                             $count++;
 
                             $userSettings = $this->convert_alert_setting( $user->user_id, $sId, $data );
@@ -6286,32 +5088,32 @@ class Controller
                             if ( isset( $userSettings->send_notices ) ) {
 
                                 $this->save_user_notice_settings( $user->user_id, $userSettings, $sId );
-                                $this->dbg_log("convert_user_notifications() - Removing converted opt-in settings from the database" );
-                                delete_user_meta( $user->user_id, $wpdb->prefix . "pmpro_sequence_notices" );
+                                E20RTools\DBG::log("convert_user_notifications() - Removing converted opt-in settings from the database" );
+                                delete_user_meta( $user->user_id, $wpdb->prefix  . "pmpro_sequence_notices" );
                             }
                         }
                     }
 
                     if ( empty( $v2 ) && empty( $userSettings ) ) {
 
-                        $this->dbg_log("convert_user_notification() - No v2 or v3 alert settings found for {$user->user_id}. Skipping this user");
+                        E20RTools\DBG::log("convert_user_notification() - No v2 or v3 alert settings found for {$user->user_id}. Skipping this user");
                         continue;
                     }
 
-                    $this->dbg_log("convert_user_notifications() - V3 Alert settings for user {$user->user_id}");
-                    $this->dbg_log( $userSettings );
+                    E20RTools\DBG::log("convert_user_notifications() - V3 Alert settings for user {$user->user_id}");
+                    E20RTools\DBG::log( $userSettings );
 
                     $userSettings->completed = true;
-                    $this->dbg_log( "convert_user_notification() - Saving new notification settings for user with ID: {$user->user_id}" );
+                    E20RTools\DBG::log( "convert_user_notification() - Saving new notification settings for user with ID: {$user->user_id}" );
 
                     if ( !$this->save_user_notice_settings( $user->user_id, $userSettings, $this->sequence_id ) ) {
 
-                        $this->dbg_log("convert_user_notification() - Unable to save new notification settings for user with ID {$user->user_id}", E20R_DEBUG_SEQ_WARNING );
+                        E20RTools\DBG::log("convert_user_notification() - Unable to save new notification settings for user with ID {$user->user_id}", E20R_DEBUG_SEQ_WARNING );
                     }
                 }
                 else {
-                    $this->dbg_log("convert_user_notification() - No alert settings to convert for {$user->user_id}");
-                    $this->dbg_log("convert_user_notification() - Checking existing V3 settings...");
+                    E20RTools\DBG::log("convert_user_notification() - No alert settings to convert for {$user->user_id}");
+                    E20RTools\DBG::log("convert_user_notification() - Checking existing V3 settings...");
 
                     $member_days = $this->get_membership_days( $user->user_id );
 
@@ -6327,7 +5129,7 @@ class Controller
 
             if (! $this->remove_old_user_alert_setting( $user->user_id ) ) {
 
-                $this->dbg_log("conver_user_notification() - Unable to remove old user_alert settings!", E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log("conver_user_notification() - Unable to remove old user_alert settings!", E20R_DEBUG_SEQ_WARNING );
             }
         }
 
@@ -6345,7 +5147,7 @@ class Controller
 
         $compare = $this->load_sequence_post( $sId, $member_days, null, '<=', null, true );
 
-        $this->dbg_log( "convert_alert_settings() - Converting the sequence ( {$sId} ) post list for user alert settings" );
+        E20RTools\DBG::log( "convert_alert_settings() - Converting the sequence ( {$sId} ) post list for user alert settings" );
 
         $when = isset( $v2->optinTS ) ? $v2->optinTS : current_time('timestamp');
 
@@ -6353,12 +5155,12 @@ class Controller
         $v3->posts = $v2->notifiedPosts;
         $v3->optin_at = $v2->last_notice_sent = $when;
 
-        $this->dbg_log("convert_alert_settings() - Looping through " . count($v3->posts) . " alert entries");
+        E20RTools\DBG::log("convert_alert_settings() - Looping through " . count($v3->posts) . " alert entries");
         foreach( $v3->posts as $key => $post_id ) {
 
             if ( false === strpos( $post_id, '_' ) ) {
 
-                $this->dbg_log("convert_alert_settings() - This entry ({$post_id}) needs to be converted...");
+                E20RTools\DBG::log("convert_alert_settings() - This entry ({$post_id}) needs to be converted...");
                 $posts = $this->find_by_id( $post_id );
 
                 foreach ($posts as $p ) {
@@ -6369,11 +5171,11 @@ class Controller
 
                         if ( $v3->posts[$key] == $post_id ) {
 
-                            $this->dbg_log("convert_alert_settings() - Converting existing alert entry");
+                            E20RTools\DBG::log("convert_alert_settings() - Converting existing alert entry");
                             $v3->posts[$key] = $flag_value;
                         }
                         else {
-                            $this->dbg_log("convert_alert_settings() - Adding alert entry");
+                            E20RTools\DBG::log("convert_alert_settings() - Adding alert entry");
                             $v3->posts[] = $flag_value;
                         }
                     }
@@ -6410,7 +5212,7 @@ class Controller
     public function post_type_icon() {
         ?>
         <style>
-            #adminmenu .menu-top.menu-icon-pmpro_sequence div.wp-menu-image:before {
+            #adminmenu .menu-top.menu-icon-<?php echo 'pmpro_sequence';?> div.wp-menu-image:before {
                 font-family:  FontAwesome !important;
                 content: '\f160';
             }
@@ -6429,18 +5231,18 @@ class Controller
             return;
         }
 
-        $this->dbg_log("register_user_scripts() - Loading user script(s) & styles");
+        E20RTools\DBG::log("register_user_scripts() - Loading user script(s) & styles");
 
         $found_links = has_shortcode( $post->post_content, 'sequence_links');
         $found_optin = has_shortcode( $post->post_content, 'sequence_alert');
 
-        $this->dbg_log("register_user_scripts() - 'sequence_links' or 'sequence_alert' shortcode present? " . ( $found_links || $found_optin ? 'Yes' : 'No') );
+        E20RTools\DBG::log("register_user_scripts() - 'sequence_links' or 'sequence_alert' shortcode present? " . ( $found_links || $found_optin ? 'Yes' : 'No') );
 
-        if ( ( true === $found_links ) || ( true === $found_optin ) || ( $this->get_post_type() == 'pmpro_sequence' ) ) {
+        if ( ( true === $found_links ) || ( true === $found_optin ) || ( 'pmpro_sequence' == $this->get_post_type() ) || 'pmpro_sequence' == $post->post_type ) {
 
             $load_e20r_sequence_script = true;
 
-            $this->dbg_log("Loading client side javascript and CSS");
+            E20RTools\DBG::log("Loading client side javascript and CSS");
             wp_register_script('e20r-sequence-user', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences.js', array('jquery'), E20R_SEQUENCE_VERSION, true);
 
             wp_register_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
@@ -6454,7 +5256,7 @@ class Controller
         }
         else {
             $load_e20r_sequence_script = false;
-            $this->dbg_log("register_user_scripts() - Didn't find the expected shortcode... Not loading client side javascript and CSS");
+            E20RTools\DBG::log("register_user_scripts() - Didn't find the expected shortcode... Not loading client side javascript and CSS");
         }
 
     }
@@ -6509,7 +5311,7 @@ class Controller
 
         $foundShortcode = has_shortcode( $post->post_content, 'sequence_links');
 
-        $this->dbg_log("enqueue_user_scripts() - 'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
+        E20RTools\DBG::log("enqueue_user_scripts() - 'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
         wp_register_script('e20r-sequence-user', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences.js', array('jquery'), E20R_SEQUENCE_VERSION, true);
 
         wp_register_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
@@ -6531,19 +5333,20 @@ class Controller
 
         global $post;
 
-        $this->dbg_log("Loading admin scripts & styles for E20R Sequences");
+        E20RTools\DBG::log("Loading admin scripts & styles for E20R Sequences");
         $this->register_admin_scripts();
     }
 
     public function register_admin_scripts() {
 
-        $this->dbg_log("Running register_admin_scripts()");
+        E20RTools\DBG::log("Running register_admin_scripts()");
 
         $delay_config = $this->set_delay_config();
 
         wp_enqueue_style( 'fontawesome', E20R_SEQUENCE_PLUGIN_URL . '/css/font-awesome.min.css', false, '4.5.0' );
+        wp_enqueue_style( 'select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/css/select2.min.css", false, self::$select2_version);
 
-        wp_enqueue_script('select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.js', array( 'jquery' ), '3.5.2' );
+        wp_enqueue_script('select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/js/select2.min.js", array( 'jquery' ), self::$select2_version );
         wp_enqueue_script('e20r-sequence-admin', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences-admin.js', array( 'jquery', 'select2' ), E20R_SEQUENCE_VERSION, true);
 
         wp_enqueue_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
@@ -6583,7 +5386,7 @@ class Controller
 
     public function set_delay_config() {
 
-        $sequences = $this->get_all_sequences('all');
+        $sequences = $this->get_all_sequences(array( 'publish', 'pending', 'draft', 'private', 'future' ));
         $delays = array();
 
         //Save state for the current sequence
@@ -6620,119 +5423,15 @@ class Controller
      */
     public function register_shortcodes() {
 
+		$sl = new Shortcodes\sequence_links();
+		$sa = new Shortcodes\sequence_alert();
+		$uc = new Shortcodes\upcoming_content();
+
+
         // Generates paginated list of links to sequence members
-        add_shortcode( 'sequence_links', array( &$this, 'sequence_links_shortcode' ) );
-        add_shortcode( 'sequence_alert', array( &$this, 'sequence_optin_shortcode' ) );
-    }
-
-  /**
-    * Shortcode to display notification opt-in checkbox
-    * @param string $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
-    *
-    * @return string - HTML of the opt-in
-    */
-    public function sequence_optin_shortcode( $attributes ) {
-
-        $this->dbg_log("sequence_optin_shortcode() - Loading user alert opt-in");
-        $sequence_id = null;
-
-        extract( shortcode_atts( array(
-            'sequence_id' => 0,
-        ), $attributes ) );
-
-        $this->dbg_log("sequence_optin_shortcode() - shortcode specified sequence id: {$sequence_id}");
-
-        if ( !empty( $sequence_id ) ) {
-
-            if ( !$this->init( $sequence_id ) ) {
-
-                return $this->get_error_msg();
-            }
-
-            return $this->view_user_notice_opt_in();
-        }
-        else {
-
-            $this->dbg_log("sequence_optin_shortcode() - ERROR: No sequence ID specified!", E20R_DEBUG_SEQ_WARNING );
-        }
-
-        return null;
-    }
-
-    /**
-     * Generates a formatted list of posts in the specified sequence.
-     *
-     * @param $attributes -- Shortcode attributes
-     *
-     * @return string -- HTML output containing the list of posts for the specified sequence(s)
-     */
-    public function sequence_links_shortcode( $attributes ) {
-
-        global $current_user, $load_e20r_sequence_script;
-
-        $load_e20r_sequence_script = true;
-
-        // To avoid errors in development tool
-        $highlight = false;
-        $button = false;
-        $scrollbox = false;
-        $pagesize = 30;
-        $id = 0;
-        $title = null;
-
-        extract( shortcode_atts( array(
-            'id' => 0,
-            'pagesize' => 30,
-            'title' => '',
-            'button' => false,
-            'highlight' => false,
-            'scrollbox' => false,
-        ), $attributes ) );
-
-        if ( $pagesize == 0 ) {
-
-            $pagesize = 30; // Default
-        }
-
-        if ( ( $id == 0 ) && ( $this->sequence_id == 0 ) ) {
-
-            global $wp_query;
-
-            // Try using the current WP post ID
-            if (! empty( $wp_query->post->ID ) ) {
-
-                $id = $wp_query->post->ID;
-            }
-            else {
-
-                return ''; // No post given so returning no info.
-            }
-        }
-        $this->dbg_log("We're given the ID of: {$id} ");
-
-        // Make sure the sequence exists.
-        if ( ! $this->sequence_exists( $id ) ) {
-
-            $this->dbg_log("shortcode() - The requested sequence (id: {$id}) does not exist", E20R_DEBUG_SEQ_WARNING );
-            $errorMsg = '<p class="error" style="text-align: center;">The specified PMPro Sequence was not found. <br/>Please report this error to the webmaster.</p>';
-
-            return apply_filters( 'e20r-sequence-not-found-msg', $errorMsg );
-        }
-
-        if ( !$this->init( $id ) ) {
-            return $this->get_error_msg();
-        }
-
-        $this->dbg_log("shortcode() - Ready to build link list for sequence with ID of: " . $id);
-
-        if ( $this->has_post_access( $current_user->ID, $id, false, $id ) ) {
-
-            return $this->create_sequence_list( $highlight, $pagesize, $button, $title, $scrollbox );
-        }
-        else {
-
-            return '';
-        }
+        add_shortcode( 'sequence_links', array( $sl, 'load_shortcode') );
+        add_shortcode( 'sequence_alert', array( $sa, 'load_shortcode') );
+        add_shortcode( 'upcoming_content', array( $uc, 'load_shortcode' ) );
     }
 
     /**
@@ -6740,17 +5439,15 @@ class Controller
      */
     public function load_textdomain() {
 
-        $domain = "e20rsequence";
+        $locale = apply_filters( "plugin_locale", get_locale(), 'e20rsequence' );
 
-        $locale = apply_filters( "plugin_locale", get_locale(), $domain );
+        $mofile = "e20rsequence-{$locale}.mo";
 
-        $mofile = "{$domain}-{$locale}.mo";
+        $mofile_local = dirname(__FILE__) . "/../languages/" . $mofile;
+        $mofile_global = WP_LANG_DIR . "/e20rsequence/" . $mofile;
 
-        $mofile_local = plugin_basename(__FILE__) . "/../languages/";
-        $mofile_global = WP_LANG_DIR . "/e20r-sequence/" . $mofile;
-
-        load_textdomain( $domain, $mofile_global );
-        load_plugin_textdomain( $domain, FALSE, $mofile_local );
+        load_textdomain( "e20rsequence", $mofile_global );
+        load_textdomain( "e20rsequence", $mofile_local );
     }
 
     /**
@@ -6758,7 +5455,7 @@ class Controller
      */
     public function unprivileged_ajax_error() {
 
-        $this->dbg_log('Unprivileged ajax call attempted', E20R_DEBUG_SEQ_CRITICAL);
+        E20RTools\DBG::log('Unprivileged ajax call attempted', E20R_DEBUG_SEQ_CRITICAL);
 
         wp_send_json_error( array(
             'message' => __('You must be logged in to edit PMPro Sequences', "e20rsequence")
@@ -6769,7 +5466,7 @@ class Controller
 
         $sequence_id = intval($_REQUEST['e20r_sequence_id']);
 
-        $this->dbg_log( 'send_user_alert_notices() - Will send alerts for sequence #' . $sequence_id );
+        E20RTools\DBG::log( 'send_user_alert_notices() - Will send alerts for sequence #' . $sequence_id );
 
 //            $sequence = apply_filters('get_sequence_class_instance', null);
 //            $sequence->sequence_id = $sequence_id;
@@ -6777,7 +5474,7 @@ class Controller
 
         do_action( 'e20r_sequence_cron_hook', array( $sequence_id ));
 
-        $this->dbg_log( 'send_user_alert_notices() - Completed action for sequence #' . $sequence_id );
+        E20RTools\DBG::log( 'send_user_alert_notices() - Completed action for sequence #' . $sequence_id );
         wp_redirect('/wp-admin/edit.php?post_type=pmpro_sequence');
     }
 
@@ -6789,7 +5486,7 @@ class Controller
 
             if ( 1 == $options->sendNotice ) {
 
-                $this->dbg_log("send_alert_notice_from_menu() - Adding send action");
+                E20RTools\DBG::log("send_alert_notice_from_menu() - Adding send action");
                 $actions['duplicate'] = '<a href="admin.php?post=' . $post->ID . '&amp;action=send_user_alert_notices&amp;e20r_sequence_id=' . $post->ID .'" title="' .__("Send user alerts", "e20rtracker" ) .'" rel="permalink">' . __("Send Notices", "e20rtracker") . '</a>';
             }
         }
@@ -6802,14 +5499,26 @@ class Controller
      */
     public function load_actions()
     {
+        // Configure all needed class instance filters;
+        add_filter( "get_sequence_views_class_instance", [ Sequence\Views::get_instance(), 'get_instance' ] );
+        add_filter( "get_e20rerror_class_instance", [ Tools\E20RError::get_instance(), 'get_instance' ] );
+        add_filter( "get_cron_class_instance", [ Tools\Cron::get_instance(), 'get_instance'] );
+
+        $uc_class = Tools\e20rSequenceUpdates::get_instance();
+        add_filter( "get_sequence_update_class_instance", [ $uc_class, 'get_instance' ] );
+
+        add_action( 'plugins_loaded', [ $uc_class, 'init' ] );
+        add_action( 'wp_loaded', [ $uc_class, 'update' ], 1) ; // Run early
 
         // Load filters
         add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
         add_filter('pmpro_sequencepost_types', array(&$this, 'included_cpts'));
 
+        // TODO: Split pmpro filters into own filter management module
         add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 9, 4);
         add_filter("pmpro_non_member_text_filter", array(&$this, "text_filter"));
         add_filter("pmpro_not_logged_in_text_filter", array(&$this, "text_filter"));
+
         add_filter("the_content", array(&$this, "display_sequence_content"));
 
         // add_filter( "the_posts", array( &$this, "set_delay_values" ), 10, 2 );
@@ -6844,7 +5553,7 @@ class Controller
 
         add_action('admin_menu', array(&$this, "define_metaboxes"));
         add_action('save_post', array(&$this, 'save_post_meta'), 10, 2);
-
+        add_action('deleted_post', array(&$this, 'delete_post_meta_for_sequence'), 10, 1);
         add_action('widgets_init', array(&$this, 'register_widgets'));
 
         // Add AJAX handlers for logged in users/admins
@@ -6885,7 +5594,7 @@ class Controller
             $this->load_sequence_post();
         }
 
-        $this->dbg_log("find_single_post() - Find post {$post_id}");
+        E20RTools\DBG::log("find_single_post() - Find post {$post_id}");
 
         foreach( $this->posts as $key => $post ) {
 
@@ -6908,11 +5617,11 @@ class Controller
 
         if ( empty( $this->options->sortOrder ) ) {
 
-            $this->dbg_log('sort_by_delay(): Need sortOrder option to base sorting decision on...');
+            E20RTools\DBG::log('sort_by_delay(): Need sortOrder option to base sorting decision on...');
             // $sequence = $this->get_sequence_by_id($a->id);
             if ( $this->sequence_id !== null) {
 
-                $this->dbg_log('sort_by_delay(): Have valid sequence post ID saved: ' . $this->sequence_id);
+                E20RTools\DBG::log('sort_by_delay(): Have valid sequence post ID saved: ' . $this->sequence_id);
                 $this->get_options( $this->sequence_id );
             }
         }
@@ -6920,11 +5629,11 @@ class Controller
         switch ($this->options->sortOrder) {
 
             case SORT_DESC:
-                $this->dbg_log('sort_by_delay(): Sorted in Descending order');
+                E20RTools\DBG::log('sort_by_delay(): Sorted in Descending order');
                 krsort( $this->posts, SORT_NUMERIC );
                 break;
             default:
-                $this->dbg_log('sort_by_delay(): undefined or ascending sort order');
+                E20RTools\DBG::log('sort_by_delay(): undefined or ascending sort order');
                 ksort( $this->posts, SORT_NUMERIC );
         }
 
@@ -6944,12 +5653,12 @@ class Controller
 
 /*            if ( empty( $this->options->sortOrder) ) {
 
-            $this->dbg_log('sort_posts_by_delay(): Need sortOrder option to base sorting decision on...');
+            E20RTools\DBG::log('sort_posts_by_delay(): Need sortOrder option to base sorting decision on...');
             // $sequence = $this->get_sequence_by_id($a->id);
 
             if ( $this->sequence_id !== null) {
 
-                $this->dbg_log('sort_posts_by_delay(): Have valid sequence post ID saved: ' . $this->sequence_id);
+                E20RTools\DBG::log('sort_posts_by_delay(): Have valid sequence post ID saved: ' . $this->sequence_id);
                 $this->get_options( $this->sequence_id );
             }
         }
@@ -6957,17 +5666,17 @@ class Controller
         switch ($this->options->sortOrder) {
 
             case SORT_ASC:
-                // $this->dbg_log('sort_posts_by_delay(): Sorting in Ascending order');
+                // E20RTools\DBG::log('sort_posts_by_delay(): Sorting in Ascending order');
                 return $this->sort_ascending($a, $b);
                 break;
 
             case SORT_DESC:
-                // $this->dbg_log('sort_posts_by_delay(): Sorting in Descending order');
+                // E20RTools\DBG::log('sort_posts_by_delay(): Sorting in Descending order');
                 return $this->sort_descending($a, $b);
                 break;
 
             default:
-                $this->dbg_log('sort_posts_by_delay(): sortOrder not defined');
+                E20RTools\DBG::log('sort_posts_by_delay(): sortOrder not defined');
         }
 
         return false;
@@ -6986,7 +5695,7 @@ class Controller
     private function sort_ascending($a, $b) {
 
         list($aDelay, $bDelay) = $this->normalize_delay_values($a, $b);
-        // $this->dbg_log('sort_ascending() - Delays have been normalized');
+        // E20RTools\DBG::log('sort_ascending() - Delays have been normalized');
 
         // Now sort the data
         if ($aDelay == $bDelay)

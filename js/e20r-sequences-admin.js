@@ -28,30 +28,30 @@ var sequenceSettings = {
         var $class = this;
 
         this.email_settings = jQuery('.e20r-sequence-email');
-        this.sendAlertCtl   = jQuery('#e20r_sequence_sendnotice');
+        this.sendAlertCtl   = jQuery('#e20r-sequence_sendnotice');
         this.checkboxes     = jQuery('.e20r-sequence-settings-display .e20r-sequence-setting-col-1 > input[type="checkbox"]');
         this.saveBtn        = jQuery('a[class^="save-pmproseq"]');
         this.cancelBtn      = jQuery('a[class^="cancel-pmproseq"]');
         this.editBtn        = jQuery('a.e20r-seq-edit');
 
         this.selects        = jQuery('div.e20r-sequence-settings-input select');
-        this.sortOrderCtl   = jQuery('#e20r_sequence_sortorder');
-        this.delayCtl       = jQuery('#e20r_sequence_delaytype');
-        this.showDelayCtl   = jQuery('#e20r_sequence_showdelayas');
-        this.templCtl       = jQuery('#e20r_sequence_template');
-        this.timeCtl        = jQuery('#e20r_sequence_noticetime');
-        this.dateCtl        = jQuery('#e20r_sequence_dateformat');
-        this.offsetCtl      = jQuery('#e20r_sequence_offset');
-        this.repeatCtl      = jQuery('#e20r_sequence_allowRepeatPosts');
-        this.sndAsCtl       = jQuery('#e20r_sequence_sendas');
+        this.sortOrderCtl   = jQuery('#e20r-sequence_sortorder');
+        this.delayCtl       = jQuery('#e20r-sequence_delaytype');
+        this.showDelayCtl   = jQuery('#e20r-sequence_showdelayas');
+        this.templCtl       = jQuery('#e20r-sequence_template');
+        this.timeCtl        = jQuery('#e20r-sequence_noticetime');
+        this.dateCtl        = jQuery('#e20r-sequence_dateformat');
+        this.offsetCtl      = jQuery('#e20r-sequence_offset');
+        this.repeatCtl      = jQuery('#e20r-sequence_allowRepeatPosts');
+        this.sndAsCtl       = jQuery('#e20r-sequence_sendas');
 
         /* Input */
-        this.excerptCtl     = jQuery('#e20r_sequence_excerpt');
-        this.subjCtl        = jQuery('#e20r_sequence_subject');
-        this.fromCtl        = jQuery('#e20r_sequence_fromname');
-        this.replyCtl       = jQuery('#e20r_sequence_replyto');
+        this.excerptCtl     = jQuery('#e20r-sequence_excerpt');
+        this.subjCtl        = jQuery('#e20r-sequence_subject');
+        this.fromCtl        = jQuery('#e20r-sequence_fromname');
+        this.replyCtl       = jQuery('#e20r-sequence_replyto');
 
-        this.offsetChkCtl   = jQuery('#e20r_sequence_offsetchk');
+        this.offsetChkCtl   = jQuery('#e20r-sequence_offsetchk');
 
         this.spinner = jQuery('div .seq_spinner');
 
@@ -83,9 +83,9 @@ var sequenceSettings = {
 
             $checkbox = jQuery(this);
 
-            if ( 'e20r_sequence_offsetchk' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
+            if ( 'e20r-sequence_offsetchk' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
 
-                var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
+                var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence_offset');
                 console.log("The checkbox for the preview functionality is set, show its status", $status);
                 $status.show();
             }
@@ -164,7 +164,7 @@ var sequenceSettings = {
             var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
 
             $inputs.find('input[type="hidden"]').val(0);
-            $inputs.find('#e20r_sequence_offset').val(0);
+            $inputs.find('#e20r-sequence_offset').val(0);
 
             var $text = '<span class="e20r-sequence-status">' + $inputs.find('#e20r_sequence_offset option:selected').text() + '</span>';
             $status.find('.e20r-sequence-setting-col-2').html( $text );
@@ -173,7 +173,7 @@ var sequenceSettings = {
             // jQuery('.e20r-sequence-offset').hide();
         }
 
-        if ( 'e20r_sequence_sendnotice' == $checkbox.attr('id')  ) {
+        if ( 'e20r-sequence_sendnotice' == $checkbox.attr('id')  ) {
 
             console.log('Show all alert related variables');
             if ( $checkbox.is(':checked') ) {
@@ -262,7 +262,7 @@ var sequenceSettings = {
     },
     change_delay_type: function() {
 
-        var dtCtl = jQuery('#e20r_sequence_delaytype');
+        var dtCtl = jQuery('#e20r-sequence_delayType');
 
         var selected = dtCtl.val();
         var current = jQuery('input[name=e20r_sequence_settings_hidden_delay]').val();
@@ -524,7 +524,7 @@ var postMeta = {
                 in_admin_panel: in_admin_panel,
                 e20r_seq_post: post_id,
                 e20r_seq_delay: delay,
-                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
+                e20r_sequence_post_nonce: jQuery('#e20r_sequence_post_nonce').val()
             },
             error: function(response, $errString, $errType){
 
@@ -624,7 +624,7 @@ var postMeta = {
                 e20r_sequence_id: jQuery('#e20r_sequence_id').val(),
                 e20r_sequence_post: jQuery('#e20r_sequencepost').val(),
                 e20r_sequence_delay: jQuery('#e20r_sequencedelay').val(),
-                e20r_sequence_addpost_nonce: jQuery('#e20r_sequence_addpost_nonce').val()
+                e20r_sequence_post_nonce: jQuery('#e20r_sequence_post_nonce').val()
             },
             error: function( $response, $errString, $errType ) {
                 console.log("error() - Returned data: " + $response + " and error:" + $errString + " and type: " + $errType );
@@ -790,7 +790,7 @@ var postMeta = {
             data: {
                 action: 'e20r_sequence_clear_cache',
                 e20r_sequence_id: sequence_id,
-                e20r_sequence_rmpost_nonce: jQuery('#e20r_sequence_rmpost_nonce').val()
+                e20r_sequence_post_nonce: jQuery('#e20r_sequence_post_nonce').val()
             },
             error: function($data, $errString, $errType){
 

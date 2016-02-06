@@ -11,17 +11,15 @@ namespace E20R\Sequences\Tools;
 class E20RError extends \WP_Error
 {
     private $history = array();
-    private static $_this;
+    private static $_this = null;
 
     public function __construct()
     {
-        if (isset(self::$_this)) {
+        if (null !== self::$_this ) {
             wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20rsequence'), get_class($this)));
         }
 
         self::$_this = $this;
-
-        add_filter('get_e20rerror_class_instance', [$this, 'get_instance']);
     }
 
     private function configure() {
@@ -34,7 +32,12 @@ class E20RError extends \WP_Error
         );
     }
 
-    public function get_instance() {
+    public static function get_instance()
+    {
+
+        if ( self::$_this == null ) {
+            self::$_this = new self;
+        }
 
         return self::$_this;
     }

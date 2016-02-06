@@ -14,7 +14,7 @@ readme_header="== ${version} =="
 #
 # Create a metadata.json friendly changelog entry for the current ${version}
 #
-${sed} -e"s/\"/\'/g" -e"s/.*/\<li\>&\<\/li\>/" ${changelog_source} > ${readme_path}${incomplete_out}
+${sed} -e"s/\"/\'/g" -e's/.*/\<li\>&\<\/li\>/' -e's/\\/\\\\\\\\/g' ${changelog_source} > ${readme_path}${incomplete_out}
 echo -n ${json_header} > ${readme_path}${json_out}
 cat ${readme_path}${incomplete_out} | tr -d '\n' >> ${readme_path}${json_out}
 echo -n ${json_footer} >> ${readme_path}${json_out}
