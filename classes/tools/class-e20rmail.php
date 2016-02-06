@@ -164,7 +164,6 @@ class e20rMail
         return false;
     }
 
-
     private function process_body($data_array = array(), $body = null ) {
 
         if (is_null($body)) {
