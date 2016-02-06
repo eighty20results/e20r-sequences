@@ -48,7 +48,7 @@ See ./email/README.txt for information on templates for the email alerts.
 1. Upload the `e20r-sequences` directory to the `/wp-content/plugins/` directory of your site.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Navigate to the Sequences menu in the WordPress dashboard to create a new sequence.
-4. Add posts to sequence using the "Posts in this Sequences" meta box under the post content.
+4. Add posts to sequence using the "Posts in this Sequences" meta box on the sequence editor page, or add it to the actual post/page via the metabox on the top right of that screen.
 
 ###Filters & Actions
 
@@ -106,14 +106,13 @@ See ./email/README.txt for information on templates for the email alerts.
 
 * If you started with this plugin on one of the V2.x versions, you *must* deactivate, and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
 * The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
-* Format for "Posts in sequence" metabox doesn't handle responsive screens well - Fix Pending
+* Format for "Posts in sequence" metabox only partially handles responsive screens well - Fix underway
 
 For more, see the [Issues section](https://github.com/eighty20results/e20r-sequences/issues) for the plugin on Github.com.
 
 ###DEBUG
- To enable logging for this plugin, set WP_DEBUG to 'true' in wp-config.php
- A fair bit (understatement) of data which will get dumped into uploads/e20r-sequences/debug_log.txt
- (located the under the plugin directory).
+ To enable logging for this plugin, define WP_DEBUG as 'true' in wp-config.php (`define('WP_DEBUG', true);`)
+ A LOT of data/log info will be dumped into wp-content/uploads/e20r-sequences/debug_log.txt.
 
 ## About the email alert templates
  These templates are standard HTML files and need to have .html as their extension. By default, we have included two template files, one template is for the scenario where you want to send one alert per new post available that day. The other is a digest approach where we include a link of posts that were made available for the sequence and user that day.
@@ -213,9 +212,53 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.3.2
-* FIX: Add e20r-sequences loader file to build
-* FIX: Incorrect path to loader file
+###4.4.0
+* FIX: Would sometimes error during display of available posts for sequence (in post list metabox)
+* FIX: Simplified security management
+* FIX: Refactored CSS (out of .php & into dedicated CSS files)
+* FIX: Error when attempting to load sequence info
+* FIX: Would sometimes return too many sequences
+* FIX: Would sometimes return incorrect number of sequences.
+* FIX: Reflect new version number (4.4)
+* FIX: Revert version fix
+* FIX: Didn't account for pages < pagesize.
+* FIX: Autoload the views class
+* FIX: Conversion check didn't always return the correct status for a sequence
+* FIX: Updated default options to match new, simpler settings management
+* FIX: Load the appropriate upgrade logic (if present).
+* FIX: Didn't always load the front-end scripts when loading the sequence page
+* FIX: Don't send notification alerts for posts with a 0 delay
+* FIX: Make compatible with new settings/option names & fields
+* FIX: Instantiation of singleton class
+* FIX: Numerous issues related to moving the view code out of the controller
+* FIX: Simplify saving of sequence options/settings from backend
+* FIX: Didn't always load the correct instance of the class
+* FIX: Would sometimes loop too many times during update check
+* ENH: Clean up Sequence meta from member posts/pages/CPTs if the sequence itself is deleted
+* ENH: Convert settings to new (easier to manage) settings for the sequence. (initial commit)
+* ENH: Add stub functions for update actions in e20rSequenceUpdates class
+* ENH: Simplify up-front loading of classes
+* ENH: Make 'add post to sequence' metabox responsive
+* ENH: Remove some of the duplicate DEBUG info
+* ENH: Support using separate view class
+* ENH: Set option for update(d) version
+* ENH: Simplify saving options/settings for the sequence
+* ENH: Add debug to debug status of post/pages being loaded from DB
+* ENH: Move view related code to own class
+* ENH: Remove some of the duplicate DEBUG info
+* ENH: Remove sequence meta from post(s) when sequence gets deleted.
+* ENH: Add upgrade handling to hook system
+* ENH: Simplify saving/loading options & settings in backend meta box
+* ENH: Initial commit for refactoring view related functions
+* ENH: Initial commit for update functionality tool
+* ENH: Add debug output for is_after_opt_in()
+* ENH: Whitespace clean-up
+* ENH: Simplified security protocol (minimize probability for error while maximizing security)
+* ENH: Add license information
+* ENH: Updated Norwegian translation (Norsk/Bokmål)
+* ENH: Add description on how to add new alert templates
+* NIT: Updated fix version
+* NIT: Refactored class
 
 ##Old releases
 ###.1
@@ -905,3 +948,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Update README.txt to highlight new substitution filter(s)
 * ENH: Update README.md to highlight new substitution filter(s)
 * ENH: Add set_option_by_name() function
+
+###4.3.2
+* FIX: Add e20r-sequences loader file to build
+* FIX: Incorrect path to loader file

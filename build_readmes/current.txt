@@ -1,2 +1,46 @@
-FIX: Add e20r-sequences loader file to build
-FIX: Incorrect path to loader file
+FIX: Would sometimes error during display of available posts for sequence (in post list metabox)
+FIX: Simplified security management
+FIX: Refactored CSS (out of .php & into dedicated CSS files)
+FIX: Error when attempting to load sequence info
+FIX: Would sometimes return too many sequences
+FIX: Would sometimes return incorrect number of sequences.
+FIX: Reflect new version number (4.4)
+FIX: Revert version fix
+FIX: Didn't account for pages < pagesize.
+FIX: Autoload the views class
+FIX: Conversion check didn't always return the correct status for a sequence
+FIX: Updated default options to match new, simpler settings management
+FIX: Load the appropriate upgrade logic (if present).
+FIX: Didn't always load the front-end scripts when loading the sequence page
+FIX: Don't send notification alerts for posts with a 0 delay
+FIX: Make compatible with new settings/option names & fields
+FIX: Instantiation of singleton class
+FIX: Numerous issues related to moving the view code out of the controller
+FIX: Simplify saving of sequence options/settings from backend
+FIX: Didn't always load the correct instance of the class
+FIX: Would sometimes loop too many times during update check
+ENH: Clean up Sequence meta from member posts/pages/CPTs if the sequence itself is deleted
+ENH: Convert settings to new (easier to manage) settings for the sequence. (initial commit)
+ENH: Add stub functions for update actions in e20rSequenceUpdates class
+ENH: Simplify up-front loading of classes
+ENH: Make "add post to sequence" metabox responsive
+ENH: Remove some of the duplicate DEBUG info
+ENH: Support using separate view class
+ENH: Set option for update(d) version
+ENH: Simplify saving options/settings for the sequence
+ENH: Add debug to debug status of post/pages being loaded from DB
+ENH: Move view related code to own class
+ENH: Remove some of the duplicate DEBUG info
+ENH: Remove sequence meta from post(s) when sequence gets deleted.
+ENH: Add upgrade handling to hook system
+ENH: Simplify saving/loading options & settings in backend meta box
+ENH: Initial commit for refactoring view related functions
+ENH: Initial commit for update functionality tool
+ENH: Add debug output for is_after_opt_in()
+ENH: Whitespace clean-up
+ENH: Simplified security protocol (minimize probability for error while maximizing security)
+ENH: Add license information
+ENH: Updated Norwegian translation (Norsk/Bokmål)
+ENH: Add description on how to add new alert templates
+NIT: Updated fix version
+NIT: Refactored class
