@@ -128,8 +128,13 @@ For more, see the [Issues section](https://github.com/eighty20results/e20r-seque
   `!!excerpt!!` - The excerpt from the post/page containing the content we're sending a reminder about.
   `!!ptitle!!` - The title of the post/page we're sending the alert about.
   
-  The template file _must_ end with the .html extension. 
-   
+### Adding new email alert templates
+  The plugin will search the directory of the currently active theme for the `sequence-email-alerts` directory. If found, it will load any .html files and add them to the Sequence Settings under the "Template" settings drop-down (at the top of the list) for all new and defined sequences.
+  
+  These template files support all standard HTML elements.
+  
+  A template file _must_ end with the .html extension or it will not be located by the settings metabox.
+  
   Whether or not the template file contains any of the replaceable variables is entirely optional.
   
   _Note_: As of v4.3, the admin can define any substitutions they would like in the template, and apply the 'e20r-sequence-email-substitution-fields' filter to do the "dirty work". The substitutions will be executed before the email gets sent to the user. Also new in 4.3 is the fact that all of the above listed substitution vairables have filters (See the sources for information on the filters).
