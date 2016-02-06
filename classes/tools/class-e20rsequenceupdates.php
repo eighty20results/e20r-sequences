@@ -52,13 +52,18 @@ class e20rSequenceUpdates
     {
         E20RTools\DBG::log("Getting plugin data for E20R Sequences");
 
-        $plugin_status = get_plugin_data(E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences.php', false, false);
+        $history = array('4.4', '4.4.0' );
+
+        if (function_exists('get_plugin_data'))
+            $plugin_status = get_plugin_data(E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences.php', false, false);
+
         $version = ( !empty($plugin_status['Version']) ? $plugin_status['Version'] : E20R_SEQUENCE_VERSION );
 
         $me = self::$_this;
         $me->set_version($version);
 
         $is_updated = get_option('e20r-sequence-updated', array() );
+        $is_updated = array_unique(array_merge($history, $is_updated));
 
         if (!in_array( $version, $is_updated )) {
 
@@ -73,6 +78,8 @@ class e20rSequenceUpdates
             add_action("e20r_sequence_update_{$v}", array(self::$_this, 'e20r_sequence_update'));
             add_action("e20r_sequence_after_update_{$v}", array(self::$_this, 'e20r_sequence_after_update'));
         }
+
+        update_option('e20r-sequence-updated', $is_updated, 'no');
     }
 
     public function get_version()
