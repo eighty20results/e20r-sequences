@@ -19,7 +19,6 @@ namespace E20R\Sequences\Sequence;
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-
 use E20R\Sequences\Sequence as Sequence;
 use E20R\Sequences\Tools\E20RError as E20RError;
 use E20R\Tools as E20RTools;
@@ -918,7 +917,7 @@ class Views {
 		<div class="submitbox" id="e20r-seq-postmeta">
 			<div id="minor-publishing">
 				<div id="e20r_seq-configure-sequence">
-					<?php echo $seq->load_sequence_meta( $post->ID ) ?>
+					<?php echo $this->load_sequence_list_meta( $post->ID ) ?>
 				</div>
 			</div>
 		</div>
@@ -948,7 +947,7 @@ class Views {
 		$processed_ids = array();
 
 		/* Fetch all Sequence posts */
-		$sequence_list = $sequence->get_all_sequences( 'any' );
+		$sequence_list = $sequence->get_all_sequences( array( 'publish', 'pending', 'draft', 'private', 'future' ) );
 
 		E20RTools\DBG::log("Loading Sequences (count: " . count($sequence_list) . ")");
 
