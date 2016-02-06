@@ -200,7 +200,7 @@ class Views {
 							if  ( $all_posts !== false ) {
 
 								foreach( $all_posts as $p ) { ?>
-									<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php echo $sequence->set_post_status( $p->post_status );?>)</option><?php
+									<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php echo $p->ID;?><?php echo $this->set_post_status( $p->post_status );?>)</option><?php
 								}
 							}
 							else {
@@ -209,14 +209,11 @@ class Views {
 							}
 							?>
 						</select>
-						<style> .select2-container {width: 100%;} </style>
-						<!-- <script type="text/javascript"> jQuery('#e20r_sequencepost').select2();</script> -->
 					</div>
 						<div class="table_newmeta e20r-meta-table-col-2 cell">
-						<input id="e20r_sequencedelay" name="e20r_sequencedelay" type="text" value="" size="7" />
-						<input id="e20r_sequence_id" name="e20r_sequence_id" type="hidden" value="<?php echo $sequence->sequence_id; ?>" size="7" />
-						<?php wp_nonce_field('e20r-sequence-add-post', 'e20r_sequence_addpost_nonce'); ?>
-						<?php wp_nonce_field('e20r-sequence-rm-post', 'e20r_sequence_rmpost_nonce'); ?>
+                            <input id="e20r_sequencedelay" name="e20r_sequencedelay" type="text" value="" size="7" />
+                            <input id="e20r_sequence_id" name="e20r_sequence_id" type="hidden" value="<?php echo $sequence->sequence_id; ?>" size="7" />
+                            <?php wp_nonce_field('e20r-sequence-post', 'e20r_sequence_post_nonce'); ?>
 					</div>
 						<div class="table_newmeta e20r-meta-table-col-3 cell">
 						<a class="button" id="e20r_sequencesave" onclick="javascript:e20r_sequence_addEntry(); return false;">
