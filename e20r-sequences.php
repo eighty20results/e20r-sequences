@@ -28,7 +28,7 @@ License:
 
 */
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '4.4.1');
+define('E20R_SEQUENCE_VERSION', '4.4.2');
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
 define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.4');
@@ -42,4 +42,10 @@ if ( version_compare( PHP_VERSION, E20R_SEQ_REQUIRED_PHP_VERSION, '<=' ) ) {
     return;
 } else {
     require_once( E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences-loader.php');
+
+    $plugin_updates = \PucFactory::buildUpdateChecker(
+        'https://eighty20results.com/protected-content/e20r-sequences/metadata.json',
+        __FILE__,
+        'e20r-sequences'
+    );
 }
