@@ -1,9 +1,9 @@
 <?php
 /*
 Plugin Name: Sequences by Eighty / 20 Results
-Plugin URI: https://eighty20results.com/plugins/e20r-sequences/
+Plugin URI: https://eighty20results.com/e20r-sequences/
 Description: Drip feed content for your users (See website for available membership module support).
-Version: 4.4.1
+Version: 4.4.2
 Author: Thomas Sjolshagen
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen
