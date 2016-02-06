@@ -1,8 +1,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: PMPro Sequence\n"
-"POT-Creation-Date: 2016-02-06 11:32-0500\n"
-"PO-Revision-Date: 2016-02-06 11:36-0500\n"
+"POT-Creation-Date: 2016-02-06 13:38-0500\n"
+"PO-Revision-Date: 2016-02-06 13:38-0500\n"
 "Last-Translator: Thomas Sjolshagen <thomas@eighty20results.com>\n"
 "Language-Team: \n"
 "Language: nb_NO\n"
@@ -79,50 +79,50 @@ msgstr ""
 msgid "Y-m-d"
 msgstr "d-m-Y"
 
-#: classes/class-controller.php:2380
+#: classes/class-controller.php:2394
 msgid "Drip Feed Settings"
 msgstr "Sekvenskonfigurasjon"
 
-#: classes/class-controller.php:2394
+#: classes/class-controller.php:2408
 msgid "Require Membership"
 msgstr "Medlemskap er påkrevet"
 
-#: classes/class-controller.php:2401
+#: classes/class-controller.php:2415
 msgid "Settings for Sequence"
 msgstr "Innstillinger for sekvensen"
 
-#: classes/class-controller.php:2405
+#: classes/class-controller.php:2419
 msgid "Posts in Sequence"
 msgstr "Innlegg i sekvensen"
 
-#: classes/class-controller.php:2513
+#: classes/class-controller.php:2527
 #, php-format
 msgid "You are on day %s of your membership"
 msgstr "Du har vært medlem i %s dager"
 
-#: classes/class-controller.php:2558
+#: classes/class-controller.php:2572
 msgid "No sequence ID specified."
 msgstr "Ingen oppgitt sekvens ID "
 
-#: classes/class-controller.php:2664
+#: classes/class-controller.php:2678
 msgid "Navigation"
 msgstr "Navigasjon"
 
-#: classes/class-controller.php:2671
+#: classes/class-controller.php:2685
 #, php-format
 msgid "%s Previous"
 msgstr "%s Forrige"
 
-#: classes/class-controller.php:2672
+#: classes/class-controller.php:2686
 #, php-format
 msgid "Next %s"
 msgstr "Neste %s"
 
-#: classes/class-controller.php:2675
+#: classes/class-controller.php:2689
 msgid "Page"
 msgstr "Side"
 
-#: classes/class-controller.php:2748
+#: classes/class-controller.php:2762
 #, php-format
 msgid ""
 "This content is only available to existing members at the specified time or "
@@ -131,22 +131,22 @@ msgstr ""
 "Dette innholdet er bare tilgjengelig for eksisterende medlemmer på den "
 "angitte datoen. ( Krever: <a href=‘%s’>%s</a>"
 
-#: classes/class-controller.php:2758
+#: classes/class-controller.php:2772
 #, php-format
 msgid "You will be able to access \"%s\" on day %s of your membership"
 msgstr "Du vil får tilgang til “%s” på dag nummer %s av medlemskapet ditt"
 
-#: classes/class-controller.php:2763
+#: classes/class-controller.php:2777
 #, php-format
 msgid "You will be able to  access \"%s\" on %s"
 msgstr "Du vil kunne åpne “%s” på %s"
 
-#: classes/class-controller.php:2770
+#: classes/class-controller.php:2784
 #, php-format
 msgid "You will be able to access \"%s\" on %s"
 msgstr "Du vil kunne åpne “%s” på %s"
 
-#: classes/class-controller.php:2786
+#: classes/class-controller.php:2800
 #, php-format
 msgid ""
 "This content is only available to existing members who are already logged "
@@ -155,7 +155,7 @@ msgstr ""
 "Dette innholdet er kun tilgjengelig for eksisterende medlemmer som allerede "
 "er logget inn (Nivå: <a href=‘%s’>%s</a>)"
 
-#: classes/class-controller.php:2790
+#: classes/class-controller.php:2804
 msgid ""
 "This content is only available to existing members who have logged in. ( For "
 "levels:  "
@@ -163,135 +163,135 @@ msgstr ""
 "Dette innholdet er kun tilgjengelig for eksisterende medlemmer som har "
 "logget inn (For nivåer:"
 
-#: classes/class-controller.php:3255
+#: classes/class-controller.php:3269
 msgid "A summary:"
 msgstr "Oppsummering:"
 
-#: classes/class-controller.php:3476
+#: classes/class-controller.php:3490
 msgid "Error: No delay value(s) received"
 msgstr "Feil: Ingen forsinkelse verdi(er) mottatt"
 
-#: classes/class-controller.php:3508
+#: classes/class-controller.php:3522
 msgid "Incorrect privileges for this operation"
 msgstr "Feil tilgang til denne operasjonen"
 
-#: classes/class-controller.php:3520
+#: classes/class-controller.php:3534
 #, php-format
 msgid "You must specify a delay value for the '%s' sequence"
 msgstr "Du må angi en forsinkelsesverdi for ‘%s’ sekvensen"
 
-#: classes/class-controller.php:3574
+#: classes/class-controller.php:3588
 msgid "Please enter a value for post and delay"
 msgstr "Vennligst legg in verdier for både artikkelen og tilgjenglighet"
 
-#: classes/class-controller.php:3583
+#: classes/class-controller.php:3597
 msgid "A post with that id does not exist"
 msgstr "Fant ikke en artikkel med den spesifiserte id'en."
 
-#: classes/class-controller.php:3609
+#: classes/class-controller.php:3623
 #, php-format
 msgid "Error adding %s to %s"
 msgstr "Feil når vi forsøkte å legge in %s til %s"
 
-#: classes/class-controller.php:3780
+#: classes/class-controller.php:3794
 msgid "No sequence provided"
 msgstr "Ingen sekvens er angitt"
 
-#: classes/class-controller.php:3794
+#: classes/class-controller.php:3808
 msgid "User is not allowed to change settings"
 msgstr "Du har ikke lov til å endre innstillinger."
 
-#: classes/class-controller.php:3807
+#: classes/class-controller.php:3821
 msgid "Unable to wipe existing posts"
 msgstr "Klarte ikke å slette eksisterende innlegg fra sekvensen"
 
-#: classes/class-controller.php:4253 classes/class-controller.php:4269
-#: classes/class-controller.php:4341
+#: classes/class-controller.php:4267 classes/class-controller.php:4283
+#: classes/class-controller.php:4355
 msgid "Unable to save your settings"
 msgstr "Kan ikke lagre innstillingene"
 
-#: classes/class-controller.php:4346
+#: classes/class-controller.php:4360
 #, php-format
 msgid "Error: %s"
 msgstr "Feil: %s"
 
-#: classes/class-controller.php:4478
+#: classes/class-controller.php:4492
 msgid "Could not delete posts from this sequence"
 msgstr "Kan ikke slette innlegg fra denne sekvensen"
 
-#: classes/class-controller.php:4488
+#: classes/class-controller.php:4502
 msgid "Unable to identify the Sequence"
 msgstr "Kunne ikke finne sekvensen"
 
-#: classes/class-controller.php:4492
+#: classes/class-controller.php:4506
 msgid "Unknown request"
 msgstr "Ukjent forespørsel"
 
-#: classes/class-controller.php:4539
+#: classes/class-controller.php:4553
 #, php-format
 msgid "'%s' has been removed"
 msgstr "“%s” har blitt slettet"
 
-#: classes/class-controller.php:4547
+#: classes/class-controller.php:4561
 msgid "Incorrect privileges: Did not update this sequence"
 msgstr "Feil rettigheter: Oppdaterer ikke sekvensen"
 
-#: classes/class-controller.php:4599
+#: classes/class-controller.php:4613
 msgid "Incorrect privileges to remove posts from this sequence"
 msgstr "Feil rettigheter for å fjerne innlegg fra denne sekvensen"
 
-#: classes/class-controller.php:4740
+#: classes/class-controller.php:4754
 msgid "Not configured to allow multiple delays for the same post/page"
 msgstr ""
 "Ikke konfigurert for å tillate flere forsinkelsesverdier for samme innlegg/"
 "side"
 
-#: classes/class-controller.php:4767
+#: classes/class-controller.php:4781
 msgid "Not permitted to modify the sequence"
 msgstr "Ikke tillatelse til å endre sekvensen"
 
-#: classes/class-controller.php:4776 classes/class-controller.php:4793
+#: classes/class-controller.php:4790 classes/class-controller.php:4807
 msgid "Did not specify a post/page to add"
 msgstr "Du har ikke spesifisert hvilket innlegg du ønsker å legge til"
 
-#: classes/class-controller.php:4780 classes/class-controller.php:4870
+#: classes/class-controller.php:4794 classes/class-controller.php:4884
 msgid "No delay has been specified"
 msgstr "Ingen forsinkelse er angitt"
 
-#: classes/class-controller.php:4798
+#: classes/class-controller.php:4812
 msgid "This sequence was not found on the server!"
 msgstr "Denne sekvensen ble ikke funnet på serveren!"
 
-#: classes/class-controller.php:4819
+#: classes/class-controller.php:4833
 msgid "No sequence specified. Did you remember to save this page first?"
 msgstr "Ingen sekvens oppgitt. Har du husket å lagre denne siden?"
 
-#: classes/class-controller.php:4852
+#: classes/class-controller.php:4866
 msgid "date: YYYY-MM-DD"
 msgstr "dato: ÅÅÅÅ-MM-DD"
 
-#: classes/class-controller.php:4852
+#: classes/class-controller.php:4866
 msgid "number: Days since membership started"
 msgstr "nummer: Dager siden medlemskap startet"
 
-#: classes/class-controller.php:4855
+#: classes/class-controller.php:4869
 #, php-format
 msgid "Invalid delay specified ( %1$s ). Expected format is a %2$s"
 msgstr "Ugyldig forsinkelse angitt (%1$s). Forventet format er en %2$s"
 
-#: classes/class-controller.php:4931
+#: classes/class-controller.php:4945
 msgid "The Eighty/20 Results Sequence plugin requires the "
 msgstr "Eighty/20 Results Sequences tillegget krever "
 
-#: classes/class-controller.php:4932
+#: classes/class-controller.php:4946
 msgid "Opens in a new window/tab."
 msgstr "Åpne lenke i nytt vindu / ny fane"
 
-#: classes/class-controller.php:4933
+#: classes/class-controller.php:4947
 msgid "Paid Memberships Pro</a> membership plugin.<br/><br/>"
 msgstr "Paid Memberships Pro</a> medlemskaps utvidelsen.<br><br>"
 
-#: classes/class-controller.php:4934
+#: classes/class-controller.php:4948
 msgid ""
 "Please install Paid Memberships Pro before attempting to activate this "
 "Eighty/20 Results Sequence plugin.<br/><br/>"
@@ -299,7 +299,7 @@ msgstr ""
 "Vennligst installer tillegget fra Paid Membership Pro før du forsøker å "
 "aktivisere Eighty/20 Results Sequences tillegget.<br/><br/>"
 
-#: classes/class-controller.php:4935
+#: classes/class-controller.php:4949
 msgid ""
 "Click the 'Back' button in your browser to return to the Plugin management "
 "page."
@@ -307,64 +307,64 @@ msgstr ""
 "Klikk “Tilbake” i nettleseren for å gå tilbake til siden for administrasjon "
 "av utvidelser."
 
-#: classes/class-controller.php:4990
+#: classes/class-controller.php:5004
 msgid "Sequences"
 msgstr "Sekvenser"
 
-#: classes/class-controller.php:4991
+#: classes/class-controller.php:5005
 msgid "Sequence"
 msgstr "Sekvens"
 
-#: classes/class-controller.php:4993 classes/class-controller.php:4994
+#: classes/class-controller.php:5007 classes/class-controller.php:5008
 #: classes/class-views.php:1086
 msgid "New Sequence"
 msgstr "Ny Sekvens"
 
-#: classes/class-controller.php:4995 classes/class-controller.php:4996
+#: classes/class-controller.php:5009 classes/class-controller.php:5010
 msgid "Edit Sequence"
 msgstr "Rediger Sekvensen"
 
-#: classes/class-controller.php:4997
+#: classes/class-controller.php:5011
 msgid "Add New"
 msgstr "Legg til"
 
-#: classes/class-controller.php:4998
+#: classes/class-controller.php:5012
 msgid "View Sequence"
 msgstr "Vis sekvens"
 
-#: classes/class-controller.php:4999
+#: classes/class-controller.php:5013
 msgid "View This Sequence"
 msgstr "Vis denne sekvensen"
 
-#: classes/class-controller.php:5000
+#: classes/class-controller.php:5014
 msgid "Search Sequences"
 msgstr "Søk i sekvensene"
 
-#: classes/class-controller.php:5001
+#: classes/class-controller.php:5015
 msgid "No Sequence Found"
 msgstr "Fant ikke sekvensen"
 
-#: classes/class-controller.php:5002
+#: classes/class-controller.php:5016
 msgid "No Sequence Found In Trash"
 msgstr "Fant ikke sekvensen i søpplebøtta"
 
-#: classes/class-controller.php:5361
+#: classes/class-controller.php:5375
 msgid "Error: This sequence needs to be saved before you can send alerts"
 msgstr "Feil: Du må lagre sekvensen før du kan sende notiser manuelt."
 
-#: classes/class-controller.php:5362 classes/class-views.php:220
+#: classes/class-controller.php:5376 classes/class-views.php:220
 msgid "Update Sequence"
 msgstr "Oppdater sekvensen"
 
-#: classes/class-controller.php:5363
+#: classes/class-controller.php:5377
 msgid "Saving"
 msgstr "Lagrer"
 
-#: classes/class-controller.php:5364 classes/class-views.php:858
+#: classes/class-controller.php:5378 classes/class-views.php:858
 msgid "Update Settings"
 msgstr "Oppdater innstillinger"
 
-#: classes/class-controller.php:5365
+#: classes/class-controller.php:5379
 msgid ""
 "Changing the delay type will erase all existing posts or pages in the "
 "Sequence list. (Cancel if your are unsure)"
@@ -372,60 +372,60 @@ msgstr ""
 "Å endre forsinkelsestypen vil slette listen av artikler definert for "
 "sekvensen (ikke selve postene/sidene). Velg Avbryt dersom du er usikker)"
 
-#: classes/class-controller.php:5366
+#: classes/class-controller.php:5380
 msgid "Error saving sequence post [1]"
 msgstr "Feil ved lagring av sekvensartikkel [1]"
 
-#: classes/class-controller.php:5367
+#: classes/class-controller.php:5381
 msgid "Error saving sequence post [2]"
 msgstr "Feil ved lagring av sekvensartikkel [2]"
 
-#: classes/class-controller.php:5368
+#: classes/class-controller.php:5382
 msgid "Error deleting sequence post [1]"
 msgstr "Feil ved sletting av sekvensartikkel [1]"
 
-#: classes/class-controller.php:5369
+#: classes/class-controller.php:5383
 msgid "Error deleting sequence post [2]"
 msgstr "Feil ved sletting av sekvensartikkel [2]"
 
-#: classes/class-controller.php:5370 classes/class-views.php:128
+#: classes/class-controller.php:5384 classes/class-views.php:128
 #: classes/class-views.php:189
 msgid "Not Defined"
 msgstr "Udefiniert"
 
-#: classes/class-controller.php:5371
+#: classes/class-controller.php:5385
 msgid "Unknown error removing post from sequence"
 msgstr "Generell feil ved sletting av artikkelen fra denne sekvensen"
 
-#: classes/class-controller.php:5372
+#: classes/class-controller.php:5386
 msgid "Unknown error adding post to sequence"
 msgstr "Generell feil ved tillegg av ny artikkel til denne sekvensen"
 
-#: classes/class-controller.php:5373 classes/class-views.php:124
+#: classes/class-controller.php:5387 classes/class-views.php:124
 msgid "Delay"
 msgstr "Tilgjenglighetsdag"
 
-#: classes/class-controller.php:5374 classes/class-views.php:185
+#: classes/class-controller.php:5388 classes/class-views.php:185
 msgid "Days to delay"
 msgstr "Tilgjenglighetsdag"
 
-#: classes/class-controller.php:5375
+#: classes/class-controller.php:5389
 msgid "Avail. on"
 msgstr "Tilgjengelig"
 
-#: classes/class-controller.php:5376 classes/class-views.php:187
+#: classes/class-controller.php:5390 classes/class-views.php:187
 msgid "Release on (YYYY-MM-DD)"
 msgstr "Tilgjengelig: åååå-mm-dd"
 
-#: classes/class-controller.php:5461
+#: classes/class-controller.php:5475
 msgid "You must be logged in to edit PMPro Sequences"
 msgstr "Du må være logget inn for å kunne oppdatere en PMPro Sekvens"
 
-#: classes/class-controller.php:5490
+#: classes/class-controller.php:5504
 msgid "Send user alerts"
 msgstr "Sende brukervarsler"
 
-#: classes/class-controller.php:5490
+#: classes/class-controller.php:5504
 msgid "Send Notices"
 msgstr "Send varsler"
 
