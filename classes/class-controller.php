@@ -560,12 +560,12 @@ class Controller
 		$direct_operation = false;
         $status = false;
 
-		if ( empty($sequence_id) && (isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_rmpost_nonce'])) ) {
+		if ( empty($sequence_id) && (isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_post_nonce'])) ) {
 
 			E20RTools\DBG::log("Attempting to clear cache during AJAX operation");
 			$direct_operation = true;
 
-			wp_verify_nonce("e20r-sequence-rm-post", "e20r_sequence_rmpost_nonce");
+			wp_verify_nonce("e20r-sequence-post", "e20r_sequence_post_nonce");
 			$sequence_id = isset($_POST['e20r_sequence_id']) ? intval($_POST['e20r_sequence_id']) : null;
 
 			if (is_null($sequence_id)) {
@@ -584,13 +584,13 @@ class Controller
         }
 
         if( (false === $status) && (true === $direct_operation) &&
-            ( isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_rmpost_nonce']) )) {
+            ( isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_post_nonce']) )) {
             wp_send_json_error( array( array('message' => __("No cache to clear, or unable to clear the cache", "e20rsequence"))));
             wp_die();
         }
 
         if ((true === $status) && (true === $direct_operation) &&
-            (isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_rmpost_nonce']) )) {
+            (isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_post_nonce']) )) {
 
             wp_send_json_success();
             wp_die();
@@ -4513,7 +4513,7 @@ class Controller
 
         global $current_user;
 
-        check_ajax_referer('e20r-sequence-rm-post', 'e20r_sequence_rmpost_nonce');
+        check_ajax_referer('e20r-sequence-post', 'e20r_sequence_post_nonce');
 
         /** @noinspection PhpUnusedLocalVariableInspection */
         $result = '';
@@ -4695,7 +4695,7 @@ class Controller
      */
     public function add_post_callback() {
 
-        check_ajax_referer('e20r-sequence-add-post', 'e20r_sequence_addpost_nonce');
+        check_ajax_referer('e20r-sequence-post', 'e20r_sequence_post_nonce');
 
         global $current_user;
 
