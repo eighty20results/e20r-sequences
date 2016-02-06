@@ -262,7 +262,7 @@ var sequenceSettings = {
     },
     change_delay_type: function() {
 
-        var dtCtl = jQuery('#e20r_sequence_delaytype');
+        var dtCtl = jQuery('#e20r-sequence_delayType');
 
         var selected = dtCtl.val();
         var current = jQuery('input[name=e20r_sequence_settings_hidden_delay]').val();
