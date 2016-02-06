@@ -26,9 +26,6 @@ use E20R\Tools as E20RTools;
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-
-// TODO: When a (sequence) is deleted to clear all sequence affiliations for posts.
-//
 class Controller
 {
     public $options;
@@ -5389,7 +5386,7 @@ class Controller
 
     public function set_delay_config() {
 
-        $sequences = $this->get_all_sequences('all');
+        $sequences = $this->get_all_sequences(array( 'publish', 'pending', 'draft', 'private', 'future' ));
         $delays = array();
 
         //Save state for the current sequence
