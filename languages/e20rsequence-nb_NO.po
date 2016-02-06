@@ -2,14 +2,14 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PMPro Sequence\n"
 "POT-Creation-Date: 2016-01-29 14:54-0500\n"
-"PO-Revision-Date: 2016-01-29 14:56-0500\n"
+"PO-Revision-Date: 2016-02-06 10:47-0500\n"
 "Last-Translator: Thomas Sjolshagen <thomas@eighty20results.com>\n"
 "Language-Team: \n"
 "Language: nb_NO\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"X-Generator: Poedit 1.8.6\n"
+"X-Generator: Poedit 1.8.7\n"
 "X-Poedit-Basepath: ..\n"
 "X-Poedit-SourceCharset: UTF-8\n"
 "X-Poedit-KeywordsList: __;_e;_n:1,2;_x:1,2c;_ex:1,2c;_nx:4c,1,2;esc_attr__;"
@@ -104,7 +104,7 @@ msgstr "Tittel"
 
 #: classes/class-controller.php:2503 classes/class-controller.php:6790
 msgid "Delay"
-msgstr "Forsinkelse"
+msgstr "Tilgjenglighetsdag"
 
 #: classes/class-controller.php:2505
 msgid "Avail. On"
@@ -160,11 +160,11 @@ msgstr "Innlegg/Side"
 
 #: classes/class-controller.php:2564 classes/class-controller.php:6791
 msgid "Days to delay"
-msgstr "Forsinkelse i dager"
+msgstr "Tilgjenglighetsdag"
 
 #: classes/class-controller.php:2566 classes/class-controller.php:6793
 msgid "Release on (YYYY-MM-DD)"
-msgstr "Tilgjengelig (YYYY-MM-DD)"
+msgstr "Tilgjengelig: åååå-mm-dd"
 
 #: classes/class-controller.php:2586
 msgid "No posts found in the database!"
