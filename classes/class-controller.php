@@ -2334,7 +2334,7 @@ class Controller
 
         /**
          * Didn't account for pages < pagesize.
-         * @since 4.3.3
+         * @since 4.4
         */
         $max_key = ( count($post_list) >= $pagesize ) ? $pagesize - 1 : count($post_list) - 1;
 
