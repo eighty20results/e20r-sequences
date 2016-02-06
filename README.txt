@@ -2,7 +2,7 @@
 Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
 Requires at least: 3.4
-Tested up to: 4.4
+Tested up to: 4.4.2
 Stable tag: 4.4.3
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
@@ -172,6 +172,7 @@ Or you can email support@eighty20results.zendesk.com
 
 == 4.4.3 ==
 * FIX: Didn't always update the plugin
+* FIX: Update WP Compatibility
 
 == 4.4.2 ==
 * FIX: Update version number and link to plugin info

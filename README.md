@@ -215,6 +215,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.4.3
 * FIX: Didn't always update the plugin
+* FIX: Update WP Compatibility
 
 ##Old releases
 ###.1
