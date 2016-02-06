@@ -2995,7 +2995,7 @@ class Controller
 
         //See if the user has access to the specific post
         if ( !$this->is_managed($post->ID)) {
-            E20RTools\DBG::log("has_membership_access_filter() - Post {$post->ID} is not managed by a sequence (it is one?). Returning original access value: " . ($hasaccess ? 'true' : 'false'));
+            E20RTools\DBG::log("Post {$post->ID} is not managed by a sequence (it is one?). Returning original access value: " . ($hasaccess ? 'true' : 'false'));
             return $hasaccess;
         }
 
@@ -3015,7 +3015,7 @@ class Controller
 
     public function is_managed( $post_id ) {
 
-        E20RTools\DBG::log("is_managed() - Check whether post ID {$post_id} is managed by a sequence: " . $this->who_called_me());
+        E20RTools\DBG::log("Check whether post ID {$post_id} is managed by a sequence: " . $this->who_called_me());
 
         $is_sequence = get_post_meta( $post_id, '_pmpro_sequence_post_belongs_to' );
         $retval = empty($is_sequence) ? false : true;
@@ -3082,12 +3082,12 @@ class Controller
         switch ($this->options->delayType) {
             case 'byDays':
                 $delayTS = strtotime( '+' . $delay . ' days', $startTS);
-                E20RTools\DBG::log('delay_as_timestamp() -  byDays:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
+                E20RTools\DBG::log('byDays:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
                 break;
 
             case 'byDate':
                 $delayTS = strtotime( $delay );
-                E20RTools\DBG::log('delay_as_timestamp() -  byDate:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
+                E20RTools\DBG::log('byDate:: delay = ' . $delay . ', delayTS is now: ' . $delayTS . ' = ' . date('Y-m-d', $startTS) . ' vs ' . date('Y-m-d', $delayTS));
                 break;
         }
 
@@ -3287,8 +3287,8 @@ class Controller
                     "post_link"     => apply_filters( 'e20r-sequence-alert-message-link-href-element', $post_links ),
                     'post_url'      => apply_filters( 'e20r-sequence-alert-message-post-permalink', $post_url ),
                     "today"         => apply_filters( 'e20r-sequence-alert-message-date', $post_date ),
-                    "excerpt"       => apply_filters( 'e20r-sequence-alert-message-excerpt-intro', $post->excerpt ),
-                    "ptitle" => apply_filters( 'e20r-sequence-alert-message-title', $post->title ),
+                    "excerpt"       => apply_filters( 'e20r-sequence-alert-message-excerpt-intro', $excerpt ),
+                    "ptitle"        => apply_filters( 'e20r-sequence-alert-message-title', $post->title ),
                 );
 
                 $emails[$idx]->data = apply_filters('e20r-sequence-email-substitution-fields', $data);
