@@ -69,7 +69,8 @@ class sequence_links {
 	 */
 	public function load_shortcode( $attributes ) {
 
-		global $current_user, $load_e20r_sequence_script;
+		global $current_user;
+		global $load_e20r_sequence_script;
 
 		$load_e20r_sequence_script = true;
 
@@ -95,6 +96,7 @@ class sequence_links {
 			$pagesize = 30; // Default
 		}
 		$sequence = apply_filters('get_sequence_class_instance', null);
+		$view = apply_filters('get_sequence_views_class_instance', null);
 
 		if ( ( $id == 0 ) && ( $sequence->sequence_id == 0 ) ) {
 
@@ -129,7 +131,7 @@ class sequence_links {
 
 		if ( $sequence->has_post_access( $current_user->ID, $id, false, $id ) ) {
 
-			return $sequence->create_sequence_list( $highlight, $pagesize, $button, $title, $scrollbox );
+			return $view->create_sequence_list( $highlight, $pagesize, $button, $title, $scrollbox );
 		}
 		else {
 
