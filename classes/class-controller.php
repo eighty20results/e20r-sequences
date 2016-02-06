@@ -2327,13 +2327,27 @@ class Controller
 
     private function set_min_max( $pagesize, $page_num, $post_list ) {
 
-        $min_key = 0;
+        /**
+         * Doesn't account for sort order.
+         * @since 4.4.1
+         */
 
         /**
          * Didn't account for pages < pagesize.
          * @since 4.4
-        */
-        $max_key = ( count($post_list) >= $pagesize ) ? $pagesize - 1 : count($post_list) - 1;
+         */
+
+        if ( $this->options->sortOrder == SORT_DESC )
+        {
+            $min_key = 0;
+            $max_key = (count($post_list) >= $pagesize) ? $pagesize - 1 : count($post_list) - 1;
+        }
+
+        if ( $this->options->sortOrder == SORT_ASC )
+        {
+            $min_key = (count($post_list) >= $pagesize) ? $pagesize - 1 : count($post_list) - 1;
+            $max_key = 0;
+        }
 
         E20RTools\DBG::log("Max key: {$max_key} and min key: {$min_key}");
         $min = $post_list[$max_key]->delay;
@@ -2641,7 +2655,7 @@ class Controller
      *
      * @return string -- Pagination HTML
      */
-    private function post_paging_nav( $total ) {
+    public function post_paging_nav( $total ) {
 
         $html = '';
 
