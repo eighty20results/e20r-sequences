@@ -208,7 +208,7 @@ if (!function_exists('e20r_sequence_loader')) {
 
         foreach ($types as $type) {
 
-            if ( false !== stripos($name, "controller")) {
+            if ( false !== stripos($name, "controller") || ( false !== stripos($name, 'views'))) {
                 $dir = "{$base_path}";
             } else {
                 $dir = "{$base_path}/{$type}";
@@ -293,15 +293,12 @@ try {
     spl_autoload_register("E20R\\Sequences\\Main\\e20r_sequence_loader");
 
     $sequence = new Sequence\Controller();
-    $cron = new Tools\Cron();
-    $er = new Tools\E20RError();
 
     E20RTools\DBG::set_plugin_name('e20r-sequences');
-
     $sequence->load_actions();
 
 } catch (\Exception $e) {
-    error_log("PMProSequence startup: Error initializing the specified sequence...: " . $e->getMessage());
+    error_log("E20R Sequences startup: Error initializing the specified sequence...: " . $e->getMessage());
 }
 
 register_activation_hook(__FILE__, array(&$sequence, 'activation'));
