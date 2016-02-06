@@ -80,14 +80,15 @@ class sequence_alert {
 
 		if ( !empty( $sequence_id ) ) {
 
-			$sequence = apply_filters('get_sequence_class_instance');
+			$sequence = apply_filters('get_sequence_class_instance', null);
+			$view = apply_filters('get_sequence_views_class_instance', null);
 
 			if ( !$sequence->init( $sequence_id ) ) {
 
 				return $sequence->get_error_msg();
 			}
 
-			return $sequence->view_user_notice_opt_in();
+			return $view->view_user_notice_opt_in();
 		}
 		else {
 
