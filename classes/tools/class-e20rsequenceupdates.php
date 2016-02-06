@@ -37,7 +37,7 @@ class e20rSequenceUpdates
 
     public static function init()
     {
-        $plugin_status = \get_plugin_data(E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences.php', false, false);
+        $plugin_status = get_plugin_data(E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences.php', false, false);
 
         $version = $plugin_status['Version'];
         $me = self::$_this;
@@ -48,27 +48,6 @@ class e20rSequenceUpdates
         add_action("e20r_sequence_before_update_{$version}", array( self::$_this, 'e20r_sequence_before_update' ) );
         add_action("e20r_sequence_update_{$version}", array( self::$_this, 'e20r_sequence_update'));
         add_action("e20r_sequence_after_update_{$version}", array( self::$_this, 'e20r_sequence_after_update' ));
-    }
-
-    /**
-     * Stub function
-     */
-    public function e20r_sequence_before_update() {
-        return;
-    }
-
-    /**
-     * Stub function
-     */
-    public function e20r_sequence_after_update() {
-        return;
-    }
-
-    /**
-     * Stub function
-     */
-    public function e20r_sequence_update() {
-        return;
     }
 
     public function get_version()
@@ -83,7 +62,8 @@ class e20rSequenceUpdates
 
     public static function get_instance()
     {
-        if ( null == self::$_this ) {
+        if ( null == self::$_this )
+        {
             E20RTools\DBG::log("Instantiating the " . get_class(self::$_this) . " class");
             self::$_this = new self;
         }
@@ -121,5 +101,27 @@ class e20rSequenceUpdates
             $is_updated[] = $version;
             update_option('e20r-sequence-updated', $is_updated, 'no');
         }
+    }
+
+
+    /**
+     * Stub function
+     */
+    public function e20r_sequence_before_update() {
+        return;
+    }
+
+    /**
+     * Stub function
+     */
+    public function e20r_sequence_after_update() {
+        return;
+    }
+
+    /**
+     * Stub function
+     */
+    public function e20r_sequence_update() {
+        return;
     }
 }
