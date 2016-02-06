@@ -1,27 +1,93 @@
 <?php
-
-
 namespace E20R\Sequences\Sequence;
+/*
+  License:
 
+	Copyright 2014-2016 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
+
+	This program is free software; you can redistribute it and/or modify
+	it under the terms of the GNU General Public License, version 2, as
+	published by the Free Software Foundation.
+
+	This program is distributed in the hope that it will be useful,
+	but WITHOUT ANY WARRANTY; without even the implied warranty of
+	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+	GNU General Public License for more details.
+
+	You should have received a copy of the GNU General Public License
+	along with this program; if not, write to the Free Software
+	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+
+*/
+
+use E20R\Sequences\Sequence as Sequence;
+use E20R\Sequences\Tools\E20RError as E20RError;
 use E20R\Tools as E20RTools;
 
 class Views {
 
+	private static $_this = null;
+
 	function __construct() {
 
-		if (isset(self::$_this)) {
+		if ( null !==  self::$_this ) {
 			$error_message = sprintf(__("Attempted to load a second instance of a singleton class (%s)", "e20rsequence"),
 				get_class($this)
 			);
 
 			error_log($error_message);
 			wp_die( $error_message);
-
 		}
 
 		self::$_this = $this;
 
-		add_filter( "get_sequence_views_class_instance", [ $this, 'get_instance' ] );
+	}
+
+	public static function get_instance() {
+
+		if (null == self::$_this) {
+			self::$_this = new self;
+		}
+
+		E20RTools\DBG::log("Loading instance for views class");
+		return self::$_this;
+	}
+
+	/**
+	 * Used to label the post list in the metabox
+	 *
+	 * @param $post_state -- The current post state (Draft, Scheduled, Under Review, Private, other)
+	 * @return null|string -- Return the correct postfix for the post
+	 *
+	 * @access private
+	 */
+	private function set_post_status( $post_state )
+	{
+		$txtState = null;
+
+		switch ($post_state)
+		{
+			case 'draft':
+				$txtState = __('-DRAFT', "e20rsequence");
+				break;
+
+			case 'future':
+				$txtState = __('-SCHED', "e20rsequence");
+				break;
+
+			case 'pending':
+				$txtState = __('-REVIEW', "e20rsequence");
+				break;
+
+			case 'private':
+				$txtState = __('-PRIVT', "e20rsequence");
+				break;
+
+			default:
+				$txtState = '';
+		}
+
+		return $txtState;
 	}
 
 	/**
@@ -30,26 +96,27 @@ class Views {
 	 * @access public
 	 * TODO: Make this responsive!
 	 */
-	public function get_post_list_for_metabox( $force = false) {
+	public function get_post_list_for_metabox( $force = false ) {
 
-		E20RTools\DBG::log("get_post_list_for_metabox() - Generating sequence content metabox for back-end");
-		$sequence = apply_filters('get_sequence_views_class_instance', null);
+		E20RTools\DBG::log("Generating sequence content metabox for back-end");
+		$sequence = apply_filters('get_sequence_class_instance', null);
 		$options = $sequence->get_options();
 
 		//show posts
-		$sequence->load_sequence_post( null, null, null, '=', null, $force, 'any' );
+		$posts = $sequence->load_sequence_post( null, null, null, '=', null, $force, 'any' );
 		$all_posts = $sequence->get_posts_from_db();
 
 		// $this->sort_by_delay();
 
-		E20RTools\DBG::log('get_post_list_for_metabox() - Displaying the back-end meta box content');
+		E20RTools\DBG::log('Displaying the back-end meta box content');
 
 		ob_start();
+		$has_error = $sequence->get_error_msg();
 		?>
 
-		<?php // if(!empty($this->get_error_msg() )) { ?>
-		<?php // $this->display_error(); ?>
-		<?php //} ?>
+		<?php if(!empty( $has_error )) { ?>
+		<?php 	echo $sequence->display_error(); ?>
+		<?php } ?>
 		<table id="e20r_sequencetable" class="e20r_sequence_postscroll wp-list-table widefat">
 			<thead>
 			<th><?php _e('Order', "e20rsequence" ); ?></label></th>
@@ -69,15 +136,15 @@ class Views {
 			<?php
 			$count = 1;
 
-			if ( empty($this->posts ) ) {
-				E20RTools\DBG::log('get_post_list_for_metabox() - No Posts found?');
+			if ( empty($posts ) ) {
+				E20RTools\DBG::log('No Posts found?');
 
 				$sequence->set_error_msg( __('No posts/pages found', "e20rsequence") );
 				?>
 				<?php
 			}
 			else {
-				foreach( $this->posts as $post ) {
+				foreach( $posts as $post ) {
 					?>
 					<tr>
 						<td class="e20r_sequence_tblNumber"><?php echo $count; ?>.</td>
@@ -99,8 +166,8 @@ class Views {
 						<td>
 							<a href="javascript:e20r_sequence_removeEntry( <?php echo "{$post->id}, {$post->delay}" ?> ); void(0);"><?php _e('Remove', "e20rsequence"); ?></a>
 						</td>
-					</tr>
-					<?php
+					</tr><?php
+
 					$count++;
 				}
 			}
@@ -111,23 +178,23 @@ class Views {
 		<div id="postcustomstuff">
 			<div class="e20r-sequence-float-left"><strong><?php _e('Add/Edit Posts:', "e20rsequence"); ?></strong></div>
 			<div class="e20r-sequence-float-right"><button class="primary-button button e20r-sequences-clear-cache"><?php _e("Clear cache", "e20rsequence");?></button></div>
-			<table id="newmeta">
-				<thead>
-				<tr>
-					<th><?php _e('Post/Page', "e20rsequence"); ?></th>
-					<?php if ($options->delayType == 'byDays'): ?>
-						<th id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Days to delay', "e20rsequence"); ?></label></th>
-					<?php elseif ( $options->delayType == 'byDate'): ?>
-						<th id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", "e20rsequence"); ?></label></th>
-					<?php else: ?>
-						<th id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Not Defined', "e20rsequence"); ?></label></th>
-					<?php endif; ?>
-					<th></th>
-				</tr>
-				</thead>
-				<tbody>
-				<tr>
-					<td>
+			<div id="newmeta" class="e20r-meta-table">
+				<div class="e20r-table-head clear">
+					<div class="table_newmeta e20r-sequence-full-row row heading">
+						<div class="table_newmeta e20r-meta-table-col-1 cell"><?php _e('Post/Page', "e20rsequence"); ?></div>
+						<?php if ($options->delayType == 'byDays'): ?>
+							<div class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Days to delay', "e20rsequence"); ?></label></div>
+						<?php elseif ( $options->delayType == 'byDate'): ?>
+							<div class="table_newmeta e20r-meta-table-col-2 cell"  id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", "e20rsequence"); ?></label></div>
+						<?php else: ?>
+							<div class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Not Defined', "e20rsequence"); ?></label></div>
+						<?php endif; ?>
+						<div class="table_newmeta e20r-meta-table-col-3 cell e20r-empty"></div>
+					</div>
+				</div>
+				<div class="e20r-table-body clear">
+					<div class="table_newmeta e20r-sequence-full-row row">
+						<div class="table_newmeta e20r-meta-table-col-1 cell">
 						<select id="e20r_sequencepost" name="e20r_sequencepost">
 							<option value=""></option>
 							<?php
@@ -139,23 +206,27 @@ class Views {
 							}
 							else {
 								$sequence->set_error_msg( __( 'No posts found in the database!', "e20rsequence" ) );
-								E20RTools\DBG::log('get_post_list_for_metabox() - Error during database search for relevant posts');
+								E20RTools\DBG::log('Error during database search for relevant posts');
 							}
 							?>
 						</select>
 						<style> .select2-container {width: 100%;} </style>
 						<!-- <script type="text/javascript"> jQuery('#e20r_sequencepost').select2();</script> -->
-					</td>
-					<td>
+					</div>
+						<div class="table_newmeta e20r-meta-table-col-2 cell">
 						<input id="e20r_sequencedelay" name="e20r_sequencedelay" type="text" value="" size="7" />
 						<input id="e20r_sequence_id" name="e20r_sequence_id" type="hidden" value="<?php echo $sequence->sequence_id; ?>" size="7" />
 						<?php wp_nonce_field('e20r-sequence-add-post', 'e20r_sequence_addpost_nonce'); ?>
 						<?php wp_nonce_field('e20r-sequence-rm-post', 'e20r_sequence_rmpost_nonce'); ?>
-					</td>
-					<td><a class="button" id="e20r_sequencesave" onclick="javascript:e20r_sequence_addEntry(); return false;"><?php _e('Update Sequence', "e20rsequence"); ?></a></td>
-				</tr>
-				</tbody>
-			</table>
+					</div>
+						<div class="table_newmeta e20r-meta-table-col-3 cell">
+						<a class="button" id="e20r_sequencesave" onclick="javascript:e20r_sequence_addEntry(); return false;">
+							<?php _e('Update Sequence', "e20rsequence"); ?>
+						</a>
+					</div>
+					</div>
+				</div>
+			</div>
 		</div>
 		<?php
 
@@ -166,7 +237,7 @@ class Views {
 
 		if ( !empty( $errors ) ) {
 
-			E20RTools\DBG::log( "get_post_list_for_metabox() - Errors:" . print_r( $errors , true ));
+			E20RTools\DBG::log( "Errors:" . print_r( $errors , true ));
 			foreach( $errors as $e ) {
 				$status .= "{$e['message']}.<br/>";
 			}
@@ -188,9 +259,9 @@ class Views {
 	 * @access public
 	 * @since 4.3.3
 	 */
-	public function sequence_settings_metabox() {
+	public function sequence_list_metabox() {
 
-		E20RTools\DBG::log("sequence_settings_metabox() - Generating settings metabox for back-end");
+		E20RTools\DBG::log("Generating settings metabox for back-end");
 		global $post;
 
 		$sequence = apply_filters('get_sequence_class_instance', null);
@@ -198,7 +269,7 @@ class Views {
 
 
 		if ( !isset( $this->sequence_id ) /* || ( $this->sequence_id != $post->ID )  */ ) {
-			E20RTools\DBG::log("sequence_settings_metabox() - Loading the sequence metabox for {$post->ID} and not {$this->sequence_id}");
+			E20RTools\DBG::log("Loading the sequence metabox for {$post->ID} and not {$sequence->sequence_id}");
 
 			$options = $sequence->get_options( $post->ID );
 
@@ -207,14 +278,14 @@ class Views {
 			}
 		}
 
-		E20RTools\DBG::log('sequence_settings_metabox(): Load the post list meta box');
+		E20RTools\DBG::log('Load the post list meta box');
 
 		// Instantiate the settings & grab any existing settings if they exist.
 		?>
 		<div id="e20r-seq-error"></div>
 		<div id="e20r_sequence_posts">
 			<?php
-			$box = $sequence->get_post_list_for_metabox();
+			$box = $this->get_post_list_for_metabox();
 			echo $box['html'];
 			?>
 		</div>
@@ -240,11 +311,11 @@ class Views {
 
 		$new_post = false;
 
-		E20RTools\DBG::log("Post ID: {$post->ID} and Sequence ID: {$this->sequence_id}");
+		E20RTools\DBG::log("Post ID: {$post->ID} and Sequence ID: {$sequence->sequence_id}");
 
-		if ( ( !isset( $this->sequence_id )  ) || ( $this->sequence_id != $post->ID ) ) {
+		if ( ( !isset( $sequence->sequence_id )  ) || ( $sequence->sequence_id != $post->ID ) ) {
 
-			E20RTools\DBG::log("Using the post ID as the sequence ID {$post->ID} vs {$this->sequence_id}");
+			E20RTools\DBG::log("Using the post ID as the sequence ID {$post->ID} vs {$sequence->sequence_id}");
 			$options = $sequence->get_options( $post->ID );
 
 			if ( !isset( $options->lengthVisible ) ) {
@@ -279,8 +350,8 @@ class Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
 							<div class="e20r-sequence-setting-col-1">
-								<input type="checkbox" value="1" id="e20r-sequence_hidden" name="e20r-sequence_hidden" title="<?php _e('Hide unpublished / future posts for this sequence', "e20rsequence"); ?>" <?php checked( $options->hidden, 1); ?> />
-								<input type="hidden" name="hidden-e20r-sequence_hidden" id="hidden-e20r-sequence_hidden" value="<?php echo esc_attr($options->hidden); ?>" >
+								<input type="checkbox" value="1" id="e20r-sequence_hideFuture" name="e20r-sequence_hideFuture" title="<?php _e('Hide unpublished / future posts for this sequence', "e20rsequence"); ?>" <?php checked( $options->hideFuture, 1); ?> />
+								<input type="hidden" name="hidden-e20r-sequence_hideFuture" id="hidden-e20r-sequence_hideFuture" value="<?php echo esc_attr($options->hideFuture); ?>" >
 							</div>
 							<div class="e20r-sequence-setting-col-2">
 								<label class="selectit e20r-sequence-setting-col-2"><?php _e('Hide all future posts', "e20rsequence"); ?></label>
@@ -414,7 +485,7 @@ class Views {
 						</div>
 					</div>
 					<div class="e20r-sequence-settings-input e20r-sequence-hidden clear-after">
-						<div class="e20r-sequences-settings-row clear-after e20r-sequence-delaytype e20r-sequence-settings e20r-sequence-full-row">
+						<div class="e20r-sequences-settings-row clear-after e20r-sequence_delayType e20r-sequence-settings e20r-sequence-full-row">
 							<div id="e20r-seq-delay-select">
 								<input type="hidden" name="hidden-e20r-sequence_delayType" id="hidden-e20r-sequence_delayType" value="<?php echo ($options->delayType != '' ? esc_attr($options->delayType): 'byDays'); ?>" >
 								<label for="e20r-sequence_delayType"></label>
@@ -425,7 +496,7 @@ class Views {
 								</select>
 							</div>
 						</div>
-						<div class="e20r-sequences-settings-row clear-after e20r-seq-delaytype e20r-sequence-settings e20r-sequence-full-row">
+						<div class="e20r-sequences-settings-row clear-after e20r-sequence_delayType e20r-sequence-settings e20r-sequence-full-row">
 							<div id="e20r-seq-delay-btns">
 								<p class="e20r-seq-btns">
 									<a href="#" id="ok-e20r-seq-delay" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
@@ -477,11 +548,11 @@ class Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-alerts e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', "e20rsequence"); ?>" id="e20r-sequence_sendnotice" name="e20r-sequence_sendnotice" <?php checked($options->sendNotice, 1); ?> />
-								<input type="hidden" name="hidden_e20r_seq_sendnotice" id="hidden_e20r_seq_sendnotice" value="<?php echo esc_attr($options->sendNotice); ?>" >
+								<input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', "e20rsequence"); ?>" id="e20r-sequence_sendNotice" name="e20r-sequence_sendNotice" <?php checked($options->sendNotice, 1); ?> />
+								<input type="hidden" name="hidden-e20r-sequence_sendNotice" id="hidden-e20r-sequence_sendNotice" value="<?php echo esc_attr($options->sendNotice); ?>" >
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<label class="selectit" for="e20r-sequence_sendnotice"><?php _e('Send email alerts', "e20rsequence"); ?></label>
+								<label class="selectit" for="e20r-sequence_sendNotice"><?php _e('Send email alerts', "e20rsequence"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-3">&nbsp;</div>
 						</div>
@@ -496,7 +567,7 @@ class Views {
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" class="e20r-seq-settings-send e20r-seq-edit" id="e20r_seq_send">
 									<span aria-hidden="true"><?php _e('Send', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php echo sprintf( __( 'Manually trigger sending of alert notices for the %s sequence', "e20rsequence"), get_the_title( $this->sequence_id) ); ?></span>
+									<span class="screen-reader-text"><?php echo sprintf( __( 'Manually trigger sending of alert notices for the %s sequence', "e20rsequence"), get_the_title( $sequence->sequence_id) ); ?></span>
 								</a>
 							</div>
 						</div><!-- end of row -->
@@ -598,11 +669,11 @@ class Views {
 						</div>
 					</div>
 					<div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-						<div class="e20r-sequences-settings-row clear-after e20r-sequence-sendas e20r-sequence-full-row">
+						<div class="e20r-sequences-settings-row clear-after e20r-sequence-noticeSendAs e20r-sequence-full-row">
 							<div id="e20r-seq-sendas-select">
-								<input type="hidden" name="hidden_e20r_seq_sendas" id="hidden_e20r_seq_sendas" value="<?php echo esc_attr($options->noticeSendAs); ?>" >
-								<label for="e20r-sequence_sendas"></label>
-								<select name="e20r-sequence_sendas" id="e20r-sequence_sendas">
+								<input type="hidden" name="hidden-e20r-sequence_noticeSendAs" id="hidden-e20r-sequence_noticeSendAs" value="<?php echo esc_attr($options->noticeSendAs); ?>" >
+								<label for="e20r-sequence_noticeSendAs"></label>
+								<select name="e20r-sequence_noticeSendAs" id="e20r-sequence_noticeSendAs">
 									<option value="<?php echo E20R_SEQ_SEND_AS_SINGLE; ?>" <?php selected( $options->noticeSendAs, E20R_SEQ_SEND_AS_SINGLE ); ?> ><?php _e('One alert per post', "e20rsequence"); ?></option>
 									<option value="<?php echo E20R_SEQ_SEND_AS_LIST; ?>" <?php selected( $options->noticeSendAs, E20R_SEQ_SEND_AS_LIST ); ?> ><?php _e('Digest of post links', "e20rsequence"); ?></option>
 								</select>
@@ -647,7 +718,7 @@ class Views {
 						</div> <!-- end of row -->
 					</div>
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
-						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after e20r-sequence-noticetime e20r-sequence-email">
+						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after e20r-sequence-noticeTime e20r-sequence-email">
 							<div class="e20r-sequence-setting-col-1">
 								<label class="e20r-sequence-label" for="e20r-seq-noticeTime"><?php _e('When:', "e20rsequence"); ?> </label>
 							</div>
@@ -726,7 +797,7 @@ class Views {
 								<label class="e20r-sequence-label" for="e20r-sequence-excerptIntro"><?php _e('Intro:', "e20rsequence"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-excerpt-status" class="e20r-sequence-status">"<?php echo ( $options->excerptIntro != '' ? esc_attr($options->excerpt_intro) : __('A summary for the new content follows:', "e20rsequence") ); ?>"</span>
+								<span id="e20r-seq-excerpt-status" class="e20r-sequence-status">"<?php echo ( $options->excerptIntro != '' ? esc_attr($options->excerptIntro) : __('A summary for the new content follows:', "e20rsequence") ); ?>"</span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-excerpt" class="e20r-seq-edit">
@@ -754,10 +825,10 @@ class Views {
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings e20r-sequence-dateformat">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-sequence-dateFormat"><?php _e('Date type:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-sequence_dateformat"><?php _e('Date type:', "e20rsequence"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-dateFormat-status" class="e20r-sequence-status">"<?php echo ( trim($options->dateFormat) == false ? __('m-d-Y', "e20rsequence") : esc_attr($options->dateFormat) ); ?>"</span>
+								<span id="e20r-seq-dateformat-status" class="e20r-sequence-status">"<?php echo ( trim($options->dateformat) == false ? __('m-d-Y', "e20rsequence") : esc_attr($options->dateformat) ); ?>"</span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-dateformat" class="e20r-seq-edit">
@@ -768,11 +839,11 @@ class Views {
 						</div>
 					</div>
 					<div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
-						<div class="e20r-sequences-settings-row clear-after e20r-sequence-dateFormat e20r-sequence-settings e20r-sequence-full-row">
+						<div class="e20r-sequences-settings-row clear-after e20r-sequence-dateformat e20r-sequence-settings e20r-sequence-full-row">
 							<div id="e20r-seq-dateformat-select">
-								<input type="hidden" name="hidden-e20r-sequence_dateFormat" id="hidden-e20r-sequence_dateFormat" value="<?php echo ( trim($options->dateFormat) == false ? __('m-d-Y', "e20rsequence") : esc_attr($options->dateFormat) ); ?>" />
-								<label for="e20r-sequence_dateFormat"></label>
-								<select name="e20r-sequence_dateFormat" id="e20r-sequence_dateFormat">
+								<input type="hidden" name="hidden-e20r-sequence_dateFormat" id="hidden-e20r-sequence_dateFormat" value="<?php echo ( trim($options->dateformat) == false ? __('m-d-Y', "e20rsequence") : esc_attr($options->dateformat) ); ?>" />
+								<label for="e20r-sequence_dateformat"></label>
+								<select name="e20r-sequence_dateformat" id="e20r-sequence_dateformat">
 									<?php echo $this->list_date_formats(); ?>
 								</select>
 							</div>
@@ -788,7 +859,7 @@ class Views {
 											<hr style="width: 100%;" />
 										</div> --><!-- end of row -->
 					<!--                         <div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row">
-                        <a class="button button-primary button-large" class="e20r-seq-settings-save" id="e20r_settings_save" onclick="e20r-sequence_saveSettings(<?php echo $this->sequence_id;?>) ; return false;"><?php _e('Update Settings', "e20rsequence"); ?></a>
+                        <a class="button button-primary button-large" class="e20r-seq-settings-save" id="e20r_settings_save" onclick="e20r-sequence_saveSettings(<?php echo $sequence->sequence_id;?>) ; return false;"><?php _e('Update Settings', "e20rsequence"); ?></a>
                         <?php wp_nonce_field('e20r-sequence-save-settings', 'e20r_sequence_settings_nonce'); ?>
                         <div class="seq_spinner"></div>
                     </div>--><!-- end of row -->
@@ -1255,4 +1326,304 @@ class Views {
 		return $html;
 	}
 
+	/**
+	 * Create a list of posts/pages/cpts that are included in the specified sequence (or all sequences, if needed)
+	 *
+	 * @param bool $highlight -- Whether to highlight the Post that is the closest to the users current membership day
+	 * @param int $pagesize -- The size of each page (number of posts per page)
+	 * @param bool $button -- Whether to display a "Available Now" button or not.
+	 * @param string $title -- The title of the sequence list. Default is the title of the sequence.
+	 * @return string -- The HTML we generated.
+	 */
+	public function create_sequence_list( $highlight = false, $pagesize = 0, $button = false, $title = null, $scrollbox = false ) {
+
+		global $wpdb;
+		global $current_user;
+		global $id;
+		global $post;
+
+		$sequence = apply_filters('get_sequence_class_instance', null);
+		$options = $sequence->get_options();
+
+		$html = '';
+
+		$savePost = $post;
+
+		// Set a default page size.
+		if ($pagesize == 0) {
+			$pagesize = 30;
+		}
+
+		E20RTools\DBG::log( "create_sequence_list() - Loading posts with pagination enabled. Expecing \\WP_Query result" );
+		$retSeq = $sequence->load_sequence_post( null, null, null, '=', $pagesize, true );
+
+		if ( is_array($retSeq ) && !empty($retSeq)) {
+
+			list( $seqList, $max_num_pages ) = $retSeq;
+		} else {
+			$seqList = null;
+			$max_num_pages = 0;
+		}
+
+		// $sequence_posts = $this->posts;
+		$memberDayCount = $sequence->get_membership_days();
+
+		E20RTools\DBG::log( "Sequence {$sequence->sequence_id} has " . count( $sequence->posts ) . " posts. Current user has been a member for {$memberDayCount} days" );
+
+		if ( ! $sequence->has_post_access( $current_user->ID, $sequence->sequence_id ) ) {
+			E20RTools\DBG::log( 'No access to sequence ' . $sequence->sequence_id . ' for user ' . $current_user->ID );
+			return '';
+		}
+
+		/* Get the ID of the post in the sequence who's delay is the closest
+         *  to the members 'days since start of membership'
+         */
+		$closestPost = apply_filters( 'e20r-sequence-found-closest-post', $sequence->find_closest_post( $current_user->ID ) );
+
+		// Image to bring attention to the closest post item
+		$closestPostImg = '<img src="' . plugins_url( '/../images/most-recent.png', __FILE__ ) . '" >';
+
+		$listed_postCnt   = 0;
+
+		E20RTools\DBG::log( "create_sequence_list() - Loading posts for the sequence_list shortcode...");
+		ob_start();
+		?>
+
+		<!-- Preface the table of links with the title of the sequence -->
+	<div id="e20r_sequence-<?php echo $sequence->sequence_id; ?>" class="e20r_sequence_list">
+
+		<?php echo apply_filters( 'e20r-sequence-list-title',  $this->set_title_in_shortcode( $title ) ); ?>
+
+		<!-- Add opt-in to the top of the shortcode display. -->
+		<?php echo $this->view_user_notice_opt_in(); ?>
+
+		<!-- List of sequence entries (paginated as needed) -->
+		<?php
+
+	if ( count( $seqList ) == 0 ) {
+		// if ( 0 == count( $this->posts ) ) {
+		echo '<span style="text-align: center;">' . __( "There is <em>no content available</em> for you at this time. Please check back later.", "e20rsequence" ) . "</span>";
+
+	} else {
+	if ( $scrollbox ) { ?>
+		<div id="e20r-seq-post-list">
+		<table class="e20r_sequence_postscroll e20r_seq_linklist">
+		<?php } else { ?>
+		<div>
+			<table class="e20r_seq_linklist">
+				<?php };
+
+				// Loop through all of the posts in the sequence
+
+				// $posts = $seqList->get_posts();
+
+				foreach( $seqList as $p ) {
+
+					if ( ( false === $p->is_future ) ) {
+						E20RTools\DBG::log("create_sequence_list() - Adding post {$p->id} with delay {$p->delay}");
+						$listed_postCnt++;
+
+						if ( ( true === $p->closest_post ) && ( $highlight ) ) {
+
+							E20RTools\DBG::log( 'create_sequence_list() - The most recently available post for user #' . $current_user->ID . ' is post #' . $p->id );
+
+							// Show the highlighted post info
+							?>
+							<tr id="e20r-seq-selected-post">
+								<td class="e20r-seq-post-img"><?php echo apply_filters( 'e20r-sequence-closest-post-indicator-image', $closestPostImg ); ?></td>
+								<td class="e20r-seq-post-hl">
+									<a href="<?php echo $p->permalink; ?>" title="<?php echo $p->title; ?>"><strong><?php echo $p->title; ?></strong>&nbsp;&nbsp;<em>(<?php _e("Current", "e20rsequence");?>)</em></a>
+								</td>
+								<td <?php echo( $button ? 'class="e20r-seq-availnow-btn"' : '' ); ?>><?php
+
+									if ( $button ) {
+										?>
+									<a class="e20r_btn e20r_btn-primary" href="<?php echo $p->permalink; ?>"> <?php _e( "Available Now", "e20rsequence" ); ?></a><?php
+									} ?>
+								</td>
+							</tr> <?php
+						} else {
+							?>
+							<tr id="e20r-seq-post">
+								<td class="e20r-seq-post-img">&nbsp;</td>
+								<td class="e20r-seq-post-fade">
+									<a href="<?php echo $p->permalink; ?>" title="<?php echo $p->title; ?>"><?php echo $p->title; ?></a>
+								</td>
+								<td<?php echo( $button ? ' class="e20r-seq-availnow-btn">' : '>' );
+								if ( $button ) {
+									?>
+								<a class="e20r_btn e20r_btn-primary" href="<?php echo $p->permalink; ?>"> <?php _e( "Available Now", "e20rsequence" ); ?></a><?php
+								} ?>
+								</td>
+							</tr>
+							<?php
+						}
+					} elseif ( ( true == $p->is_future ) /* &&
+                    ( false === $this->hide_upcoming_posts() ) */ ) {
+
+						$listed_postCnt++;
+
+						// Do we need to highlight the (not yet available) post?
+						// if ( ( $p->ID == $closestPost->id ) && ( $p->delay == $closestPost->delay ) && $highlight ) {
+						if ( ( true === $p->closest_post ) && ( $highlight ) ) {
+							?>
+
+							<tr id="e20r-seq-post">
+								<td class="e20r-seq-post-img">&nbsp;</td>
+								<td id="e20r-seq-post-future-hl">
+									<?php E20RTools\DBG::log( "Highlight post #: {$p->id} with future availability" ); ?>
+									<span class="e20r_sequence_item-title">
+                                        <?php echo $p->title; ?>
+                                    </span>
+                                    <span class="e20r_sequence_item-unavailable">
+                                        <?php echo sprintf( __( 'available on %s', "e20rsequence" ),
+											( $options->delayType == 'byDays' &&
+												$options->showDelayAs == E20R_SEQ_AS_DAYNO ) ?
+												__( 'day', "e20rsequence" ) : '' ); ?>
+										<?php echo $sequence->display_proper_delay( $p->delay ); ?>
+                                    </span>
+								</td>
+								<td></td>
+							</tr>
+							<?php
+						} else {
+							?>
+							<tr id="e20r-seq-post">
+								<td class="e20r-seq-post-img">&nbsp;</td>
+								<td>
+									<span class="e20r_sequence_item-title"><?php echo $p->post_title; ?></span>
+                                    <span class="e20r_sequence_item-unavailable">
+                                        <?php echo sprintf( __( 'available on %s', "e20rsequence" ),
+											($options->delayType == 'byDays' &&
+												$options->showDelayAs == E20R_SEQ_AS_DAYNO ) ?
+												__( 'day', "e20rsequence" ) : '' ); ?>
+										<?php echo $sequence->display_proper_delay( $p->delay ); ?>
+                                    </span>
+								</td>
+								<td></td>
+							</tr> <?php
+						}
+					} else {
+						if ( ( count( $seqList ) > 0 ) && ( $listed_postCnt > 0 ) ) {
+							?>
+							<tr id="e20r-seq-post">
+								<td>
+									<span style="text-align: center;">There is <em>no content available</em> for you at this time. Please check back later.</span>
+								</td>
+							</tr><?php
+						}
+					}
+				}
+
+				?></table>
+		</div>
+		<div class="clear"></div>
+		<?php
+
+
+		echo apply_filters( 'e20r-sequence-list-pagination-code', $sequence->post_paging_nav( ceil( count( $sequence->posts ) / $pagesize ) ) );
+		// echo apply_filters( 'e20r-sequence-list-pagination-code', $this->post_paging_nav( $max_num_pages ) );
+		// wp_reset_postdata();
+	}
+		?>
+		</div><?php
+
+		$post = $savePost;
+
+		$html .= ob_get_contents();
+		ob_end_clean();
+
+		E20RTools\DBG::log("create_sequence_list() - Returning the - possibly filtered - HTML for the sequence_list shortcode");
+
+		return apply_filters( 'e20r-sequence-list-html', $html );
+	}
+
+	/**
+	 * Formats the title (unless its empty, then we set it to the post title for the current sequence)
+	 *
+	 * @param string|null $title -- A string (title) to apply formatting to & return
+	 *
+	 * @return null|string - The title string
+	 */
+	private function set_title_in_shortcode( $title = null ) {
+
+		$sequence = apply_filters('get_sequence_class_instance', null);
+		// Process the title attribute (default values, can apply filter if needed/wanted)
+		if ( ( $title == '' ) && ( $sequence->sequence_id != 0 ) ) {
+
+			$title = '<h3>' . get_the_title( $sequence->sequence_id ) . '</h3>';
+		}
+		elseif ( ( $sequence->sequence_id == 0 ) && ( $title == '' ) ) {
+
+			$title = "<h3>" . _e("Available posts", "e20rsequence") . "</h3>";
+		}
+		elseif ( $title == '' ) {
+
+			$title = '';
+		}
+		else {
+
+			$title = "<h3>{$title}</h3>";
+		}
+
+		return $title;
+	}
+
+	    /**
+     * Adds notification opt-in to list of posts/pages in sequence.
+     *
+     * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
+     *
+     * @access public
+     */
+    public function view_user_notice_opt_in() {
+
+        $optinForm = '';
+
+        global $current_user;
+
+		$sequence = apply_filters('get_sequence_class_instance', null);
+		$options = $sequence->get_options();
+
+        // $meta_key = $wpdb->prefix . "pmpro_sequence_notices";
+
+        E20RTools\DBG::log('view_user_notice_opt_in() - User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
+
+        if ( isset( $options->sendNotice ) && ( $options->sendNotice == 1 ) ) {
+
+            E20RTools\DBG::log("view_user_notice_opt_in() - Allow user to opt out of email notices");
+            $optIn = $sequence->load_user_notice_settings( $current_user->ID, $sequence->sequence_id );
+
+            E20RTools\DBG::log('view_user_notice_opt_in() - Fetched Meta: ' . print_r( $optIn, true));
+
+            $noticeVal = isset( $optIn->send_notices ) && ( $optIn->send_notices == 1 ) ? $optIn->send_notices : 0;
+
+            /* Add form information */
+            ob_start();
+            ?>
+            <div class="e20r-seq-centered">
+                <div class="e20r_sequence_useroptin">
+                    <div class="seq_spinner"></div>
+                    <form class="e20r-sequence" action="<?php echo admin_url('admin-ajax.php'); ?>" method="post">
+                        <input type="hidden" name="hidden_e20r_seq_useroptin" id="hidden_e20r_seq_useroptin" value="<?php echo $noticeVal; ?>" >
+                        <input type="hidden" name="hidden_e20r_seq_id" id="hidden_e20r_seq_id" value="<?php echo $sequence->sequence_id; ?>" >
+                        <input type="hidden" name="hidden_e20r_seq_uid" id="hidden_e20r_seq_uid" value="<?php echo $current_user->ID; ?>" >
+                        <?php wp_nonce_field('e20r-sequence-user-optin', 'e20r_sequence_optin_nonce'); ?>
+                        <span>
+                            <input type="checkbox" value="1" id="e20r_sequence_useroptin" name="e20r_sequence_useroptin" onclick="javascript:e20r_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', "e20rsequence"); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
+                            <label for="e20r-seq-useroptin"><?php _e('Yes, please send me email reminders!', "e20rsequence"); ?></label>
+                        </span>
+                    </form>
+                </div>
+            </div>
+
+            <?php
+            $optinForm = ob_get_clean();
+        }
+        else {
+            E20RTools\DBG::log("view_user_notice_opt_in() - Not configured to allow sending of notices. {$options->sendNotice}");
+        }
+
+        return $optinForm;
+    }
 }
