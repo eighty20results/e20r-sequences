@@ -27,12 +27,24 @@ use E20R\Tools as E20RTools;
 
 class Cron
 {
-    /**
+    // Refers to a single instance of this class.
+    private static $_this = null;
+/**
      * Job constructor.
      */
     function __construct()
     {
-        add_filter("get_cron_class_instance", [$this, 'get_instance']);
+        if (null !== self::$_this) {
+            $error_message = sprintf(__("Attempted to load a second instance of a singleton class (%s)", "e20rsequence"),
+                get_class($this)
+            );
+
+            error_log($error_message);
+            wp_die( $error_message);
+        }
+
+        self::$_this = $this;
+
         add_action('e20r_sequence_cron_hook', array(apply_filters("get_cron_class_instance", null), 'check_for_new_content'), 10, 1);
     }
 
@@ -390,9 +402,13 @@ class Cron
      *
      * @return Tools\Cron $this
      */
-    public function get_instance()
+    public static function get_instance()
     {
-        return $this;
+        if (null == self::$_this) {
+            self::$_this = new self;
+        }
+
+        return self::$_this;
     }
 
     /**
