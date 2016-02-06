@@ -8,14 +8,15 @@ Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the con
 
 == Description ==
 This plugin currently requires Paid Memberships Pro and started life as a fork of the PMPro Series
- plugin by strangerstudios. However, I needed a drip-content plugin that supported different delay type options, paginated
+ plugin by Stranger Studios, LLC. However, I needed a drip-content plugin that supported different delay type options, paginated
  lists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type,
  etc, etc, so I wound up with something completely different from PMPro Series. At this point, there's really nothing
- left of the original fork.
+ left of the original in this fork.
 
 == Features ==
 
 * Configuration UI for the drip feed sequence (meta box)
+* The plugin is translatable (I18N support)
 * Add supported post types to one or more sequences with one or more delay values from the post edit page
 * [sequence_list] shortcode with attributes for paginated sequence list
 * [e20r_available_on] shortcode to prevent visibility of content between [e20r_available_on] and [/e20r_available_on] until a specific date, or until a certain number of days after the users membership started.
@@ -103,10 +104,10 @@ See ./email/README.txt for information on templates for the email alerts.
 4. Must rename plug-in to conform with Wordpress.org naming requirements - Done
 
 ##Known Issues
-
 * If you started with this plugin on one of the V2.x versions, you *must* deactivate, and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
 * The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
 * Format for "Posts in sequence" metabox only partially handles responsive screens well - Fix underway
+* Limited library of translations available: English (US) and Norwegian. Contributions would be most welcome!
 
 For more, see the [Issues section](https://github.com/eighty20results/e20r-sequences/issues) for the plugin on Github.com.
 
@@ -212,53 +213,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.0
-* FIX: Would sometimes error during display of available posts for sequence (in post list metabox)
-* FIX: Simplified security management
-* FIX: Refactored CSS (out of .php & into dedicated CSS files)
-* FIX: Error when attempting to load sequence info
-* FIX: Would sometimes return too many sequences
-* FIX: Would sometimes return incorrect number of sequences.
-* FIX: Reflect new version number (4.4)
-* FIX: Revert version fix
-* FIX: Didn't account for pages < pagesize.
-* FIX: Autoload the views class
-* FIX: Conversion check didn't always return the correct status for a sequence
-* FIX: Updated default options to match new, simpler settings management
-* FIX: Load the appropriate upgrade logic (if present).
-* FIX: Didn't always load the front-end scripts when loading the sequence page
-* FIX: Don't send notification alerts for posts with a 0 delay
-* FIX: Make compatible with new settings/option names & fields
-* FIX: Instantiation of singleton class
-* FIX: Numerous issues related to moving the view code out of the controller
-* FIX: Simplify saving of sequence options/settings from backend
-* FIX: Didn't always load the correct instance of the class
-* FIX: Would sometimes loop too many times during update check
-* ENH: Clean up Sequence meta from member posts/pages/CPTs if the sequence itself is deleted
-* ENH: Convert settings to new (easier to manage) settings for the sequence. (initial commit)
-* ENH: Add stub functions for update actions in e20rSequenceUpdates class
-* ENH: Simplify up-front loading of classes
-* ENH: Make 'add post to sequence' metabox responsive
-* ENH: Remove some of the duplicate DEBUG info
-* ENH: Support using separate view class
-* ENH: Set option for update(d) version
-* ENH: Simplify saving options/settings for the sequence
-* ENH: Add debug to debug status of post/pages being loaded from DB
-* ENH: Move view related code to own class
-* ENH: Remove some of the duplicate DEBUG info
-* ENH: Remove sequence meta from post(s) when sequence gets deleted.
-* ENH: Add upgrade handling to hook system
-* ENH: Simplify saving/loading options & settings in backend meta box
-* ENH: Initial commit for refactoring view related functions
-* ENH: Initial commit for update functionality tool
-* ENH: Add debug output for is_after_opt_in()
-* ENH: Whitespace clean-up
-* ENH: Simplified security protocol (minimize probability for error while maximizing security)
-* ENH: Add license information
-* ENH: Updated Norwegian translation (Norsk/Bokmål)
-* ENH: Add description on how to add new alert templates
-* NIT: Updated fix version
-* NIT: Refactored class
+###4.4.3
+* FIX: Didn't always update the plugin
+* FIX: Update WP Compatibility
 
 ##Old releases
 ###.1
@@ -952,3 +909,67 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 ###4.3.2
 * FIX: Add e20r-sequences loader file to build
 * FIX: Incorrect path to loader file
+
+###4.4.0
+* FIX: Would sometimes error during display of available posts for sequence (in post list metabox)
+* FIX: Simplified security management
+* FIX: Refactored CSS (out of .php & into dedicated CSS files)
+* FIX: Error when attempting to load sequence info
+* FIX: Would sometimes return too many sequences
+* FIX: Would sometimes return incorrect number of sequences.
+* FIX: Reflect new version number (4.4)
+* FIX: Revert version fix
+* FIX: Didn't account for pages < pagesize.
+* FIX: Autoload the views class
+* FIX: Conversion check didn't always return the correct status for a sequence
+* FIX: Updated default options to match new, simpler settings management
+* FIX: Load the appropriate upgrade logic (if present).
+* FIX: Didn't always load the front-end scripts when loading the sequence page
+* FIX: Don't send notification alerts for posts with a 0 delay
+* FIX: Make compatible with new settings/option names & fields
+* FIX: Instantiation of singleton class
+* FIX: Numerous issues related to moving the view code out of the controller
+* FIX: Simplify saving of sequence options/settings from backend
+* FIX: Didn't always load the correct instance of the class
+* FIX: Would sometimes loop too many times during update check
+* ENH: Clean up Sequence meta from member posts/pages/CPTs if the sequence itself is deleted
+* ENH: Convert settings to new (easier to manage) settings for the sequence. (initial commit)
+* ENH: Add stub functions for update actions in e20rSequenceUpdates class
+* ENH: Simplify up-front loading of classes
+* ENH: Make 'add post to sequence' metabox responsive
+* ENH: Remove some of the duplicate DEBUG info
+* ENH: Support using separate view class
+* ENH: Set option for update(d) version
+* ENH: Simplify saving options/settings for the sequence
+* ENH: Add debug to debug status of post/pages being loaded from DB
+* ENH: Move view related code to own class
+* ENH: Remove some of the duplicate DEBUG info
+* ENH: Remove sequence meta from post(s) when sequence gets deleted.
+* ENH: Add upgrade handling to hook system
+* ENH: Simplify saving/loading options & settings in backend meta box
+* ENH: Initial commit for refactoring view related functions
+* ENH: Initial commit for update functionality tool
+* ENH: Add debug output for is_after_opt_in()
+* ENH: Whitespace clean-up
+* ENH: Simplified security protocol (minimize probability for error while maximizing security)
+* ENH: Add license information
+* ENH: Updated Norwegian translation (Norsk/Bokmål)
+* ENH: Add description on how to add new alert templates
+* NIT: Updated fix version
+* NIT: Refactored class
+
+###4.4.1
+* FIX: Intermittent problem changing sort order
+* FIX: Didn't always display full sequence list for shortcode
+* FIX: Sequence listing didn't always display correctly in sequence_list shortcode
+* FIX: Pagination didn't always work after view/controller split
+* FIX: Didn't always run upgrade actions as expected.
+
+###4.4.2
+* FIX: Update version number and link to plugin info
+* FIX: Clean up update checker
+* FIX: Run upgrade process for all versions after v4.4
+* FIX: Duplicate DEBUG info
+* FIX: Didn't always include the excerpt data for the notification message when sending one message per post
+* ENH: Updated Translation files
+* ENH: Update version history for updates

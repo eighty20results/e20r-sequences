@@ -52,17 +52,34 @@ class e20rSequenceUpdates
     {
         E20RTools\DBG::log("Getting plugin data for E20R Sequences");
 
-        $plugin_status = get_plugin_data(E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences.php', false, false);
+        $history = array('4.4', '4.4.0', '4.4.1', '4.4.2', '4.4.3' );
+
+        if (function_exists('get_plugin_data'))
+            $plugin_status = get_plugin_data(E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences.php', false, false);
+
         $version = ( !empty($plugin_status['Version']) ? $plugin_status['Version'] : E20R_SEQUENCE_VERSION );
 
         $me = self::$_this;
         $me->set_version($version);
 
-        E20RTools\DBG::log("Running INIT for updates related to {$version}");
+        $is_updated = get_option('e20r-sequence-updated', array() );
+        $is_updated = array_unique(array_merge($history, $is_updated));
 
-        add_action("e20r_sequence_before_update_{$version}", array( self::$_this, 'e20r_sequence_before_update' ) );
-        add_action("e20r_sequence_update_{$version}", array( self::$_this, 'e20r_sequence_update'));
-        add_action("e20r_sequence_after_update_{$version}", array( self::$_this, 'e20r_sequence_after_update' ));
+        if (!in_array( $version, $is_updated )) {
+
+            E20RTools\DBG::log("Appending {$version} to list of stuff to upgrade");
+            $is_updated[] = $version;
+        }
+
+        foreach( $is_updated as $v )
+        {
+            E20RTools\DBG::log("Adding update action for {$v}");
+            add_action("e20r_sequence_before_update_{$v}", array(self::$_this, 'e20r_sequence_before_update'));
+            add_action("e20r_sequence_update_{$v}", array(self::$_this, 'e20r_sequence_update'));
+            add_action("e20r_sequence_after_update_{$v}", array(self::$_this, 'e20r_sequence_after_update'));
+        }
+
+        update_option('e20r-sequence-updated', $is_updated, 'no');
     }
 
     public function get_version()
@@ -91,31 +108,38 @@ class e20rSequenceUpdates
         $su_class = apply_filters('get_sequence_update_class_instance',null);
         $version = $su_class->get_version();
 
-        $upgrade_file = str_replace('.', '_', $version);
-
         $is_updated = get_option('e20r-sequence-updated', array() );
 
-        if (in_array( $version, $is_updated ) ) {
-            E20RTools\DBG::log("Update for {$version} previously completed");
-            return;
-        }
+        if (!in_array( $version, $is_updated )) {
 
-        if (file_exists(E20R_SEQUENCE_PLUGIN_DIR . "upgrades/{$upgrade_file}.php") )
-        {
-            require_once(E20R_SEQUENCE_PLUGIN_DIR . "upgrades/{$upgrade_file}.php");
-
-            E20RTools\DBG::log("Running pre (before) update action for {$version}");
-            do_action("e20r_sequence_before_update_{$version}");
-
-            E20RTools\DBG::log("Running update action for {$version}");
-            do_action("e20r_sequence_update_{$version}");
-
-            E20RTools\DBG::log("Running clean-up (after) update action for {$version}");
-            do_action("e20r_sequence_after_update_{$version}");
-
+            E20RTools\DBG::log("Appending {$version} to list of stuff to upgrade");
             $is_updated[] = $version;
-            update_option('e20r-sequence-updated', $is_updated, 'no');
         }
+
+        foreach ($is_updated as $v) {
+
+            $upgrade_file = str_replace('.', '_', $v);
+
+            if (file_exists(E20R_SEQUENCE_PLUGIN_DIR . "upgrades/{$upgrade_file}.php")) {
+
+                require_once(E20R_SEQUENCE_PLUGIN_DIR . "upgrades/{$upgrade_file}.php");
+
+                E20RTools\DBG::log("Running pre (before) update action for {$v}");
+                do_action("e20r_sequence_before_update_{$v}");
+
+                E20RTools\DBG::log("Running update action for {$v}");
+                do_action("e20r_sequence_update_{$v}");
+
+                E20RTools\DBG::log("Running clean-up (after) update action for {$v}");
+                do_action("e20r_sequence_after_update_{$v}");
+
+                if (!in_array($v, $is_updated)) {
+                    $is_updated[] = $v;
+                }
+            }
+        }
+
+        update_option('e20r-sequence-updated', $is_updated, 'no');
     }
 
 
