@@ -306,6 +306,5 @@ register_deactivation_hook(__FILE__, array(&$sequence, 'deactivation'));
 
 $plugin_updates = \PucFactory::buildUpdateChecker(
     'https://eighty20results.com/protected-content/e20r-sequences/metadata.json',
-    __FILE__,
-    'e20r-sequences'
+    __FILE__
 );
