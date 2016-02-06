@@ -2331,7 +2331,12 @@ class Controller
     private function set_min_max( $pagesize, $page_num, $post_list ) {
 
         $min_key = 0;
-        $max_key = $pagesize - 1;
+
+        /**
+         * Didn't account for pages < pagesize.
+         * @since 4.3.3
+        */
+        $max_key = ( count($post_list) >= $pagesize ) ? $pagesize - 1 : count($post_list) - 1;
 
         E20RTools\DBG::log("Max key: {$max_key} and min key: {$min_key}");
         $min = $post_list[$max_key]->delay;
