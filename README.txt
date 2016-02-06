@@ -4,7 +4,7 @@ Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid m
 Requires at least: 3.4
 Requires PHP 5.3 or later.
 Tested up to: 4.4
-Stable tag: 4.3.1
+Stable tag: 4.4
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -37,7 +37,8 @@ This plugin currently requires Paid Memberships Pro and started life as a fork o
 * Allows 'preview' of upcoming posts in the sequence (Lets the admin/editor send alerts for "today" while letting the user read/view upcoming content in the sequence - used in coaching programs, for instance).
 * Filters to simplify integration with other membership frameworks/content restriction frameworks
 * Supports automatic conversion of existing PMPro Series to sequences on init (filter based)
-* See filter table for overview of all available filters/hooks
+* When deleting a sequence, it will clean up after itself (remove sequence related postmeta from member posts).
+* Numerous filters and hooks.  (See the table for overview of some of the available hooks)
 
 See ./email/README.txt for information on templates for the email alerts.
 
@@ -59,7 +60,7 @@ See ./email/README.txt for information on templates for the email alerts.
 == Known Issues ==
 * If you started with this plugin on one of the V2.x versions, you *must* deactivate and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
 * The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
-* Format for "Posts in sequence" metabox doesn't handle responsive screens well - Fix Pending
+* Format for "Posts in sequence" metabox only partially handles responsive screens well - Fix underway
 
 For more, see the [Issues section](https://github.com/eighty20results/e20r-sequences/issues) for the plugin on Github.com
 
@@ -83,11 +84,19 @@ For more, see the [Issues section](https://github.com/eighty20results/e20r-seque
   `!!excerpt!!` - The excerpt from the post/page containing the content we're sending a reminder about.
   `!!ptitle!!` - The title of the post/page we're sending the alert about.
 
-  The template file _must_ end with the .html extension.
+  === Adding new templates ===
+
+  The plugin will search the directory of the currently active theme for the `sequence-email-alerts` directory.
+  If found, it will load any .html files and add them to the Sequence Settings under the "Template" settings
+  drop-down (at the top of the list) for all new and defined sequences.
+
+  These template files support all standard HTML elements.
+
+  A template file _must_ end with the .html extension or it will not be located by the settings metabox.
 
   Whether or not the template file contains any of the replaceable variables is entirely optional.
 
-    _Note_: As of v4.3, the admin can define any substitutions they would like in the template, and apply the 'e20r-sequence-email-substitution-fields' filter to do the "dirty work". The substitutions will be executed before the email gets sent to the user. Also new in 4.3 is the fact that all of the above listed substitution vairables have filters (See the sources for information on the filters).
+    _Note_: *As of v4.3.x*, the admin can define any substitutions they would like in the template, and apply the 'e20r-sequence-email-substitution-fields' filter to do the "dirty work". The substitutions will be executed before the email gets sent to the user. Also new in 4.3 is the fact that all of the above listed substitution variables have filters (See the sources/table of hooks for information on the filters).
 
     All field names need to be wrapped in dual "bang" characters ('!'). However, when specifying the substitution variable it's done without any '!!' characters. I.e. '!!post_url!! becomes `'post_url' => "http://example.com/my-post-name"` in the substitution array.
 
@@ -111,7 +120,7 @@ The following attributes may be used, unless they have the "Required" keyword ne
 Example 1:
 [sequence_links id="4" pagesize="20" title="My Sequence Links" button="true" highlight="true" scrollbox="true"]
 
-===[sequence_alert] ===
+=== [sequence_alert] ===
 
 This shortcode can be placed on any page or post and will load a checkbox allowing the logged-in user to opt in, or
 out of receiving email alerts about new content.
@@ -160,6 +169,7 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
 
 == 4.3.2 ==
 * FIX: Add e20r-sequences loader file to build
