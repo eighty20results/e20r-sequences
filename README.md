@@ -213,12 +213,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.1
-* FIX: Intermittent problem changing sort order
-* FIX: Didn't always display full sequence list for shortcode
-* FIX: Sequence listing didn't always display correctly in sequence_list shortcode
-* FIX: Pagination didn't always work after view/controller split
-* FIX: Didn't always run upgrade actions as expected.
+###4.4.3
+* FIX: Didn't always update the plugin
 
 ##Old releases
 ###.1
@@ -960,3 +956,19 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Add description on how to add new alert templates
 * NIT: Updated fix version
 * NIT: Refactored class
+
+###4.4.1
+* FIX: Intermittent problem changing sort order
+* FIX: Didn't always display full sequence list for shortcode
+* FIX: Sequence listing didn't always display correctly in sequence_list shortcode
+* FIX: Pagination didn't always work after view/controller split
+* FIX: Didn't always run upgrade actions as expected.
+
+###4.4.2
+* FIX: Update version number and link to plugin info
+* FIX: Clean up update checker
+* FIX: Run upgrade process for all versions after v4.4
+* FIX: Duplicate DEBUG info
+* FIX: Didn't always include the excerpt data for the notification message when sending one message per post
+* ENH: Updated Translation files
+* ENH: Update version history for updates

@@ -1,5 +1,1 @@
-FIX: Intermittent problem changing sort order
-FIX: Didn't always display full sequence list for shortcode
-FIX: Sequence listing didn't always display correctly in sequence_list shortcode
-FIX: Pagination didn't always work after view/controller split
-FIX: Didn't always run upgrade actions as expected.
+FIX: Didn't always update the plugin
