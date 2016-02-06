@@ -459,7 +459,7 @@ class Views {
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-sortorder e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-sort" class="save-e20rseq-sortorder button"><?php _e('OK', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-sort" class="save-pmproseq-sortorder button"><?php _e('OK', "e20rsequence"); ?></a>
 								<a href="#" id="cancel-e20r-seq-sort" class="cancel-pmproseq-sortorder button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
 							</p>
 						</div><!-- end of row -->
@@ -1364,7 +1364,7 @@ class Views {
 		// $sequence_posts = $this->posts;
 		$memberDayCount = $sequence->get_membership_days();
 
-		E20RTools\DBG::log( "Sequence {$sequence->sequence_id} has " . count( $sequence->posts ) . " posts. Current user has been a member for {$memberDayCount} days" );
+		E20RTools\DBG::log( "Sequence {$sequence->sequence_id} has " . count( $retSeq ) . " posts. Current user has been a member for {$memberDayCount} days" );
 
 		if ( ! $sequence->has_post_access( $current_user->ID, $sequence->sequence_id ) ) {
 			E20RTools\DBG::log( 'No access to sequence ' . $sequence->sequence_id . ' for user ' . $current_user->ID );
@@ -1517,7 +1517,7 @@ class Views {
 		<?php
 
 
-		echo apply_filters( 'e20r-sequence-list-pagination-code', $sequence->post_paging_nav( ceil( count( $sequence->posts ) / $pagesize ) ) );
+		echo apply_filters( 'e20r-sequence-list-pagination-code', $sequence->post_paging_nav( ceil( count( $retSeq ) / $pagesize ) ) );
 		// echo apply_filters( 'e20r-sequence-list-pagination-code', $this->post_paging_nav( $max_num_pages ) );
 		// wp_reset_postdata();
 	}
