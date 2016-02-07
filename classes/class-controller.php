@@ -5523,7 +5523,7 @@ class Controller
 
         add_action( 'plugins_loaded', [ $uc_class, 'init' ] );
         add_action( 'wp_loaded', [ $uc_class, 'update' ], 1) ; // Run early
-        add_action( 'e20r_sequence_cron_hook', array(apply_filters("get_cron_class_instance", null), 'check_for_new_content'), 10, 1);
+        add_action( 'e20r_sequence_cron_hook', [ Tools\Cron::get_instance(), 'check_for_new_content' ], 10, 1);
 
         // Load filters
         add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
