@@ -41,8 +41,6 @@ class e20rMail
 
     public function __get($property)
     {
-        E20RTools\DBG::log("Getting property {$property}");
-
         if (property_exists($this, $property)) {
 
             return $this->{$property};
@@ -51,8 +49,6 @@ class e20rMail
 
     public function __set($property, $value)
     {
-        E20RTools\DBG::log("Setting property {$property} to {$value}");
-
         if (property_exists($this, $property)) {
 
             $this->{$property} = $value;
