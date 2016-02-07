@@ -34,7 +34,7 @@ class Cron
      */
     function __construct()
     {
-        if (null !== self::$_this) {
+        if (null != self::$_this) {
             $error_message = sprintf(__("Attempted to load a second instance of a singleton class (%s)", "e20rsequence"),
                 get_class($this)
             );
@@ -44,8 +44,6 @@ class Cron
         }
 
         self::$_this = $this;
-
-        add_action('e20r_sequence_cron_hook', array(apply_filters("get_cron_class_instance", null), 'check_for_new_content'), 10, 1);
     }
 
     static public function schedule_default() {
