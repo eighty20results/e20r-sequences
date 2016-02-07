@@ -4440,7 +4440,7 @@ class Controller
      */
     public function sendalert_callback() {
 
-        E20RTools\DBG::log('sendalert() - Processing the request to send alerts manually');
+        E20RTools\DBG::log('Processing the request to send alerts manually');
 
         check_ajax_referer('e20r-sequence-sendalert', 'e20r_sequence_sendalert_nonce');
 
@@ -4457,7 +4457,7 @@ class Controller
 
             do_action( 'e20r_sequence_cron_hook', array( $sequence_id ));
 
-            E20RTools\DBG::log('sendalert() - Completed action for sequence');
+            E20RTools\DBG::log('Completed action for sequence');
         }
     }
 
@@ -5480,7 +5480,7 @@ class Controller
 
         $sequence_id = intval($_REQUEST['e20r_sequence_id']);
 
-        E20RTools\DBG::log( 'send_user_alert_notices() - Will send alerts for sequence #' . $sequence_id );
+        E20RTools\DBG::log( 'Will send alerts for sequence #' . $sequence_id );
 
 //            $sequence = apply_filters('get_sequence_class_instance', null);
 //            $sequence->sequence_id = $sequence_id;
@@ -5523,6 +5523,7 @@ class Controller
 
         add_action( 'plugins_loaded', [ $uc_class, 'init' ] );
         add_action( 'wp_loaded', [ $uc_class, 'update' ], 1) ; // Run early
+        add_action( 'e20r_sequence_cron_hook', array(apply_filters("get_cron_class_instance", null), 'check_for_new_content'), 10, 1);
 
         // Load filters
         add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
