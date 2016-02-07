@@ -5568,7 +5568,7 @@ class Controller
 
         add_action('admin_menu', array(&$this, "define_metaboxes"));
         add_action('save_post', array(&$this, 'save_post_meta'), 10, 2);
-        add_action('deleted_post', array(&$this, 'delete_post_meta_for_sequence'), 10, 1);
+        // add_action('deleted_post', array(&$this, 'delete_post_meta_for_sequence'), 10, 1);
         add_action('widgets_init', array(&$this, 'register_widgets'));
 
         // Add AJAX handlers for logged in users/admins
