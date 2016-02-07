@@ -1,1 +1,3 @@
-FIX: Didn't always update the plugin
+FIX: Strict standards warning
+FIX: Better handling of new  values
+ENH: Update version for upgrade history

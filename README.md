@@ -213,9 +213,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.3
-* FIX: Didn't always update the plugin
-* FIX: Update WP Compatibility
+###4.4.6
+* FIX: Strict standards warning
+* FIX: Better handling of new  values
+* ENH: Update version for upgrade history
 
 ##Old releases
 ###.1
@@ -973,3 +974,16 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * FIX: Didn't always include the excerpt data for the notification message when sending one message per post
 * ENH: Updated Translation files
 * ENH: Update version history for updates
+
+###4.4.3
+* FIX: Didn't always update the plugin
+* FIX: Update WP Compatibility
+
+###4.4.4
+* FIX: Didn't always trigger the cron jobs
+* ENH: Update version for upgrade history
+
+###4.4.5
+* FIX: Disable cleanup on delete
+* FIX: Debug cleanup
+* ENH: Update version for upgrade history
