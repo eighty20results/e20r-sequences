@@ -417,7 +417,7 @@ class Cron
      *
      * @since 4.2.6
      */
-    private function get_user_sequence_list($sequence_id = null) {
+    private static function get_user_sequence_list($sequence_id = null) {
 
         $sequence = apply_filters('get_sequence_class_instance', null);
         $result = array();
@@ -429,9 +429,9 @@ class Cron
             // Prepare SQL to get all sequences and users associated in the system who _may_ need to be notified
             if (is_null($sequence_id)) {
 
-                // dbgOut('get_user_sequence_list() - No Sequence ID specified. Processing for all sequences');
+                // dbgOut('No Sequence ID specified. Processing for all sequences');
                 $all_sequences = true;
-                E20RTools\DBG::log("get_user_sequence_list() - Loading and processing ALL sequences");
+                E20RTools\DBG::log("Loading and processing ALL sequences");
                 $sql = "
                         SELECT usrs.*, pgs.page_id AS seq_id
                         FROM {$wpdb->pmpro_memberships_users} AS usrs
@@ -445,7 +445,7 @@ class Cron
             else {
 
                 // dbgOut('Sequence ID specified in function argument. Processing for sequence: ' . $sequenceId);
-                E20RTools\DBG::log("get_user_sequence_list() - Loading and processing specific sequence: {$sequence_id}");
+                E20RTools\DBG::log("Loading and processing specific sequence: {$sequence_id}");
 
                 $sql = $wpdb->prepare(
                     "
