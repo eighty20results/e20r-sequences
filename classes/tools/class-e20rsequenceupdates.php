@@ -52,7 +52,7 @@ class e20rSequenceUpdates
     {
         E20RTools\DBG::log("Getting plugin data for E20R Sequences");
 
-        $history = array( '4.4', '4.4.0', '4.4.1', '4.4.2', '4.4.3', '4.4.4', '4.4.5', '4.4.6' );
+        $history = array( '4.4', '4.4.0', '4.4.1', '4.4.2', '4.4.3', '4.4.4', '4.4.5', '4.4.6', '4.4.7' );
 
         if (function_exists('get_plugin_data'))
             $plugin_status = get_plugin_data(E20R_SEQUENCE_PLUGIN_DIR . 'e20r-sequences.php', false, false);
