@@ -1,3 +1,11 @@
-FIX: Strict standards warning
-FIX: Better handling of new  values
-ENH: Update version for upgrade history
+DOC: More functions w/documentation
+FIX: Didn't always run the deactivation/activation functions
+FIX: Keep backwards compatibility for now (to old sequence versions)
+FIX: Didn't force a sequence load after conversion
+FIX: Didn't always trigger conversion to V3 format
+ENH: New constant for the main plugin file
+ENH: Refactor (a little) for code readability
+ENH: Add support for per-sequence start date (uses membership plugin startdate if there isn't any info in the users usermeta)
+ENH: Modified user_can_edit to support filter of required permissions (user settable)
+ENH: Simplified loading of front-end JavaScript & Styles (fewer hoops)
+ENH: Add update code for 4.4.7
