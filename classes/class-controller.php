@@ -199,7 +199,13 @@ class Controller
         return $this->sequence_id;
     }
 
-
+    /**
+     * Static method to return the details about a specific Post belonging to a specific sequence.
+     *
+     * @param $sequence_id
+     * @param $post_id
+     * @return WP_Post - Array of posts.
+     */
     static public function post_details( $sequence_id, $post_id )
     {
         $seq = apply_filters('get_sequence_class_instance', null);
@@ -208,12 +214,24 @@ class Controller
         return $seq->find_by_id( $post_id );
     }
 
+    /**
+     * Static function that returns all sequences in the system that have the specified post status
+     *
+     * @param string $statuses
+     * @return array of Sequence objects
+     */
     static public function all_sequences( $statuses = 'publish' )
     {
         $seq = apply_filters('get_sequence_class_instance', null);
         return $seq->get_all_sequences( $statuses );
     }
 
+    /**
+     * Static function that returns all sequence IDs that a specific post_id belongs to
+     *
+     * @param $post_id - Post ID
+     * @return mixed -- array of sequence Ids
+     */
     static public function sequences_for_post( $post_id )
     {
         $cSequence = apply_filters('get_sequence_class_instance', null);
@@ -222,6 +240,7 @@ class Controller
     }
 
     /**
+      * Singleton pattern - returns sequence object (this) to caller (via filter)
       * @return Sequence\Controller $this - Current instance of the class
       * @since 4.0.0
       */
@@ -234,12 +253,18 @@ class Controller
         return self::$_this;
     }
 
+    /**
+     * Check all sequences in the system for whether or not they've been converted to the v3 metadata format then set warning banner if not.
+     */
     public function check_conversion()
     {
+        E20RTools\DBG::log("Check whether we need to convert any sequences");
         $sequences = $this->get_all_sequences();
         $flag = false;
 
         foreach( $sequences as $sequence ) {
+
+            E20RTools\DBG::log("Check whether we need to convert sequence # {$sequence->ID}");
 
             if ( !$this->is_converted( $sequence->ID ) ) {
 
@@ -274,16 +299,38 @@ class Controller
         return $all_posts;
     }
 
+    /**
+     * Check whether a specific sequence ID has been converted to the V3 metadata format
+     *
+     * @param $sequence_id - the ID of the sequnence to check for
+     * @return bool - True if it's been converted, false otherwise.
+     */
     public function is_converted( $sequence_id ) {
+
+        E20RTools\DBG::log("Check whether sequence ID {$sequence_id} is converted already");
 
         if ( empty( $this->current_metadata_versions ) ) {
 
             $this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
         }
 
-        $is_pre_v3 = get_post_meta( $sequence_id, "_sequence_posts", true );
+        E20RTools\DBG::log("Sequence metadata map: ");
+        E20RTools\DBG::log($this->current_metadata_versions);
 
-        if ( ( false === $is_pre_v3 ) || ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) ) {
+        if (empty( $this->current_metadata_versions ) )
+        {
+            E20RTools\DBG::log("{$sequence_id} needs to be converted to V3 format");
+            return false;
+        }
+
+        $has_pre_v3 = get_post_meta( $sequence_id, "_sequence_posts", true );
+
+        if( ( false !== $has_pre_v3 ) && ( !isset( $this->current_metadata_versions[$sequence_id]) || ( 3 != $this->current_metadata_versions[$sequence_id] )) ) {
+            E20RTools\DBG::log("{$sequence_id} needs to be converted to V3 format");
+            return false;
+        }
+
+        if ( ( false === $has_pre_v3 ) || ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) ) {
 
             E20RTools\DBG::log("{$sequence_id} is at v3 format");
             return true;
@@ -312,9 +359,10 @@ class Controller
             );
 
         $is_converted = new \WP_Query( $args );
+
         $options = $this->get_options( $sequence_id );
 
-        if ( $is_converted->post_count >= 1 || $options->loaded === true ) {
+        if ( $is_converted->post_count >= 1 && $options->loaded === true ) {
 
             if ( !isset( $this->current_metadata_versions[$sequence_id] ) ) {
 
@@ -328,7 +376,22 @@ class Controller
         return false;
     }
 
+    /**
+     * Convert sequence ID to V3 metadata config if it hasn't been converted already.
+     * @param $seq_id
+     */
+    public function convert_sequence( $seq_id ) {
 
+        E20RTools\DBG::log("Process {$seq_id} for V3 conversion?");
+
+        if ( false === $this->is_converted( $seq_id ) ) {
+
+            E20RTools\DBG::log("Need to convert sequence #{$seq_id} to V3 format");
+            $this->get_options( $seq_id );
+            $this->convert_posts_to_v3( $seq_id );
+            E20RTools\DBG::log("Converted {$seq_id} to V3 format");
+        }
+    }
 
     /**
      * Set the private $error value
@@ -343,7 +406,7 @@ class Controller
 
         $e = apply_filters('get_e20rerror_class_instance', null);
 
-        if ( $msg !== null ) {
+        if ( !empty($msg) ) {
 
             E20RTools\DBG::log("set_error_msg(): {$msg}");
 
@@ -351,7 +414,57 @@ class Controller
         }
     }
 
+    /**
+     * Access the private $error value
+     *
+     * @return string|null -- Error message or NULL
+     * @access public
+     */
+    public function get_error_msg() {
+
+        // $e = apply_filters('get_e20rerror_class_instance', null);
+        $e = Tools\E20RError::get_instance();
+
+        $this->error = $e->get_error( 'error' );
+
+        if ( ! empty( $this->error ) ) {
+
+            E20RTools\DBG::log("Error info found: " . print_r( $this->error, true));
+            return $this->error;
+        }
+        else {
+            return null;
+        }
+    }
+
+    /**
+     * Display the error message (if it's defined).
+     */
+    public function display_error() {
+
+        E20RTools\DBG::log("Display error messages, if there are any");
+        global $current_screen;
+
+        $msg = $this->get_error_msg();
+
+        if ( ! empty( $msg ) ){
+            E20RTools\DBG::log("Display error for Drip Feed operation(s)");
+            ?><div id="e20r-seq-error" class="notice-error is-dismissble"><p></p><?php $msg; ?></p></div><?php
+        }
+    }
+
+    /**
+     * Converts the posts for a sequence to the V3 metadata format (settings)
+     *
+     * @param null $sequence_id - The ID of the sequence to convert.
+     * @param bool $force - Whether to force the conversion or not.
+     * @return bool - Whether the conversion successfully completed or not
+     */
     public function convert_posts_to_v3( $sequence_id = null, $force = false ) {
+
+        global $converting_sequence;
+
+        $converting_sequence = true;
 
         if ( !is_null( $sequence_id ) ) {
 
@@ -365,6 +478,7 @@ class Controller
 
             if ( false === $force  ) {
 
+                E20RTools\DBG::log("Loading posts for {$sequence_id}.");
                 $this->get_options( $sequence_id );
                 $this->load_sequence_post();
             }
@@ -389,8 +503,8 @@ class Controller
             // E20RTools\DBG::log("Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
             // $retval = $retval && $this->save_sequence_post();
 
-            E20RTools\DBG::log("Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
-            $retval = $retval && delete_post_meta( $this->sequence_id, "_sequence_posts" );
+            E20RTools\DBG::log("(Not) Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
+            // $retval = $retval && delete_post_meta( $this->sequence_id, "_sequence_posts" );
         }
         else {
 
@@ -400,23 +514,22 @@ class Controller
 
         if ( $retval == true ) {
 
-            E20RTools\DBG::log("Successfully converted to v3 metadata format for all sequence member posts");
+            E20RTools\DBG::log("Successfully converted sequence id# {$this->sequence_id} to v3 metadata format for all sequence member posts");
             $this->current_metadata_versions[$this->sequence_id] = 3;
             update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
 
             // Reset sequence info.
             $this->get_options( $old_sequence_id );
-            $this->load_sequence_post();
+            $this->load_sequence_post(null, null, null, '=', null, true);
 
         }
         else {
             $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence (%s)", "e20rsequence") , get_the_title( $this->sequence_id ) ) );
         }
 
+        $converting_sequence = false;
         return $retval;
     }
-
-
 
     /**
      * Return the default options for a sequence
@@ -483,6 +596,11 @@ class Controller
         return $settings;
     }
 
+    /**
+     * Find a Sequence option by name and return it's current setting/value
+     * @param $option - The name of the setting to return
+     * @return mixed - The setting value
+     */
     public function get_option_by_name( $option )
     {
         if ( ! isset($this->options->{$option} ) ) {
@@ -493,12 +611,24 @@ class Controller
         return $this->options->{$option};
     }
 
+    /**
+     * Set a Sequence option by name to the specified $value.
+     *
+     * @param $option
+     * @param $value
+     */
     public function set_option_by_name( $option, $value )
     {
         $this->options->{$option} = $value;
     }
 
-
+    /**
+     * Return the expiration timestamp for the post cache of a specific sequence
+     *
+     * @param $sequence_id
+     * @return null|string
+     *
+     */
     private function get_cache_expiry($sequence_id) {
 
         E20RTools\DBG::log("Loading cache timeout value for {$sequence_id}");
@@ -526,6 +656,11 @@ class Controller
         return $expires;
     }
 
+    /**
+     * Checks whether the post cache for the active sequence is still valid (timeout based)
+     *
+     * @return bool - True if still valid
+     */
     private function is_cache_valid() {
 
         E20RTools\DBG::log("We have " . count($this->posts) . " posts in the post list" );
@@ -555,6 +690,12 @@ class Controller
         return false;
     }
 
+    /**
+     * Clear the cache for the specified sequence ID
+     *
+     * @param null $sequence_id
+     * @return bool
+     */
     public function delete_cache( $sequence_id = null ) {
 
 		$direct_operation = false;
@@ -600,6 +741,13 @@ class Controller
         // return wp_cache_delete( $key, $group);
     }
 
+    /**
+     * Configure (load) the post cache for the specific sequence ID
+     *
+     * @param $sequence_posts - array of posts that belong to the sequence
+     * @param $sequence_id - The ID of the sequence to load the cache for
+     * @return bool - Whether the cache loaded successfully or not
+     */
     private function set_cache( $sequence_posts, $sequence_id ) {
 
         $success = false;
@@ -625,6 +773,12 @@ class Controller
         // wp_cache_set( $key, $value );
     }
 
+    /**
+     * Return the cached post list for the specific cache
+     *
+     * @param $sequence_id - The Sequenece Id
+     * @return bool|mixed - The cached post list (or false if unable to locate it)
+     */
     private function get_cache( $sequence_id ) {
 
         E20RTools\DBG::log("Loading from cache for {$sequence_id}...");
@@ -653,6 +807,8 @@ class Controller
     }
 
     /**
+      * Returns the per-sequence startdate to use for a user
+      *
       * @param $user_id -- The user ID to find the startdate for
       * @return mixed|void  - A UNIX timestamp (seconds since start of epoch)
       */
@@ -661,17 +817,44 @@ class Controller
         $startdate = strtotime('today ' . get_option('timezone_string'));
 
         // TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
+
         if (function_exists('pmpro_getMemberStartdate')) {
             $startdate = pmpro_getMemberStartdate( $user_id, $level_id );
         }
 
+        $startdate = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate, $user_id, $level_id);
+
+        // Use a per-sequence startdate
+        $m_startdate = get_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", true);
+
+        if (empty($m_startdate)) {
+
+            update_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", $startdate);
+            $m_startdate = $startdate;
+        }
+
+        $startdate = $m_startdate;
+
         return apply_filters('e20r-sequence-user-startdate', $startdate, $user_id, $level_id);
     }
 
+    /**
+     * Loads the post list for a sequence (or the current sequence) from the DB
+     *
+     * @param null $sequence_id
+     * @param null $delay
+     * @param null $post_id
+     * @param string $comparison
+     * @param null $pagesize
+     * @param bool $force
+     * @param string $status
+     * @return array|bool|mixed
+     */
     public function load_sequence_post( $sequence_id = null, $delay = null, $post_id = null, $comparison = '=', $pagesize = null, $force = false, $status = 'default' ) {
 
         global $current_user;
         global $loading_sequence;
+        global $converting_sequence;
 
         $find_by_delay = false;
         $found = array();
@@ -823,7 +1006,7 @@ class Controller
 
         E20RTools\DBG::log("Loaded {$posts->post_count} posts from wordpress database for sequence {$sequence_id}");
 
-        if ( ( 0 === $posts->post_count ) && is_null( $pagesize ) && ( is_null( $post_id ) ) ) {
+        if ( ( 0 === $posts->post_count ) && is_null( $pagesize ) && ( is_null( $post_id ) ) && false === $converting_sequence ) {
 
             E20RTools\DBG::log("Didn't find any posts. Checking if we need to convert...?");
 
@@ -1129,8 +1312,6 @@ class Controller
         return true;
     }
 
-    /********************************* Add/Remove sequence posts *****************************/
-
     /**
      * Returns a number of days since the users membership started based on the supplied date.
      * This allows us to mix sequences containing days since membership start and fixed dates for content drips
@@ -1305,16 +1486,16 @@ class Controller
 
         E20RTools\DBG::log("Adding post {$post_id} to sequence {$sequence_id} using v3 meta format");
 
-		$found_post = $this->is_present( $post_id, $delay );
-/*
-        if ($this->is_present( $post_id, $delay )) {
+        /**
+        if ( false === $found_post && ) {
 
             E20RTools\DBG::log("Post {$post_id} with delay {$delay} is already present in sequence {$sequence_id}");
             $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', "e20rsequence" ) );
             return true;
         }
-*/
-		E20RTools\DBG::log("The post was not found in the current list of posts for {$sequence_id}");
+        **/
+
+        $found_post = $this->is_present( $post_id, $delay );
 
         $posts = $this->find_by_id( $post_id, $sequence_id );
 
@@ -1339,7 +1520,9 @@ class Controller
             $member_days = $this->get_membership_days( $current_user->ID );
         }
 
-		E20RTools\DBG::log("Loading post {$post_id} from DB using WP_Query");
+        E20RTools\DBG::log("The post was not found in the current list of posts for {$sequence_id}");
+
+        E20RTools\DBG::log("Loading post {$post_id} from DB using WP_Query");
         $tmp = new \WP_Query( array(
             'p' => $post_id,
             'post_type' => apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' )),
@@ -1445,11 +1628,12 @@ class Controller
         return true;
     }
 
-    public function is_present ( $post_id, $delay ) {
+    public function is_present( $post_id, $delay ) {
 
         E20RTools\DBG::log("Checking whether post {$post_id} with delay {$delay} is already included in {$this->sequence_id}");
 
         if ( empty($this->posts ) ) {
+            E20RTools\DBG::log("No posts in sequence {$this->sequence_id}yet. Post was NOT found");
             return false;
         }
 
@@ -1813,6 +1997,15 @@ class Controller
         return true;
     }
 
+    /**
+     * Check whether $user_id has acess to $post_id
+     * @param $user_id
+     * @param $post_id
+     * @param bool $isAlert
+     * @param null $sequence_id
+     * @return bool
+     * @throws \Exception
+     */
     public function has_post_access( $user_id, $post_id, $isAlert = false, $sequence_id = null ) {
 
 		E20RTools\DBG::log("Checking access to post {$post_id} for user {$user_id} ");
@@ -1998,7 +2191,10 @@ class Controller
 
         return $retval;
     }
+
     /**
+      * Check whether the specified user is a member of one of the supplied levels.
+      *
       * @param int|array|null $levels - Array or ID of level(s) to check against
       * @param int|null $user_id - Id of user to check levels for
       * @return boolean
@@ -2054,6 +2250,12 @@ class Controller
         return apply_filters('e20r-sequence-membership-access', $access, $post_id, $user_id, $return_membership_levels);
     }
 
+    /**
+     * Returns array of sequences that a specific post_id belongs to. Will also force a migration to the V3 data structure for sequences.
+     *
+     * @param $post_id - ID of post to check
+     * @return array - Array of sequence IDs
+     */
     public function get_sequences_for_post( $post_id ) {
 
         E20RTools\DBG::log("Check whether we've still got old post_sequences data stored. " . $this->who_called_me() );
@@ -2119,6 +2321,13 @@ class Controller
         return $trace;
     }
 
+    /**
+     * Set the postmeta about the sequence(s) this post belongs to, if it's not present already
+     *
+     * @param $post_id
+     * @param $sequence_ids
+     * @return bool
+     */
     public function set_sequences_for_post( $post_id, $sequence_ids ) {
 
         E20RTools\DBG::log("Adding sequence info to post # {$post_id}");
@@ -2159,6 +2368,13 @@ class Controller
         return $retval;
     }
 
+    /**
+     * Adds the 'closest post' flag as "true" for the correct post.
+     *
+     * @param $post_list - List of posts to process
+     * @param int|null $user_id - User ID (or empty)
+     * @return array - The completed/processed post list
+     */
     public function set_closest_post( $post_list, $user_id = null ) {
 
         global $current_user;
@@ -2264,6 +2480,7 @@ class Controller
         return $posts;
 
     }
+
     /**
      * Compares the object to the array of posts in the sequence
      * @param $delayComp -- Delay value to compare to
@@ -2306,6 +2523,13 @@ class Controller
 
     }
 
+    /**
+     * Pagination logic for posts.
+     * @param $post_list - Posts to paginate
+     * @param $page_size - Size of page (# of posts per page).
+     * @param $current_page - The current page number
+     * @return array - Array of posts to include in the current page.
+     */
     private function paginate_posts( $post_list, $page_size, $current_page ) {
 
         $page = array();
@@ -2325,6 +2549,14 @@ class Controller
 
     }
 
+    /**
+     * Get the first and last post to include on the page during pagination
+     *
+     * @param $pagesize - The size of the page
+     * @param $page_num - The order of the page
+     * @param $post_list - The posts to paginate
+     * @return array - Array consisting of the max and min delay value for the post(s) on the page.
+     */
     private function set_min_max( $pagesize, $page_num, $post_list ) {
 
         /**
@@ -2362,12 +2594,11 @@ class Controller
     /**
      * Test whether a post belongs to a sequence & return a stdClass containing Sequence specific meta for the post ID
      *
-     * @param id $post - Post ID to search for.
-     * @return stdClass - The sequence specific post data for the specified post_id.
+     * @param int $post_id - Post ID to search for.
+     * @return array - Array of The sequence specific post data for the specified post_id.
      *
      * @access public
      */
-
     public function get_post_details( $post_id ) {
 
         $post_list = $this->find_by_id( $post_id );
@@ -2417,29 +2648,6 @@ class Controller
         E20RTools\DBG::log("Loading sequence post list meta box");
         //sequence meta box
         add_meta_box('e20r_sequence_meta', __('Posts in Sequence', "e20rsequence"), array( $view, "sequence_list_metabox" ), 'pmpro_sequence', 'normal', 'high');
-    }
-
-    /**
-     * Access the private $error value
-     *
-     * @return string|null -- Error message or NULL
-     * @access public
-     */
-    public function get_error_msg() {
-
-        // $e = apply_filters('get_e20rerror_class_instance', null);
-        $e = Tools\E20RError::get_instance();
-
-        $this->error = $e->get_error( 'error' );
-
-        if ( ! empty( $this->error ) ) {
-
-            E20RTools\DBG::log("Error info found: " . print_r( $this->error, true));
-            return $this->error;
-        }
-        else {
-            return null;
-        }
     }
 
     /**
@@ -2548,7 +2756,7 @@ class Controller
         if ( !is_null( $id ) ) {
 
             $this->sequence = get_post( $id );
-            E20RTools\DBG::log('init() - Loading the "' . get_the_title($id) . '" sequence settings');
+            E20RTools\DBG::log('Loading the "' . get_the_title($id) . '" sequence settings');
 
             // Set options for the sequence
             $this->get_options( $id );
@@ -2560,10 +2768,10 @@ class Controller
 
             if ( empty( $this->posts ) && ( !$this->is_converted( $id ) ) ) {
 
-                E20RTools\DBG::log("init() - Need to convert sequence with ID {$id } to version 3 format!");
+                E20RTools\DBG::log("Need to convert sequence with ID {$id } to version 3 format!");
             }
 
-            E20RTools\DBG::log( 'init() -- Done.' );
+            E20RTools\DBG::log( 'init complete' );
 
             return $this->sequence_id;
         }
@@ -2573,23 +2781,6 @@ class Controller
         }
 
         return false;
-    }
-
-    /**
-     * Display the error message (if it's defined).
-     */
-    public function display_error() {
-
-        E20RTools\DBG::log("Display error messages, if there are any");
-        global $current_screen;
-
-        $msg = $this->get_error_msg();
-
-        if ( ! empty( $msg ) ){
-            E20RTools\DBG::log("Display error for Drip Feed operation(s)");
-            ?><div id="e20r-seq-error" class="error"><?php settings_errors('e20r_seq_errors'); ?></div><?php
-
-        }
     }
 
     /**
@@ -2819,6 +3010,7 @@ class Controller
     }
 
     /**
+      * Validate if user ID has access to the sequence
       * @param $user_id
       * @param null $sequence_id
       * @return bool
@@ -3013,6 +3205,12 @@ class Controller
         return apply_filters( 'e20r-sequence-has-access-filter', $hasaccess, $post, $user, $levels );
     }
 
+    /**
+     * Check whether a post ($post->ID) is managed by any sequence
+     *
+     * @param $post_id - ID of post to check
+     * @return bool - True if the post is managed by a sequence
+     */
     public function is_managed( $post_id ) {
 
         E20RTools\DBG::log("Check whether post ID {$post_id} is managed by a sequence: " . $this->who_called_me());
@@ -3094,6 +3292,11 @@ class Controller
         return $delayTS;
     }
 
+    /**
+     * Retrieve the Google Analytics Cookie ID
+     *
+     * @return null - Return the Cookie ID for the Google Analytics cookie
+     */
     public function ga_getCid() {
 
         $contents = $this->ga_parseCookie();
@@ -3119,6 +3322,14 @@ class Controller
         return array();
     }
 
+    /**
+     * Prepare the (soon-to-be) PHPMailer() object to send
+     *
+     * @param WP_Post $post - Post Object
+     * @param WP_User $user - User Object
+     * @param $template - Template name (string)
+     * @return Tools\e20rMail - Mail object to process
+     */
     private function prepare_mail_obj( $post, $user, $template ) {
 
         E20RTools\DBG::log("Attempting to load email class...");
@@ -3139,6 +3350,7 @@ class Controller
         return $email;
 
     }
+
     /**
      * Send email to userID about access to new post.
      *
@@ -3378,28 +3590,13 @@ class Controller
             return true;
         }
 
-        // $this->load_notices( $this->sequence_id );
-        /*
-        if ( isset( $notices->sequences ) ) {
-
-            foreach( $notices->sequences as $seqId => $noticeList ) {
-
-                if ( $seqId == $sequenceId ) {
-
-                    E20RTools\DBG::log("Deleting user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
-
-                    unset($notices->sequences[$seqId]);
-                    //  Use $this->save_user_notice_settings( $userId, $notices, $sequenceId )
-                    return update_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence' . '_notices', $notices );
-                }
-            }
-        }
-        */
         return false;
     }
 
     /**
      * Changes the content of the following placeholders as described:
+     *
+     * TODO: Simplify and just use a more standardized and simple way of preparing the mail object before wp_mail'ing it.
      *
      *  !!excerpt_intro!! --> The introduction to the excerpt (Configure in "Sequence" editor ("Sequence Settings pane")
      *  !!lesson_title!! --> The title of the lesson/post we're emailing an alert about.
@@ -3552,15 +3749,24 @@ class Controller
      */
     private function user_can_edit( $user_id ) {
 
-        if ( ( user_can( $user_id, 'publish_pages' ) ) ||
-            ( user_can( $user_id, 'publish_posts' ) ) ) {
+        $required_permissions = apply_filters('e20r-sequence-required-permissions', array( 'publish_pages', 'publish_posts' ) );
 
-            E20RTools\DBG::log("user_can_edit() - User with ID {$user_id} has permission to update/edit this sequence");
-            return true;
+        // Default is "no access"
+        $perm = false;
+
+        // Make sure there are permissions to check against
+        if (!empty( $required_permissions) ) {
+            $perm = true;
         }
-        else {
-            return false;
+
+        // Check the supplied array of permissions for the supplied user_id
+        foreach( $required_permissions as $permission ) {
+
+            $perm = $perm && user_can( $user_id, $permission );
         }
+
+        E20RTools\DBG::log("User with ID {$user_id} has permission to update/edit this sequence? " . ( $perm ? 'Yes' : 'No') );
+        return $perm;
     }
 
     /**
@@ -3734,6 +3940,12 @@ class Controller
         return false; // Default
     }
 
+    /**
+     * Sanitize supplied field value(s) depending on it's data type
+     *
+     * @param $field - The data to santitize
+     * @return array|int|string
+     */
 	public function sanitize( $field ) {
 
         if ( ! is_numeric( $field ) ) {
@@ -3784,7 +3996,10 @@ class Controller
      */
     public function save_settings( $sequence_id )
     {
+        global $current_user;
+
         $settings = $this->options;
+
         E20RTools\DBG::log('Saving settings for Sequence w/ID: ' . $sequence_id);
         // E20RTools\DBG::log($_POST);
 
@@ -3802,8 +4017,7 @@ class Controller
         }
 
         // Verify that we're allowed to update the sequence data
-        // TODO: Use "has access" or something similar!
-        if ( !current_user_can( 'edit_post', $sequence_id ) ) {
+        if ( ! $this->user_can_edit($current_user->ID) ) {
             E20RTools\DBG::log('save_settings(): User is not allowed to edit this post type', E20R_DEBUG_SEQ_CRITICAL);
             $this->set_error_msg( __('User is not allowed to change settings', "e20rsequence"));
             return false;
@@ -4059,7 +4273,8 @@ class Controller
 
     /**
       * Delete all post meta for sequence (can be used by delete_post action).
-      * @param null $sequence_id - Id of sequence to delete metadata for (optional)
+     *
+      * @param int $sequence_id - Id of sequence to delete metadata for (optional)
       * @return bool - True if successful, false on error
       */
     public function delete_post_meta_for_sequence( $sequence_id = null) {
@@ -4096,16 +4311,22 @@ class Controller
         return $retval;
     }
 
+    /**
+     * Return the single (specified) option/setting from the membership plugin
+     *
+     * @param string $option_name -- The name of the option to fetch
+     * @return mixed|void
+     */
     public function get_membership_setting( $option_name )
     {
-        $val = '';
+        $val = null;
 
         if ( function_exists('pmpro_getOption')) {
 
             $val = pmpro_getOption($option_name);
         }
 
-        return apply_filters( 'e20r-sequence-get-membership-setting', $val, $option_name);
+        return apply_filters( 'e20r-sequence-membership-module-get-membership-setting', $val, $option_name);
     }
 
     /**
@@ -4195,6 +4416,9 @@ class Controller
         return $timestamp;
     }
 
+    /**
+     * Callback to remove the all recorded post notifications for the specific post in the specified sequence
+     */
     public function remove_post_alert_callback() {
 
         E20RTools\DBG::log("remove_post_alert_callback() - Attempting to remove the alerts for a post");
@@ -4204,6 +4428,7 @@ class Controller
         $sequence_id = isset( $_POST['e20r_sequence_id'] ) && !empty( $_POST['e20r_sequence_id'] ) ? intval($_POST['e20r_sequence_id']) : null;
         $post_id = isset( $_POST['e20r_sequence_post'] ) && !empty( $_POST['e20r_sequence_post'] ) ? intval( $_POST['e20r_sequence_post'] ) : null;
 
+        // TODO: Would using the $this->sanitize() function work for this?
         if ( isset( $_POST['e20r_sequence_post_delay'] ) && !empty( $_POST['e20r_sequence_post_delay'] ) ) {
 
             $date = preg_replace("([^0-9/])", "", $_POST['e20r_sequence_post_delay']);
@@ -4369,6 +4594,17 @@ class Controller
 
     }
 
+    /**
+     * Test whether it's necessary to convert the post notification flags in the DB for the specified v3 based sequence?
+     * In the v3 format, the notifications changed from simple "delay value" to a concatenated post_id + delay value.
+     * This was to support having multiple repeating post IDs in the sequence and still notify the users on the
+     * correct delay value for that instance.
+     *
+     * @param Sequence $v3 - The Sequence to test
+     * @param $post_list - The list of posts belonging to the sequence
+     * @param $member_days
+     * @return mixed
+     */
     private function fix_user_alert_settings( $v3, $post_list, $member_days ) {
 
         E20RTools\DBG::log("fix_user_alert_settings() - Checking whether to convert the post notification flags for {$v3->id}");
@@ -4451,10 +4687,6 @@ class Controller
             $sequence_id = intval($_POST['e20r_sequence_id']);
             E20RTools\DBG::log('sendalert() - Will send alerts for sequence #' . $sequence_id);
 
-//                $sequence = apply_filters('get_sequence_class_instance', null);
-//                $sequence->sequence_id = $sequence_id;
-//                $sequence->get_options( $sequence_id );
-
             do_action( 'e20r_sequence_cron_hook', array( $sequence_id ));
 
             E20RTools\DBG::log('Completed action for sequence');
@@ -4462,7 +4694,7 @@ class Controller
     }
 
     /**
-     * Catches ajax POSTs from dashboard/edit for CPT (clear existing sequence members)
+     * Catches ajax POSTs from dashboard/edit for CPT (clear existing sequence members (posts) )
      */
     public function sequence_clear_callback() {
 
@@ -4909,7 +5141,7 @@ class Controller
         */
 
         // Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
-        $seqs = \WP_Query( array( 'post_type' => 'pmpro_sequence' ) );
+        $seqs = new \WP_Query( array( 'post_type' => 'pmpro_sequence' ) );
 
         // Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
         foreach($seqs as $s) {
@@ -4940,6 +5172,8 @@ class Controller
      */
     public function activation()
     {
+        E20RTools\DBG::log("Processing activation event");
+
         if ( ! function_exists( 'pmpro_getOption' ) ) {
 
             $errorMessage = __( "The Eighty/20 Results Sequence plugin requires the ", "e20rsequence" );
@@ -4962,17 +5196,13 @@ class Controller
         $sequence = apply_filters('get_sequence_class_instance', null);
         $sequences = $sequence->get_all_sequences();
 
-        E20RTools\DBG::log("activation() - Found " . count( $sequences ) . " to convert");
+        E20RTools\DBG::log("Found " . count( $sequences ) . " to convert");
 
         foreach( $sequences as $seq ) {
 
-            E20RTools\DBG::log("activation() - Converting postmeta to v3 format for {$seq->ID}" );
+            E20RTools\DBG::log("Converting configuration meta to v3 format for {$seq->ID}" );
 
-            if ( !$sequence->is_converted( $seq->ID ) ) {
-
-                $sequence->get_options( $seq->ID );
-                $sequence->convert_posts_to_v3( $seq->ID );
-            }
+            $sequence->convert_sequence( $seq->ID );
         }
 
         /* Register the default cron job to send out new content alerts */
@@ -5043,6 +5273,9 @@ class Controller
         }
     }
 
+    /**
+     * Trigger conversion of the user notification metadata for all users - called as part of activation or upgrade.
+     */
     public function convert_user_notifications() {
 
         global $wpdb;
@@ -5150,6 +5383,13 @@ class Controller
         wp_reset_postdata();
     }
 
+    /**
+     * Updates the alert settings for a given userID
+     * @param $user_id - The user ID to convert settings for
+     * @param $sId - The Sequence ID to check/use
+     * @param $v2 - The V2 sequence
+     * @return stdClass - The converted notification settings for the $user_id.
+     */
     private function convert_alert_setting( $user_id, $sId, $v2 ) {
 
         $v3 = $this->create_user_notice_defaults();
@@ -5161,7 +5401,7 @@ class Controller
 
         $compare = $this->load_sequence_post( $sId, $member_days, null, '<=', null, true );
 
-        E20RTools\DBG::log( "convert_alert_settings() - Converting the sequence ( {$sId} ) post list for user alert settings" );
+        E20RTools\DBG::log( "Converting the sequence ( {$sId} ) post list for user alert settings" );
 
         $when = isset( $v2->optinTS ) ? $v2->optinTS : current_time('timestamp');
 
@@ -5169,12 +5409,12 @@ class Controller
         $v3->posts = $v2->notifiedPosts;
         $v3->optin_at = $v2->last_notice_sent = $when;
 
-        E20RTools\DBG::log("convert_alert_settings() - Looping through " . count($v3->posts) . " alert entries");
+        E20RTools\DBG::log("Looping through " . count($v3->posts) . " alert entries");
         foreach( $v3->posts as $key => $post_id ) {
 
             if ( false === strpos( $post_id, '_' ) ) {
 
-                E20RTools\DBG::log("convert_alert_settings() - This entry ({$post_id}) needs to be converted...");
+                E20RTools\DBG::log("This entry ({$post_id}) needs to be converted...");
                 $posts = $this->find_by_id( $post_id );
 
                 foreach ($posts as $p ) {
@@ -5185,11 +5425,11 @@ class Controller
 
                         if ( $v3->posts[$key] == $post_id ) {
 
-                            E20RTools\DBG::log("convert_alert_settings() - Converting existing alert entry");
+                            E20RTools\DBG::log("Converting existing alert entry");
                             $v3->posts[$key] = $flag_value;
                         }
                         else {
-                            E20RTools\DBG::log("convert_alert_settings() - Adding alert entry");
+                            E20RTools\DBG::log("Adding alert entry");
                             $v3->posts[] = $flag_value;
                         }
                     }
@@ -5203,6 +5443,12 @@ class Controller
         return $v3;
     }
 
+    /**
+     * Clear (remove) the usermeta containing the old notification settings for $user_id
+     *
+     * @param $user_id - The ID of the user who's settings we'll remove.
+     * @return bool -- Whether we were able to remove them or not.
+     */
     private function remove_old_user_alert_setting( $user_id ) {
 
         global $wpdb;
@@ -5234,6 +5480,9 @@ class Controller
     <?php
     }
 
+    /**
+     * Load the front-end scripts & styles
+     */
     public function register_user_scripts() {
 
         global $e20r_sequence_editor_page;
@@ -5307,7 +5556,8 @@ class Controller
     }
 
     /**
-     * Add javascript and CSS for end-users.
+     * Add javascript and CSS for end-users on the front-end of the site.
+     * TODO: Is this a duplicate for register_user_scripts???
      */
     public function enqueue_user_scripts() {
 
@@ -5343,6 +5593,7 @@ class Controller
     /**
      * Load all JS & CSS for Admin page
      */
+/*
     function enqueue_admin_scripts( $hook ) {
 
         global $post;
@@ -5350,21 +5601,21 @@ class Controller
         E20RTools\DBG::log("Loading admin scripts & styles for E20R Sequences");
         $this->register_admin_scripts();
     }
-
+*/
     public function register_admin_scripts() {
 
-        E20RTools\DBG::log("Running register_admin_scripts()");
+        E20RTools\DBG::log("Loading admin scripts & styles for E20R Sequences");
 
         $delay_config = $this->set_delay_config();
 
         wp_enqueue_style( 'fontawesome', E20R_SEQUENCE_PLUGIN_URL . '/css/font-awesome.min.css', false, '4.5.0' );
         wp_enqueue_style( 'select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/css/select2.min.css", false, self::$select2_version);
 
-        wp_enqueue_script('select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/js/select2.min.js", array( 'jquery' ), self::$select2_version );
-        wp_enqueue_script('e20r-sequence-admin', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences-admin.js', array( 'jquery', 'select2' ), E20R_SEQUENCE_VERSION, true);
-
         wp_enqueue_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen');
         wp_enqueue_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
+
+        wp_enqueue_script('select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/js/select2.min.js", array( 'jquery' ), self::$select2_version );
+        wp_register_script('e20r-sequence-admin', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences-admin.js', array( 'jquery', 'select2' ), E20R_SEQUENCE_VERSION, true);
 
         /* Localize ajax script */
         wp_localize_script('e20r-sequence-admin', 'e20r_sequence',
@@ -5398,6 +5649,11 @@ class Controller
         wp_enqueue_script( array( 'select2', 'e20r-sequence-admin' ) );
     }
 
+    /**
+     * Load array containing the delay type settings for the sequences in the system
+     *
+     * @return array|null - Array of used delay types (days since start / date) for the sequences in the system.
+     */
     public function set_delay_config() {
 
         $sequences = $this->get_all_sequences(array( 'publish', 'pending', 'draft', 'private', 'future' ));
@@ -5476,6 +5732,10 @@ class Controller
         ) );
     }
 
+    /**
+     * Hooks to action for sending user notifications
+     * TODO: Check whether send_user_alert_notices is redundant?
+     */
     public function send_user_alert_notices() {
 
         $sequence_id = intval($_REQUEST['e20r_sequence_id']);
@@ -5492,16 +5752,25 @@ class Controller
         wp_redirect('/wp-admin/edit.php?post_type=pmpro_sequence');
     }
 
+    /**
+     * Trigger send of any new content alert messages for a sequence in the Sequence Edit menu
+     *
+     * @param $actions - Action
+     * @param WP_Post $post - Post object
+     * @return array - Array containing the list of actions to list in the menu
+     */
     public function send_alert_notice_from_menu( $actions, $post ) {
 
-        if ( ( 'pmpro_sequence' == $post->post_type ) && current_user_can('edit_posts' ) ) {
+        global $current_user;
+
+        if ( ( 'pmpro_sequence' == $post->post_type ) && $this->user_can_edit($current_user->ID) ) {
 
             $options = $this->get_options( $post->ID );
 
             if ( 1 == $options->sendNotice ) {
 
                 E20RTools\DBG::log("send_alert_notice_from_menu() - Adding send action");
-                $actions['duplicate'] = '<a href="admin.php?post=' . $post->ID . '&amp;action=send_user_alert_notices&amp;e20r_sequence_id=' . $post->ID .'" title="' .__("Send user alerts", "e20rtracker" ) .'" rel="permalink">' . __("Send Notices", "e20rtracker") . '</a>';
+                $actions['send_notices'] = '<a href="admin.php?post=' . $post->ID . '&amp;action=send_user_alert_notices&amp;e20r_sequence_id=' . $post->ID .'" title="' .__("Send user alerts", "e20rtracker" ) .'" rel="permalink">' . __("Send Notices", "e20rtracker") . '</a>';
             }
         }
 
@@ -5547,14 +5816,12 @@ class Controller
         add_filter( "page_row_actions", array( &$this, 'send_alert_notice_from_menu' ), 10, 2);
         add_action( "admin_action_send_user_alert_notices", array( &$this, 'send_user_alert_notices') );
 
-//            add_action("init", array(&$this, "register_user_scripts") );
-//            add_action("init", array(&$this, "register_admin_scripts") );
 
         // Add CSS & Javascript
         add_action("wp_enqueue_scripts", array( &$this, 'register_user_scripts' ));
-        add_action("wp_footer", array( &$this, 'enqueue_user_scripts') );
+        // add_action("wp_footer", array( &$this, 'enqueue_user_scripts') );
 
-        add_action("admin_enqueue_scripts", array(&$this, 'enqueue_admin_scripts'));
+        add_action("admin_enqueue_scripts", array(&$this, "register_admin_scripts") );
         add_action('admin_head', array(&$this, 'post_type_icon'));
 
         // Load metaboxes for editor(s)
@@ -5599,9 +5866,11 @@ class Controller
     }
 
     /**
-      * @param $post_id
-      * @param $delay
-      * @return bool|\WP_Post
+      * Find a single post/delay combination in the current sequence
+      *
+      * @param $post_id - The post ID to look for
+      * @param $delay - The delay value to look for
+      * @return \WP_Post - The post info
       */
     private function find_single_post( $post_id, $delay ) {
 
