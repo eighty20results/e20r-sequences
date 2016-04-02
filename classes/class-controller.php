@@ -4077,7 +4077,7 @@ class Controller
             }
 
             if ( in_array($field, $form_checkboxes ) ) {
-                $this->options->{$field} = ( !isset($_POST["e20r-sequence_{$field}"]) ? false : true);
+                $this->options->{$field} = ( isset($_POST["e20r-sequence_{$field}"]) ? intval($_POST["e20r-sequence_{$field}"]) : 0);
             }
 		}
 
