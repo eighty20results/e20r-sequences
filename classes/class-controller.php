@@ -3579,7 +3579,7 @@ class Controller
         global $wpdb;
 
         E20RTools\DBG::log("reset_user_alerts() - Attempting to delete old-style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
-        $old_style = delete_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence' . '_notices' );
+        $old_style = delete_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence_notices' );
 
         E20RTools\DBG::log("reset_user_alerts() - Attempting to delete v3 style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO);
         $v3_style = delete_user_meta( $userId, "pmpro_sequence_id_{$sequenceId}_notices" );
