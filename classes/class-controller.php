@@ -5196,7 +5196,10 @@ class Controller
         $sequence = apply_filters('get_sequence_class_instance', null);
         $sequences = $sequence->get_all_sequences();
 
+        $old_timeout = ini_get('max_execution_time');
+
         E20RTools\DBG::log("Found " . count( $sequences ) . " to convert");
+        set_time_limit(300);
 
         foreach( $sequences as $seq ) {
 
@@ -5209,6 +5212,7 @@ class Controller
         Tools\Cron::schedule_default();
 
         $this->convert_user_notifications();
+        set_time_limit($old_timeout);
     }
 
     /**
