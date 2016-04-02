@@ -1565,7 +1565,7 @@ class Views {
 		return $title;
 	}
 
-	    /**
+    /**
      * Adds notification opt-in to list of posts/pages in sequence.
      *
      * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
