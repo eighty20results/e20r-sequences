@@ -292,14 +292,19 @@ try {
 
     spl_autoload_register("E20R\\Sequences\\Main\\e20r_sequence_loader");
 
+    global $converting_sequence;
+    $converting_sequence = false;
+
     $sequence = new Sequence\Controller();
 
     E20RTools\DBG::set_plugin_name('e20r-sequences');
+
+    register_activation_hook(E20R_SEQUENCE_PLUGIN_FILE, array($sequence, 'activation'));
+    register_deactivation_hook(E20R_SEQUENCE_PLUGIN_FILE, array($sequence, 'deactivation'));
+
     $sequence->load_actions();
 
 } catch (\Exception $e) {
     error_log("E20R Sequences startup: Error initializing the specified sequence...: " . $e->getMessage());
 }
 
-register_activation_hook(__FILE__, array(&$sequence, 'activation'));
-register_deactivation_hook(__FILE__, array(&$sequence, 'deactivation'));
