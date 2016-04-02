@@ -213,10 +213,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.6
-* FIX: Strict standards warning
-* FIX: Better handling of new  values
-* ENH: Update version for upgrade history
+###4.4.8
+* FIX: Didn't always handle checkbox settings correctly
 
 ##Old releases
 ###.1
@@ -987,3 +985,21 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * FIX: Disable cleanup on delete
 * FIX: Debug cleanup
 * ENH: Update version for upgrade history
+
+###4.4.6
+* FIX: Strict standards warning
+* FIX: Better handling of new  values
+* ENH: Update version for upgrade history
+
+###4.4.7
+* DOC: More functions w/documentation
+* FIX: Didn't always run the deactivation/activation functions
+* FIX: Keep backwards compatibility for now (to old sequence versions)
+* FIX: Didn't force a sequence load after conversion
+* FIX: Didn't always trigger conversion to V3 format
+* ENH: New constant for the main plugin file
+* ENH: Refactor (a little) for code readability
+* ENH: Add support for per-sequence start date (uses membership plugin startdate if there isn't any info in the users usermeta)
+* ENH: Modified user_can_edit to support filter of required permissions (user settable)
+* ENH: Simplified loading of front-end JavaScript & Styles (fewer hoops)
+* ENH: Add update code for 4.4.7
