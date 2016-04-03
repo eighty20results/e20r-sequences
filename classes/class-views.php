@@ -118,8 +118,8 @@ class Views {
 		<?php } ?>
 		<table id="e20r_sequencetable" class="e20r_sequence_postscroll wp-list-table widefat">
 			<thead>
-			<th><?php _e('Order', "e20rsequence" ); ?></label></th>
-			<th width="50%"><?php _e('Title', "e20rsequence"); ?></th>
+			<th class="e20r_sequence_orderlabel"><?php _e('Order', "e20rsequence" ); ?></label></th>
+			<th class="e20r_sequence_titlelabel"><?php _e('Title', "e20rsequence"); ?></th>
 			<?php if ($options->delayType == 'byDays'): ?>
 				<th id="e20r_sequence_delaylabel"><?php _e('Delay', "e20rsequence"); ?></th>
 			<?php elseif ( $options->delayType == 'byDate'): ?>
@@ -127,9 +127,9 @@ class Views {
 			<?php else: ?>
 				<th id="e20r_sequence_delaylabel"><?php _e('Not Defined', "e20rsequence"); ?></th>
 			<?php endif; ?>
-			<th></th>
-			<th></th>
-			<th></th>
+			<th class="e20r_edit_label_big"></th>
+			<th class="e20r_edit_label_small"></th>
+			<th class="e20r_edit_label_big"></th>
 			</thead>
 			<tbody>
 			<?php
@@ -149,7 +149,7 @@ class Views {
 						<td class="e20r_sequence_tblNumber"><?php echo $count; ?>.</td>
 						<td class="e20r_sequence_tblPostname"><?php echo ( get_post_status( $post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", "e20rsequence" ) ) : null ) . get_the_title($post->id) . " " . sprintf( __("(ID: %d)", "e20rsequence" ), $post->id); ?></td>
 						<td class="e20r_sequence_tblNumber"><?php echo $post->delay; ?></td>
-						<td><?php
+						<td class="e20r_edit_label_big"><?php
 							if ( true == $options->allowRepeatPosts ) { ?>
 								<a href="javascript:e20r_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Edit',"e20rsequence"); ?></a><?php
 							}
@@ -157,12 +157,12 @@ class Views {
 								<a href="javascript:e20r_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Post',"e20rsequence"); ?></a><?php
 							} ?>
 						</td>
-						<td><?php
+						<td class="e20r_edit_label_small"><?php
 							if ( false == $options->allowRepeatPosts ) { ?>
 								<a href="javascript:e20r_sequence_editEntry( <?php echo "{$post->id}, {$post->delay}" ;?> ); void(0);"><?php _e('Edit', "e20rsequence"); ?></a><?php
 							} ?>
 						</td>
-						<td>
+						<td class="e20r_edit_label_big">
 							<a href="javascript:e20r_sequence_removeEntry( <?php echo "{$post->id}, {$post->delay}" ?> ); void(0);"><?php _e('Remove', "e20rsequence"); ?></a>
 						</td>
 					</tr><?php
@@ -1565,7 +1565,7 @@ class Views {
 		return $title;
 	}
 
-    /**
+	    /**
      * Adds notification opt-in to list of posts/pages in sequence.
      *
      * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
