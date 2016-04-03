@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
 Requires at least: 3.4
 Tested up to: 4.4.2
-Stable tag: 4.4.8
+Stable tag: 4.4.10
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -169,6 +169,24 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.4.10 ==
+* ENH: Refactor for readability
+* ENH: Record startdates for a user's (new) sequences on membership module purchase action/activity
+* ENH: Add infrastructure to support startdate management for any hookable membership module
+* FIX: Didn't capture the correct startdate for the user with the sequence
+
+== 4.4.9 ==
+* FIX: Refactor for code readability
+* FIX: Simplify error message(s) for non-converted sequences
+* FIX: Didn't always handle start times for users
+* FIX: Don't attempt to fix conversion during sequence load
+* FIX: Didn't handle situations where the timezone for the server wasn't configured yet
+* FIX: Only attempt to upgrade a sequence during activation.
+* FIX: Renamed convert_sequence function to upgrade_sequence() and add $force variable.
+* FIX: Make user notice config a per-sequence update event.
+* FIX: Formatting for sequence configuration metabox
+* ENH: Add more formatting for metaboxes
 
 == 4.4.8 ==
 * FIX: Didn't always handle checkbox settings correctly

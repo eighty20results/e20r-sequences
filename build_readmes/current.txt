@@ -1,1 +1,4 @@
-FIX: Didn't always handle checkbox settings correctly
+ENH: Refactor for readability
+ENH: Record startdates for a user's (new) sequences on membership module purchase action/activity
+ENH: Add infrastructure to support startdate management for any hookable membership module
+FIX: Didn't capture the correct startdate for the user with the sequence

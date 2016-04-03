@@ -213,8 +213,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.8
-* FIX: Didn't always handle checkbox settings correctly
+###4.4.10
+* ENH: Refactor for readability
+* ENH: Record startdates for a user's (new) sequences on membership module purchase action/activity
+* ENH: Add infrastructure to support startdate management for any hookable membership module
+* FIX: Didn't capture the correct startdate for the user with the sequence
 
 ##Old releases
 ###.1
@@ -1003,3 +1006,18 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Modified user_can_edit to support filter of required permissions (user settable)
 * ENH: Simplified loading of front-end JavaScript & Styles (fewer hoops)
 * ENH: Add update code for 4.4.7
+
+###4.4.8
+* FIX: Didn't always handle checkbox settings correctly
+
+###4.4.9
+* FIX: Refactor for code readability
+* FIX: Simplify error message(s) for non-converted sequences
+* FIX: Didn't always handle start times for users
+* FIX: Don't attempt to fix conversion during sequence load
+* FIX: Didn't handle situations where the timezone for the server wasn't configured yet
+* FIX: Only attempt to upgrade a sequence during activation.
+* FIX: Renamed convert_sequence function to upgrade_sequence() and add $force variable.
+* FIX: Make user notice config a per-sequence update event.
+* FIX: Formatting for sequence configuration metabox
+* ENH: Add more formatting for metaboxes
