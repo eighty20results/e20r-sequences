@@ -5859,31 +5859,59 @@ class Controller
         }
     }
 
-    public function sequences_for_membership_level($level_id)
+    /**
+     * All published sequences that are protected by the specified PMPro Membership Level
+     *
+     * @param $level_id - the Level ID
+     * @return array - array of sequences;
+     */
+    public function sequences_for_membership_level($membership_level_id)
     {
         global $wpdb;
         global $current_user;
 
-        $sequence_list = $this->get_all_sequences(array('publish', 'future', 'draft', 'pending', 'private'));
+        // get all published sequences
+        $sequence_list = $this->get_all_sequences(array('publish', 'private'));
         $in_sequence = array();
 
-        // get all configured sequence IDs
+        E20RTools\DBG::log("Found " . count($sequence_list) . " sequences have been published on this system");
+
+        // Pull out the ID values (post IDs)
         foreach( $sequence_list as $s ) {
 
             $in_sequence[] = $s->ID;
         }
 
-        $sql = $wpdb->prepare(
-            "
-            SELECT mp.membership_id
-            FROM {$wpdb->pmpro_memberships_pages} AS mp
-             WHERE mp.membership_id = %d AND
-             mp.page_id IN ( " . implode(', ', $in_sequence) . " )
-            ",
-            $level_id
-        );
+        // check that there are sequences found
+        if (!empty($in_sequence)) {
 
-        return $wpdb->get_col($sql);
+            E20RTools\DBG::log("Search DB for sequences protected by the specified membership ID: {$membership_level_id}");
+
+            // get all sequences (by page id) from the DB that are protected by
+            // a specific membership level.
+            $sql = $wpdb->prepare(
+                "
+                SELECT mp.page_id
+                FROM {$wpdb->pmpro_memberships_pages} AS mp
+                 WHERE mp.membership_id = %d AND
+                 mp.page_id IN ( " . implode(', ', $in_sequence) . " )
+                ",
+                $membership_level_id
+            );
+
+            // list of page IDs that have the level ID configured
+            $sequences = $wpdb->get_col($sql);
+
+            E20RTools\DBG::log("Found " . count($sequences) . " sequences that are protected by level # {$membership_level_id}");
+
+            // list of page IDs that have the level ID configured
+            return $sequences;
+
+        }
+
+        E20RTools\DBG::log("Found NO sequences protected by level # {$membership_level_id}!");
+        // No sequences configured
+        return null;
     }
 
     /**
