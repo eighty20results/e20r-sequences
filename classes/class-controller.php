@@ -710,60 +710,6 @@ class Controller
     }
 
     /**
-      * Returns the per-sequence startdate to use for a user
-      *
-      * @param $user_id -- The user ID to find the startdate for
-      * @return mixed|void  - A UNIX timestamp (seconds since start of epoch)
-      */
-    private function get_user_startdate($user_id = null, $level_id = null)
-    {
-        $timezone = get_option('timezone_string');
-
-        // TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
-        if (function_exists('pmpro_getMemberStartdate')) {
-            $startdate_ts = pmpro_getMemberStartdate( $user_id, $level_id );
-        }
-
-        // if the user doesn't have a membership level...
-        if (empty($startdate_ts)) {
-
-            // and there's a valid Timezone setting
-            if (!empty($timezone)) {
-
-                // use 'right now' local time' as their startdate.
-                E20RTools\DBG::log("Using timezone: {$timezone}");
-                $startdate_ts = strtotime('today ' . get_option('timezone_string'));
-            }
-            else {
-                // or we'll use the registration date for the user.
-                $user = get_user_by('id', $user_id);
-                $startdate_ts = strtotime($user->user_registered);
-            }
-        }
-
-        // filter this so other membership modules can set the startdate too.
-        $startdate_ts = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate_ts, $user_id, $level_id);
-
-        E20RTools\DBG::log("Filtered startdate: {$startdate_ts}");
-
-        // Use a per-sequence startdate
-        $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", true);
-
-        if (empty($m_startdate_ts)) {
-
-            update_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", $startdate_ts);
-            $m_startdate_ts = $startdate_ts;
-        }
-
-        $startdate = $m_startdate_ts;
-
-        E20RTools\DBG::log("Using startdate value of : {$startdate_ts}");
-
-        // finally, allow the user to filter the startdate to whatever they want it to be.
-        return apply_filters('e20r-sequence-user-startdate', $startdate_ts,  $this->sequence_id, $user_id, $level_id);
-    }
-
-    /**
      * Loads the post list for a sequence (or the current sequence) from the DB
      *
      * @param null $sequence_id
@@ -5843,10 +5789,155 @@ class Controller
     }
 
     /**
+     * Run the action(s) to load the membership module sign-up hook.
+     * I.e. for PMPro it's the opportunity to hook into pmpro_after_checkout
+     */
+    public function membership_signup_hooks() {
+
+        do_action('e20r_sequence_load_membership_signup_hook');
+    }
+
+    public function e20r_add_membership_module_signup_hook() {
+        add_action('pmpro_after_checkout', array( $this, 'e20r_sequence_pmpro_after_checkout'), 10, 2);
+    }
+
+    /**
+     * Set the per-sequence startdate whenever the user signs up for a PMPro membership level.
+     * TODO: Add functionality to do the same as part of activation/startup for the Sequence.
+     *
+     * @param $user_id - the ID of the user
+     * @param \MemberOrder $order - The PMPro Membership order object
+     */
+    public function e20r_sequence_pmpro_after_checkout( $user_id, $order ) {
+
+        global $wpdb;
+        global $current_user;
+
+        $startdate_ts = null;
+        $timezone = null;
+
+        if (function_exists('pmpro_getMemberStartdate')) {
+            $startdate_ts = pmpro_getMemberStartdate( $user_id, $order->membership_id );
+        }
+
+        if (empty($startdate_ts)) {
+
+            $startdate_ts = strtotime($current_user->user_registered );
+        }
+
+        if (empty($startdate_ts)) {
+
+            $timezone = get_option('timezone_string');
+
+            // and there's a valid Timezone setting
+            if (!empty($timezone)) {
+
+                // use 'right now' local time' as their startdate.
+                E20RTools\DBG::log("Using timezone: {$timezone}");
+                $startdate_ts = strtotime('today ' . get_option('timezone_string'));
+            }
+            else {
+                $startdate_ts = current_time('timestamp');
+            }
+
+        }
+        $sequence_list = $this->get_all_sequences(array('publish', 'future', 'draft', 'pending', 'private'));
+        $in_sequence = array();
+
+        // get all configured sequence IDs
+        foreach( $sequence_list as $s ) {
+
+            $in_sequence[] = $s->ID;
+        }
+
+        $sql = $wpdb->prepare(
+            "
+            SELECT mp.membership_id
+            FROM {$wpdb->pmpro_memberships_pages} AS mp
+             WHERE mp.membership_id = %d AND
+             mp.page_id IN ( " . explode(', ', $in_sequence) . " )
+            ",
+            $order->memebership_id
+        );
+
+        $member_sequences = $wpdb->get_col($sql);
+
+        if ( ! empty( $member_sequences ) ) {
+
+            foreach( $member_sequences as $new_user_sequence ) {
+
+                $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$new_user_sequence}", true);
+
+                if (empty($m_startdate_ts)) {
+
+                    update_user_meta($user_id, "_e20r-sequence-startdate-{$new_user_sequence}", $startdate_ts);
+                }
+
+            }
+        }
+    }
+
+    /**
+     * Returns the per-sequence startdate to use for a user
+     *
+     * @param $user_id -- The user ID to find the startdate for
+     * @return mixed|void  - A UNIX timestamp (seconds since start of epoch)
+     */
+    private function get_user_startdate($user_id = null, $level_id = null)
+    {
+        $timezone = get_option('timezone_string');
+
+        // TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
+        if (function_exists('pmpro_getMemberStartdate')) {
+            $startdate_ts = pmpro_getMemberStartdate( $user_id, $level_id );
+        }
+
+        // if the user doesn't have a membership level...
+        if (empty($startdate_ts)) {
+
+            // and there's a valid Timezone setting
+            if (!empty($timezone)) {
+
+                // use 'right now' local time' as their startdate.
+                E20RTools\DBG::log("Using timezone: {$timezone}");
+                $startdate_ts = strtotime('today ' . get_option('timezone_string'));
+            }
+            else {
+                // or we'll use the registration date for the user.
+                $user = get_user_by('id', $user_id);
+                $startdate_ts = strtotime($user->user_registered);
+            }
+        }
+
+        // filter this so other membership modules can set the startdate too.
+        $startdate_ts = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate_ts, $user_id, $level_id);
+
+        E20RTools\DBG::log("Filtered startdate: {$startdate_ts}");
+
+        // Use a per-sequence startdate
+        $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", true);
+
+        if (empty($m_startdate_ts)) {
+
+            update_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", $startdate_ts);
+            $m_startdate_ts = $startdate_ts;
+        }
+
+        $startdate = $m_startdate_ts;
+
+        E20RTools\DBG::log("Using startdate value of : {$startdate_ts}");
+
+        // finally, allow the user to filter the startdate to whatever they want it to be.
+        return apply_filters('e20r-sequence-user-startdate', $startdate_ts,  $this->sequence_id, $user_id, $level_id);
+    }
+
+    /**
      * Loads actions & filters for the plugin.
      */
     public function load_actions()
     {
+        add_action('plugins_loaded', array( $this, 'membership_signup_hooks'));
+
         // Configure all needed class instance filters;
         add_filter( "get_sequence_views_class_instance", [ Sequence\Views::get_instance(), 'get_instance' ] );
         add_filter( "get_e20rerror_class_instance", [ Tools\E20RError::get_instance(), 'get_instance' ] );
@@ -5859,14 +5950,16 @@ class Controller
         add_action( 'wp_loaded', [ $uc_class, 'update' ], 1) ; // Run early
         add_action( 'e20r_sequence_cron_hook', [ Tools\Cron::get_instance(), 'check_for_new_content' ], 10, 1);
 
+        // TODO: Split pmpro filters into own filter management module
+
         // Load filters
         add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
         add_filter('pmpro_sequencepost_types', array(&$this, 'included_cpts'));
 
-        // TODO: Split pmpro filters into own filter management module
         add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 9, 4);
         add_filter("pmpro_non_member_text_filter", array(&$this, "text_filter"));
         add_filter("pmpro_not_logged_in_text_filter", array(&$this, "text_filter"));
+        add_action('e20r_sequence_load_membership_signup_hook', array($this, 'e20r_add_membership_module_signup_hook'));
 
         add_filter("the_content", array(&$this, "display_sequence_content"));
 
