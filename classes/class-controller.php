@@ -157,28 +157,6 @@ class Controller
     }
 
     /**
-     * Generate a key to identify the transient for a user/sequence combination
-     *
-     * @param $sequence_id - Id of sequence
-     * @return string - The transient key being used.
-     */
-    private function get_cache_key($sequence_id)
-    {
-        global $current_user;
-        $key = null;
-
-        if ((0 == $current_user->ID && $this->is_cron) ||
-            (is_numeric($this->e20r_sequence_user_id) && 0 < $this->e20r_sequence_user_id)) {
-
-            $user_id = $this->e20r_sequence_user_id;
-            $key = $this->transient_key . "{$user_id}_{$sequence_id}";
-        }
-
-        E20RTools\DBG::log("Cache key: " . (is_null($key) ? 'NULL' : $key));
-        return $key;
-    }
-
-    /**
      * Fetches the post data for this sequence
      *
      * @param $id -- ID of sequence to fetch data for
@@ -268,13 +246,8 @@ class Controller
 
             if ( !$this->is_converted( $sequence->ID ) ) {
 
-                $flag = $sequence->ID;
+                $this->set_error_msg( sprintf( __( "Required action: Please de-activate and then activate the E20R Sequences plugin (%d)", "e20rsequence" ), $sequence->ID ) );
             }
-        }
-
-        if ( $flag ) {
-
-            $this->set_error_msg( sprintf( __( "Required action: Please de-activate and then activate the PMPro Sequences plugin (%d)", "e20rsequence" ), $flag ) );
         }
     }
 
@@ -373,24 +346,8 @@ class Controller
 
             return true;
         }
+
         return false;
-    }
-
-    /**
-     * Convert sequence ID to V3 metadata config if it hasn't been converted already.
-     * @param $seq_id
-     */
-    public function convert_sequence( $seq_id ) {
-
-        E20RTools\DBG::log("Process {$seq_id} for V3 conversion?");
-
-        if ( false === $this->is_converted( $seq_id ) ) {
-
-            E20RTools\DBG::log("Need to convert sequence #{$seq_id} to V3 format");
-            $this->get_options( $seq_id );
-            $this->convert_posts_to_v3( $seq_id );
-            E20RTools\DBG::log("Converted {$seq_id} to V3 format");
-        }
     }
 
     /**
@@ -451,84 +408,6 @@ class Controller
             E20RTools\DBG::log("Display error for Drip Feed operation(s)");
             ?><div id="e20r-seq-error" class="notice-error is-dismissble"><p></p><?php $msg; ?></p></div><?php
         }
-    }
-
-    /**
-     * Converts the posts for a sequence to the V3 metadata format (settings)
-     *
-     * @param null $sequence_id - The ID of the sequence to convert.
-     * @param bool $force - Whether to force the conversion or not.
-     * @return bool - Whether the conversion successfully completed or not
-     */
-    public function convert_posts_to_v3( $sequence_id = null, $force = false ) {
-
-        global $converting_sequence;
-
-        $converting_sequence = true;
-
-        if ( !is_null( $sequence_id ) ) {
-
-            if ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 == $this->current_metadata_versions[$sequence_id] ) ) {
-
-                E20RTools\DBG::log("Sequence {$sequence_id} is already converted.");
-                return;
-            }
-
-            $old_sequence_id = $this->sequence_id;
-
-            if ( false === $force  ) {
-
-                E20RTools\DBG::log("Loading posts for {$sequence_id}.");
-                $this->get_options( $sequence_id );
-                $this->load_sequence_post();
-            }
-        }
-
-        $is_pre_v3 = get_post_meta( $this->sequence_id, "_sequence_posts", true );
-
-        E20RTools\DBG::log("Need to convert from old metadata format to new format for sequence {$this->sequence_id}");
-        $retval = true;
-
-        if ( !empty( $this->sequence_id ) ) {
-
-            // $tmp = get_post_meta( $sequence_id, "_sequence_posts", true );
-            $posts = ( !empty( $is_pre_v3 ) ? $is_pre_v3 : array() ); // Fixed issue where empty sequences would generate error messages.
-
-            foreach( $posts as $sp ) {
-
-                E20RTools\DBG::log("Adding post # {$sp->id} with delay {$sp->delay} to sequence {$this->sequence->id} ");
-                $retval = $retval && $this->add_post_to_sequence( $this->sequence_id, $sp->id, $sp->delay );
-            }
-
-            // E20RTools\DBG::log("Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
-            // $retval = $retval && $this->save_sequence_post();
-
-            E20RTools\DBG::log("(Not) Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
-            // $retval = $retval && delete_post_meta( $this->sequence_id, "_sequence_posts" );
-        }
-        else {
-
-            $retval = false;
-            $this->set_error_msg( __("Cannot convert to V3 metadata format: No sequences were defined.", "e20rsequence" ) );
-        }
-
-        if ( $retval == true ) {
-
-            E20RTools\DBG::log("Successfully converted sequence id# {$this->sequence_id} to v3 metadata format for all sequence member posts");
-            $this->current_metadata_versions[$this->sequence_id] = 3;
-            update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
-
-            // Reset sequence info.
-            $this->get_options( $old_sequence_id );
-            $this->load_sequence_post(null, null, null, '=', null, true);
-
-        }
-        else {
-            $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence (%s)", "e20rsequence") , get_the_title( $this->sequence_id ) ) );
-        }
-
-        $converting_sequence = false;
-        return $retval;
     }
 
     /**
@@ -620,6 +499,30 @@ class Controller
     public function set_option_by_name( $option, $value )
     {
         $this->options->{$option} = $value;
+    }
+
+    /**
+     * Generate a key & identify transient for a user/sequence combination
+     *
+     * @param $sequence_id - Id of sequence
+     * @return string - The transient key being used.
+     */
+    private function get_cache_key($sequence_id)
+    {
+        global $current_user;
+        $key = null;
+
+        E20RTools\DBG::log("Cache key for user: {$this->e20r_sequence_user_id}");
+
+        if ((0 == $current_user->ID && true === $this->is_cron) ||
+            (is_numeric($this->e20r_sequence_user_id) && 0 < $this->e20r_sequence_user_id)) {
+
+            $user_id = $this->e20r_sequence_user_id;
+            $key = $this->transient_key . "{$user_id}_{$sequence_id}";
+        }
+
+        E20RTools\DBG::log("Cache key: " . (is_null($key) ? 'NULL' : $key));
+        return $key;
     }
 
     /**
@@ -814,15 +717,30 @@ class Controller
       */
     private function get_user_startdate($user_id = null, $level_id = null)
     {
-        $startdate = strtotime('today ' . get_option('timezone_string'));
+        $timezone = get_option('timezone_string');
+
+        if (!empty($timezone)) {
+
+            E20RTools\DBG::log("Using timezone: {$timezone}");
+            $startdate = strtotime('today ' . get_option('timezone_string'));
+        }
+        else {
+            $startdate = strtotime('today');
+        }
 
         // TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
-
         if (function_exists('pmpro_getMemberStartdate')) {
             $startdate = pmpro_getMemberStartdate( $user_id, $level_id );
         }
 
+        if (empty($startdate)) {
+            $user = get_user_by('id', $user_id);
+            $startdate = strtotime($user->user_registered);
+        }
+
         $startdate = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate, $user_id, $level_id);
+
+        E20RTools\DBG::log("Filtered startdate: {$startdate}");
 
         // Use a per-sequence startdate
         $m_startdate = get_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", true);
@@ -834,6 +752,8 @@ class Controller
         }
 
         $startdate = $m_startdate;
+
+        E20RTools\DBG::log("Using startdate value of : {$startdate}");
 
         return apply_filters('e20r-sequence-user-startdate', $startdate, $user_id, $level_id);
     }
@@ -1006,7 +926,7 @@ class Controller
 
         E20RTools\DBG::log("Loaded {$posts->post_count} posts from wordpress database for sequence {$sequence_id}");
 
-        if ( ( 0 === $posts->post_count ) && is_null( $pagesize ) && ( is_null( $post_id ) ) && false === $converting_sequence ) {
+/*        if ( ( 0 === $posts->post_count ) && is_null( $pagesize ) && ( is_null( $post_id ) ) && false === $converting_sequence ) {
 
             E20RTools\DBG::log("Didn't find any posts. Checking if we need to convert...?");
 
@@ -1016,7 +936,7 @@ class Controller
                 $this->convert_posts_to_v3( $sequence_id, true );
             }
         }
-
+*/
         $is_admin = user_can( $user_id, 'manage_options');
 
         $member_days = ( $is_admin || ( is_admin() && ( $this->is_cron == false ) ) ) ? 9999 : $this->get_membership_days( $user_id );
@@ -1227,6 +1147,9 @@ class Controller
 
         E20RTools\DBG::log("Timezone: {$tz}");
 
+        if (empty($tz)) {
+            $tz = 'UTC';
+        };
         // use current day as $enddate if nothing is specified
         if ( ( is_null( $enddate ) ) && ( $tz == 'UTC') ) {
 
@@ -5172,7 +5095,9 @@ class Controller
      */
     public function activation()
     {
-        E20RTools\DBG::log("Processing activation event");
+        $old_timeout = ini_get('max_execution_time');
+
+        E20RTools\DBG::log("Processing activation event using {$old_timeout} secs as timeout");
 
         if ( ! function_exists( 'pmpro_getOption' ) ) {
 
@@ -5196,23 +5121,151 @@ class Controller
         $sequence = apply_filters('get_sequence_class_instance', null);
         $sequences = $sequence->get_all_sequences();
 
-        $old_timeout = ini_get('max_execution_time');
-
         E20RTools\DBG::log("Found " . count( $sequences ) . " to convert");
-        set_time_limit(300);
 
         foreach( $sequences as $seq ) {
 
             E20RTools\DBG::log("Converting configuration meta to v3 format for {$seq->ID}" );
 
-            $sequence->convert_sequence( $seq->ID );
+            $sequence->upgrade_sequence( $seq->ID, true );
         }
 
         /* Register the default cron job to send out new content alerts */
         Tools\Cron::schedule_default();
 
-        $this->convert_user_notifications();
-        set_time_limit($old_timeout);
+        $sequence->convert_user_notifications();
+    }
+
+    /**
+     * Convert sequence ID to V3 metadata config if it hasn't been converted already.
+     * @param $seq_id
+     */
+    public function upgrade_sequence( $seq_id, $force ) {
+
+        E20RTools\DBG::log("Process {$seq_id} for V3 upgrade?");
+
+        if ( false === $this->is_converted( $seq_id ) ) {
+
+            E20RTools\DBG::log("Need to convert sequence #{$seq_id} to V3 format");
+            $this->get_options( $seq_id );
+
+            if ( $this->convert_posts_to_v3( $seq_id, true ) )
+            {
+                E20RTools\DBG::log("Converted {$seq_id} to V3 format");
+                $this->convert_user_notifications($seq_id);
+                E20RTools\DBG::log("Converted {$seq_id} user notifications to V3 format");
+            } else {
+                E20RTools\DBG::log("Error during conversion of {$seq_id} to V3 format");
+            }
+        }
+    }
+
+    /**
+     * Converts the posts for a sequence to the V3 metadata format (settings)
+     *
+     * @param null $sequence_id - The ID of the sequence to convert.
+     * @param bool $force - Whether to force the conversion or not.
+     * @return bool - Whether the conversion successfully completed or not
+     */
+    public function convert_posts_to_v3( $sequence_id = null, $force = false ) {
+
+        global $converting_sequence;
+
+        $converting_sequence = true;
+
+        if ( !is_null( $sequence_id ) ) {
+
+            if ( isset( $this->current_metadata_versions[$sequence_id] ) && ( 3 >= $this->current_metadata_versions[$sequence_id] ) ) {
+
+                E20RTools\DBG::log("Sequence {$sequence_id} is already converted.");
+                return;
+            }
+
+            $old_sequence_id = $this->sequence_id;
+/**
+            if ( false === $force  ) {
+
+                E20RTools\DBG::log("Loading posts for {$sequence_id}.");
+                $this->get_options( $sequence_id );
+                $this->load_sequence_post();
+            }
+*/
+        }
+
+        $is_pre_v3 = get_post_meta( $this->sequence_id, "_sequence_posts", true );
+
+        E20RTools\DBG::log("Need to convert from old metadata format to new format for sequence {$this->sequence_id}");
+        $retval = true;
+
+        if ( !empty( $this->sequence_id ) ) {
+
+            // $tmp = get_post_meta( $sequence_id, "_sequence_posts", true );
+            $posts = ( !empty( $is_pre_v3 ) ? $is_pre_v3 : array() ); // Fixed issue where empty sequences would generate error messages.
+
+            foreach( $posts as $sp ) {
+
+                E20RTools\DBG::log("Adding post #{$sp->id} with delay {$sp->delay} to sequence {$this->sequence->id} ");
+
+                $added_to_sequence = false;
+                $s_list = get_post_meta($sp->id, "_pmpro_sequence_post_belongs_to" );
+
+                if ( false == $s_list || !in_array($sequence_id, $s_list)) {
+                    add_post_meta($sp->id, '_pmpro_sequence_post_belongs_to', $sequence_id);
+                    $added_to_sequence = true;
+                }
+
+                if( true === $this->allow_repetition() && true === $added_to_sequence ) {
+                    add_post_meta($sp->id, "_pmpro_sequence_{$sequence_id}_post_delay", $sp->delay);
+
+                } elseif ( false == $this->allow_repetition() && true === $added_to_sequence ) {
+
+                    update_post_meta($sp->id, "_pmpro_sequence_{$sequence_id}_post_delay", $sp->delay);
+                }
+
+                if ( ( false !== get_post_meta($sp->id, '_pmpro_sequence_post_belongs_to', true) ) &&
+                    ( false !== get_post_meta($sp->id, "_pmpro_sequence_{$sequence_id}_post_delay", true) ) )
+                {
+                    E20RTools\DBG::log("Edited metadata for migrated post {$sp->id} and delay {$sp->delay}");
+                    $retval = true;
+
+                } else {
+                    delete_post_meta( $sp->id, '_pmpro_sequence_post_belongs_to', $this->sequence_id);
+                    delete_post_meta( $sp->id, "_pmpro_sequence_{$this->sequence_id}_post_delay", $sp->delay);
+                    $retval = false;
+                }
+
+                // $retval = $retval && $this->add_post_to_sequence( $this->sequence_id, $sp->id, $sp->delay );
+            }
+
+            // E20RTools\DBG::log("Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
+            // $retval = $retval && $this->save_sequence_post();
+
+            E20RTools\DBG::log("(Not) Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
+            // $retval = $retval && delete_post_meta( $this->sequence_id, "_sequence_posts" );
+        }
+        else {
+
+            $retval = false;
+            $this->set_error_msg( __("Cannot convert to V3 metadata format: No sequences were defined.", "e20rsequence" ) );
+        }
+
+        if ( $retval == true ) {
+
+            E20RTools\DBG::log("Converted sequence id# {$this->sequence_id} to v3 metadata format for all sequence member posts");
+            $this->current_metadata_versions[$this->sequence_id] = 3;
+            update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
+
+            // Reset sequence info.
+            $this->get_options( $old_sequence_id );
+            $this->load_sequence_post(null, null, null, '=', null, true);
+
+        }
+        else {
+            $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence (%s)", "e20rsequence") , get_the_title( $this->sequence_id ) ) );
+        }
+
+        $converting_sequence = false;
+        return $retval;
     }
 
     /**
@@ -5279,8 +5332,9 @@ class Controller
 
     /**
      * Trigger conversion of the user notification metadata for all users - called as part of activation or upgrade.
+     * @param int|null $sid - Sequence ID to convert user notification(s) for.
      */
-    public function convert_user_notifications() {
+    public function convert_user_notifications( $sid = null) {
 
         global $wpdb;
 
@@ -5293,94 +5347,96 @@ class Controller
 
         $sequence_list = new \WP_Query( $query );
 
-        E20RTools\DBG::log( "convert_user_notifications() - Found " . count($sequence_list) . " sequences to process for alert conversion" );
+        E20RTools\DBG::log( "Found " . count($sequence_list) . " sequences to process for alert conversion" );
 
         while ( $sequence_list->have_posts() ) {
 
             $sequence_list->the_post();
             $sequence_id = get_the_ID();
 
-            $this->get_options( $sequence_id );
+            if (is_null($sid) || ($sid == $sequence_id) ) {
 
-            $users = $this->get_users_of_sequence();
+                $this->get_options($sequence_id);
 
-            foreach ( $users as $user ) {
+                $users = $this->get_users_of_sequence();
 
-                $this->e20r_sequence_user_id = $user->user_id;
-                $userSettings = get_user_meta( $user->user_id, "pmpro_sequence_id_{$sequence_id}_notices", true);
+                foreach ($users as $user) {
 
-                // No V3 formatted settings found. Will convert from V2 (if available)
-                if ( empty( $userSettings ) || ( !isset( $userSettings->send_notices ) ) ) {
+                    $this->e20r_sequence_user_id = $user->user_id;
+                    $userSettings = get_user_meta($user->user_id, "pmpro_sequence_id_{$sequence_id}_notices", true);
 
-                    E20RTools\DBG::log("convert_user_notifications() - Converting notification settings for user with ID: {$user->user_id}" );
-                    E20RTools\DBG::log("convert_user_notifications() - Loading V2 meta: {$wpdb->prefix}pmpro_sequence_notices for user ID: {$user->user_id}");
+                    // No V3 formatted settings found. Will convert from V2 (if available)
+                    if (empty($userSettings) || (!isset($userSettings->send_notices))) {
 
-                    $v2 = get_user_meta( $user->user_id, "{$wpdb->prefix}"  . "pmpro_sequence_notices", true );
+                        E20RTools\DBG::log("Converting notification settings for user with ID: {$user->user_id}");
+                        E20RTools\DBG::log("Loading V2 meta: {$wpdb->prefix}pmpro_sequence_notices for user ID: {$user->user_id}");
 
-                    // E20RTools\DBG::log($old_optIn);
+                        $v2 = get_user_meta($user->user_id, "{$wpdb->prefix}" . "pmpro_sequence_notices", true);
 
-                    if ( !empty( $v2 ) ) {
+                        // E20RTools\DBG::log($old_optIn);
 
-                        E20RTools\DBG::log("convert_user_notifications() - V2 settings found. They are: ");
-                        E20RTools\DBG::log( $v2 );
+                        if (!empty($v2)) {
 
-                        E20RTools\DBG::log("convert_user_notifications() - Found old-style notification settings for user {$user->user_id}. Attempting to convert", E20R_DEBUG_SEQ_WARNING );
+                            E20RTools\DBG::log("V2 settings found. They are: ");
+                            E20RTools\DBG::log($v2);
 
-                        // Loop through the old-style array of sequence IDs
-                        $count = 1;
+                            E20RTools\DBG::log("Found old-style notification settings for user {$user->user_id}. Attempting to convert", E20R_DEBUG_SEQ_WARNING);
 
-                        foreach( $v2->sequence as $sId => $data ) {
+                            // Loop through the old-style array of sequence IDs
+                            $count = 1;
 
-                            E20RTools\DBG::log("convert_user_notification() - Converting sequence notices for {$sId} - Number {$count} of " . count($v2->sequence));
-                            $count++;
+                            foreach ($v2->sequence as $sId => $data) {
 
-                            $userSettings = $this->convert_alert_setting( $user->user_id, $sId, $data );
+                                E20RTools\DBG::log("Converting sequence notices for {$sId} - Number {$count} of " . count($v2->sequence));
+                                $count++;
 
-                            if ( isset( $userSettings->send_notices ) ) {
+                                $userSettings = $this->convert_alert_setting($user->user_id, $sId, $data);
 
-                                $this->save_user_notice_settings( $user->user_id, $userSettings, $sId );
-                                E20RTools\DBG::log("convert_user_notifications() - Removing converted opt-in settings from the database" );
-                                delete_user_meta( $user->user_id, $wpdb->prefix  . "pmpro_sequence_notices" );
+                                if (isset($userSettings->send_notices)) {
+
+                                    $this->save_user_notice_settings($user->user_id, $userSettings, $sId);
+                                    E20RTools\DBG::log(" Removing converted opt-in settings from the database");
+                                    delete_user_meta($user->user_id, $wpdb->prefix . "pmpro_sequence_notices");
+                                }
                             }
                         }
-                    }
 
-                    if ( empty( $v2 ) && empty( $userSettings ) ) {
+                        if (empty($v2) && empty($userSettings)) {
 
-                        E20RTools\DBG::log("convert_user_notification() - No v2 or v3 alert settings found for {$user->user_id}. Skipping this user");
-                        continue;
-                    }
+                            E20RTools\DBG::log("convert_user_notification() - No v2 or v3 alert settings found for {$user->user_id}. Skipping this user");
+                            continue;
+                        }
 
-                    E20RTools\DBG::log("convert_user_notifications() - V3 Alert settings for user {$user->user_id}");
-                    E20RTools\DBG::log( $userSettings );
+                        E20RTools\DBG::log("V3 Alert settings for user {$user->user_id}");
+                        E20RTools\DBG::log($userSettings);
 
-                    $userSettings->completed = true;
-                    E20RTools\DBG::log( "convert_user_notification() - Saving new notification settings for user with ID: {$user->user_id}" );
+                        $userSettings->completed = true;
+                        E20RTools\DBG::log("Saving new notification settings for user with ID: {$user->user_id}");
 
-                    if ( !$this->save_user_notice_settings( $user->user_id, $userSettings, $this->sequence_id ) ) {
+                        if (!$this->save_user_notice_settings($user->user_id, $userSettings, $this->sequence_id)) {
 
-                        E20RTools\DBG::log("convert_user_notification() - Unable to save new notification settings for user with ID {$user->user_id}", E20R_DEBUG_SEQ_WARNING );
+                            E20RTools\DBG::log("convert_user_notification() - Unable to save new notification settings for user with ID {$user->user_id}", E20R_DEBUG_SEQ_WARNING);
+                        }
+                    } else {
+                        E20RTools\DBG::log("convert_user_notification() - No alert settings to convert for {$user->user_id}");
+                        E20RTools\DBG::log("convert_user_notification() - Checking existing V3 settings...");
+
+                        $member_days = $this->get_membership_days($user->user_id);
+
+                        $old = $this->posts;
+
+                        $compare = $this->load_sequence_post($sequence_id, $member_days, null, '<=', null, true);
+                        $userSettings = $this->fix_user_alert_settings($userSettings, $compare, $member_days);
+                        $this->save_user_notice_settings($user->user_id, $userSettings, $sequence_id);
+
+                        $this->posts = $old;
                     }
                 }
-                else {
-                    E20RTools\DBG::log("convert_user_notification() - No alert settings to convert for {$user->user_id}");
-                    E20RTools\DBG::log("convert_user_notification() - Checking existing V3 settings...");
 
-                    $member_days = $this->get_membership_days( $user->user_id );
+                if (!$this->remove_old_user_alert_setting($user->user_id)) {
 
-                    $old = $this->posts;
-
-                    $compare = $this->load_sequence_post( $sequence_id, $member_days, null, '<=', null, true );
-                    $userSettings = $this->fix_user_alert_settings( $userSettings, $compare, $member_days );
-                    $this->save_user_notice_settings( $user->user_id, $userSettings, $sequence_id );
-
-                    $this->posts = $old;
+                    E20RTools\DBG::log("Unable to remove old user_alert settings!", E20R_DEBUG_SEQ_WARNING);
                 }
-            }
-
-            if (! $this->remove_old_user_alert_setting( $user->user_id ) ) {
-
-                E20RTools\DBG::log("conver_user_notification() - Unable to remove old user_alert settings!", E20R_DEBUG_SEQ_WARNING );
             }
         }
 
