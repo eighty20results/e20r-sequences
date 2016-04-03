@@ -719,43 +719,48 @@ class Controller
     {
         $timezone = get_option('timezone_string');
 
-        if (!empty($timezone)) {
-
-            E20RTools\DBG::log("Using timezone: {$timezone}");
-            $startdate = strtotime('today ' . get_option('timezone_string'));
-        }
-        else {
-            $startdate = strtotime('today');
-        }
-
         // TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
         if (function_exists('pmpro_getMemberStartdate')) {
-            $startdate = pmpro_getMemberStartdate( $user_id, $level_id );
+            $startdate_ts = pmpro_getMemberStartdate( $user_id, $level_id );
         }
 
-        if (empty($startdate)) {
-            $user = get_user_by('id', $user_id);
-            $startdate = strtotime($user->user_registered);
+        // if the user doesn't have a membership level...
+        if (empty($startdate_ts)) {
+
+            // and there's a valid Timezone setting
+            if (!empty($timezone)) {
+
+                // use 'right now' local time' as their startdate.
+                E20RTools\DBG::log("Using timezone: {$timezone}");
+                $startdate_ts = strtotime('today ' . get_option('timezone_string'));
+            }
+            else {
+                // or we'll use the registration date for the user.
+                $user = get_user_by('id', $user_id);
+                $startdate_ts = strtotime($user->user_registered);
+            }
         }
 
-        $startdate = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate, $user_id, $level_id);
+        // filter this so other membership modules can set the startdate too.
+        $startdate_ts = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate_ts, $user_id, $level_id);
 
-        E20RTools\DBG::log("Filtered startdate: {$startdate}");
+        E20RTools\DBG::log("Filtered startdate: {$startdate_ts}");
 
         // Use a per-sequence startdate
-        $m_startdate = get_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", true);
+        $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", true);
 
-        if (empty($m_startdate)) {
+        if (empty($m_startdate_ts)) {
 
-            update_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", $startdate);
-            $m_startdate = $startdate;
+            update_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", $startdate_ts);
+            $m_startdate_ts = $startdate_ts;
         }
 
-        $startdate = $m_startdate;
+        $startdate = $m_startdate_ts;
 
-        E20RTools\DBG::log("Using startdate value of : {$startdate}");
+        E20RTools\DBG::log("Using startdate value of : {$startdate_ts}");
 
-        return apply_filters('e20r-sequence-user-startdate', $startdate, $user_id, $level_id);
+        // finally, allow the user to filter the startdate to whatever they want it to be.
+        return apply_filters('e20r-sequence-user-startdate', $startdate_ts,  $this->sequence_id, $user_id, $level_id);
     }
 
     /**
@@ -5133,7 +5138,7 @@ class Controller
         /* Register the default cron job to send out new content alerts */
         Tools\Cron::schedule_default();
 
-        $sequence->convert_user_notifications();
+        // $sequence->convert_user_notifications();
     }
 
     /**
