@@ -217,9 +217,20 @@ table#newmeta td { vertical-align: middle !important; }
     overflow-y: auto;
     overflow-x: hidden;
 }
-.e20r_sequence_tblPostname { width: 50%; }
+.e20r_sequence_tblPostname {
+    min-width: 100px;
+    max-width: 50%;
+    width: 50%;
+    padding: 8px 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -ms-text-overflow: ellipsis;
+}
 .e20r_sequence_tblNumber {
-    width: 172px;
+    width: 10%;
+    min-width: 50px;
+    max-width: 150px;
     padding: 8px 20px !important;
     overflow: hidden;
     text-align: center;
@@ -438,3 +449,33 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
     text-align: right;
 }
 .table_newmeta .select2-container {width: 100%;}
+th#e20r_sequence_delaylabel {
+    max-width: 178px;
+    width: 20%;
+}
+th.e20r_sequence_titlelabel {
+    min-width: 100px;
+    max-width: 50%;
+    width: 50%;
+    padding: 8px 10px;
+}
+th.e20r_sequence_orderlabel {
+    width: 10%;
+    min-width: 40px;
+    max-width: 150px;
+    padding: 8px 20px !important;
+    overflow: hidden;
+    text-align: center;
+}
+th.e20r_edit_label_big {
+    max-width: 100px;
+    /* min-width: 75px; */
+    width: 10%;
+    white-space: nowrap;
+}
+th.e20r_edit_label_small {
+    max-width: 100px;
+    /* min-width: 50px; */
+    width: 5%;
+
+}
