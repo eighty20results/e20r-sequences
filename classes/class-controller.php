@@ -5841,6 +5841,29 @@ class Controller
             }
 
         }
+
+        $member_sequences = $this->sequences_for_membership_level($order->membership_id);
+
+        if ( ! empty( $member_sequences ) ) {
+
+            foreach( $member_sequences as $user_sequence ) {
+
+                $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$user_sequence}", true);
+
+                if (empty($m_startdate_ts)) {
+
+                    update_user_meta($user_id, "_e20r-sequence-startdate-{$user_sequence}", $startdate_ts);
+                }
+
+            }
+        }
+    }
+
+    public function sequences_for_membership_level($level_id)
+    {
+        global $wpdb;
+        global $current_user;
+
         $sequence_list = $this->get_all_sequences(array('publish', 'future', 'draft', 'pending', 'private'));
         $in_sequence = array();
 
@@ -5855,26 +5878,12 @@ class Controller
             SELECT mp.membership_id
             FROM {$wpdb->pmpro_memberships_pages} AS mp
              WHERE mp.membership_id = %d AND
-             mp.page_id IN ( " . explode(', ', $in_sequence) . " )
+             mp.page_id IN ( " . implode(', ', $in_sequence) . " )
             ",
-            $order->memebership_id
+            $level_id
         );
 
-        $member_sequences = $wpdb->get_col($sql);
-
-        if ( ! empty( $member_sequences ) ) {
-
-            foreach( $member_sequences as $new_user_sequence ) {
-
-                $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$new_user_sequence}", true);
-
-                if (empty($m_startdate_ts)) {
-
-                    update_user_meta($user_id, "_e20r-sequence-startdate-{$new_user_sequence}", $startdate_ts);
-                }
-
-            }
-        }
+        return $wpdb->get_col($sql);
     }
 
     /**
