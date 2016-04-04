@@ -5921,7 +5921,7 @@ class Controller
      * @param $user_id -- The user ID to find the startdate for
      * @return mixed|void  - A UNIX timestamp (seconds since start of epoch)
      */
-    private function get_user_startdate($user_id = null, $level_id = null, $sequence_id = null)
+    public function get_user_startdate($user_id = null, $level_id = null, $sequence_id = null)
     {
         $timezone = get_option('timezone_string');
 
