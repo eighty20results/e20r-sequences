@@ -5921,13 +5921,23 @@ class Controller
      * @param $user_id -- The user ID to find the startdate for
      * @return mixed|void  - A UNIX timestamp (seconds since start of epoch)
      */
-    private function get_user_startdate($user_id = null, $level_id = null)
+    private function get_user_startdate($user_id = null, $level_id = null, $sequence_id = null)
     {
         $timezone = get_option('timezone_string');
 
         // TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
         if (function_exists('pmpro_getMemberStartdate')) {
             $startdate_ts = pmpro_getMemberStartdate( $user_id, $level_id );
+        }
+
+        // we didn't get a sequence id to process for so check if it's set by default
+        if( empty($sequence_id) && !empty($this->sequence_id) ) {
+            $sequence_id = $this->sequence_id;
+        }
+
+        // neither default nor received sequence id to process.
+        if (empty($sequence_id) && empty($this->sequence_id)) {
+            return null;
         }
 
         // if the user doesn't have a membership level...
@@ -5948,16 +5958,16 @@ class Controller
         }
 
         // filter this so other membership modules can set the startdate too.
-        $startdate_ts = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate_ts, $user_id, $level_id);
+        $startdate_ts = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate_ts, $user_id, $level_id, $sequence_id);
 
         E20RTools\DBG::log("Filtered startdate: {$startdate_ts}");
 
         // Use a per-sequence startdate
-        $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", true);
+        $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$sequence_id}", true);
 
         if (empty($m_startdate_ts)) {
 
-            update_user_meta($user_id, "_e20r-sequence-startdate-{$this->sequence_id}", $startdate_ts);
+            update_user_meta($user_id, "_e20r-sequence-startdate-{$sequence_id}", $startdate_ts );
             $m_startdate_ts = $startdate_ts;
         }
 
@@ -5966,7 +5976,7 @@ class Controller
         E20RTools\DBG::log("Using startdate value of : {$startdate_ts}");
 
         // finally, allow the user to filter the startdate to whatever they want it to be.
-        return apply_filters('e20r-sequence-user-startdate', $startdate_ts,  $this->sequence_id, $user_id, $level_id);
+        return apply_filters('e20r-sequence-user-startdate', $startdate_ts,  $sequence_id, $user_id, $level_id);
     }
 
     /**
