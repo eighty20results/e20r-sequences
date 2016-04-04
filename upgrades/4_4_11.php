@@ -13,6 +13,8 @@ function e20r_sequence_upgrade_settings_4411()
         $levels = pmpro_getAllLevels(true, true);
     }
 
+    E20RTools\DBG::log("Updating user startdate per sequence for all active users");
+
     $levels = apply_filters('e20r-sequences-membership-module-get-level-id-array', $levels);
     $seq = apply_filters('get_sequence_class_instance', null);
 
@@ -36,4 +38,4 @@ function e20r_sequence_upgrade_settings_4411()
         }
     }
 }
-add_action('e20r_sequence_update_4.4.10', 'e20r_sequence_upgrade_settings_4410');
+add_action('e20r_sequence_update_4.4.11', 'e20r_sequence_upgrade_settings_4411');
