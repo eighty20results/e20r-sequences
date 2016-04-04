@@ -170,6 +170,17 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 4.4.11 ==
+* FIX: Didn't always return all of the configured sequences
+* FIX: Didn't return the right list of sequences protected by a specific membership level
+* FIX: sequences_for_membership_level() didn't handle cases where there were no sequences configured yet
+* FIX: Didn't consistently return valid SQL for sequence list belonging to a given membership level (PMPRO)
+* ENH: Added update version history
+* ENH: Automatically update active membership user records w/the right startdate for the sequence(s) in the system.
+* ENH: Updated get_user_startdate() to support upgrade functionality
+* ENH: Add sequence ID to filters for startdate
+* ENH: Added PHPDoc for new function(s)
+
 == 4.4.10 ==
 * ENH: Refactor for readability
 * ENH: Record startdates for a user's (new) sequences on membership module purchase action/activity
