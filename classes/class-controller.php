@@ -262,7 +262,7 @@ class Controller
         $query = array(
             'post_type' => 'pmpro_sequence',
             'post_status' => $statuses,
-            'post_per_page' => -1, // BUG: Didn't return more than 5 sequences
+            'posts_per_page' => -1, // BUG: Didn't return more than 5 sequences
         );
 
         /* Fetch all Sequence posts - NOTE: Using \WP_Query and not the sequence specific get_posts() function! */
