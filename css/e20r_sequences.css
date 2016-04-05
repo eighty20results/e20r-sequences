@@ -409,15 +409,15 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
 .e20r-table-body {
     padding: 5px;
 }
-.row {
+.e20r-meta-table .row {
     display: table-row;
 }
-.heading {
+.e20r-meta-table .heading {
     font-weight: bold;
     text-align: center;
     display: table-row;
 }
-.cell {
+.e20r-meta-table .cell {
     display: table-cell;
     padding: 0 5px 0 5px;
     vertical-align: top;
