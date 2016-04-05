@@ -1487,7 +1487,7 @@ class Views {
 							<tr id="e20r-seq-post">
 								<td class="e20r-seq-post-img">&nbsp;</td>
 								<td>
-									<span class="e20r_sequence_item-title"><?php echo $p->post_title; ?></span>
+									<span class="e20r_sequence_item-title"><?php echo $p->title; ?></span>
                                     <span class="e20r_sequence_item-unavailable">
                                         <?php echo sprintf( __( 'available on %s', "e20rsequence" ),
 											($options->delayType == 'byDays' &&
