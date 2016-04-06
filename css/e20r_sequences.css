@@ -34,7 +34,7 @@
 .e20r_sequence_item-title {display: inline-block; }
 .e20r_sequence_item-title a {font-size: 1.1em; }
 .e20r_sequence_item-available {display: inline-block; float: right; width: auto; }
-.e20r_sequence_item-unavailable {display: inline-block; float: right; width: auto; font-style: italic; font-size: .9em; text-align: center;  }
+.e20r_sequence_item-unavailable {display: inline-block; float: right; width: 170px; font-style: italic; font-size: .9em; padding: 6px 0;  }
 #e20r_sequence_meta td { font-size: 0.8em !important; }
 .e20r-seq-centered {
     margin-top: 30px;
@@ -345,6 +345,8 @@ a:hover.page-numbers {
     display: inline-block;
     /* position: relative; */
     right: 5px;
+    float: right;
+    padding: 6px 0;
 }
 #e20r-seq-post-summary {
     max-height: 150px;
