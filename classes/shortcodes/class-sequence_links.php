@@ -75,8 +75,8 @@ class sequence_links {
 		$load_e20r_sequence_script = true;
 
 		// To avoid errors in development tool
-		$highlight = false;
-		$button = false;
+		$highlight = true;
+		$button = true;
 		$scrollbox = false;
 		$pagesize = 30;
 		$id = 0;
@@ -86,8 +86,8 @@ class sequence_links {
 			'id' => 0,
 			'pagesize' => 30,
 			'title' => '',
-			'button' => false,
-			'highlight' => false,
+			'button' => true,
+			'highlight' => true,
 			'scrollbox' => false,
 		), $attributes ) );
 
