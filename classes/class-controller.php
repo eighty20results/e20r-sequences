@@ -508,14 +508,25 @@ class Controller
      * @param $sequence_id - Id of sequence
      * @return string - The transient key being used.
      */
-    private function get_cache_key($sequence_id)
+    private function get_cache_key($sequence_id, $user_id = null)
     {
         global $current_user;
+
+        // init variables
         $key = null;
+        $user_id = null;
+
+        if (empty($user_id)) {
+            $user_id = $current_user->ID;
+        }
+
+        if (empty($this->e20r_sequence_user_id)) {
+            $this->e20r_sequence_user_id = $user_id;
+        }
 
         E20RTools\DBG::log("Cache key for user: {$this->e20r_sequence_user_id}");
 
-        if ((0 == $current_user->ID && true === $this->is_cron) ||
+        if ((0 == $current_user->ID && ! empty($this->e20r_sequence_user_id) && true === $this->is_cron) ||
             (is_numeric($this->e20r_sequence_user_id) && 0 < $this->e20r_sequence_user_id)) {
 
             $user_id = $this->e20r_sequence_user_id;
@@ -661,19 +672,21 @@ class Controller
         E20RTools\DBG::log("Saving data to cache for {$sequence_id}...");
         $key = $this->get_cache_key($sequence_id);
 
-        if (!is_null($key)) {
-            $success = set_transient( $key, $sequence_posts, self::$cache_timeout * MINUTE_IN_SECONDS);
-        }
+        if ( ! empty($key) ) {
 
-        if (true === $success) {
+            E20RTools\DBG::log("Saving Cache as transient w/a timeout of: " . self::$cache_timeout );
+            $success = set_transient( $key, $sequence_posts, self::$cache_timeout * MINUTE_IN_SECONDS);
             $this->expires = $this->get_cache_expiry($sequence_id);
             E20RTools\DBG::log("Cache set to expire: {$this->expires}");
-        } else {
-            E20RTools\DBG::log("Unable to update the cache for {$sequence_id}!");
-            $this->expires = null;
+
+            return true;
         }
 
-        return $success;
+        E20RTools\DBG::log("Unable to update the cache for {$sequence_id}!");
+        $this->expires = null;
+
+        return false;
+
         // wp_cache_set( $key, $value );
     }
 
@@ -923,6 +936,7 @@ class Controller
                 $p->closest_post = false;
                 $p->current_post = false;
                 $p->is_future = false;
+                $p->list_include = true;
                 $p->type = $sPost->post_type;
 
                 // E20RTools\DBG::log("Configured delay value: {$p->delay}. Normalized delay: " . $this->normalize_delay( $p->delay ));
@@ -937,18 +951,21 @@ class Controller
 
                     // Or if we're not supposed to hide the upcomping posts.
 
-                    if ( !$this->hide_upcoming_posts() ) {
+                    if ( false === $this->hide_upcoming_posts() ) {
 
                         E20RTools\DBG::log("Loading {$p->id} with delay {$p->delay} to list of upcoming posts");
                         $p->is_future = true;
                         $found[] = $p;
                     }
                     else {
+
                         E20RTools\DBG::log("Ignoring post {$p->id} with delay {$p->delay} to sequence list for {$sequence_id}");
                         if ( !is_null( $pagesize ) ) {
 
-                            unset( $post_list[ $k ] );
+                            $post_list[$k]->list_include = false;
+                            //unset( $post_list[ $k ] );
                         }
+
                     }
                 }
             } // End of foreach for delay values
@@ -967,16 +984,17 @@ class Controller
             // Default to old _sequence_posts data
             if ( 0 == count( $this->posts ) ) {
 
-                E20RTools\DBG::log("No posts found using the V3 meta format. Reverting... ", E20R_DEBUG_SEQ_WARNING );
+                E20RTools\DBG::log("No posts found using the V3 meta format. Need to convert! ", E20R_DEBUG_SEQ_WARNING );
 
-                $tmp = get_post_meta( $this->sequence_id, "_sequence_posts", true );
-                $this->posts = ( $tmp ? $tmp : array() ); // Fixed issue where empty sequences would generate error messages.
+//                $tmp = get_post_meta( $this->sequence_id, "_sequence_posts", true );
+//                $this->posts = ( $tmp ? $tmp : array() ); // Fixed issue where empty sequences would generate error messages.
 
-                E20RTools\DBG::log("Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
+/*                E20RTools\DBG::log("Saving to new V3 format... ", E20R_DEBUG_SEQ_WARNING );
                 $this->save_sequence_post();
 
                 E20RTools\DBG::log("Removing old format meta... ", E20R_DEBUG_SEQ_WARNING );
                 delete_post_meta( $this->sequence_id, "_sequence_posts" );
+*/
             }
 
             E20RTools\DBG::log("Identify the closest post for {$user_id}");
@@ -1019,6 +1037,7 @@ class Controller
 
                 E20RTools\DBG::log("Check max / min delay values for paginated set. Max: {$max}, Min: {$min}");
 
+                /*
                 foreach( $paged_list as $k => $p ) {
 
                     E20RTools\DBG::log("Checking post key {$k} (post: {$p->id}) with delay {$p->delay}");
@@ -1036,9 +1055,12 @@ class Controller
 
                     }
                 }
+                */
+                $max_pages = ceil( count($this->posts) / $pagesize);
+                $post_count = count($paged_list);
 
-                E20RTools\DBG::log("Returning the \\WP_Query result to process for pagination.");
-                return array( $paged_list, $posts->max_num_pages );
+                E20RTools\DBG::log("Returning the \\WP_Query result to process for pagination. Max # of pages: {$max_pages}, total posts {$post_count}");
+                return array( $paged_list, $max_pages );
             }
 
         }
@@ -2414,13 +2436,20 @@ class Controller
 
         foreach( $post_list as $k => $post ) {
 
-            if ( ( $k <= $last_key ) && ( $k >= $first_key ) ) {
-                E20RTools\DBG::log("Including {$post->id} with delay {$post->delay} in page");
-                $page[] = $post;
+            // skip if we've already marked this post for exclusion.
+            if (false === $post->list_include ) {
+
+                continue;
+            }
+
+            if ( ! (( $k <= $last_key ) && ( $k >= $first_key )) ) {
+                E20RTools\DBG::log("Excluding {$post->id} with delay {$post->delay} from post/page/list");
+                // $page[] = $post;
+                $post_list[$k]->list_include = false;
             }
         }
 
-        return $page;
+        return $post_list;
 
     }
 
@@ -2577,7 +2606,7 @@ class Controller
 	}
 
     /**
-     * Show list of sequence posts at the bottom of the specific sequenc post.
+     * Show list of sequence posts at the bottom of the specific sequence post.
      *
      * @param $content -- The content to process as part of the filter action
      * @return string -- The filtered content
@@ -2586,13 +2615,14 @@ class Controller
 
         global $post;
         global $pagenow;
+        global $current_user;
 
         if ( ( $pagenow == 'post-new.php' || $pagenow == 'edit.php' || $pagenow == 'post.php' ) ) {
 
             return $content;
         }
 
-        if ( ( 'pmpro_sequence' == $post->post_type ) && $this->has_membership_access() ) {
+        if ( is_singular() && is_main_query() && ( 'pmpro_sequence' == $post->post_type ) && $this->has_membership_access($post->ID, $current_user->ID ) ) {
 
             global $load_e20r_sequence_script;
 
@@ -2668,10 +2698,10 @@ class Controller
      */
     public function get_post_list_as_html($echo = false) {
 
-        E20RTools\DBG::log("get_post_list_as_html() - Generate HTML list of posts for sequence #: {$this->sequence_id}");
+        E20RTools\DBG::log("Generate HTML list of posts for sequence #: {$this->sequence_id}");
 
         //global $current_user;
-        $this->load_sequence_post();
+        // $this->load_sequence_post(); // Unnecessary
 
         if ( ! empty( $this->posts ) ) {
 
@@ -2709,7 +2739,7 @@ class Controller
             $delayDiff = ($delay - $memberDays);
             E20RTools\DBG::log('Delay: ' .$delay . ', memberDays: ' . $memberDays . ', delayDiff: ' . $delayDiff);
 
-            return strftime('%x', strtotime("+" . $delayDiff ." days"));
+            return date_i18n(get_option( 'date_format' ), strtotime("+" . $delayDiff ." days"));
         }
 
         return $delay; // It's stored as a number, not a date
@@ -2725,10 +2755,15 @@ class Controller
 
         $html = '';
 
+        E20RTools\DBG::log("Total count: {$total}");
+
         if ($total > 1) {
 
-            if (! $current_page = get_query_var( 'page' ) )
+            if (! $current_page = get_query_var( 'page' ) ) {
                 $current_page = 1;
+            }
+
+            E20RTools\DBG::log("Current Page #: {$current_page}");
 
             $paged = ( get_query_var( 'page' ) ) ? absint( get_query_var( 'page' ) ) : 1;
             $base = @add_query_arg('page','%#%');
