@@ -213,9 +213,24 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.12
-* FIX: Didn't always trigger upgrade activity for v4.4.11
-* FIX: get_user_startdate() caused whitescreen due to method visibility.
+###4.4.14
+* FIX: Escape variables being loaded to the front-end listing of Sequence members.
+* FIX: List upcoming posts if they're supposed to be visible
+* FIX: The default shortcode settings weren't correct.
+* FIX: Flag an update routine as having ran after executing the pre/update/post hooks.
+* FIX: Didn't always find the cache key to use
+* FIX: Didn't always load the sequence data for the user from cache when available
+* FIX: Didn't always paginate sequence lists properly
+* FIX: Would sometimes remove old metadata erroneously
+* FIX: paginate_posts() didn't always return the correct list of posts
+* FIX: Make the display_sequence_content() function behave a little 'better' when being executed by the 'the_content' filter
+* FIX: Didn't always align the future & current availability info.
+* FIX: Resolved a possible CSS element name conflict with themes
+* FIX: Didn't  always load the post title in the sequence list view
+* ENH: Optimize the number of times we attempt to load sequence posts
+* ENH: Use the Wordpress configured date format when listing future (unavailable) posts & the sequence is configured to show dates.
+* ENH: Would sometimes run the update functionality more than once
+* ENH: Clean up debug logging
 
 ##Old releases
 ###.1
@@ -1036,3 +1051,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Updated get_user_startdate() to support upgrade functionality
 * ENH: Add sequence ID to filters for startdate
 * ENH: Added PHPDoc for new function(s)
+
+###4.4.12
+* FIX: Didn't always trigger upgrade activity for v4.4.11
+* FIX: get_user_startdate() caused whitescreen due to method visibility.
+
+###4.4.13
+* FIX: Didn't always return all of the configured sequences

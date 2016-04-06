@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
 Requires at least: 3.4
 Tested up to: 4.4.2
-Stable tag: 4.4.12
+Stable tag: 4.4.14
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -169,6 +169,26 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.4.14 ==
+* FIX: Escape variables being loaded to the front-end listing of Sequence members.
+* FIX: List upcoming posts if they're supposed to be visible
+* FIX: The default shortcode settings weren't correct.
+* FIX: Flag an update routine as having ran after executing the pre/update/post hooks.
+* FIX: Didn't always find the cache key to use
+* FIX: Didn't always load the sequence data for the user from cache when available
+* FIX: Didn't always paginate sequence lists properly
+* FIX: Would sometimes remove old metadata erroneously
+* FIX: paginate_posts() didn't always return the correct list of posts
+* FIX: Make the display_sequence_content() function behave a little 'better' when being executed by the 'the_content' filter
+* FIX: Didn't always align the future & current availability info.
+* FIX: Resolved a possible CSS element name conflict with themes
+* FIX: Didn't  always load the post title in the sequence list view
+* ENH: Optimize the number of times we attempt to load sequence posts
+* ENH: Use the Wordpress configured date format when listing future (unavailable) posts & the sequence is configured to show dates.
+* ENH: Would sometimes run the update functionality more than once
+* ENH: Clean up debug logging== 4.4.13 ==
+* FIX: Didn't always return all of the configured sequences
 
 == 4.4.12 ==
 * FIX: Didn't always trigger upgrade activity for v4.4.11
