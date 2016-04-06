@@ -1918,12 +1918,25 @@ class Controller
 			// return false;
 		}
 
-		$retval = false;
+        $p_type = get_post_type($post_id);
+        E20RTools\DBG::log("Post with ID {$post_id} is of post type {$p_type}...");
+
+        $post_access = $this->has_membership_access($post_id, $user_id);
+
+        if ( 'pmpro_sequence' == $p_type && ( ( is_array($post_access) && (false == $post_access[0])) || ( ! is_array($post_access) && false == $post_access ) ) ) {
+
+            E20RTools\DBG::log("{$post_id} is a sequence and user {$user_id} does not have access to it!");
+            return false;
+        }
+
+        $retval = false;
         $sequences = $this->get_sequences_for_post( $post_id );
 
         // if ( !$this->allow_repetition() ) {
 
         $sequence_list = array_unique( $sequences );
+
+        // is the post we're supplied is a sequence?
 
         if ( count( $sequence_list ) < count( $sequences ) ) {
 
@@ -2138,10 +2151,21 @@ class Controller
             $access = false;
         }
 
+        E20RTools\DBG::log("Testing access for post # {$post_id} by user {$user_id} via membership function(s)");
+
         // TODO: Remove pmpro_has_membership_access from e20r-sequences and into own module
         if (function_exists('pmpro_has_membership_access')) {
 
-            $access = pmpro_has_membership_access($post_id, $user_id, $return_membership_levels);
+            E20RTools\DBG::log("Found the PMPro Membership access function");
+            $has_access = pmpro_has_membership_access($post_id, $user_id, $return_membership_levels);
+
+            E20RTools\DBG::log($has_access);
+
+            if ( ( is_array( $has_access ) &&  true == $has_access[0] ) || (!is_array($has_access) && true == $has_access ) ) {
+                $access = true;
+            }
+
+
         }
 
         return apply_filters('e20r-sequence-membership-access', $access, $post_id, $user_id, $return_membership_levels);
@@ -2164,7 +2188,7 @@ class Controller
             E20RTools\DBG::log("Need to migrate to V3 sequence list for post ID {$post_id}", E20R_DEBUG_SEQ_WARNING );
             E20RTools\DBG::log($post_sequences);
 
-            foreach ( $post_sequences as $seq_id ) {
+/*            foreach ( $post_sequences as $seq_id ) {
 
                 add_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $seq_id, true ) or
                     update_post_meta( $post_id, '_pmpro_sequence_post_belongs_to', $seq_id );
@@ -2172,6 +2196,7 @@ class Controller
 
             E20RTools\DBG::log("Removing old sequence list metadata");
             delete_post_meta( $post_id, '_post_sequences' );
+*/
         }
 
         E20RTools\DBG::log("Attempting to load sequence list for post {$post_id}", E20R_DEBUG_SEQ_INFO );
@@ -6039,7 +6064,7 @@ class Controller
         add_filter("pmpro_after_phpmailer_init", array(&$this, "email_body"));
         add_filter('pmpro_sequencepost_types', array(&$this, 'included_cpts'));
 
-        add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 9, 4);
+        // add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 9, 4);
         add_filter("pmpro_non_member_text_filter", array(&$this, "text_filter"));
         add_filter("pmpro_not_logged_in_text_filter", array(&$this, "text_filter"));
         add_action('e20r_sequence_load_membership_signup_hook', array($this, 'e20r_add_membership_module_signup_hook'));
