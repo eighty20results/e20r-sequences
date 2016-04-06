@@ -114,6 +114,16 @@ class sequence_links {
 		}
 		E20RTools\DBG::log("We're given the ID of: {$id} ");
 
+		$seq_access = $sequence->has_post_access($current_user->ID, $id, false, $id);
+
+		if ( ( is_array( $seq_access ) &&  false == $seq_access[0] ) || (!is_array($seq_access) && false == $seq_access ) )  {
+
+			E20RTools\DBG::log("Not logged in or not a member with access to this sequence. Exiting!");
+
+			$default_message = __("We're sorry, you do not have access to this content. Please either log in to this system, and/or upgrade your membership level", "e20rsequence");
+			return apply_filters('e20r-sequence-mmodule-access-denied-msg', $default_message, $id, $current_user);
+		}
+
 		// Make sure the sequence exists.
 		if ( ! $sequence->sequence_exists( $id ) ) {
 
