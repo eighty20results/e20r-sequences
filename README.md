@@ -214,8 +214,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.16
-* FIX: Clean up Navigation links
+###4.4.17
+* FIX: Delay column formatting/layout
+* FIX: Doesn't properly display the Meta-table for the Sequence members on the editor page
+* FIX: Formatting for table of sequence posts on post-editor page
 
 ##Old releases
 ###.1
@@ -1073,3 +1075,6 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Add Member Module specific access denied message(s).
 * ENH: Hook for Member Module Specific access denied message(s)
 * ENH: Added filterable 'Content is inaccessible' message.
+
+###4.4.16
+* FIX: Clean up Navigation links

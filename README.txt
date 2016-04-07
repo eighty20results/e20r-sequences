@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
 Requires at least: 3.4
 Tested up to: 4.4.2
-Stable tag: 4.4.16
+Stable tag: 4.4.17
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -169,6 +169,11 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.4.17 ==
+* FIX: Delay column formatting/layout
+* FIX: Doesn't properly display the Meta-table for the Sequence members on the editor page
+* FIX: Formatting for table of sequence posts on post-editor page
 
 == 4.4.16 ==
 * FIX: Clean up Navigation links

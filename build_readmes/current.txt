@@ -1,1 +1,3 @@
-FIX: Clean up Navigation links
+FIX: Delay column formatting/layout
+FIX: Doesn't properly display the Meta-table for the Sequence members on the editor page
+FIX: Formatting for table of sequence posts on post-editor page
