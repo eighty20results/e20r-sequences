@@ -227,14 +227,6 @@ table#newmeta td { vertical-align: middle !important; }
     text-overflow: ellipsis;
     -ms-text-overflow: ellipsis;
 }
-.e20r_sequence_tblNumber {
-    width: 10%;
-    min-width: 50px;
-    max-width: 150px;
-    padding: 8px 20px !important;
-    overflow: hidden;
-    text-align: center;
-}
 .e20r_sequence_postscroll tbody tr {
     display: table;
     width: 100%;
@@ -451,23 +443,33 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
     text-align: right;
 }
 .table_newmeta .select2-container {width: 100%;}
-th#e20r_sequence_delaylabel {
-    max-width: 178px;
+th#e20r_sequence_delaylabel,
+td.e20r_sequence_tblNumber {
+    max-width: 0;
     width: 20%;
+    min-width: 75px;
+    text-align: center;
+    /* padding: 8px 20px !important; */
+    overflow: hidden;
 }
+td.e20r_sequence_tblPostname,
 th.e20r_sequence_titlelabel {
     min-width: 100px;
-    max-width: 50%;
-    width: 50%;
-    padding: 8px 10px;
-}
-th.e20r_sequence_orderlabel {
-    width: 10%;
-    min-width: 40px;
-    max-width: 150px;
-    padding: 8px 20px !important;
-    overflow: hidden;
+    max-width: 0;
+    width: 40%;
     text-align: center;
+    /* padding: 8px 10px 8px 0; */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    -ms-text-overflow: ellipsis;
+}
+th.e20r_sequence_orderlabel,
+td.e20r_sequence_tblOrder {
+    max-width: 0;
+    width: 75px;
+    min-width: 75px;
+    /* padding: 8px 10px 8px 10px!important; */
 }
 th.e20r_edit_label_big {
     max-width: 100px;
@@ -480,4 +482,15 @@ th.e20r_edit_label_small {
     /* min-width: 50px; */
     width: 5%;
 
+}
+th.e20r_sequence_idlabel,
+td.e20r_sequence_tblPostId {
+    min-width: 75px;
+    width: 10%;
+    max-width: 100%;
+    padding: 8px 10px 8px 0;
+    text-align: center;
+}
+table#e20r_sequencetable thead th {
+    font-size: 0.8rem !important;
 }
