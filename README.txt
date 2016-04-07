@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
 Requires at least: 3.4
 Tested up to: 4.4.2
-Stable tag: 4.4.14
+Stable tag: 4.4.15
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -169,6 +169,17 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.4.15 ==
+* FIX: has_post_access() would sometimes return the incorrect access value for the post_id.
+* FIX: [sequence_links] shortcode would sometimes show the sequence info for users who didn't have access to it.
+* FIX: Various styling issues
+* FIX: Make usertstyle URL filter more self-documenting in nature
+* ENH: Load support for user created styles (loads after default Sequences styles)
+* ENH: Filter & use member specific sequence 'access denied' message(s).
+* ENH: Add Member Module specific access denied message(s).
+* ENH: Hook for Member Module Specific access denied message(s)
+* ENH: Added filterable 'Content is inaccessible' message.
 
 == 4.4.14 ==
 * FIX: Escape variables being loaded to the front-end listing of Sequence members.

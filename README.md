@@ -96,6 +96,7 @@ See ./email/README.txt for information on templates for the email alerts.
 | e20r-sequence-default-sender-email | The email address to use as the default sequence notification sender | email address for admin user |
 | e20r-sequence-default-sender-name | The name to use as the default sequence notification sender | Name of the admin user (display name) |
 | e20r-sequence-site-name | A text/string containing the name you wish to use as the blog name for this site | get_option('blogname') |
+| e20r-sequences-userstyle-url | The URL to a user defined .css file containing styles (will load after the default Sequences styles) | null |
 
 ##Roadmap (possible features)
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
@@ -213,24 +214,16 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.14
-* FIX: Escape variables being loaded to the front-end listing of Sequence members.
-* FIX: List upcoming posts if they're supposed to be visible
-* FIX: The default shortcode settings weren't correct.
-* FIX: Flag an update routine as having ran after executing the pre/update/post hooks.
-* FIX: Didn't always find the cache key to use
-* FIX: Didn't always load the sequence data for the user from cache when available
-* FIX: Didn't always paginate sequence lists properly
-* FIX: Would sometimes remove old metadata erroneously
-* FIX: paginate_posts() didn't always return the correct list of posts
-* FIX: Make the display_sequence_content() function behave a little 'better' when being executed by the 'the_content' filter
-* FIX: Didn't always align the future & current availability info.
-* FIX: Resolved a possible CSS element name conflict with themes
-* FIX: Didn't  always load the post title in the sequence list view
-* ENH: Optimize the number of times we attempt to load sequence posts
-* ENH: Use the Wordpress configured date format when listing future (unavailable) posts & the sequence is configured to show dates.
-* ENH: Would sometimes run the update functionality more than once
-* ENH: Clean up debug logging
+###4.4.15
+* FIX: has_post_access() would sometimes return the incorrect access value for the post_id.
+* FIX: [sequence_links] shortcode would sometimes show the sequence info for users who didn't have access to it.
+* FIX: Various styling issues
+* FIX: Make usertstyle URL filter more self-documenting in nature
+* ENH: Load support for user created styles (loads after default Sequences styles)
+* ENH: Filter & use member specific sequence 'access denied' message(s).
+* ENH: Add Member Module specific access denied message(s).
+* ENH: Hook for Member Module Specific access denied message(s)
+* ENH: Added filterable 'Content is inaccessible' message.
 
 ##Old releases
 ###.1
@@ -1058,3 +1051,22 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.4.13
 * FIX: Didn't always return all of the configured sequences
+
+###4.4.14
+* FIX: Escape variables being loaded to the front-end listing of Sequence members.
+* FIX: List upcoming posts if they're supposed to be visible
+* FIX: The default shortcode settings weren't correct.
+* FIX: Flag an update routine as having ran after executing the pre/update/post hooks.
+* FIX: Didn't always find the cache key to use
+* FIX: Didn't always load the sequence data for the user from cache when available
+* FIX: Didn't always paginate sequence lists properly
+* FIX: Would sometimes remove old metadata erroneously
+* FIX: paginate_posts() didn't always return the correct list of posts
+* FIX: Make the display_sequence_content() function behave a little 'better' when being executed by the 'the_content' filter
+* FIX: Didn't always align the future & current availability info.
+* FIX: Resolved a possible CSS element name conflict with themes
+* FIX: Didn't  always load the post title in the sequence list view
+* ENH: Optimize the number of times we attempt to load sequence posts
+* ENH: Use the Wordpress configured date format when listing future (unavailable) posts & the sequence is configured to show dates.
+* ENH: Would sometimes run the update functionality more than once
+* ENH: Clean up debug logging
