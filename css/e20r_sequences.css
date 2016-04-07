@@ -448,7 +448,7 @@ td.e20r_sequence_tblNumber {
     max-width: 0;
     width: 20%;
     min-width: 75px;
-    text-align: center;
+    /* text-align: center; */
     /* padding: 8px 20px !important; */
     overflow: hidden;
 }
