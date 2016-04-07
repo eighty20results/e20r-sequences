@@ -5729,7 +5729,7 @@ class Controller
         wp_register_script('e20r-sequence-user', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences.js', array('jquery'), E20R_SEQUENCE_VERSION, true);
 
         // load styles
-        $user_styles = apply_filters('e20r-sequences-userstyles', null);
+        $user_styles = apply_filters('e20r-sequences-userstyle-url', null);
         wp_enqueue_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css', null, E20R_SEQUENCE_VERSION );
 
         // Attempt to load user style CSS file (if it exists).
