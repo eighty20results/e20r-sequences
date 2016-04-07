@@ -5652,8 +5652,14 @@ class Controller
             E20RTools\DBG::log("Loading client side javascript and CSS");
             wp_register_script('e20r-sequence-user', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences.js', array('jquery'), E20R_SEQUENCE_VERSION, true);
 
-            wp_register_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
-            wp_enqueue_style( "e20r-sequence" );
+            $user_styles = apply_filters('e20r-sequences-userstyles', null);
+            wp_enqueue_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css', null, E20R_SEQUENCE_VERSION );
+
+            // Attempt to load user style CSS file (if it exists).
+            if (file_exists( $user_styles)) {
+
+                wp_enqueue_style( 'e20r-sequence-userstyles', $user_styles, array('e20r-sequence'), E20R_SEQUENCE_VERSION );
+            }
 
             wp_localize_script('e20r-sequence-user', 'e20r_sequence',
                 array(
@@ -5722,8 +5728,16 @@ class Controller
         E20RTools\DBG::log("enqueue_user_scripts() - 'sequence_links' shortcode present? " . ( $foundShortcode ? 'Yes' : 'No') );
         wp_register_script('e20r-sequence-user', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences.js', array('jquery'), E20R_SEQUENCE_VERSION, true);
 
-        wp_register_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
-        wp_enqueue_style( "e20r-sequence" );
+        // load styles
+        $user_styles = apply_filters('e20r-sequences-userstyles', null);
+        wp_enqueue_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css', null, E20R_SEQUENCE_VERSION );
+
+        // Attempt to load user style CSS file (if it exists).
+        if (file_exists( $user_styles)) {
+
+            wp_enqueue_style( 'e20r-sequence-userstyles', $user_styles, array('e20r-sequence'), E20R_SEQUENCE_VERSION );
+        }
+
 
         wp_localize_script('e20r-sequence-user', 'e20r_sequence',
             array(
