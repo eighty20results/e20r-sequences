@@ -2879,12 +2879,12 @@ class Controller
                     'format'        => $format,
                     'total'         => $total,
                     'current'       => $paged,
-                    'mid_size'      => 2,
+                    'mid_size'      => 1,
                     'prev_text'     => sprintf( __( '%s Previous', "e20rsequence"), $prev_arrow),
                     'next_text'     => sprintf( __( 'Next %s', "e20rsequence"), $next_arrow),
                     'prev_next'     => true,
                     'type'          => 'list',
-                    'before_page_number' => '<span class="screen-reader-text">' . __('Page', "e20rsequence") . '</span>',
+                    'before_page_number' => '<span class="screen-reader-text">' . __('Page', "e20rsequence") . ' </span>',
                 )); ?>
             </nav>
             <?php
