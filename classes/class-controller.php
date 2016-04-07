@@ -1109,6 +1109,78 @@ class Controller
     }
 
     /**
+     * Paid Memberships Pro specific "access denied" message
+     *
+     * @param $msg - A previously received message.
+     * @param $post_id - Post ID for the post/sequence ID the message applies to
+     * @param $user_id - User ID for the user the message applies to
+     * @return string - The text message
+     */
+    public function pmpro_access_denied_msg($msg, $post_id, $user_id) {
+
+        if ( ! function_exists('pmpro_has_membership_access') ||
+            ! function_exists('pmpro_getLevel') ||
+            ! function_exists('pmpro_implodeToEnglish') ||
+            ! function_exists('pmpro_getOption'))
+        {
+            return $msg;
+        }
+
+        global $current_user;
+
+        $hasaccess = pmpro_has_membership_access($post_id, $user_id, true);
+
+        if(is_array($hasaccess))
+        {
+            //returned an array to give us the membership level values
+            $post_membership_levels_ids = $hasaccess[1];
+            $post_membership_levels_names = $hasaccess[2];
+        }
+
+        foreach($post_membership_levels_ids as $key => $id)
+        {
+            //does this level allow registrations?
+            $level_obj = pmpro_getLevel($id);
+            if(!$level_obj->allow_signups)
+            {
+                unset($post_membership_levels_ids[$key]);
+                unset($post_membership_levels_names[$key]);
+            }
+        }
+
+        E20RTools\DBG::log("Available PMPro Membership Levels to access this post: ");
+        E20RTools\DBG::log($post_membership_levels_names);
+
+        $pmpro_content_message_pre = '<div class="pmpro_content_message">';
+        $pmpro_content_message_post = '</div>';
+
+        $sr_search = array("!!levels!!", "!!referrer!!");
+        $sr_replace = array(pmpro_implodeToEnglish($post_membership_levels_names), urlencode(site_url($_SERVER['REQUEST_URI'])));
+
+        $content = '';
+
+        if(is_feed())
+        {
+            $newcontent = apply_filters("pmpro_rss_text_filter", stripslashes(pmpro_getOption("rsstext")));
+            $content .= $pmpro_content_message_pre . str_replace($sr_search, $sr_replace, $newcontent) . $pmpro_content_message_post;
+        }
+        elseif($current_user->ID)
+        {
+            //not a member
+            $newcontent = apply_filters("pmpro_non_member_text_filter", stripslashes(pmpro_getOption("nonmembertext")));
+            $content .= $pmpro_content_message_pre . str_replace($sr_search, $sr_replace, $newcontent) . $pmpro_content_message_post;
+        }
+        else
+        {
+            //not logged in!
+            $newcontent = apply_filters("pmpro_not_logged_in_text_filter", stripslashes(pmpro_getOption("notloggedintext")));
+            $content .= $pmpro_content_message_pre . str_replace($sr_search, $sr_replace, $newcontent) . $pmpro_content_message_post;
+        }
+
+        return (! empty($content) ? $content : $msg );
+    }
+
+    /**
      * Calculates the difference between two dates (specified in UTC seconds)
      *
      * @param $startdate (timestamp) - timestamp value for start date
@@ -6068,7 +6140,7 @@ class Controller
         add_filter("pmpro_non_member_text_filter", array(&$this, "text_filter"));
         add_filter("pmpro_not_logged_in_text_filter", array(&$this, "text_filter"));
         add_action('e20r_sequence_load_membership_signup_hook', array($this, 'e20r_add_membership_module_signup_hook'));
-
+        add_filter('e20r-sequence-mmodule-access-denied-msg', array( $this, 'pmpro_access_denied_msg'), 15, 3);
         add_filter("the_content", array(&$this, "display_sequence_content"));
 
         // add_filter( "the_posts", array( &$this, "set_delay_values" ), 10, 2 );
