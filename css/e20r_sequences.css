@@ -27,14 +27,14 @@
     clear: both;
     visibility: hidden;
 }
-.e20r_sequence_list {list-style: none; margin: 1.5em 0; border-top: 1px solid #EEE; }
-.e20r_sequence_list li {padding: .5em 1em; margin: 0; background: #F9F9F9; border-top: 1px solid #FFF; border-bottom: 1px solid #EEE; }
+.e20r_sequence_list {list-style: none; margin: 1.5rem 0; border-top: 1px solid #EEE; }
+.e20r_sequence_list li {padding: .5rem 1rem; margin: 0; background: #F9F9F9; border-top: 1px solid #FFF; border-bottom: 1px solid #EEE; }
 .e20r_sequence_list li:nth-child(odd) { }
 .e20r_sequence_list li:nth-child(event) { }
 .e20r_sequence_item-title {display: inline-block; }
-.e20r_sequence_item-title a {font-size: 1.1em; }
+.e20r_sequence_item-title a {font-size: 1.1rem; }
 .e20r_sequence_item-available {display: inline-block; float: right; width: auto; }
-.e20r_sequence_item-unavailable {display: inline-block; float: right; width: 170px; font-style: italic; font-size: .9em; padding: 6px 0;  }
+.e20r_sequence_item-unavailable {display: inline-block; float: right; max-width: 200px; font-style: italic; font-size: .9rem; padding: 6px 0; width: 30%; }
 #e20r_sequence_meta td { font-size: 0.8em !important; }
 .e20r-seq-centered {
     margin-top: 30px;
