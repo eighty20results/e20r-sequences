@@ -943,7 +943,7 @@ class Controller
                 // Only add posts to list if the member is supposed to see them
                 if ( $member_days >= $this->normalize_delay( $p->delay ) ) {
 
-                    // E20RTools\DBG::log("Adding {$p->id} ({$p->title}) with delay {$p->delay} to list of available posts");
+                    E20RTools\DBG::log("Adding {$p->id} ({$p->title}) with delay {$p->delay} to list of available posts");
                     $p->is_future = false;
                     $found[] = $p;
                 }
@@ -953,16 +953,17 @@ class Controller
 
                     if ( false === $this->hide_upcoming_posts() ) {
 
-                        E20RTools\DBG::log("Loading {$p->id} with delay {$p->delay} to list of upcoming posts");
+                        E20RTools\DBG::log("Loading {$p->id} with delay {$p->delay} to list of upcoming posts. User is administrator level? " . ( $is_admin ? 'true' : 'false'));
                         $p->is_future = true;
                         $found[] = $p;
                     }
                     else {
 
-                        E20RTools\DBG::log("Ignoring post {$p->id} with delay {$p->delay} to sequence list for {$sequence_id}");
+                        E20RTools\DBG::log("Ignoring post {$p->id} with delay {$p->delay} to sequence list for {$sequence_id}. User is administrator level? " . ( $is_admin ? 'true' : 'false'));
                         if ( !is_null( $pagesize ) ) {
 
                             $post_list[$k]->list_include = false;
+                            $post_list[$k]->is_future = true;
                             //unset( $post_list[ $k ] );
                         }
 
