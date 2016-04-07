@@ -118,8 +118,9 @@ class Views {
 		<?php } ?>
 		<table id="e20r_sequencetable" class="e20r_sequence_postscroll wp-list-table widefat">
 			<thead>
-			<th class="e20r_sequence_orderlabel"><?php _e('Order', "e20rsequence" ); ?></label></th>
+			<th class="e20r_sequence_orderlabel"><?php // _e('Order', "e20rsequence" ); ?></label></th>
 			<th class="e20r_sequence_titlelabel"><?php _e('Title', "e20rsequence"); ?></th>
+			<th class="e20r_sequence_idlabel"><?php _e('ID', "e20rsequence"); ?></th>
 			<?php if ($options->delayType == 'byDays'): ?>
 				<th id="e20r_sequence_delaylabel"><?php _e('Delay', "e20rsequence"); ?></th>
 			<?php elseif ( $options->delayType == 'byDate'): ?>
@@ -128,7 +129,7 @@ class Views {
 				<th id="e20r_sequence_delaylabel"><?php _e('Not Defined', "e20rsequence"); ?></th>
 			<?php endif; ?>
 			<th class="e20r_edit_label_big"></th>
-			<th class="e20r_edit_label_small"></th>
+			<?php if ( false == $options->allowRepeatPosts ) { ?><th class="e20r_edit_label_small"></th><?php } ?>
 			<th class="e20r_edit_label_big"></th>
 			</thead>
 			<tbody>
@@ -146,8 +147,9 @@ class Views {
 				foreach( $posts as $post ) {
 					?>
 					<tr>
-						<td class="e20r_sequence_tblNumber"><?php echo $count; ?>.</td>
-						<td class="e20r_sequence_tblPostname"><?php echo ( get_post_status( $post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", "e20rsequence" ) ) : null ) . get_the_title($post->id) . " " . sprintf( __("(ID: %d)", "e20rsequence" ), $post->id); ?></td>
+						<td class="e20r_sequence_tblOrder"><?php echo $count; ?>.</td>
+						<td class="e20r_sequence_tblPostname"><?php echo ( get_post_status( $post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", "e20rsequence" ) ) : null ) . get_the_title($post->id); ?></td>
+						<td class="e20r_sequence_tblPostId"><?php printf( __("(ID: %d)", "e20rsequence" ), $post->id); ?></td>
 						<td class="e20r_sequence_tblNumber"><?php echo $post->delay; ?></td>
 						<td class="e20r_edit_label_big"><?php
 							if ( true == $options->allowRepeatPosts ) { ?>
@@ -157,11 +159,12 @@ class Views {
 								<a href="javascript:e20r_sequence_editPost( <?php echo "{$post->id}, {$post->delay}"; ?> ); void(0); "><?php _e('Post',"e20rsequence"); ?></a><?php
 							} ?>
 						</td>
-						<td class="e20r_edit_label_small"><?php
+						<?php
 							if ( false == $options->allowRepeatPosts ) { ?>
-								<a href="javascript:e20r_sequence_editEntry( <?php echo "{$post->id}, {$post->delay}" ;?> ); void(0);"><?php _e('Edit', "e20rsequence"); ?></a><?php
+						<td class="e20r_edit_label_small">
+								<a href="javascript:e20r_sequence_editEntry( <?php echo "{$post->id}, {$post->delay}" ;?> ); void(0);"><?php _e('Edit', "e20rsequence"); ?></a>
+						</td><?php
 							} ?>
-						</td>
 						<td class="e20r_edit_label_big">
 							<a href="javascript:e20r_sequence_removeEntry( <?php echo "{$post->id}, {$post->delay}" ?> ); void(0);"><?php _e('Remove', "e20rsequence"); ?></a>
 						</td>
@@ -1416,12 +1419,12 @@ class Views {
 				foreach( $seqList as $p ) {
 
 					if ( ( false === $p->is_future && ( true === $p->list_include )) ) {
-						E20RTools\DBG::log("create_sequence_list() - Adding post {$p->id} with delay {$p->delay}");
+						E20RTools\DBG::log("Adding post {$p->id} with delay {$p->delay}");
 						$listed_postCnt++;
 
 						if ( ( true === $p->closest_post ) && ( $highlight ) ) {
 
-							E20RTools\DBG::log( 'create_sequence_list() - The most recently available post for user #' . $current_user->ID . ' is post #' . $p->id );
+							E20RTools\DBG::log( 'The most recently available post for user #' . $current_user->ID . ' is post #' . $p->id );
 
 							// Show the highlighted post info
 							?>
