@@ -214,16 +214,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.15
-* FIX: has_post_access() would sometimes return the incorrect access value for the post_id.
-* FIX: [sequence_links] shortcode would sometimes show the sequence info for users who didn't have access to it.
-* FIX: Various styling issues
-* FIX: Make usertstyle URL filter more self-documenting in nature
-* ENH: Load support for user created styles (loads after default Sequences styles)
-* ENH: Filter & use member specific sequence 'access denied' message(s).
-* ENH: Add Member Module specific access denied message(s).
-* ENH: Hook for Member Module Specific access denied message(s)
-* ENH: Added filterable 'Content is inaccessible' message.
+###4.4.16
+* FIX: Clean up Navigation links
 
 ##Old releases
 ###.1
@@ -1070,3 +1062,14 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Use the Wordpress configured date format when listing future (unavailable) posts & the sequence is configured to show dates.
 * ENH: Would sometimes run the update functionality more than once
 * ENH: Clean up debug logging
+
+###4.4.15
+* FIX: has_post_access() would sometimes return the incorrect access value for the post_id.
+* FIX: [sequence_links] shortcode would sometimes show the sequence info for users who didn't have access to it.
+* FIX: Various styling issues
+* FIX: Make usertstyle URL filter more self-documenting in nature
+* ENH: Load support for user created styles (loads after default Sequences styles)
+* ENH: Filter & use member specific sequence 'access denied' message(s).
+* ENH: Add Member Module specific access denied message(s).
+* ENH: Hook for Member Module Specific access denied message(s)
+* ENH: Added filterable 'Content is inaccessible' message.
