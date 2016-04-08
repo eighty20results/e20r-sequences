@@ -170,6 +170,9 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
+== 4.4.18 ==
+* FIX: Didn't always mark 'future' posts as being 'future'.
+
 == 4.4.17 ==
 * FIX: Delay column formatting/layout
 * FIX: Doesn't properly display the Meta-table for the Sequence members on the editor page

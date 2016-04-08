@@ -214,10 +214,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.17
-* FIX: Delay column formatting/layout
-* FIX: Doesn't properly display the Meta-table for the Sequence members on the editor page
-* FIX: Formatting for table of sequence posts on post-editor page
+###4.4.18
+* FIX: Didn't always mark 'future' posts as being 'future'.
 
 ##Old releases
 ###.1
@@ -1078,3 +1076,8 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.4.16
 * FIX: Clean up Navigation links
+
+###4.4.17
+* FIX: Delay column formatting/layout
+* FIX: Doesn't properly display the Meta-table for the Sequence members on the editor page
+* FIX: Formatting for table of sequence posts on post-editor page
