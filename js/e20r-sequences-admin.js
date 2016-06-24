@@ -371,6 +371,42 @@ var sequenceSettings = {
                 }
             });
         }
+    },
+    set_responsive: function() {
+
+        console.log("Processing responsive layout for Sequence post metabox");
+
+        var headertext = [];
+        var headers = document.querySelectorAll("table#e20r_sequencetable thead");
+        var tablebody = document.querySelectorAll("table#e20r_sequencetable tbody");
+
+        for (var i = 0; i < headers.length; i++) {
+            headertext[i]=[];
+            for (var j = 0, headrow; headrow = headers[i].rows[0].cells[j]; j++) {
+                var current = headrow;
+                headertext[i].push(current.textContent);
+            }
+        }
+
+        for (var h = 0, tbody; tbody = tablebody[h]; h++) {
+            for (var i = 0, row; row = tbody.rows[i]; i++) {
+                for (var j = 0, col; col = row.cells[j]; j++) {
+                    col.setAttribute("data-th", headertext[h][j]);
+                }
+            }
+        }
+    },
+    _waitForFinalEvent: function () {
+        var timers = {};
+        return function (callback, ms, uniqueId) {
+            if (!uniqueId) {
+                uniqueId = "Don't call this twice without a uniqueId";
+            }
+            if (timers[uniqueId]) {
+                clearTimeout (timers[uniqueId]);
+            }
+            timers[uniqueId] = setTimeout(callback, ms);
+        };
     }
 };
 
@@ -744,6 +780,10 @@ var postMeta = {
 
     },
     show_controls: function() {
+
+        if ( jQuery('div#e20r_seq-configure-sequence').length === 0) {
+            return;
+        }
 
         var $count = 0;
         var $class = this;
@@ -1172,6 +1212,21 @@ jQuery(document).ready(function(){
 
     adminUI.init();
     posts.init();
+
+    if ( jQuery(".wp-admin table#e20r_sequencetable").length !== 0) {
+
+        adminUI.set_responsive();
+
+        jQuery(window).on('resize', function() {
+
+            adminUI._waitForFinalEvent( function(){
+                console.log("Resized the document");
+                adminUI.set_responsive();
+
+            }, 500, "128934jkdse");
+        });
+    }
+
 });
 
 
