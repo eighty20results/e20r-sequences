@@ -2114,8 +2114,9 @@ class Controller
                                      * offset when this user apparently started their access to the sequence
                                      *
                                      * @since 2.4.13
+                                     * @since 4.4.20 - Added 'user_id' so the filter can map user/sequence/offsets.
                                      */
-                                    $offset = apply_filters( 'e20r-sequence-add-startdate-offset', __return_zero(), $this->sequence_id );
+                                    $offset = apply_filters( 'e20r-sequence-add-startdate-offset', __return_zero(), $this->sequence_id, $user_id );
 
                                     $durationOfMembership += $offset;
 
@@ -2637,7 +2638,9 @@ class Controller
      */
     public function define_metaboxes() {
 
-        //PMPro box
+        do_action('e20r_sequences_load_membership_plugin_meta');
+
+        //PMPro box - TODO: Move to special add-on & call via the e20r_sequences_load_membership_plugin_meta hook
         add_meta_box('pmpro_page_meta', __('Require Membership', "pmpro"), 'pmpro_page_meta', 'pmpro_sequence', 'side');
 
         $view = apply_filters('get_sequence_views_class_instance', null);
@@ -4475,6 +4478,16 @@ class Controller
         wp_send_json_error( 'Missing data in AJAX call' );
     }
 
+
+    public function clearBuffers() {
+
+        ob_start();
+
+        $buffers = ob_get_clean();
+
+        return $buffers;
+
+    }
     /**
      * Callback for saving the sequence alert optin/optout for the current user
      */
@@ -4482,6 +4495,9 @@ class Controller
     {
         global $current_user, $wpdb;
 
+        $buffers = $this->clearBuffers();
+
+        E20RTools\DBG::log("Buffer content: " . print_r($buffers));
         /** @noinspection PhpUnusedLocalVariableInspection */
         $result = '';
 
@@ -5617,7 +5633,7 @@ class Controller
     public function post_type_icon() {
         ?>
         <style>
-            #adminmenu .menu-top.menu-icon-<?php echo 'pmpro_sequence';?> div.wp-menu-image:before {
+            #adminmenu .menu-top.menu-icon-<?php echo self::$seq_post_type;?> div.wp-menu-image:before {
                 font-family:  FontAwesome !important;
                 content: '\f160';
             }
@@ -5667,6 +5683,8 @@ class Controller
                     'ajaxurl' => admin_url('admin-ajax.php'),
                 )
             );
+
+            wp_enqueue_script('e20r-sequence-user');
         }
         else {
             $load_e20r_sequence_script = false;
@@ -5950,64 +5968,6 @@ class Controller
     }
 
     /**
-     * Set the per-sequence startdate whenever the user signs up for a PMPro membership level.
-     * TODO: Add functionality to do the same as part of activation/startup for the Sequence.
-     *
-     * @param $user_id - the ID of the user
-     * @param \MemberOrder $order - The PMPro Membership order object
-     */
-    public function e20r_sequence_pmpro_after_checkout( $user_id, $order ) {
-
-        global $wpdb;
-        global $current_user;
-
-        $startdate_ts = null;
-        $timezone = null;
-
-        if (function_exists('pmpro_getMemberStartdate')) {
-            $startdate_ts = pmpro_getMemberStartdate( $user_id, $order->membership_id );
-        }
-
-        if (empty($startdate_ts)) {
-
-            $startdate_ts = strtotime($current_user->user_registered );
-        }
-
-        if (empty($startdate_ts)) {
-
-            $timezone = get_option('timezone_string');
-
-            // and there's a valid Timezone setting
-            if (!empty($timezone)) {
-
-                // use 'right now' local time' as their startdate.
-                E20RTools\DBG::log("Using timezone: {$timezone}");
-                $startdate_ts = strtotime('today ' . get_option('timezone_string'));
-            }
-            else {
-                $startdate_ts = current_time('timestamp');
-            }
-
-        }
-
-        $member_sequences = $this->sequences_for_membership_level($order->membership_id);
-
-        if ( ! empty( $member_sequences ) ) {
-
-            foreach( $member_sequences as $user_sequence ) {
-
-                $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$user_sequence}", true);
-
-                if (empty($m_startdate_ts)) {
-
-                    update_user_meta($user_id, "_e20r-sequence-startdate-{$user_sequence}", $startdate_ts);
-                }
-
-            }
-        }
-    }
-
-    /**
      * All published sequences that are protected by the specified PMPro Membership Level
      *
      * @param $level_id - the Level ID
@@ -6063,6 +6023,65 @@ class Controller
     }
 
     /**
+     * Set the per-sequence startdate whenever the user signs up for a PMPro membership level.
+     * TODO: Add functionality to do the same as part of activation/startup for the Sequence.
+     *
+     * @param $user_id - the ID of the user
+     * @param \MemberOrder $order - The PMPro Membership order object
+     */
+    public function e20r_sequence_pmpro_after_checkout( $user_id, $order ) {
+
+        global $wpdb;
+        global $current_user;
+
+        $startdate_ts = null;
+        $timezone = null;
+
+        if (function_exists('pmpro_getMemberStartdate')) {
+            $startdate_ts = pmpro_getMemberStartdate( $user_id, $order->membership_id );
+        }
+
+
+        if (empty($startdate_ts)) {
+
+            $startdate_ts = strtotime($current_user->user_registered );
+        }
+
+        if (empty($startdate_ts)) {
+
+            $timezone = get_option('timezone_string');
+
+            // and there's a valid Timezone setting
+            if (!empty($timezone)) {
+
+                // use 'right now' local time' as their startdate.
+                E20RTools\DBG::log("Using timezone: {$timezone}");
+                $startdate_ts = strtotime('today ' . get_option('timezone_string'));
+            }
+            else {
+                $startdate_ts = current_time('timestamp');
+            }
+
+        }
+
+        $member_sequences = $this->sequences_for_membership_level($order->membership_id);
+
+        if ( ! empty( $member_sequences ) ) {
+
+            foreach( $member_sequences as $user_sequence ) {
+
+                $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$user_sequence}", true);
+
+                if (empty($m_startdate_ts)) {
+
+                    update_user_meta($user_id, "_e20r-sequence-startdate-{$user_sequence}", $startdate_ts);
+                }
+
+            }
+        }
+    }
+
+    /**
      * Returns the per-sequence startdate to use for a user
      *
      * @param $user_id -- The user ID to find the startdate for
@@ -6104,13 +6123,24 @@ class Controller
             }
         }
 
-        // filter this so other membership modules can set the startdate too.
-        $startdate_ts = apply_filters('e20r-sequence-membership-module-user-startdate', $startdate_ts, $user_id, $level_id, $sequence_id);
+        $use_membership_startdate = apply_filters('e20r-sequence-use-membership-startdate', false );
+        $user_global_startdate = apply_filters('e20r-sequence-use-global-startdate', false);
 
-        E20RTools\DBG::log("Filtered startdate: {$startdate_ts}");
+        if ( false === $use_membership_startdate ) {
 
-        // Use a per-sequence startdate
-        $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$sequence_id}", true);
+            // filter this so other membership modules can set the startdate too.
+            $startdate_ts = apply_filters('e20r-sequence-mmodule-user-startdate', $startdate_ts, $user_id, $level_id, $sequence_id);
+
+            E20RTools\DBG::log("Filtered startdate: {$startdate_ts}");
+
+            if (false === $user_global_startdate ) {
+                // Use a per-sequence startdate
+                $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-{$sequence_id}", true);
+            } else {
+                // use a global startdate
+                $m_startdate_ts = get_user_meta($user_id, "_e20r-sequence-startdate-global", true);
+            }
+        }
 
         if (empty($m_startdate_ts)) {
 
