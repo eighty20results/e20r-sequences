@@ -56,6 +56,7 @@ class Views {
 	 * Used to label the post list in the metabox
 	 *
 	 * @param $post_state -- The current post state (Draft, Scheduled, Under Review, Private, other)
+	 *
 	 * @return null|string -- Return the correct postfix for the post
 	 *
 	 * @access private
@@ -118,6 +119,7 @@ class Views {
 		<?php } ?>
 		<table id="e20r_sequencetable" class="e20r_sequence_postscroll wp-list-table widefat">
 			<thead>
+			<tr>
 			<th class="e20r_sequence_orderlabel"><?php // _e('Order', "e20rsequence" ); ?></label></th>
 			<th class="e20r_sequence_titlelabel"><?php _e('Title', "e20rsequence"); ?></th>
 			<th class="e20r_sequence_idlabel"><?php _e('ID', "e20rsequence"); ?></th>
@@ -131,6 +133,7 @@ class Views {
 			<th class="e20r_edit_label_big"></th>
 			<?php if ( false == $options->allowRepeatPosts ) { ?><th class="e20r_edit_label_small"></th><?php } ?>
 			<th class="e20r_edit_label_big"></th>
+			</tr>
 			</thead>
 			<tbody>
 			<?php
@@ -227,6 +230,9 @@ class Views {
 				</div>
 			</div>
 		</div>
+		<script>
+			// e20r_sequence_admin_responsive();
+		</script>
 		<?php
 
 		$html = ob_get_clean();
@@ -403,7 +409,7 @@ class Views {
 								<input type="hidden" name="hidden-e20r-sequence_previewOffset" id="hidden-e20r-sequence_previewOffset" value="<?php echo esc_attr($options->previewOffset); ?>" >
 								<label for="e20r-sequence_offset"></label>
 								<select name="e20r-sequence_offset" id="e20r-sequence_previewOffset">
-									<option value="0">None</option>
+									<option value="0"><?php _e("None", "e20rtracker");?></option>
 									<?php foreach (range(1, 5) as $previewOffset) { ?>
 										<option value="<?php echo esc_attr($previewOffset); ?>" <?php selected( intval($options->previewOffset), $previewOffset); ?> ><?php echo $previewOffset; ?></option>
 									<?php } ?>
@@ -1100,6 +1106,7 @@ class Views {
 	 * List all template files in email directory for this plugin.
 	 *
 	 * @param $settings (stdClass) - The settings for the sequence.
+	 *
 	 * @return bool| mixed - HTML containing the Option list
 	 *
 	 * @access private
@@ -1164,6 +1171,7 @@ class Views {
 	 * Create list of options for time.
 	 *
 	 * @param $settings -- (array) Sequence specific settings
+	 *
 	 * @return bool| mixed - HTML containing the Option list
 	 *
 	 * @access private
@@ -1203,6 +1211,7 @@ class Views {
 	 * value = dateformat example.
 	 *
 	 * @param $settings -- Settings for the sequence
+	 *
 	 * @return bool| mixed - HTML containing the Option list
 	 *
 	 * @access private
@@ -1254,11 +1263,9 @@ class Views {
 				$starts = date_i18n( "Y-m-d", current_time('timestamp') );
 
 				if ( empty( $input_value ) ) {
-					// $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' min='{$starts}' name='e20r_seq-delay[]' id='e20r_seq-delay_{$active_id}'>";
 					$inputHTML = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' min='{$starts}' name='e20r_seq-delay[]'>";
 				}
 				else {
-					// $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' name='e20r_seq-delay[]' id='e20r_seq-delay_{$active_id}' {$input_value}>";
 					$inputHTML = "<input class='e20r-seq-delay-info e20r-seq-date' type='date' name='e20r_seq-delay[]' {$input_value}>";
 				}
 
@@ -1268,7 +1275,6 @@ class Views {
 
 				E20RTools\DBG::log("Configured to track delays by Day count: {$active_id}");
 				$delayFormat = __('Day count', "e20rsequence");
-				// $inputHTML = "<input class='e20r-seq-delay-info e20r-seq-days' type='text' id='e20r_seq-delay_{$active_id}' name='e20r_seq-delay[]' {$input_value}>";
 				$inputHTML = "<input class='e20r-seq-delay-info e20r-seq-days' type='text' name='e20r_seq-delay[]' {$input_value}>";
 
 		}
@@ -1294,10 +1300,10 @@ class Views {
 
 	private function print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label ) {
 		ob_start(); ?>
-		<tr class="select-row-input sequence-select<?php // echo ( $active_id == 0 ? ' new-sequence-select' : ' sequence-select' ); ?>">
+		<tr class="select-row-input sequence-select">
 			<td class="sequence-list-dropdown">
-				<select class="e20r_seq-memberof-sequences<?php // echo ( $active_id == 0 ? 'new-sequence-select' : 'e20r_seq-memberof-sequences'); ?>" name="e20r_seq-sequences[]">
-					<option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected' : '' ); ?>><?php _e("Not managed", "e20rsequence"); ?></option><?php
+				<select class="e20r_seq-memberof-sequences" name="e20r_seq-sequences[]">
+					<option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected="selected"' : '' ); ?>><?php _e("Not managed", "e20rsequence"); ?></option><?php
 					// Loop through all of the sequences & create an option list
 					foreach ( $sequence_list as $sequence ) {
 
@@ -1332,7 +1338,8 @@ class Views {
 	 * @param int $pagesize -- The size of each page (number of posts per page)
 	 * @param bool $button -- Whether to display a "Available Now" button or not.
 	 * @param string $title -- The title of the sequence list. Default is the title of the sequence.
-	 * @return string -- The HTML we generated.
+	 *
+     * @return string -- The HTML we generated.
 	 */
 	public function create_sequence_list( $highlight = false, $pagesize = 0, $button = false, $title = null, $scrollbox = false ) {
 
@@ -1565,7 +1572,7 @@ class Views {
 		return $title;
 	}
 
-	    /**
+	/**
      * Adds notification opt-in to list of posts/pages in sequence.
      *
      * @return string -- The HTML containing a form (if the sequence is configured to let users receive notices)
