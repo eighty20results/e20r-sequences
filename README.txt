@@ -2,8 +2,8 @@
 Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
 Requires at least: 3.4
-Tested up to: 4.4.2
-Stable tag: 4.4.17
+Tested up to: 4.5.2
+Stable tag: 4.4.20
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -169,6 +169,19 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.4.20 ==
+* FIX: Didn't load the Optin handler script correctly
+* FIX: Avoid JS error if the sequence settings were missing
+* FIX: Clean up HTML for post list in admin metabox
+* FIX: Didn't allow translation of 'None' option in offset drop-down.
+* ENHANCEMENT: Started work to make Sequence Post metabox (bottom) responsive
+* ENHANCEMENT: Refactor & clean up
+* ENHANCEMENT: Added user ID to e20r-sequence-add-startdate-offset filter
+* ENHANCEMENT: Added 'e20r_sequences_load_membership_plugin_meta' action (future user)
+* ENHANCEMENT: Clean up buffers & returns the content (warning / notice messages) for AJAX calls
+* ENHANCEMENT: New filters to support per-sequence startdate functionality (including using usermeta) - e20r-sequence-use-membership-startdate,  e20r-sequence-use-global-startdate
+* REFACTOR: Make CSS file more readable
 
 == 4.4.18 ==
 * FIX: Didn't always mark 'future' posts as being 'future'.
