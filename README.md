@@ -214,18 +214,9 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.20
-* FIX: Didn't load the Optin handler script correctly
-* FIX: Avoid JS error if the sequence settings were missing
-* FIX: Clean up HTML for post list in admin metabox
-* FIX: Didn't allow translation of 'None' option in offset drop-down.
-* ENHANCEMENT: Started work to make Sequence Post metabox (bottom) responsive
-* ENHANCEMENT: Refactor & clean up
-* ENHANCEMENT: Added user ID to e20r-sequence-add-startdate-offset filter
-* ENHANCEMENT: Added 'e20r_sequences_load_membership_plugin_meta' action (future user)
-* ENHANCEMENT: Clean up buffers & returns the content (warning / notice messages) for AJAX calls
-* ENHANCEMENT: New filters to support per-sequence startdate functionality (including using usermeta) - e20r-sequence-use-membership-startdate,  e20r-sequence-use-global-startdate
-* REFACTOR: Make CSS file more readable
+###4.4.21
+* ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
+* REFACTOR: Removed stale code
 
 ##Old releases
 ###.1
@@ -1094,3 +1085,16 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ###4.4.18
 * FIX: Didn't always mark 'future' posts as being 'future'.
+
+###4.4.20
+* FIX: Didn't load the Optin handler script correctly
+* FIX: Avoid JS error if the sequence settings were missing
+* FIX: Clean up HTML for post list in admin metabox
+* FIX: Didn't allow translation of 'None' option in offset drop-down.
+* ENHANCEMENT: Started work to make Sequence Post metabox (bottom) responsive
+* ENHANCEMENT: Refactor & clean up
+* ENHANCEMENT: Added user ID to e20r-sequence-add-startdate-offset filter
+* ENHANCEMENT: Added 'e20r_sequences_load_membership_plugin_meta' action (future user)
+* ENHANCEMENT: Clean up buffers & returns the content (warning / notice messages) for AJAX calls
+* ENHANCEMENT: New filters to support per-sequence startdate functionality (including using usermeta) - e20r-sequence-use-membership-startdate,  e20r-sequence-use-global-startdate
+* REFACTOR: Make CSS file more readable

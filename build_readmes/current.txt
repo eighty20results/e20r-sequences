@@ -1,12 +1,2 @@
-
-FIX: Didn't load the Optin handler script correctly
-FIX: Avoid JS error if the sequence settings were missing
-FIX: Clean up HTML for post list in admin metabox
-FIX: Didn't allow translation of "None" option in offset drop-down.
-ENHANCEMENT: Started work to make Sequence Post metabox (bottom) responsive
-ENHANCEMENT: Refactor & clean up
-ENHANCEMENT: Added user ID to e20r-sequence-add-startdate-offset filter
-ENHANCEMENT: Added 'e20r_sequences_load_membership_plugin_meta' action (future user)
-ENHANCEMENT: Clean up buffers & returns the content (warning / notice messages) for AJAX calls
-ENHANCEMENT: New filters to support per-sequence startdate functionality (including using usermeta) - e20r-sequence-use-membership-startdate,  e20r-sequence-use-global-startdate
-REFACTOR: Make CSS file more readable
+ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
+REFACTOR: Removed stale code
