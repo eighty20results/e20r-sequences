@@ -106,8 +106,6 @@ class Views {
 		$posts = $sequence->load_sequence_post( null, null, null, '=', null, $force, 'any' );
 		$all_posts = $sequence->get_posts_from_db();
 
-		// $this->sort_by_delay();
-
 		E20RTools\DBG::log('Displaying the back-end meta box content');
 
 		ob_start();
