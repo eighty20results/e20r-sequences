@@ -4914,6 +4914,9 @@ class Controller
         if ( empty( $posts ) ) {
             $posts = array();
         }
+        
+        // Sort the post order by delay (Ascending)
+        usort( $posts, array( $this, "sort_ascending" ));
 
         foreach( $posts as $k => $post ) {
 
