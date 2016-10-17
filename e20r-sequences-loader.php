@@ -204,7 +204,7 @@ if (!function_exists('e20r_sequence_loader')) {
         $base_path = plugin_dir_path(__FILE__) . "classes";
         $name = strtolower($parts[(count($parts) - 1)]);
 
-        $types = array('shortcodes', 'tools', 'widgets');
+        $types = array('shortcodes', 'tools', 'widgets', 'license');
 
         foreach ($types as $type) {
 
@@ -217,6 +217,11 @@ if (!function_exists('e20r_sequence_loader')) {
             if (file_exists("{$dir}/class-{$name}.php")) {
 
                 require_once("{$dir}/class-{$name}.php");
+            }
+
+            // For the license class.
+            if (file_exists( "{$dir}/class.{$name}.php")) {
+	            require_once("{$dir}/class.{$name}.php");
             }
 /*
             else {
@@ -295,14 +300,14 @@ try {
     global $converting_sequence;
     $converting_sequence = false;
 
-    $sequence = new Sequence\Controller();
+	$sequence = new Sequence\Controller();
 
     E20RTools\DBG::set_plugin_name('e20r-sequences');
 
     register_activation_hook(E20R_SEQUENCE_PLUGIN_FILE, array($sequence, 'activation'));
     register_deactivation_hook(E20R_SEQUENCE_PLUGIN_FILE, array($sequence, 'deactivation'));
 
-    $sequence->load_actions();
+	add_action('plugins_loaded', array( $sequence, 'load_actions' ), 5 );
 
 } catch (\Exception $e) {
     error_log("E20R Sequences startup: Error initializing the specified sequence...: " . $e->getMessage());
