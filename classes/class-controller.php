@@ -6164,6 +6164,10 @@ class Controller
      */
     public function load_actions()
     {
+        // Register & validate the license for this plugin
+        \e20rLicense::registerLicense( E20R_LICENSE_NAME, __("E20R Drip Feed Sequences for PMPro", "e20rsequence") );
+        add_action('upgrader_pre_download', array( $this, 'checkLicense'), 9, 3 );
+
         add_action('plugins_loaded', array( $this, 'membership_signup_hooks'));
 
         // Configure all needed class instance filters;
@@ -6249,6 +6253,20 @@ class Controller
         // Load shortcodes (instantiate the object(s).
         $shortcode_availableOn = new Shortcodes\available_on();
 
+    }
+
+    /**
+     * Validate license before downloading the E20r Sequences kit
+     *
+     * @param $reply
+     * @param $package
+     * @param $upgrader
+     *
+     * @return mixed
+     */
+    public function checkLicense( $reply, $package, $upgrader ) {
+
+        return e20rLicense::isLicenseActive( E20R_LICENSE_NAME );
     }
 
     /**
