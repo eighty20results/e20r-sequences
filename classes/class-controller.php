@@ -6165,7 +6165,8 @@ class Controller
     public function load_actions()
     {
         // Register & validate the license for this plugin
-        \e20rLicense::registerLicense( E20R_LICENSE_NAME, __("E20R Drip Feed Sequences for PMPro", "e20rsequence") );
+        \e20rLicense::registerLicense( 'e20r_sequence', __("E20R Drip Feed Sequences for PMPro", "e20rsequence") );
+
         add_action('upgrader_pre_download', array( $this, 'checkLicense'), 9, 3 );
 
         add_action('plugins_loaded', array( $this, 'membership_signup_hooks'));
@@ -6256,7 +6257,7 @@ class Controller
     }
 
     /**
-     * Validate license before downloading the E20r Sequences kit
+     * Validate license before downloading the E20r Sequences kit (and only in that case).
      *
      * @param $reply
      * @param $package
@@ -6266,7 +6267,30 @@ class Controller
      */
     public function checkLicense( $reply, $package, $upgrader ) {
 
-        return e20rLicense::isLicenseActive( E20R_LICENSE_NAME );
+    	$lic = \e20rLicense::get_instance();
+	    $licenses = $lic->getAllLicenses();
+
+        error_log("{$reply}");
+
+        if ( false === stripos( $package, 'e20r_sequence' ) ) {
+            return $reply;
+        } else {
+
+            foreach( $licenses as $key => $s ) {
+
+                if ( false !== stripos( $key, 'e20r_sequence' ) ) {
+
+                    $license_key = $key;
+
+                    if ( true === \e20rLicense::isLicenseActive( $license_key, $package, $reply ) ) {
+                        return $reply;
+                    }
+                }
+
+            }
+        }
+
+	    return null;
     }
 
     /**
