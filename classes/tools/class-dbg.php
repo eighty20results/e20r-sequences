@@ -94,7 +94,7 @@ class DBG
             // $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'sequence_debug_log-' . date('Y-m-d', current_time("timestamp") ) . '.txt';
             $dbgFile = $dbgPath . DIRECTORY_SEPARATOR . 'debug_log.txt';
 
-            $tid = sprintf("%08x", abs(crc32($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_TIME'] . $_SERVER['REMOTE_PORT'])));
+            $tid = sprintf("%08x", abs(crc32($_SERVER['REMOTE_ADDR'] . $_SERVER['REQUEST_TIME'] )));
 
             $dbgMsg = '(' . date('d-m-y H:i:s', current_time('timestamp')) . "-{$tid}) -- {$who_called_me} " .
                 ((is_array($msg) || (is_object($msg))) ? print_r($msg, true) : $msg) . "\n";
