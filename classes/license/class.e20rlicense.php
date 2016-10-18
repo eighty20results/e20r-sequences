@@ -28,7 +28,20 @@ if ( ! defined( 'E20R_LICENSE_SECRET_KEY' ) ) {
 	define( 'E20R_LICENSE_SECRET_KEY', '5687dc27b50520.33717427' );
 }
 
-// Don't redefine the class if it exsits in memory already
+// Define constants related to upstream license status
+if ( ! defined( 'E20R_LICENSE_MAX_DOMAINS' ) ) {
+	define( 'E20R_LICENSE_MAX_DOMAINS', 0x10000 );
+}
+
+if ( ! defined( 'E20R_LICENSE_REGISTERED' ) ) {
+	define( 'E20R_LICENSE_REGISTERED', 0x20000 );
+}
+
+if ( ! defined( 'E20R_LICENSE_ERROR' ) ) {
+	define( 'E20R_LICENSE_ERROR', 0x01000 );
+}
+
+// Don't redefine the class if it exists in memory already
 if ( class_exists( 'e20rLicense' ) ) {
 	return;
 }
@@ -46,29 +59,9 @@ class e20rLicense {
 	private $utils;
 
 	/**
-	 * @var string $option_name The name to use in the WordPress options table
+	 * @var string $option_name The name to use in the WordPress options table (default: class name)
 	 */
-	private $option_name;
-
-	/**
-	 * @var array $defaults The default settings for the Level Setup Fee
-	 */
-	private $defaults;
-
-	/**
-	 * @var array $options Array of levels with setup fee values.
-	 */
-	private $options;
-
-	/**
-	 * @var string $notice_msg The Admin notice (text)
-	 */
-	private $notice_msg;
-
-	/**
-	 * @var string $notice_class The admin notice CSS class
-	 */
-	private $notice_class;
+	private $option_name = '';
 
 	/**
 	 * @var array $license_list Licenses we're managing
@@ -88,6 +81,7 @@ class e20rLicense {
 		$this->option_name = strtolower( get_class( $this ) );
 
 		$this->setDefaultLicense();
+
 		$list = get_option( $this->option_name );
 
 		if ( ! empty( $list ) ) {
@@ -109,7 +103,6 @@ class e20rLicense {
 			add_action( 'admin_init', array( $this, 'registerSettings' ) );
 		}
 
-		add_action( 'admin_notices', array( $this, 'displayNotice' ) );
 		add_action( 'http_api_curl', array( $this, 'force_tls_12' ) );
 
 		if ( class_exists( 'e20rUtils' ) ) {
@@ -121,7 +114,7 @@ class e20rLicense {
 	/**
 	 * Retrieve and initiate the class instance
 	 *
-	 * @return e20rMembershipSetupFee
+	 * @return e20rLicense
 	 */
 	public static function get_instance() {
 
@@ -135,50 +128,96 @@ class e20rLicense {
 	}
 
 	/**
+	 * Return the existing instance of the e20rUtils class (for notices/etc)
+	 *
+	 * @return e20rUtils
+	 */
+	public function get_utils() {
+		return $this->utils;
+	}
+
+	/**
 	 * Test & register a license
-	 * @param string    $name
-	 * @param string    $descr
+	 *
+	 * @param string $name
+	 * @param string $descr
 	 */
 	public static function registerLicense( $name, $descr ) {
 
 		$class = self::get_instance();
+		$utils = $class->get_utils();
 
 		$licenses = $class->getAllLicenses();
 
-		// Need to add the supplied license.
-		if ( !in_array( $name, array_keys( $licenses ) ) ) {
+		foreach ( $licenses as $ln => $settings ) {
 
-			$class->utils->log("{$name} not found in existing list of licenses");
+			if ( 'e20r_default_license' === $ln ) {
+				$utils->log( "No need to process the default license" );
+				continue;
+			}
 
-			// The license is active on the remote Eighty/20 Results license server?
-			if ( false === $class->hasActiveLicense( $name ) ) {
+			// Is a version of the key present?
+			if ( false !== strpos( $ln, $name ) ) {
 
-				if ( false === $class->activateExistingLicenseOnServer( $name, $descr )) {
+				$utils->log( "Similar key to {$name} found in license settings: {$ln}" );
 
-					$class->utils->log("{$name} license not active, using trial license");
-					// No, we'll add default (trial) license
-					$class->addLicense( $name, $class->generateDefaultLicense( $name, $descr ) );
+				if ( $ln !== $name ) {
+
+					$utils->log( "But not identical, so using saved name" );
+					$licenses[ $ln ]                  = $settings;
+					$licenses[ $ln ]['fulltext_name'] = $descr;
+					unset( $licenses[ $name ] );
 				}
 			}
+
+			/*
+			// The license is active on the remote Eighty/20 Results license server?
+			if ( false === $class->$this->verifyLicense( $name, true ) ) {
+
+				if ( false === $class->activateExistingLicenseOnServer( $name, $descr ) ) {
+
+					$utils->log( "{$name} license not active, using trial license" );
+					// No, we'll add default (trial) license
+					$class->addLicense( $name, $class->generateNullLicense( $name, $descr ) );
+				}
+			}
+			*/
 		}
 	}
 
-	public function getAllLicenses() {
+	/**
+	 * Static wrapper to allow a 3rd party to set a license description text for a given license name
+	 *
+	 * @param $license
+	 * @param $text
+	 */
+	public static function setDescription( $license, $text ) {
 
-		if ( empty( $this->license_list ) ) {
-			$this->setDefaultLicense();
-		}
-
-		return $this->license_list;
+		$me = self::get_instance();
+		$me->setDescr( $license, $text );
 	}
 
-	public function loadLicense( $name ) {
+	/**
+	 * Static wrapper for the checkLicense() function
+	 *
+	 * @param $license_name
+	 *
+	 * @return bool
+	 *
+	 * TODO: Include e20rLicense::isLicenseActive() in class using this infrastructure
+	 */
+	public static function isLicenseActive( $license_name, $package, $reply ) {
 
-		if ( ! empty( $this->license_list[ $name ] ) ) {
-			return $this->license_list[ $name ];
-		}
+		$class = self::get_instance();
 
-		return null;
+		return $class->checkLicense( $license_name );
+	}
+
+	public function setDescr( $license, $descr ) {
+
+		$this->license_list[ $license ]['fulltext_name'] = $descr;
+
+		return $this->updateLicenses( $this->license_list );
 	}
 
 	/**
@@ -195,7 +234,7 @@ class e20rLicense {
 		$this->license_list[ $name ] = $definition;
 
 		// Update the options table w/the new license definition
-		update_option( $this->option_name, $this->license_list, false );
+		$this->updateLicenses( $this->license_list );
 
 		// Remove the transient
 		delete_transient( "{$this->option_name}_{$name}" );
@@ -212,19 +251,16 @@ class e20rLicense {
 	 */
 	public function deleteLicense( $name ) {
 
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "Deleting license: {$name}" );
-		}
+		$this->utils->log( "Deleting license: {$name}" );
+
 		// Remove the license information from the local server.
 		if ( isset( $this->license_list[ $name ] ) && false === strpos( 'e20r_default_license', $name ) ) {
 
 			delete_transient( "{$this->option_name}_{$name}" );
 			unset( $this->license_list[ $name ] );
-			update_option( $this->option_name, $this->license_list, false );
+			$this->updateLicenses( $this->license_list );
 
-			if ( ! empty( $this->utils ) ) {
-				$this->utils->log( "License has been removed: {$name}" );
-			}
+			$this->utils->log( "License has been removed: {$name}" );
 
 			return true;
 		}
@@ -232,11 +268,93 @@ class e20rLicense {
 		return false;
 	}
 
+	/**
+	 * Save license information to the options table
+	 *
+	 * @param $licenses
+	 *
+	 * @return array
+	 */
+	private function updateLicenses( $licenses ) {
+
+		$retVal = true;
+
+		$this->license_list = wp_parse_args( $this->license_list, $licenses );
+		$this->utils->log( "About to save: " . print_r( $this->license_list, true ) );
+
+		$updated = update_option( $this->option_name, $this->license_list, true );
+
+		if ( false === $updated ) {
+			$test = get_option( $this->option_name );
+
+			if ( is_array( $test ) && is_array( $this->license_list ) ) {
+
+				$diff = array_udiff_assoc( $test, $this->license_list, array( $this, 'compare_licenses' ) );
+
+				if ( ! empty( $diff ) ) {
+					$this->utils->log( "The saved license list and the in-memory list are different!" );
+				}
+			} else {
+				$this->utils->log( "The license data isn't in array format??" );
+			}
+		}
+
+		$this->utils->log("Returning the license list as saved");
+		return $this->license_list;
+	}
+
+	/**
+	 * Compare license entries by the timestamp they were updated on the local system
+	 *
+	 * @param stdClass $lic_a - First license
+	 * @param stdClass $lic_b - Second license
+	 *
+	 * @return int
+	 */
+	public function compare_licenses( $lic_a, $lic_b ) {
+
+		if ( isset( $lic_a->timestamp ) ) {
+			$a = $lic_a->timestamp;
+		} else {
+			$a = null;
+		}
+
+		if ( isset( $lic_b->timestamp ) ) {
+			$b = $lic_b->timestamp;
+		} else {
+			$b = null;
+		}
+
+		if ( $a == $b ) {
+			return 0;
+		} elseif ( $a > $b ) {
+			return 1;
+		} else {
+			return - 1;
+		}
+	}
+
+	/**
+	 * Get a copy of the licenses from the options table (if needed).
+	 *
+	 * @return array
+	 */
+	public function getAllLicenses() {
+
+		$list               = get_option( $this->option_name, array() );
+		$this->license_list = wp_parse_args( $list, $this->license_list );
+
+		return $this->license_list;
+	}
+
+	/**
+	 * Generates a default (dummy) license
+	 */
 	private function setDefaultLicense() {
 
 		$this->defaults = array(
 			'e20r_default_license' =>
-				$this->generateDefaultLicense( 'e20r_default_license', __( "Temporary Update license", "e20rlicense" ) )
+				$this->generateNullLicense( 'e20r_default_license', __( "Temporary Update license", "e20rlicense" ) )
 		);
 
 		$this->license_list = get_option( $this->option_name );
@@ -249,48 +367,38 @@ class e20rLicense {
 	}
 
 	/**
-	 * Creates a default license for the specified shortname/product name
+	 * Create a default license definition for the specified shortname/product name
 	 *
 	 * @param null $name
 	 * @param null $product_name
 	 *
 	 * @return array|mixed
 	 */
-	public function generateDefaultLicense( $name = null, $product_name = null ) {
+	public function generateNullLicense( $name = null, $product_name = null ) {
 
 		if ( is_null( $name ) ) {
 			$name = 'e20r_default_license';
 		}
 
 		if ( is_null( $product_name ) ) {
-			$product_name = __( "Temporary Update license", "e20rlicense" );
+			$product_name = sprintf( __( "Update license for %s", "e20rlicense" ), $name );
 		}
-
-		$new_license = array(
-			'fulltext_name' => $product_name,
-			'key'           => $name,
-			'expires'       => strtotime( '+1 week', current_time( 'timestamp' ) ),
-			'status'        => 'inactive',
-		);
-
 
 		if ( empty( $this->license_list[ $name ] ) ) {
+
+			$new_license = array(
+				'fulltext_name' => $product_name,
+				'key'           => $name,
+				'expires'       => strtotime( '+1 week', current_time( 'timestamp' ) ),
+				'status'        => 'inactive',
+				'timestamp'     => current_time( 'timestamp' ),
+			);
+
 			return $new_license;
+
+		} else {
+			return $this->license_list[ $name ];
 		}
-
-		return $this->license_list[ $name ];
-	}
-
-	/**
-	 * TODO: Include e20rLicense::isLicenseActive()
-	 *
-	 * Static wrapper for the checkLicense() function
-	 * @param $license_name
-	 */
-	public static function isLicenseActive( $license_name ) {
-
-		$class = self::get_instance();
-		return $class->checkLicense( $license_name );
 	}
 
 	/**
@@ -320,7 +428,7 @@ class e20rLicense {
 		if ( $name === 'e20r_default_license' ) {
 
 			// Is the trial/default license active?
-			if ( $this->hasActiveLicense( $name ) ) {
+			if ( $this->verifyLicense( $name, true ) ) {
 
 				$msg = sprintf(
 					__( "You're currently using the trial license. It will expire <strong>%s</strong>", "e20rlicense" ),
@@ -331,7 +439,7 @@ class e20rLicense {
 					$this->utils->log( $msg );
 				}
 
-				$this->setNotice( $msg, 'warning' );
+				$this->utils->set_notice( $msg, 'warning' );
 
 				return true;
 			}
@@ -346,13 +454,13 @@ class e20rLicense {
 			}
 
 			// It's not
-			$this->setNotice( $msg, 'warning' );
+			$this->utils->set_notice( $msg, 'warning' );
 
 			return false;
 		}
 
 		// Is the license active
-		if ( $this->hasActiveLicense( $name ) ) {
+		if ( $this->verifyLicense( $name, true ) ) {
 			// Yes
 			return true;
 		} else {
@@ -368,36 +476,289 @@ class e20rLicense {
 			}
 
 			// No. Warn & return.
-			$this->setNotice( $msg, 'warning' );
+			$this->utils->set_notice( $msg, 'warning' );
 		}
 
 		return false;
 	}
 
 	/**
-	 * Checks if the specified license is an active membership
+	 * Default User settings for the license.
 	 *
-	 * @param string        $name       Shortname of license
+	 * @return array
+	 */
+	private function defaultUserSettings() {
+		global $current_user;
+
+		if ( ! is_user_logged_in() ) {
+			return null;
+		}
+
+		return array(
+			'first_name' => $current_user->user_firstname,
+			'last_name'  => $current_user->user_lastname,
+			'email'      => $current_user->user_email,
+		);
+	}
+
+	/**
+	 * Validate the license specific settings as they're being saved
+	 *
+	 * @param array $values
+	 *
+	 * @return array|mixed|void
+	 */
+	public function validateLicenseSettings( $input ) {
+
+		$this->utils->log("Validation input: " . print_r( $input, true ) );
+
+		$licenses = $this->getAllLicenses();
+		$out = array();
+
+		if ( isset( $input[0]['status'] ) ) {
+			$this->utils->log("Skipping validate since our data consists of the expected stuff already");
+			$bypass = true;
+			return $input;
+		}
+
+		if (!empty( $input['fieldname'][0] ) && is_array( $input['fieldname']) ) {
+
+			// Process all values received
+			foreach ( $input['fieldname'] as $key => $name ) {
+
+				if ( false === stripos( $name, 'new_license' ) && !empty( $name ) ) {
+					$license_key   = $name;
+					$license_email = $input['license_email'][ $key ];
+				} else {
+					$license_key   = $input['new_key'][0];
+					$license_email = $input['new_email'][0];
+				}
+
+				if ( !empty( $license_email ) && !empty( $license_key ) ) {
+
+					$this->utils->log( "Processing {$license_key} with email {$license_email}" );
+					$status = $this->licenseManagement( $license_key, $license_email );
+
+					$out[] = array(
+						'email'  => $license_email,
+						'key'    => $license_key,
+						'status' => $status
+					);
+				}
+
+				if ( 'e20r_default_license' === $license_key && is_array( $licenses['e20r_default_license']['key'] ) ) {
+					$this->utils->log( "Resetting the default key." );
+					$this->license_list['e20r_default_license'] = $this->generateNullLicense( 'e20r_default_license', 'Temporary Update license' );
+				}
+			}
+		} elseif( !empty( $input['new_key'][0] )) {
+
+			$this->utils->log("Processing a new license. No other licenses on page.");
+
+			$license_key   = $input['new_key'][0];
+			$license_email = $input['new_email'][0];
+
+			if ( !empty( $license_email ) && !empty( $license_key ) ) {
+
+				$status = $this->licenseManagement( $license_key, $license_email );
+
+				$out[] = array(
+					'email'  => $license_email,
+					'key'    => $license_key,
+					'status' => $status
+				);
+			}
+
+		}
+
+		$this->utils->log( "Returning after validation: " . print_r( $out, true ) );
+
+		if ( empty( $out ) ){
+			$out = get_option("{$this->option_name}_settings", array() );
+		}
+
+		return $out;
+
+	}
+
+	private function licenseManagement( $license_key, $license_email ) {
+
+		global $current_user;
+
+		$status = false;
+
+		if ( false === $this->verifyLicense( $license_key, true ) ) {
+
+			$user_settings = array(
+				'first_name' => $current_user->user_firstname,
+				'last_name'  => $current_user->user_lastname,
+				'email'      => $license_email,
+			);
+
+			$status = $this->activateExistingLicenseOnServer( $license_key, __( "Add-on Update License", "e20rlicense" ), $user_settings );
+
+			switch ( $status ) {
+				case E20R_LICENSE_MAX_DOMAINS:
+
+					$msg = sprintf( __( "Exceeded the available registration domains for the %s license (email: %s)", "e20rlicense" ), $license_key, $license_email );
+					$this->utils->set_notice( $msg, 'error' );
+					$this->utils->log( $msg );
+
+					break;
+
+				case E20R_LICENSE_ERROR:
+					$msg = sprintf( __( "Failed during activation of the %s license for %s", "e20rlicense" ), $license_key, $license_email );
+					$this->utils->set_notice( $msg, 'error' );
+					$this->utils->log( $msg );
+					break;
+
+				case E20R_LICENSE_REGISTERED:
+					$this->utils->log( "Attempting to verify the {$license_key} license again" );
+					$this->verifyLicense( $license_key, true );
+					$msg = sprintf( __( "Activated the %s license for %s", "e20rlicense" ), $license_key, $license_email );
+					$this->utils->set_notice( $msg, 'notice' );
+					$this->utils->log( $msg );
+					break;
+			}
+		}
+
+		return $status;
+	}
+
+	/**
+	 * Activate an existing license for the domain where this license is running.
+	 *
+	 * @param string $name The shortname of the license to register
+	 * @param string $product_name The fulltext name of the product being registered
 	 *
 	 * @return bool
 	 */
-	public function hasActiveLicense( $name ) {
+	public function activateExistingLicenseOnServer( $name, $product_name, $user_settings = array() ) {
+
+		$state = null;
+		$this->utils->log( "Attempting to activate {$name} on remote server" );
+
+		if ( empty( $user_settings ) ) {
+
+			// Default settings (not ideal)
+			$user_settings = $this->defaultUserSettings();
+		}
+
+		if ( empty( $user_settings ) ) {
+			return false;
+		}
 
 		if ( empty( $this->license_list[ $name ] ) ) {
-			$this->utils->log( "No license of that name found: {$name}" );
+
+			$this->license_list[ $name ]        = $this->generateNullLicense( $name, $product_name );
+			$this->license_list[ $name ]['key'] = $name;
+
+			$this->utils->log( "Have to generate a default license for now: " . print_r( $this->license_list, true ) );
+		}
+
+		$api_params = array(
+			'slm_action'        => 'slm_activate',
+			'license_key'       => $this->license_list[ $name ]['key'],
+			'secret_key'        => E20R_LICENSE_SECRET_KEY,
+			'registered_domain' => $_SERVER['SERVER_NAME'],
+			'item_reference'    => urlencode( $product_name ),
+			'first_name'        => $user_settings['first_name'],
+			'last_name'         => $user_settings['last_name'],
+			'email'             => $user_settings['email'],
+		);
+
+		$this->utils->log( "Transmitting...: " . print_r( $api_params, true ) );
+
+		// Send query to the license manager server
+		$response = wp_remote_get(
+			add_query_arg( $api_params, E20R_LICENSE_SERVER_URL ),
+			array(
+				'timeout'     => apply_filters( 'e20r-license-server-timeout', 30 ),
+				'sslverify'   => true,
+				'httpversion' => '1.1',
+				'decompress'  => true,
+			)
+		);
+
+		// Check for error in the response
+		if ( is_wp_error( $response ) ) {
+
+			$this->utils->log( "Unexpected Error! The server request returned with an error." );
 
 			return false;
 		}
 
-		if ( false === $this->verifyLicense( $name, true ) ) {
-			$this->utils->log( "Unable to verify license with server {$name}" );
+		// License data.
+		$license_data = stripslashes( wp_remote_retrieve_body( $response ) );
 
-			return false;
+		$bom          = pack( 'H*', 'EFBBBF' );
+		$license_data = preg_replace( "/^$bom/", '', $license_data );
+		$decoded      = json_decode( $license_data );
+
+		if ( null === $decoded && json_last_error() !== JSON_ERROR_NONE ) {
+
+			switch ( json_last_error() ) {
+				case JSON_ERROR_DEPTH:
+					$error = 'Maximum stack depth exceeded';
+					break;
+				case JSON_ERROR_STATE_MISMATCH:
+					$error = 'Underflow or the modes mismatch';
+					break;
+				case JSON_ERROR_CTRL_CHAR:
+					$error = 'Unexpected control character found';
+					break;
+				case JSON_ERROR_SYNTAX:
+					$error = 'Syntax error, malformed JSON';
+					break;
+				case JSON_ERROR_UTF8:
+					$error = 'Malformed UTF-8 characters, possibly incorrectly encoded';
+					break;
+				default:
+					$error = "No error, supposedly? " . print_r( json_last_error(), true );
+			}
+
+			$this->utils->log( "Response from remote server: <" . $license_data . ">" );
+			$this->utils->log( "JSON decode error: " . $error );
+		} else {
+
+			$this->utils->log( "License data received: (" . print_r( $decoded, true ) . ")" );
 		}
 
-		$this->utils->log( "License data: " . print_r( $this->license_list[ $name ], true ) );
+		if ( isset( $decoded->result ) ) {
 
-		return ( current_time( 'timestamp' ) <= $this->license_list[ $name ]['expires'] );
+			$this->utils->log( "Decoded JSON and received a status... ({$decoded->result})" );
+
+			switch ( $decoded->result ) {
+
+				case 'success':
+					$this->license_list[ $name ]['status']    = 'active';
+					$this->license_list[ $name ]['timestamp'] = current_time( 'timestamp' );
+					$this->utils->log( "Added {$name} to license list" );
+					$this->utils->log( "Activated {$name} on the remote server." );
+					$state = E20R_LICENSE_REGISTERED;
+					break;
+
+				case 'error':
+
+					$msg = $decoded->message;
+
+					if ( false !== stripos( $msg, 'maximum' ) ) {
+						$state = E20R_LICENSE_MAX_DOMAINS;
+					} else {
+						$state = E20R_LICENSE_ERROR;
+					}
+					$this->utils->set_notice( $decoded->message, $decoded->result );
+					$this->utils->log( "{$decoded->message}" );
+					// unset( $this->license_list[ $name ] );
+					break;
+			}
+
+			$this->utils->log( "Saving new license information" );
+			$this->updateLicenses( $this->license_list );
+		}
+
+		return $state;
+
 	}
 
 	/**
@@ -413,17 +774,16 @@ class e20rLicense {
 		$license_status = null;
 		global $current_user;
 
-		// Does this license even exist?
-		if ( ! isset( $this->license_list[ $name ]['key'] ) ) {
-			$this->utils->log( "License info not found for {$name}" );
-
+		// Specified license doesn't exist.
+		if ( !isset( $this->license_list[$name]['key']) ) {
+			$this->utils->log("The {$name} license doesn't exist locally (yet)");
 			return false;
 		}
 
 		// Load from transients (cache)
 		if ( true === $force || false === ( $license_status = get_transient( "{$this->option_name}_{$name}" ) ) ) {
 
-			$this->utils->log( "No transient found for: {$this->option_name}_{$name}" );
+			$this->utils->log( "No transient found, or request forced for: {$name} / {$this->license_list[$name]['key']}" );
 
 			// Configure request for license check
 			$api_params = array(
@@ -433,104 +793,127 @@ class e20rLicense {
 			);
 
 			// Send query to the license manager server
-			$query    = esc_url_raw( add_query_arg( $api_params, E20R_LICENSE_SERVER_URL ) );
-			$response = wp_remote_get( $query, array( 'timeout' => 30, 'sslverify' => true, 'httpversion' => '1.1' ) );
+			$response = wp_remote_get(
+				add_query_arg( $api_params, E20R_LICENSE_SERVER_URL ),
+				array(
+					'timeout'     => apply_filters( 'e20r-license-server-timeout', 30 ),
+					'sslverify'   => true,
+					'httpversion' => '1.1',
+					'decompress'  => true,
+				)
+			);
 
 			// Check for error in the response
 			if ( is_wp_error( $response ) ) {
 
 				$msg = sprintf( __( "E20R License: %s", "e20rlicense" ), $response->get_error_message() );
 
-				if ( ! empty( $this->utils ) ) {
-					$this->utils->log( $msg );
-				}
-
-				$this->setNotice( $msg, 'error' );
+				$this->utils->log( $msg );
+				$this->utils->set_notice( $msg, 'error' );
 
 				return false;
 			}
 
-			// var_dump( $response );//uncomment it if you want to look at the full response
+			$license_data = stripslashes( wp_remote_retrieve_body( $response ) );
 
-			// License data.
-			$license_data = json_decode( wp_remote_retrieve_body( $response ) );
+			$bom          = pack( 'H*', 'EFBBBF' );
+			$license_data = preg_replace( "/^$bom/", '', $license_data );
+			$decoded      = json_decode( $license_data );
 
-			if ( ! empty( $this->utils ) ) {
-				$this->utils->log( "License data: " . print_r( $license_data, true ) );
+			if ( null === $decoded && json_last_error() !== JSON_ERROR_NONE ) {
+
+				switch ( json_last_error() ) {
+					case JSON_ERROR_DEPTH:
+						$error = 'Maximum stack depth exceeded';
+						break;
+					case JSON_ERROR_STATE_MISMATCH:
+						$error = 'Underflow or the modes mismatch';
+						break;
+					case JSON_ERROR_CTRL_CHAR:
+						$error = 'Unexpected control character found';
+						break;
+					case JSON_ERROR_SYNTAX:
+						$error = 'Syntax error, malformed JSON';
+						break;
+					case JSON_ERROR_UTF8:
+						$error = 'Malformed UTF-8 characters, possibly incorrectly encoded';
+						break;
+					default:
+						$error = "No error, supposedly? " . print_r( json_last_error(), true );
+				}
+
+				$this->utils->log( "Response from remote server: <" . $license_data . ">" );
+				$this->utils->log( "JSON decode error: " . $error );
+			} else {
+
+				$this->utils->log( "License data received: (" . print_r( $decoded, true ) . ")" );
 			}
 
 			// License not validated
-			if ( 'success' != $license_data->result ) {
-				$msg = sprintf( __( "Sorry, you need a valid update license for the %s add-on", "e20rlicense" ), 'E20R Membership Setup Fee' );
-				if ( ! empty( $this->utils ) ) {
-					$this->utils->log( $msg );
-				}
-				$this->setNotice( $msg, 'error' );
+			if ( ! isset( $decoded->result ) || 'success' != $decoded->result ) {
+
+				$msg = sprintf( __( "Sorry, you need a valid update license for the %s add-on", "e20rlicense" ), $this->license_list[ $name ]['fulltext_name'] );
+				$this->utils->log( $msg );
+				$this->utils->set_notice( $msg, 'error' );
 
 				return false;
 			}
 
-			if ( is_array( $license_data->registered_domains ) ) {
+			if ( is_array( $decoded->registered_domains ) ) {
 
-				$this->utils->log("Processing license data for (count: " . count( $license_data->registered_domains ) . " domains )");
+				$this->utils->log( "Processing license data for (count: " . count( $decoded->registered_domains ) . " domains )" );
 
-				foreach( $license_data->registered_domains as $domain ) {
+				foreach ( $decoded->registered_domains as $domain ) {
 
 					if ( isset( $domain->registered_domain ) && $domain->registered_domain == $_SERVER['SERVER_NAME'] ) {
 
+						if ( '0000-00-00' != $decoded->date_renewed ) {
+							$this->license_list[ $name ]['renewed'] = strtotime( $decoded->date_renewed, current_time( 'timestamp' ) );
+						} else {
+							$this->license_list[ $name ]['renewed'] = current_time( 'timestamp' );
+						}
+						$this->license_list[ $name ]['domain']        = $domain->registered_domain;
 						$this->license_list[ $name ]['fulltext_name'] = $domain->item_reference;
-						$this->license_list[ $name ]['expires'] = strtotime( $license_data->date_expiry, current_time( 'timestamp' ) );
-						$this->license_list[ $name ]['renewed'] = strtotime( $license_data->date_renewed, current_time( 'timestamp' ) );
-						$this->license_list[ $name ]['status']  = $license_data->status;
+						$this->license_list[ $name ]['expires']       = strtotime( $decoded->date_expiry, current_time( 'timestamp' ) );
+						$this->license_list[ $name ]['status']        = $decoded->status;
+						$this->license_list[ $name ]['first_name']    = $current_user->user_firstname;
+						$this->license_list[ $name ]['last_name']     = $current_user->user_lastname;
+						$this->license_list[ $name ]['email']         = $decoded->email;
+						$this->license_list[ $name ]['timestamp']     = current_time( 'timestamp' );
 
-						$this->license_list[ $name ]['first_name'] = $current_user->user_firstname;
-						$this->license_list[ $name ]['last_name']  = $current_user->user_lastname;
-						$this->license_list[ $name ]['email']      = $license_data->email;
+						$this->updateLicenses( $this->license_list );
 					}
 				}
-			}
+			} else {
 
-			if ( false === $this->addLicense( $name, $this->license_list[ $name ] ) ) {
-
-				$msg = sprintf(
-					__( "Unable to save license data to WordPress database for %s", "e20rlicense" ),
-					$name
-				);
-
-				if ( empty( $this->utils ) ) {
-					$this->utils->log( $msg );
-				}
-
-				$this->setNotice( $msg, 'error' );
-
+				$this->utils->log("The {$name} license is on the server, but not active for this domain");
 				return false;
 			}
 
-			if ( 'active' !== $this->license_list[ $name ]['status'] || $this->license_list[ $name ]['expires'] < current_time( 'timestamp' ) ) {
+			if ( $this->license_list[ $name ]['expires'] < current_time( 'timestamp' ) || 'active' !== $this->license_list[ $name ]['status'] ) {
+
 				$msg = sprintf(
 					__( "Your update license has expired for the %s add-on!", "e20rlicense" ),
 					$this->license_list[ $name ]['fulltext_name']
 				);
 
-				if ( ! empty( $this->utils ) ) {
-					$this->utils->log( $msg );
-				}
-				$this->setNotice( $msg, 'error' );
+				$this->utils->log( $msg );
+				$this->utils->set_notice( $msg, 'error' );
 
 				return false;
 			}
 
 			// Doesn't really matter what the status of the transient update is.
 			set_transient( "{$this->option_name}_{$name}", "{$name}_license_is_valid", DAY_IN_SECONDS );
+			$this->utils->log( "{$name} license is active and current." );
 
 			return true;
+
 		} else {
 
 			if ( "{$name}_license_is_valid" === $license_status ) {
 
-				if ( ! empty( $this->utils ) ) {
-					$this->utils->log( "Valid license found for {$name}" );
-				}
+				$this->utils->log( "Valid license found for {$name}" );
 
 				return true;
 			}
@@ -538,105 +921,10 @@ class e20rLicense {
 
 		$msg = sprintf( __( "Sorry, you need a valid update license for the %s add-on", "e20rlicense" ), 'E20R Membership Setup Fee' );
 
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( $msg );
-		}
-
-		$this->setNotice( $msg, 'error' );
+		$this->utils->log( $msg );
+		$this->utils->set_notice( $msg, 'error' );
 
 		return false;
-	}
-
-	/**
-	 * Default User settings for the license.
-	 *
-	 * @return array
-	 */
-	private function defaultUserSettings() {
-		global $current_user;
-
-		return array(
-			'first_name' => $current_user->user_firstname,
-			'last_name'  => $current_user->user_lastname,
-			'email'      => $current_user->user_email,
-		);
-	}
-
-	/**
-	 * Activate an existing license for the domain where this license is running.
-	 *
-	 * @param string $name The shortname of the license to register
-	 * @param string $product_name The fulltext name of the product being registered
-	 *
-	 * @return bool
-	 */
-	public function activateExistingLicenseOnServer( $name, $product_name, $user_settings = array() ) {
-
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "Attempting to activate {$name} on remote server" );
-		}
-
-		if ( empty( $user_settings ) ) {
-
-			// Default settings (not ideal)
-			$user_settings = $this->defaultUserSettings();
-		}
-
-		if ( empty( $this->license_list[ $name ] ) ) {
-
-			if ( ! empty( $this->utils ) ) {
-				$this->utils->log( "Have to generate a default license for now" );
-			}
-
-			$this->license_list[ $name ]        = $this->generateDefaultLicense( $name, $product_name );
-			$this->license_list[ $name ]['key'] = $name;
-		}
-
-		$api_params = array(
-			'slm_action'        => 'slm_activate',
-			'license_key'       => $this->license_list[ $name ]['key'],
-			'secret_key'        => E20R_LICENSE_SECRET_KEY,
-			'registered_domain' => $_SERVER['SERVER_NAME'],
-			'item_reference'    => urlencode( $product_name ),
-			'first_name'        => $user_settings['first_name'],
-			'last_name'         => $user_settings['last_name'],
-			'email'             => $user_settings['email'],
-		);
-
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "Transmitting...: " . print_r( $api_params, true ) );
-		}
-		// Send query to the license manager server
-		$response = wp_remote_get(
-			add_query_arg( $api_params, E20R_LICENSE_SERVER_URL ),
-			array(
-				'timeout'     => apply_filters( 'e20r-license-server-timeout', 30 ),
-				'sslverify'   => true,
-				'httpversion' => '1.1',
-			)
-		);
-
-		// Check for error in the response
-		if ( is_wp_error( $response ) ) {
-			if ( ! empty( $this->utils ) ) {
-				$this->utils->log( "Unexpected Error! The server request returned with an error." );
-			}
-		}
-
-		// License data.
-		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
-
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "License data received: " . print_r( $license_data, true ) );
-		}
-
-		$this->verifyLicense( $name, $product_name );
-
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "Activated license {$name}." );
-		}
-
-		return $this->addLicense( $name, $this->license_list[ $name ] );
 	}
 
 	/**
@@ -646,24 +934,20 @@ class e20rLicense {
 	 *
 	 * @return bool
 	 */
-	public function deactivateExistingLicenseOnServer( $name ) {
+	public function deactivateExistingLicenseOnServer( $name, $key ) {
 
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "Attempting to deactivate {$name} on remote server" );
-		}
+		$this->utils->log( "Attempting to deactivate {$name} on remote server" );
 
 		$api_params = array(
 			'slm_action'        => 'slm_deactivate',
-			'license_key'       => $this->license_list[ $name ]['key'],
+			'license_key'       => $key,
 			'secret_key'        => E20R_LICENSE_SECRET_KEY,
 			'registered_domain' => $_SERVER['SERVER_NAME'],
-			'item_reference'    => urlencode( $name ),
 			'status'            => 'pending'
 		);
 
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "Transmitting...: " . print_r( $api_params, true ) );
-		}
+		$this->utils->log( "Transmitting...: " . print_r( $api_params, true ) );
+
 		// Send query to the license manager server
 		$response = wp_remote_get(
 			add_query_arg( $api_params, E20R_LICENSE_SERVER_URL ),
@@ -676,35 +960,49 @@ class e20rLicense {
 
 		// Check for error in the response
 		if ( is_wp_error( $response ) ) {
-			if ( ! empty( $this->utils ) ) {
-				$this->utils->log( "Unexpected Error! The server request returned with an error." );
-			}
+			$this->utils->log( "Unexpected Error! The server request returned with an error." );
 		}
 
 		// License data.
-		$license_data = json_decode( wp_remote_retrieve_body( $response ) );
+		$license_data = stripslashes( wp_remote_retrieve_body( $response ) );
 
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "License data received: " . print_r( $license_data, true ) );
+		$bom          = pack( 'H*', 'EFBBBF' );
+		$license_data = preg_replace( "/^$bom/", '', $license_data );
+		$decoded      = json_decode( $license_data );
+
+		if ( null === $decoded && json_last_error() !== JSON_ERROR_NONE ) {
+
+			switch ( json_last_error() ) {
+				case JSON_ERROR_DEPTH:
+					$error = 'Maximum stack depth exceeded';
+					break;
+				case JSON_ERROR_STATE_MISMATCH:
+					$error = 'Underflow or the modes mismatch';
+					break;
+				case JSON_ERROR_CTRL_CHAR:
+					$error = 'Unexpected control character found';
+					break;
+				case JSON_ERROR_SYNTAX:
+					$error = 'Syntax error, malformed JSON';
+					break;
+				case JSON_ERROR_UTF8:
+					$error = 'Malformed UTF-8 characters, possibly incorrectly encoded';
+					break;
+				default:
+					$error = "No error, supposedly? " . print_r( json_last_error(), true );
+			}
+
+			$this->utils->log( "Response from remote server: <" . $license_data . ">" );
+			$this->utils->log( "JSON decode error: " . $error );
+		} else {
+
+			$this->utils->log( "License data received: (" . print_r( $decoded, true ) . ")" );
 		}
 
-		if ( ! empty( $this->utils ) ) {
-			$this->utils->log( "Removing license {$name}..." );
-		}
+		$this->utils->log( "Removing license {$name}..." );
 
 		return $this->deleteLicense( $name );
 
-	}
-
-	/**
-	 * Connect to the license server using TLS 1.2
-	 *
-	 * @param $handle - File handle for the pipe to the CURL process
-	 */
-	public function force_tls_12( $handle ) {
-
-		// set the CURL option to use.
-		curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
 	}
 
 	/**
@@ -727,8 +1025,8 @@ class e20rLicense {
 	public function registerSettings() {
 
 		register_setting(
-			$this->option_name, // group, used for settings_fields()
-			$this->option_name,  // option name, used as key in database
+			"{$this->option_name}_settings", // group, used for settings_fields()
+			"{$this->option_name}_settings",  // option name, used as key in database
 			array( $this, 'validateLicenseSettings' )      // validation callback
 		);
 
@@ -739,23 +1037,42 @@ class e20rLicense {
 			'e20r-license'
 		);
 
-		foreach ( $this->license_list as $key => $settings ) {
+		$this->getAllLicenses();
+		$this->utils->log( "License info: " . print_r( $this->license_list, true ) );
 
-			if ( $key !== 'e20r_default_license' ) {
+		$settings = get_option("{$this->option_name}_settings", array() );
+
+		$this->utils->log("License settings: " . print_r( $settings, true ));
+
+		foreach ( $settings as $k => $license ) {
+
+			// Skip and clean up.
+			if (empty( $license['key']) ) {
+
+				unset($settings[$k]);
+				update_option( "{$this->option_name}_settings", $settings );
+				continue;
+			}
+
+			$this->utils->log( "Generate settings fields for {$license['key']}" );
+
+			if ( $license['key'] != 'e20r_default_license' && !empty( $license['key'] ) ) {
 
 				add_settings_field(
-					"e20r_license_{$key}",
-					$settings['fulltext_name'],
+					"e20r_license_{$license['key']}",
+					$this->license_list[$license['key']]['fulltext_name'],
 					array( $this, 'showLicenseKeyInput' ),
 					'e20r-license',
 					'e20r_license_section',
 					array(
-						'label_for'   => $key,
-						'option_name' => $this->option_name,
-						'name'        => $key,
+						'label_for'   => $license['key'],
+						'option_name' => "{$this->option_name}_settings",
+						'name'        => 'license_key',
 						'input_type'  => 'password',
-						'value'       => $settings['key'],
-						'placeholder' => sprintf( __( "Paste/enter the %s license key here", "e20rlicense" ), $settings['fulltext_name'] )
+						'value'       => $license['key'],
+						'email_field' => "license_email",
+						'email_value' => ! empty( $license['email'] ) ? $license['email'] : null,
+						'placeholder' => __( "Paste/enter the license key here", "e20rlicense" )
 					)
 				);
 			}
@@ -769,58 +1086,15 @@ class e20rLicense {
 			'e20r_license_section',
 			array(
 				'label_for'   => 'new_license',
-				'option_name' => $this->option_name,
-				'name'        => 'new_license',
-				'input_type'  => 'password',
+				'option_name' => "{$this->option_name}_settings",
+				'name'        => 'new_key',
+				'input_type'  => 'text',
 				'value'       => null,
+				'email_field' => "new_email",
+				'email_value' => null,
 				'placeholder' => __( 'Enter the new license key here', 'e20rlicense' )
 			)
 		);
-	}
-
-	/**
-	 * Validate the license specific settings as they're being saved
-	 * @param $values
-	 *
-	 * @return array|mixed|void
-	 */
-	public function validateLicenseSettings( $values ) {
-
-		global $current_user;
-
-		$this->utils->log( 'License settings: ' . print_r( $values, true ) );
-
-		$this->license_list = get_option( $this->option_name );
-		$this->utils->log( "Saved list: " . print_r( $this->license_list, true ) );
-
-		//<input name=e20rlicense[e20r_test_license_1]" type="password" id="e20r_test_license_1" value="<license_key>" placeholder="Paste/enter the license key here" class="regular_text">
-
-		/**
-		 * Array: array ( 'e20r_test_license_1' => 'test_license_1_key' );
-		 */
-		$keys = array_keys( $this->license_list );
-		$user_settings = array(
-			'first_name' => $current_user->user_firstname,
-			'last_name' => $current_user->user_lastname,
-			'email' => $current_user->user_email
-		);
-
-		foreach( $values as $key => $v ) {
-
-			if ( 'name' === $key ) {
-				$license_id = $values[$key];
-
-				if ( !in_array( $license_id, $keys ) ) {
-
-					// Need to add this license to the list of licenses to process.
-					$this->activateExistingLicenseOnServer( $license_id, '' ,$user_settings );
-				}
-			}
-
-		}
-
-		// Processed and updated the license list, so we can return it as the savable option.
-		return $this->license_list;
 	}
 
 	/**
@@ -832,23 +1106,32 @@ class e20rLicense {
 			wp_die( __( "You are not permitted to perform this action.", "e20rlicense" ) );
 		}
 		?>
+		<?php $this->utils->display_notice(); ?>
+		<br/>
 		<h2><?php echo $GLOBALS['title']; ?></h2>
 		<form action="options.php" method="POST">
 			<?php
-			settings_fields( $this->option_name );
+			settings_fields( "{$this->option_name}_settings" );
 			do_settings_sections( 'e20r-license' );
 			submit_button();
 			?>
 		</form>
 		<?php
 
-		foreach ( $this->license_list as $key => $license ) {
+		$settings = get_option( "{$this->option_name}_settings", array() );
 
-			$license_valid = $this->verifyLicense( $key );
+		foreach ( $settings as $license ) {
+
+			if ( $license['key'] == 'e20r_default_license' ) {
+				continue;
+			}
+
+			$license_valid = $this->verifyLicense( $license['key'] );
+
 			?>
 
 			<div class="wrap"><?php
-				if ( $license['expires'] <= current_time( 'timestamp' ) || empty( $license['expires'] ) ) {
+				if ( $this->license_list[$license['key']]['expires'] <= current_time( 'timestamp' ) || empty( $this->license_list[$license['key']]['expires'] ) ) {
 					?>
 					<div class="notice notice-error inline">
 					<p>
@@ -893,29 +1176,27 @@ class e20rLicense {
 	/**
 	 * Generate input for license information
 	 *
-	 * @param array $args   Arguments used to configure input field(s)
+	 * @param array $args Arguments used to configure input field(s)
 	 */
 	public function showLicenseKeyInput( $args ) {
 
-		/**
-		'label_for'   => $key,
-		'option_name' => $this->option_name,
-		'name'        => $key,
-		'input_type'  => 'password',
-		'value'       => $settings['key'],
-		'placeholder' => sprintf( __( "Paste/enter the %s license key here", "e20rlicense" ), $settings['fulltext_name'] )
-		 */
-
-		// printf( '<label for="%s">%s</label>', $args['label_for'], $args['label'] );
-		printf( '<input type="hidden" name="%1$s[name]" value="%2$s" />', $this->option_name, $args['name'] );
+		printf( '<input type="hidden" name="%1$s" value="%2$s" />', "{$args['option_name']}[fieldname][]", $args['value'] );
 		printf(
-			'<input name="%1$s[%2$s]" type="%3$s" id="%4$s" value="%5$s" placeholder="%6$s" class="regular_text">',
+			'<input name="%1$s[%2$s][]" type="%3$s" id="%4$s" value="%5$s" placeholder="%6$s" class="regular_text">',
 			$args['option_name'],
 			$args['name'],
 			$args['input_type'],
 			$args['label_for'],
 			$args['value'],
 			$args['placeholder']
+		);
+		printf(
+			'<input name="%1$s[%2$s][]" type="email" id=%3$s_email value="%4$s" placeholder="%5$s" class="email_address" style="width: 250px;">',
+			$args['option_name'],
+			$args['email_field'],
+			$args['label_for'],
+			$args['email_value'],
+			__( "Email address used to purhcase license", "e20rlicense" )
 		);
 	}
 
@@ -939,45 +1220,14 @@ class e20rLicense {
 	}
 
 	/**
-	 * Save the admin notice text and severity (class) to use
+	 * Connect to the license server using TLS 1.2
 	 *
-	 * @param string $message Text to use in admin notice
-	 * @param string $severity CSS class for admin notices (see link for appropriate class names)
-	 *
-	 * @url     https://codex.wordpress.org/Plugin_API/Action_Reference/admin_notices
+	 * @param $handle - File handle for the pipe to the CURL process
 	 */
-	private function setNotice( $message, $severity = 'notice-info' ) {
+	public function force_tls_12( $handle ) {
 
-		if ( !empty( $this->utils )) {
-			$this->utils->set_notice( $message, $severity );
-		} else {
-			$this->notice_msg[]   = $message;
-			$this->notice_class[] = $severity;
-		}
-	}
-
-	/**
-	 * Show wp-admin error/warning/notices
-	 */
-	public function displayNotice() {
-
-		if (!empty( $this->utils ) ) {
-			$this->utils->display_notice();
-		} else {
-
-			if ( ! empty( $this->notice_msg ) && is_admin() ) {
-
-				foreach ( $this->notice_msg as $key => $msg )
-					?>
-					<div class="notice notice-<?php echo $this->notice_class[ $key ]; ?>">
-				<p><strong><?php echo ucfirst( $this->notice_class[ $key ] ); ?></strong>: <?php echo $msg; ?></p>
-				</div>
-				<?php
-			}
-		}
-
-		$this->notice_msg   = array();
-		$this->notice_class = array();
+		// set the CURL option to use.
+		curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
 	}
 
 }
