@@ -20,6 +20,9 @@
 
 defined( 'ABSPATH' ) or die( 'Cannot access plugin sources directly' );
 
+if ( !defined( 'E20R_LICENSE_VERSION' ) ) {
+	define( 'E20R_LICENSE_VERSION', '1.0' );
+}
 if ( ! defined( 'E20R_LICENSE_SERVER_URL' ) ) {
 	define( 'E20R_LICENSE_SERVER_URL', 'https://eighty20results.com' );
 }
@@ -93,6 +96,7 @@ class e20rLicense {
 		 */
 		add_action( 'init', array( $this, 'loadTranslation' ) );
 		add_action( 'admin_menu', array( $this, 'addOptionsPage' ) );
+		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_scripts' ) );
 
 		// Hook into admin_init when we need to.
 		if ( ! empty ( $GLOBALS['pagenow'] )
@@ -1198,6 +1202,11 @@ class e20rLicense {
 			$args['email_value'],
 			__( "Email address used to purhcase license", "e20rlicense" )
 		);
+		printf(
+			'<input type="button" name="%1$s[delete][]" class="clear_license button-primary" value="%2$s">',
+			$args['option_name'],
+			__("Deactivate License", "e20rlicense")
+		);
 	}
 
 	/**
@@ -1230,4 +1239,8 @@ class e20rLicense {
 		curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
 	}
 
+	public function enqueue_scripts() {
+
+		wp_enqueue_script( 'e20r-license-admin', plugins_url( '/js/e20r-license-admin.js', __FILE__ ), array( 'jquery' ), E20R_LICENSE_VERSION, true );
+	}
 }
