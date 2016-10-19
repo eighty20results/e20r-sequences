@@ -1271,4 +1271,9 @@ class e20rLicense {
 		// set the CURL option to use.
 		curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
 	}
+
+	public function enqueue_scripts() {
+
+		wp_enqueue_style('e20rlicense', plugins_url( '/css/e20rlicense.css', __FILE__ ), null, E20R_LICENSE_VERSION, 'screen' );
+	}
 }
