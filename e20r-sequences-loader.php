@@ -204,7 +204,7 @@ if (!function_exists('e20r_sequence_loader')) {
         $base_path = plugin_dir_path(__FILE__) . "classes";
         $name = strtolower($parts[(count($parts) - 1)]);
 
-        $types = array('shortcodes', 'tools', 'widgets', 'license');
+        $types = array('shortcodes', 'tools', 'widgets', 'license', 'utilities');
 
         foreach ($types as $type) {
 
@@ -219,10 +219,11 @@ if (!function_exists('e20r_sequence_loader')) {
                 require_once("{$dir}/class-{$name}.php");
             }
 
-            // For the license class.
+            // For the license & utilities class.
             if (file_exists( "{$dir}/class.{$name}.php")) {
 	            require_once("{$dir}/class.{$name}.php");
             }
+
 /*
             else {
                 error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
