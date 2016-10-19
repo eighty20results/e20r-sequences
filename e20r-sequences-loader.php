@@ -219,11 +219,6 @@ if (!function_exists('e20r_sequence_loader')) {
                 require_once("{$dir}/class-{$name}.php");
             }
 
-            // For the license & utilities class.
-            if (file_exists( "{$dir}/class.{$name}.php")) {
-	            require_once("{$dir}/class.{$name}.php");
-            }
-
 /*
             else {
                 error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
