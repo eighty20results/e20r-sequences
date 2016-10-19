@@ -519,6 +519,24 @@ class e20rLicense {
 		$licenses = $this->getAllLicenses();
 		$out = array();
 
+		if ( isset( $input['delete']) ) {
+
+			foreach ( $input['delete'] as $l ) {
+
+				if ( true === $this->deactivateExistingLicenseOnServer( $l, $l ) ) {
+
+					$lk = array_search( $l, $input['license_key'] );
+
+					if ( ! empty( $lk ) ) {
+						unset( $input['license_key'][ $lk ] );
+						unset( $input['license_email'][ $lk ] );
+						unset( $input['fieldname'][ $lk ] );
+						unset( $this->license_list[ $lk ] );
+					}
+				}
+			}
+		}
+
 		if ( isset( $input[0]['status'] ) ) {
 			$this->utils->log("Skipping validate since our data consists of the expected stuff already");
 			$bypass = true;
@@ -1173,6 +1191,14 @@ class e20rLicense {
 			<a href="https://eighty20results.com/pricing/"
 			   target="_blank"><?php _e( "View License Options &raquo;", "e20rlicense" ); ?></a>
 		</p>
+		<table class="form-table">
+			<tr>
+				<th><?php _e("Name", "e20rlicense"); ?></th>
+				<th><?php _e("Key", "e20rlicense"); ?></th>
+				<th><?php _e("Email", "e20rlicense"); ?></th>
+				<th><?php _e("Deactivate", "e20rlicense"); ?></th>
+			</tr>
+		</table>
 		<?php
 
 	}
@@ -1193,7 +1219,9 @@ class e20rLicense {
 			$args['label_for'],
 			$args['value'],
 			$args['placeholder']
-		);
+		);?></td>
+		<td>
+		<?php
 		printf(
 			'<input name="%1$s[%2$s][]" type="email" id=%3$s_email value="%4$s" placeholder="%5$s" class="email_address" style="width: 250px;">',
 			$args['option_name'],
@@ -1201,12 +1229,17 @@ class e20rLicense {
 			$args['label_for'],
 			$args['email_value'],
 			__( "Email address used to purhcase license", "e20rlicense" )
-		);
-		printf(
-			'<input type="button" name="%1$s[delete][]" class="clear_license button-primary" value="%2$s">',
-			$args['option_name'],
-			__("Deactivate License", "e20rlicense")
-		);
+		);?></td>
+		<?php if ( $args['name'] !== 'new_key') { ?>
+			<td>
+				<?php
+				printf(
+					'<input type="checkbox" name="%1$s[delete][]" class="clear_license" style="float: left;" value="%2$s">',
+					$args['option_name'],
+					$args['value']
+				); ?></td>
+			<?php
+		}
 	}
 
 	/**
@@ -1237,10 +1270,5 @@ class e20rLicense {
 
 		// set the CURL option to use.
 		curl_setopt( $handle, CURLOPT_SSLVERSION, 6 );
-	}
-
-	public function enqueue_scripts() {
-
-		wp_enqueue_script( 'e20r-license-admin', plugins_url( '/js/e20r-license-admin.js', __FILE__ ), array( 'jquery' ), E20R_LICENSE_VERSION, true );
 	}
 }
