@@ -29,7 +29,6 @@ License:
 */
 /* Version number */
 define('E20R_SEQUENCE_VERSION', '4.5.0');
-define('E20R_LICENSE_NAME', 'e20r_sequences');
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
 define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.4');
