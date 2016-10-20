@@ -519,7 +519,7 @@ class e20rLicense {
 		$licenses = $this->getAllLicenses();
 		$out = array();
 
-		if ( isset( $input['delete']) ) {
+		if ( isset( $input['delete']) && !empty( $input['delete'][0]) ) {
 
 			foreach ( $input['delete'] as $l ) {
 
