@@ -154,8 +154,8 @@ class upcoming_content
 
         ob_start(); ?>
         <div class="e20r-sequence-uce e20r-sequence-float-left">
-            <a href="<?php echo get_permalink($content->ID); ?>" target="_blank">
-                <div class="e20r-sequence-uce-title"><?php echo esc_attr($content->post_title); ?></div>
+            <a href="<?php echo esc_url_raw( get_permalink($content->ID) ); ?>" target="_blank">
+                <div class="e20r-sequence-uce-title"><?php esc_attr_e($content->post_title); ?></div>
                 <div class="e20r-sequence-uce-body">
                     <?php echo apply_filters('the_excerpt', get_post_field('post_excerpt', $content->ID));; ?>
                 </div>
