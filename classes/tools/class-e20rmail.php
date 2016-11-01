@@ -194,6 +194,13 @@ class e20rMail
         return $this->body;
     }
 
+	/**
+	 * Load email body from specified template (file or editor)
+	 *
+	 * @param string $template_file    - file name
+	 *
+	 * @return mixed|null|string|void   - Body value for template
+	 */
     private function load_template( $template_file ) {
 
         E20RTools\DBG::log("Load template for file {$template_file}");
