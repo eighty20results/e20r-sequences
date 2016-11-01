@@ -219,6 +219,18 @@ class e20rMail
             $this->body = file_get_contents(E20R_SEQUENCE_PLUGIN_DIR . "/email/" . $template_file);                        //default template in plugin
         }
 
+	    /**
+	     * @filter e20r-sequence-template-editor-loaded - Determines whether the template editor is loaded & active
+	     */
+	    $use_editor = apply_filters( 'e20r-sequence-template-editor-loaded', false );
+
+	    if ( true === $use_editor ) {
+		    /**
+		     * @filter e20r-sequence-template-editor-contents - Loads the contents of the specific template_file from the email editor add-on.
+		     */
+		    $this->body = apply_filters( 'e20r-sequence-template-editor-contents', null, $template_file );
+        }
+
         return $this->body;
     }
 }
