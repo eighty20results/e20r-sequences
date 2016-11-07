@@ -43,7 +43,7 @@ class Controller
     private $managed_types = null;
     private $current_metadata_versions = array();
 
-    private static $select2_version = '4.0.1';
+    private static $select2_version = '4.0.3';
     private static $seq_post_type = 'pmpro_sequence';
 
     // private static $transient_option_key = '_transient_timeout_';
@@ -54,6 +54,11 @@ class Controller
 
     // Refers to a single instance of this class
     private static $_this = null;
+
+    /**
+     * @var e20rUtils   $utils  Utilities class
+     */
+    private $utils = null;
 
     /**
      * Constructor for the Sequence
@@ -362,13 +367,13 @@ class Controller
 
         $this->error = $msg;
 
-        $e = apply_filters('get_e20rerror_class_instance', null);
+        $this->utils = \e20rUtils::get_instance();
 
         if ( !empty($msg) ) {
 
             E20RTools\DBG::log("set_error_msg(): {$msg}");
 
-            $e->set_error( $msg, 'error', null, 'e20r_seq_errors' );
+            $this->utils->set_notice( $msg, 'error' );
         }
     }
 
@@ -381,9 +386,9 @@ class Controller
     public function get_error_msg() {
 
         // $e = apply_filters('get_e20rerror_class_instance', null);
-        $e = Tools\E20RError::get_instance();
+        $this->utils = \e20rUtils::get_instance();
 
-        $this->error = $e->get_error( 'error' );
+        $this->error = $this->utils->get_error_msg( 'error' );
 
         if ( ! empty( $this->error ) ) {
 
@@ -400,15 +405,14 @@ class Controller
      */
     public function display_error() {
 
-        E20RTools\DBG::log("Display error messages, if there are any");
+        E20RTools\DBG::log("Display error message(s), if there are any");
         global $current_screen;
 
-        $msg = $this->get_error_msg();
-
-        if ( ! empty( $msg ) ){
-            E20RTools\DBG::log("Display error for Drip Feed operation(s)");
-            ?><div id="e20r-seq-error" class="notice-error is-dismissble"><p></p><?php $msg; ?></p></div><?php
+        if (empty( $this->utils)) {
+            $this->utils = \e20rUtils::get_instance();
         }
+
+        $this->utils->display_notice();
     }
 
     /**
@@ -2726,13 +2730,14 @@ class Controller
         if ( is_singular() && is_main_query() && ( 'pmpro_sequence' == $post->post_type ) && $this->has_membership_access($post->ID, $current_user->ID ) ) {
 
             global $load_e20r_sequence_script;
+            $utils = \e20rUtils::get_instance();
 
             $load_e20r_sequence_script = true;
 
             E20RTools\DBG::log( "E20R Sequence display {$post->ID} - " . get_the_title( $post->ID ) . " : " . $this->who_called_me() . ' and page base: ' . $pagenow );
 
             if ( !$this->init( $post->ID ) ) {
-                return $this->display_error() . $content;
+                return $utils->display_notice() . $content;
             }
 
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
