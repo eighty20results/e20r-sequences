@@ -289,7 +289,7 @@ class Views {
 		<div id="e20r_sequence_posts">
 			<?php
 			$box = $this->get_post_list_for_metabox();
-			esc_html_e( $box['html'] );
+			echo $box['html'];
 			?>
 		</div>
 		<?php
@@ -1062,7 +1062,7 @@ class Views {
 						if ( isset( $delay->delay ) && (!is_null( $delay->delay ) && is_numeric($delay->delay)) ) {
 
 							E20RTools\DBG::log( "Delay Value: {$delay->delay}" );
-							$delayVal = " value='{$delay->delay}' ";
+							$delayVal = " value=\"{$delay->delay}\" ";
 
 							list( $label, $inputHTML ) = $this->set_delay_input( $delayVal, $active_id );
 							echo $this->print_sequence_header( $active_id );
@@ -1278,7 +1278,7 @@ class Views {
 					$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-date" type="date" min="%s" name="e20r_seq-delay[]">', $starts );
 				}
 				else {
-					$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-date" type="date" name="e20r_seq-delay[]" %s>', esc_html( $input_value ) );
+					$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-date" type="date" name="e20r_seq-delay[]" %s>', $input_value );
 				}
 
 				break;
@@ -1287,7 +1287,7 @@ class Views {
 
 				E20RTools\DBG::log("Configured to track delays by Day count: {$active_id}");
 				$delayFormat = __('Day count', "e20rsequence");
-				$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-days" type="text" name="e20r_seq-delay[]" %s>', esc_html( $input_value ) );
+				$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-days" type="text" name="e20r_seq-delay[]" %s>', $input_value );
 
 		}
 
@@ -1336,7 +1336,7 @@ class Views {
 		</tr>
 		<tr class="delay-row-input sequence-delay">
 			<td>
-				<?php esc_html_e( $inputHTML ); ?>
+				<?php echo $inputHTML; ?>
 				<label for="remove-sequence_<?php esc_attr_e( $active_id ); ?>" ><?php _e('Remove: ', "e20rsequence"); ?></label>
 				<input type="checkbox" name="remove-sequence" class="e20r_seq-remove-seq" value="<?php esc_attr_e( $active_id ); ?>">
 				<button class="button-secondary e20r-sequence-remove-alert"><?php _e("Clear alerts", "e20rsequence");?></button>
