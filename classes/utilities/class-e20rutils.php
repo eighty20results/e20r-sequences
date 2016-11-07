@@ -210,21 +210,59 @@ class e20rUtils {
 		}
 	}
 
+	public function get_error_msg( $type = null, $limit = null ) {
+
+		$count = 0;
+		if ( is_null( $type )) {
+
+			return $this->notice_msg;
+		}
+
+		$result = array();
+
+		if ( !is_null($limit)) {
+
+			$count = 0;
+		}
+		foreach( $this->notice_msg as $k => $e ) {
+
+			if ( $type == $this->notice_class[$k] ) {
+
+				if ( !is_null($limit) && ( $count > $limit )) {
+					// quit since we're above the limit.
+					break;
+				}
+
+				$result[] = $e;
+
+				if (!is_null($limit)) {
+					$count++;
+				}
+			}
+		}
+
+		return $result;
+	}
+
 	/**
 	 * Display any notice message(s)
 	 */
 	public function display_notice() {
 
-		if ( ! empty( $this->notice_msg ) ) {
-			foreach ( $this->notice_msg as $key => $msg ) ?>
-				<div class="notice notice-<?php echo $this->notice_class[ $key ]; ?>">
-			<p><?php echo $msg; ?></p>
-			</div>
-			<?php
+		if ( is_admin() && ( !defined( 'DOING_AJAX') || false === DOING_AJAX ) ) {
+			$this->display_in_admin();
+		} else {
+			if ( ! empty( $this->notice_msg ) ) {
+				foreach ( $this->notice_msg as $key => $msg ) { ?>
+					<div class="notice notice-<?php esc_attr_e( $this->notice_class[ $key ] ); ?>">
+						<p><?php esc_attr_e( $msg ); ?></p>
+					</div>
+					<?php
+				}
+				$this->notice_msg   = array();
+				$this->notice_class = array();
+			}
 		}
-
-		$this->notice_msg   = array();
-		$this->notice_class = array();
 	}
 
 	/**
@@ -232,14 +270,14 @@ class e20rUtils {
 	 */
 	public function display_in_admin() {
 
-		if ( is_admin() ) {
+		if ( is_admin() && ( !defined( 'DOING_AJAX') || false === DOING_AJAX )  ) {
 			if ( ! empty( $this->notice_msg ) ) {
-				foreach ( $this->notice_msg as $key => $msg )
-					?>
-					<div class="notice notice-<?php echo $this->notice_class[ $key ]; ?>">
-				<p><?php echo $msg; ?></p>
-				</div>
-				<?php
+				foreach ( $this->notice_msg as $key => $msg ) { ?>
+					<div class="notice notice-<?php esc_attr_e( $this->notice_class[ $key ] ); ?>">
+						<p><?php esc_attr_e( $msg ); ?></p>
+					</div>
+					<?php
+				}
 			}
 
 		}
@@ -272,7 +310,7 @@ class e20rUtils {
 		$from = $this->_who_called_me();
 
 		if ( ! defined( "WP_DEBUG" ) ) {
-			echo "[{$tid}] {$from}: {$msg}";
+			esc_attr_e( "[{$tid}] {$from}: {$msg}" );
 		} else {
 			error_log( "[{$tid}] {$from} - {$msg}" );
 		}
