@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 sed=/usr/bin/sed
+short_name="e20r-sequences"
 readme_path="../build_readmes/"
 changelog_source=${readme_path}current.txt
 incomplete_out=tmp.txt
 json_out=json_changelog.txt
 readme_out=readme_changelog.txt
-short_name="e20r-sequences"
-version=$(egrep "^Version:" ../${short_name}.php | awk '{print $2}')
+version=$(egrep "^Version:" ../${short_name}.php | sed 's/[[:alpha:]|(|[:space:]|\:]//g' | awk -F- '{printf "%s", $1}')
 json_header="<h3>${version}</h3><ol>"
 json_footer="</ol>"
 readme_header="== ${version} =="
