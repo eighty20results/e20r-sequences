@@ -21,10 +21,7 @@ License:
 */
 
 /* Define namespaces */
-use E20R\Sequences\Main as Main;
 use E20R\Sequences\Sequence as Sequence;
-use E20R\Sequences\Tools as Tools;
-use E20R\Sequences\Modules as Modules;
 use E20R\Tools as E20RTools;
 
 define(__NAMESPACE__ . '\NS', __NAMESPACE__ . '\\');
@@ -66,14 +63,14 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
         $importStatus = apply_filters('pmpro-sequence-import-pmpro-series', __return_false());
 
         // Don't import anything.
-        if (__return_false() === $importStatus) {
+        if ( false === $importStatus) {
 
-            return;
+            return $importStatus;
         }
 
         global $wpdb;
 
-        if ((__return_true() === $importStatus) || ('all' === $importStatus)) {
+        if (( true === $importStatus) || ('all' === $importStatus)) {
 
             //Get all of the defined PMPro Series posts to import from this site.
             $series_sql = "
@@ -157,7 +154,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
 
                     if (!$seq->add_post($seq_member->id, $seq_member->delay)) {
                         return new \WP_Error('sequence_import',
-                            sprintf(__('Could not complete import of post id %d for series %s', "e20rsequence"), $seq_member->id, $series->post_title), $seq->getError());
+                            sprintf(__('Could not complete import of post id %d for series %s', "e20r-sequences"), $seq_member->id, $series->post_title), $seq->getError());
                     }
                 } // End of foreach
 
@@ -168,7 +165,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
             } else {
 
                 return new \WP_Error('db_query_error',
-                    sprintf(__('Could not complete import for series %s', "e20rsequence"), $series->post_title), $wpdb->last_error);
+                    sprintf(__('Could not complete import for series %s', "e20r-sequences"), $series->post_title), $wpdb->last_error);
 
             }
         } // End of foreach (DB result)
@@ -219,11 +216,17 @@ if (!function_exists('e20r_sequence_loader')) {
                 require_once("{$dir}/class-{$name}.php");
             }
 
-/*
-            else {
-                error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
-            }
-*/
+	        if (file_exists("{$dir}/class.{$name}.php")) {
+
+		        require_once("{$dir}/class.{$name}.php");
+	        }
+
+
+	        /*
+						else {
+							error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
+						}
+			*/
         }
     }
 }
