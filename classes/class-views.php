@@ -30,7 +30,7 @@ class Views {
 	function __construct() {
 
 		if ( null !==  self::$_this ) {
-			$error_message = sprintf(__("Attempted to load a second instance of a singleton class (%s)", "e20rsequence"),
+			$error_message = sprintf(__("Attempted to load a second instance of a singleton class (%s)", "e20r-sequences"),
 				get_class($this)
 			);
 
@@ -68,19 +68,19 @@ class Views {
 		switch ($post_state)
 		{
 			case 'draft':
-				$txtState = __('-DRAFT', "e20rsequence");
+				$txtState = __('-DRAFT', "e20r-sequences");
 				break;
 
 			case 'future':
-				$txtState = __('-SCHED', "e20rsequence");
+				$txtState = __('-SCHED', "e20r-sequences");
 				break;
 
 			case 'pending':
-				$txtState = __('-REVIEW', "e20rsequence");
+				$txtState = __('-REVIEW', "e20r-sequences");
 				break;
 
 			case 'private':
-				$txtState = __('-PRIVT', "e20rsequence");
+				$txtState = __('-PRIVT', "e20r-sequences");
 				break;
 
 			default:
@@ -118,15 +118,15 @@ class Views {
 		<table id="e20r_sequencetable" class="e20r_sequence_postscroll wp-list-table widefat">
 			<thead>
 			<tr>
-			<th class="e20r_sequence_orderlabel"><?php // _e('Order', "e20rsequence" ); ?></label></th>
-			<th class="e20r_sequence_titlelabel"><?php _e('Title', "e20rsequence"); ?></th>
-			<th class="e20r_sequence_idlabel"><?php _e('ID', "e20rsequence"); ?></th>
+			<th class="e20r_sequence_orderlabel"><?php // _e('Order', "e20r-sequences" ); ?></label></th>
+			<th class="e20r_sequence_titlelabel"><?php _e('Title', "e20r-sequences"); ?></th>
+			<th class="e20r_sequence_idlabel"><?php _e('ID', "e20r-sequences"); ?></th>
 			<?php if ($options->delayType == 'byDays'): ?>
-				<th id="e20r_sequence_delaylabel"><?php _e('Delay', "e20rsequence"); ?></th>
+				<th id="e20r_sequence_delaylabel"><?php _e('Delay', "e20r-sequences"); ?></th>
 			<?php elseif ( $options->delayType == 'byDate'): ?>
-				<th id="e20r_sequence_delaylabel"><?php _e('Avail. On', "e20rsequence"); ?></th>
+				<th id="e20r_sequence_delaylabel"><?php _e('Avail. On', "e20r-sequences"); ?></th>
 			<?php else: ?>
-				<th id="e20r_sequence_delaylabel"><?php _e('Not Defined', "e20rsequence"); ?></th>
+				<th id="e20r_sequence_delaylabel"><?php _e('Not Defined', "e20r-sequences"); ?></th>
 			<?php endif; ?>
 			<th class="e20r_edit_label_big"></th>
 			<?php if ( false == $options->allowRepeatPosts ) { ?><th class="e20r_edit_label_small"></th><?php } ?>
@@ -140,7 +140,7 @@ class Views {
 			if ( empty($posts ) ) {
 				E20RTools\DBG::log('No Posts found?');
 
-				$sequence->set_error_msg( __('No posts/pages found', "e20rsequence") );
+				$sequence->set_error_msg( __('No posts/pages found', "e20r-sequences") );
 				?>
 				<?php
 			}
@@ -149,25 +149,25 @@ class Views {
 					?>
 					<tr>
 						<td class="e20r_sequence_tblOrder"><?php echo $count; ?>.</td>
-						<td class="e20r_sequence_tblPostname"><?php echo ( get_post_status( $post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", "e20rsequence" ) ) : null ) . get_the_title($post->id); ?></td>
-						<td class="e20r_sequence_tblPostId"><?php printf( __("(ID: %d)", "e20rsequence" ), esc_attr( $post->id )); ?></td>
+						<td class="e20r_sequence_tblPostname"><?php echo ( get_post_status( $post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", "e20r-sequences" ) ) : null ) . get_the_title($post->id); ?></td>
+						<td class="e20r_sequence_tblPostId"><?php printf( __("(ID: %d)", "e20r-sequences" ), esc_attr( $post->id )); ?></td>
 						<td class="e20r_sequence_tblNumber"><?php esc_attr_e( $post->delay ); ?></td>
 						<td class="e20r_edit_label_big"><?php
 							if ( true == $options->allowRepeatPosts ) { ?>
-								<a href="javascript:e20r_sequence_editPost( <?php printf( "%s, %s", esc_attr( $post->id ), esc_attr( $post->delay ) ); ?> ); void(0); "><?php _e('Edit',"e20rsequence"); ?></a><?php
+								<a href="javascript:e20r_sequence_editPost( <?php printf( "%s, %s", esc_attr( $post->id ), esc_attr( $post->delay ) ); ?> ); void(0); "><?php _e('Edit',"e20r-sequences"); ?></a><?php
 							}
 							else { ?>
-								<a href="javascript:e20r_sequence_editPost( <?php printf( "%s, %s", esc_attr( $post->id ), esc_attr( $post->delay ) ); ?> ); void(0); "><?php _e('Post',"e20rsequence"); ?></a><?php
+								<a href="javascript:e20r_sequence_editPost( <?php printf( "%s, %s", esc_attr( $post->id ), esc_attr( $post->delay ) ); ?> ); void(0); "><?php _e('Post',"e20r-sequences"); ?></a><?php
 							} ?>
 						</td>
 						<?php
 							if ( false == $options->allowRepeatPosts ) { ?>
 						<td class="e20r_edit_label_small">
-								<a href="javascript:e20r_sequence_editEntry( <?php printf( "%s, %s", esc_attr( $post->id ), esc_attr( $post->delay ) ); ?> ); void(0);"><?php _e('Edit', "e20rsequence"); ?></a>
+								<a href="javascript:e20r_sequence_editEntry( <?php printf( "%s, %s", esc_attr( $post->id ), esc_attr( $post->delay ) ); ?> ); void(0);"><?php _e('Edit', "e20r-sequences"); ?></a>
 						</td><?php
 							} ?>
 						<td class="e20r_edit_label_big">
-							<a href="javascript:e20r_sequence_removeEntry( <?php printf( "%s, %s", esc_attr( $post->id ), esc_attr( $post->delay ) ); ?>); void(0);"><?php _e('Remove', "e20rsequence"); ?></a>
+							<a href="javascript:e20r_sequence_removeEntry( <?php printf( "%s, %s", esc_attr( $post->id ), esc_attr( $post->delay ) ); ?>); void(0);"><?php _e('Remove', "e20r-sequences"); ?></a>
 						</td>
 					</tr><?php
 
@@ -179,18 +179,18 @@ class Views {
 		</table>
 
 		<div id="postcustomstuff">
-			<div class="e20r-sequence-float-left"><strong><?php _e('Add/Edit Posts:', "e20rsequence"); ?></strong></div>
-			<div class="e20r-sequence-float-right"><button class="primary-button button e20r-sequences-clear-cache"><?php _e("Clear cache", "e20rsequence");?></button></div>
+			<div class="e20r-sequence-float-left"><strong><?php _e('Add/Edit Posts:', "e20r-sequences"); ?></strong></div>
+			<div class="e20r-sequence-float-right"><button class="primary-button button e20r-sequences-clear-cache"><?php _e("Clear cache", "e20r-sequences");?></button></div>
 			<div id="newmeta" class="e20r-meta-table">
 				<div class="e20r-table-head clear">
 					<div class="table_newmeta e20r-sequence-full-row row heading">
-						<div class="table_newmeta e20r-meta-table-col-1 cell"><?php _e('Post/Page', "e20rsequence"); ?></div>
+						<div class="table_newmeta e20r-meta-table-col-1 cell"><?php _e('Post/Page', "e20r-sequences"); ?></div>
 						<?php if ($options->delayType == 'byDays'): ?>
-							<div class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Days to delay', "e20rsequence"); ?></label></div>
+							<div class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Days to delay', "e20r-sequences"); ?></label></div>
 						<?php elseif ( $options->delayType == 'byDate'): ?>
-							<div class="table_newmeta e20r-meta-table-col-2 cell"  id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", "e20rsequence"); ?></label></div>
+							<div class="table_newmeta e20r-meta-table-col-2 cell"  id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", "e20r-sequences"); ?></label></div>
 						<?php else: ?>
-							<div class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Not Defined', "e20rsequence"); ?></label></div>
+							<div class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Not Defined', "e20r-sequences"); ?></label></div>
 						<?php endif; ?>
 						<div class="table_newmeta e20r-meta-table-col-3 cell e20r-empty"></div>
 					</div>
@@ -208,7 +208,7 @@ class Views {
 								}
 							}
 							else {
-								$sequence->set_error_msg( __( 'No posts found in the database!', "e20rsequence" ) );
+								$sequence->set_error_msg( __( 'No posts found in the database!', "e20r-sequences" ) );
 								E20RTools\DBG::log('Error during database search for relevant posts');
 							}
 							?>
@@ -221,7 +221,7 @@ class Views {
 					</div>
 						<div class="table_newmeta e20r-meta-table-col-3 cell">
 						<a class="button" id="e20r_sequencesave" onclick="javascript:e20r_sequence_addEntry(); return false;">
-							<?php _e('Update Sequence', "e20rsequence"); ?>
+							<?php _e('Update Sequence', "e20r-sequences"); ?>
 						</a>
 					</div>
 					</div>
@@ -328,7 +328,7 @@ class Views {
 		}
 		else {
 			E20RTools\DBG::log('Not a valid Sequence ID, cannot load options');
-			$sequence->set_error_msg( __('Invalid drip-feed sequence specified', "e20rsequence") );
+			$sequence->set_error_msg( __('Invalid drip-feed sequence specified', "e20r-sequences") );
 			return;
 		}
 
@@ -353,11 +353,11 @@ class Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
 							<div class="e20r-sequence-setting-col-1">
-								<input type="checkbox" value="1" id="e20r-sequence_hideFuture" name="e20r-sequence_hideFuture" title="<?php _e('Hide unpublished / future posts for this sequence', "e20rsequence"); ?>" <?php checked( $options->hideFuture, 1); ?> />
+								<input type="checkbox" value="1" id="e20r-sequence_hideFuture" name="e20r-sequence_hideFuture" title="<?php _e('Hide unpublished / future posts for this sequence', "e20r-sequences"); ?>" <?php checked( $options->hideFuture, 1); ?> />
 								<input type="hidden" name="hidden-e20r-sequence_hideFuture" id="hidden-e20r-sequence_hideFuture" value="<?php esc_attr_e($options->hideFuture); ?>" >
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<label class="selectit e20r-sequence-setting-col-2"><?php _e('Hide all future posts', "e20rsequence"); ?></label>
+								<label class="selectit e20r-sequence-setting-col-2"><?php _e('Hide all future posts', "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-3"></div>
 						</div>
@@ -365,11 +365,11 @@ class Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
 							<div class="e20r-sequence-setting-col-1">
-								<input type="checkbox" value="1" id="e20r-sequence_allowRepeatPosts" name="e20r-sequence_allowRepeatPosts" title="<?php _e('Allow the admin to repeat the same post/page with different delay values', "e20rsequence"); ?>" <?php checked( $options->allowRepeatPosts, 1); ?> />
+								<input type="checkbox" value="1" id="e20r-sequence_allowRepeatPosts" name="e20r-sequence_allowRepeatPosts" title="<?php _e('Allow the admin to repeat the same post/page with different delay values', "e20r-sequences"); ?>" <?php checked( $options->allowRepeatPosts, 1); ?> />
 								<input type="hidden" name="hidden-e20r-sequence_allowRepeatPosts" id="hidden-e20r-sequence_allowRepeatPosts" value="<?php esc_attr_e($options->allowRepeatPosts); ?>" >
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<label class="selectit"><?php _e('Allow repeat posts/pages', "e20rsequence"); ?></label>
+								<label class="selectit"><?php _e('Allow repeat posts/pages', "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-3"></div>
 						</div>
@@ -377,10 +377,10 @@ class Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
 							<div class="e20r-sequence-setting-col-1">
-								<input type="checkbox" value="1" id="e20r-sequence_previewOffset" name="e20r-sequence_previewOffset" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', "e20rsequence"); ?>" <?php echo ( $options->previewOffset != 0 ? ' checked="checked"' : '' ); ?> />
+								<input type="checkbox" value="1" id="e20r-sequence_previewOffset" name="e20r-sequence_previewOffset" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', "e20r-sequences"); ?>" <?php echo ( $options->previewOffset != 0 ? ' checked="checked"' : '' ); ?> />
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<label class="selectit"><?php _e('Allow "preview" of sequence', "e20rsequence"); ?></label>
+								<label class="selectit"><?php _e('Allow "preview" of sequence', "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-3"></div>
 						</div>
@@ -388,15 +388,15 @@ class Views {
 					<div class="e20r-sequence-offset e20r-sequence-hidden e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-offset">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-offset"><?php _e('Days of preview:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-seq-offset"><?php _e('Days of preview:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
 								<span id="e20r-seq-offset-status" class="e20r-sequence-status"><?php echo ( $options->previewOffset == 0 ? 'None' : esc_attr( $options->previewOffset ) ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-offset" class="e20r-seq-edit">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Change the number of days to preview', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Change the number of days to preview', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -416,19 +416,19 @@ class Views {
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-offset e20r-sequence-full-row">
 							<p class="e20r-seq-offset">
-								<a href="#" id="ok-e20r-seq-offset" class="save-pmproseq-offset button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-offset" class="cancel-pmproseq-offset button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-offset" class="save-e20rseq-offset button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-offset" class="cancel-e20rseq-offset button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div>
 					</div>
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<input type="checkbox"  value="1" id="e20r-sequence_lengthVisible" name="e20r-sequence_lengthVisible" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text', "e20rsequence"); ?>" <?php checked( $options->lengthVisible, 1); ?> />
+								<input type="checkbox"  value="1" id="e20r-sequence_lengthVisible" name="e20r-sequence_lengthVisible" title="<?php _e('Whether to show the &quot;You are on day NNN of your membership&quot; text', "e20r-sequences"); ?>" <?php checked( $options->lengthVisible, 1); ?> />
 								<input type="hidden" name="hidden-e20r-sequence_lengthVisible" id="hidden-e20r-sequence_lengthVisible" value="<?php esc_attr_e($options->lengthVisible); ?>" >
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<label class="selectit"><?php _e("Show user membership length", "e20rsequence"); ?></label>
+								<label class="selectit"><?php _e("Show user membership length", "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-3"></div>
 						</div>
@@ -440,15 +440,15 @@ class Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-sortorder e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-sequence_sortOrder"><?php _e('Sort order:', "e20rsequence"); ?></label>
+								<label class="e20r-sequence-label" for="e20r-sequence_sortOrder"><?php _e('Sort order:', "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-sort-status" class="e20r-sequence-status"><?php echo ( $options->sortOrder == SORT_ASC ? __('Ascending', "e20rsequence") : __('Descending', "e20rsequence") ); ?></span>
+								<span id="e20r-seq-sort-status" class="e20r-sequence-status"><?php echo ( $options->sortOrder == SORT_ASC ? __('Ascending', "e20r-sequences") : __('Descending', "e20r-sequences") ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-sort" class="e20r-seq-edit e20r-sequence-setting-col-3">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Edit the list sort order', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Edit the list sort order', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -459,30 +459,30 @@ class Views {
 								<input type="hidden" name="hidden-e20r-sequence_sortOrder" id="hidden-e20r-sequence_sortOrder" value="<?php echo ($options->sortOrder == SORT_ASC ? esc_attr( SORT_ASC ) : esc_attr( SORT_DESC ) ); ?>" >
 								<label for="e20r-sequence_sortOrder"></label>
 								<select name="e20r-sequence_sortOrder" id="e20r-sequence_sortOrder">
-									<option value="<?php echo esc_attr(SORT_ASC); ?>" <?php selected( intval($options->sortOrder), SORT_ASC); ?> > <?php _e('Ascending', "e20rsequence"); ?></option>
-									<option value="<?php echo esc_attr(SORT_DESC); ?>" <?php selected( intval($options->sortOrder), SORT_DESC); ?> ><?php _e('Descending', "e20rsequence"); ?></option>
+									<option value="<?php echo esc_attr(SORT_ASC); ?>" <?php selected( intval($options->sortOrder), SORT_ASC); ?> > <?php _e('Ascending', "e20r-sequences"); ?></option>
+									<option value="<?php echo esc_attr(SORT_DESC); ?>" <?php selected( intval($options->sortOrder), SORT_DESC); ?> ><?php _e('Descending', "e20r-sequences"); ?></option>
 								</select>
 							</div>
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-sortorder e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-sort" class="save-pmproseq-sortorder button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-sort" class="cancel-pmproseq-sortorder button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-sort" class="save-e20rseq-sortorder button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-sort" class="cancel-e20rseq-sortorder button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div><!-- end of row -->
 					</div>
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-delaytype e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-sequence-delay"><?php _e('Delay type:', "e20rsequence"); ?></label>
+								<label class="e20r-sequence-label" for="e20r-sequence-delay"><?php _e('Delay type:', "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-delay-status" class="e20r-sequence-status"><?php echo ($options->delayType == 'byDate' ? __('A date', "e20rsequence") : __('Days after sign-up', "e20rsequence") ); ?></span>
+								<span id="e20r-seq-delay-status" class="e20r-sequence-status"><?php echo ($options->delayType == 'byDate' ? __('A date', "e20r-sequences") : __('Days after sign-up', "e20r-sequences") ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-delay" class="e20r-seq-edit">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Edit the delay type for this sequence', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Edit the delay type for this sequence', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -494,16 +494,16 @@ class Views {
 								<label for="e20r-sequence_delayType"></label>
 								<!-- onchange="e20r-sequence_delayTypeChange(<?php echo esc_attr( $sequence->sequence_id ); ?>); return false;" -->
 								<select name="e20r-sequence_delayType" id="e20r-sequence_delayType">
-									<option value="byDays" <?php selected( $options->delayType, 'byDays'); ?> ><?php _e('Days after sign-up', "e20rsequence"); ?></option>
-									<option value="byDate" <?php selected( $options->delayType, 'byDate'); ?> ><?php _e('A date', "e20rsequence"); ?></option>
+									<option value="byDays" <?php selected( $options->delayType, 'byDays'); ?> ><?php _e('Days after sign-up', "e20r-sequences"); ?></option>
+									<option value="byDate" <?php selected( $options->delayType, 'byDate'); ?> ><?php _e('A date', "e20r-sequences"); ?></option>
 								</select>
 							</div>
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence_delayType e20r-sequence-settings e20r-sequence-full-row">
 							<div id="e20r-seq-delay-btns">
 								<p class="e20r-seq-btns">
-									<a href="#" id="ok-e20r-seq-delay" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-									<a href="#" id="cancel-e20r-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+									<a href="#" id="ok-e20r-seq-delay" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+									<a href="#" id="cancel-e20r-seq-delay" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 								</p>
 							</div>
 						</div>
@@ -511,15 +511,15 @@ class Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-seq-showdelayas e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-showdelayas"><?php _e("Show availability as:", "e20rsequence"); ?></label>
+								<label class="e20r-sequence-label" for="e20r-seq-showdelayas"><?php _e("Show availability as:", "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-showdelayas-status" class="e20r-sequence-status"><?php echo ($options->showDelayAs == E20R_SEQ_AS_DATE ? __('Calendar date', "e20rsequence") : __('Day of membership', "e20rsequence") ); ?></span>
+								<span id="e20r-seq-showdelayas-status" class="e20r-sequence-status"><?php echo ($options->showDelayAs == E20R_SEQ_AS_DATE ? __('Calendar date', "e20r-sequences") : __('Day of membership', "e20r-sequences") ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-showdelayas" class="e20r-seq-edit e20r-sequence-setting-col-3">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('How to indicate when the post will be available to the user. Select either "Calendar date" or "day of membership")', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('How to indicate when the post will be available to the user. Select either "Calendar date" or "day of membership")', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -530,32 +530,32 @@ class Views {
 							<input type="hidden" name="hidden_e20r_seq_showdelayas" id="hidden_e20r_seq_showdelayas" value="<?php echo ($options->showDelayAs == E20R_SEQ_AS_DATE ? esc_attr( E20R_SEQ_AS_DATE ) : esc_attr( E20R_SEQ_AS_DAYNO ) ); ?>" >
 							<label for="e20r-sequence_showdelayas"></label>
 							<select name="e20r-sequence_showdelayas" id="e20r-sequence_showdelayas">
-								<option value="<?php echo E20R_SEQ_AS_DAYNO; ?>" <?php selected( $options->showDelayAs, E20R_SEQ_AS_DAYNO); ?> ><?php _e('Day of membership', "e20rsequence"); ?></option>
-								<option value="<?php echo E20R_SEQ_AS_DATE; ?>" <?php selected( $options->showDelayAs, E20R_SEQ_AS_DATE); ?> ><?php _e('Calendar date', "e20rsequence"); ?></option>
+								<option value="<?php echo E20R_SEQ_AS_DAYNO; ?>" <?php selected( $options->showDelayAs, E20R_SEQ_AS_DAYNO); ?> ><?php _e('Day of membership', "e20r-sequences"); ?></option>
+								<option value="<?php echo E20R_SEQ_AS_DATE; ?>" <?php selected( $options->showDelayAs, E20R_SEQ_AS_DATE); ?> ><?php _e('Calendar date', "e20r-sequences"); ?></option>
 							</select>
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-seq-showdelayas e20r-sequence-settings e20r-sequence-full-row">
 							<div id="e20r-seq-delay-btns">
 								<p class="e20r-seq-btns">
-									<a href="#" id="ok-e20r-seq-delay" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-									<a href="#" id="cancel-e20r-seq-delay" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+									<a href="#" id="ok-e20r-seq-delay" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+									<a href="#" id="cancel-e20r-seq-delay" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 								</p>
 							</div>
 						</div>
 					</div>
 					<div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row">
-						<div class="e20r-seq-alert-hl"><?php _e('New content alerts', "e20rsequence"); ?></div>
+						<div class="e20r-seq-alert-hl"><?php _e('New content alerts', "e20r-sequences"); ?></div>
 						<hr style="width: 100%;" />
 					</div><!-- end of row -->
 					<!--Email alerts -->
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-alerts e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', "e20rsequence"); ?>" id="e20r-sequence_sendNotice" name="e20r-sequence_sendNotice" <?php checked($options->sendNotice, 1); ?> />
+								<input type="checkbox" value="1" title="<?php _e('Whether to send an alert/notice to members when new content for this sequence is available to them', "e20r-sequences"); ?>" id="e20r-sequence_sendNotice" name="e20r-sequence_sendNotice" <?php checked($options->sendNotice, 1); ?> />
 								<input type="hidden" name="hidden-e20r-sequence_sendNotice" id="hidden-e20r-sequence_sendNotice" value="<?php esc_attr_e($options->sendNotice); ?>" >
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<label class="selectit" for="e20r-sequence_sendNotice"><?php _e('Send email alerts', "e20rsequence"); ?></label>
+								<label class="selectit" for="e20r-sequence_sendNotice"><?php _e('Send email alerts', "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-3">&nbsp;</div>
 						</div>
@@ -563,35 +563,35 @@ class Views {
 					<!-- Send now -->
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after <?php echo ( $new_post ? 'e20r-sequence-hidden' : null ); ?>">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-sendnowbtn e20r-sequence-settings">
-							<div class="e20r-sequence-setting-col-1"><label for="e20r_seq_send"><?php _e('Send alerts now', "e20rsequence"); ?></label></div>
+							<div class="e20r-sequence-setting-col-1"><label for="e20r_seq_send"><?php _e('Send alerts now', "e20r-sequences"); ?></label></div>
 							<div class="e20r-sequence-setting-col-2">
 								<?php wp_nonce_field('e20r-sequence-sendalert', 'e20r_sequence_sendalert_nonce'); ?>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" class="e20r-seq-settings-send e20r-seq-edit" id="e20r_seq_send">
-									<span aria-hidden="true"><?php _e('Send', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php echo sprintf( __( 'Manually trigger sending of alert notices for the %s sequence', "e20rsequence"), get_the_title( $sequence->sequence_id) ); ?></span>
+									<span aria-hidden="true"><?php _e('Send', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php echo sprintf( __( 'Manually trigger sending of alert notices for the %s sequence', "e20r-sequences"), get_the_title( $sequence->sequence_id) ); ?></span>
 								</a>
 							</div>
 						</div><!-- end of row -->
 					</div>
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row">
-							<p class="e20r-seq-email-hl"><?php _e("Alert settings:", "e20rsequence"); ?></p>
+							<p class="e20r-seq-email-hl"><?php _e("Alert settings:", "e20r-sequences"); ?></p>
 						</div>
 					</div>
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-replyto e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-replyto"><?php _e('Email:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-seq-replyto"><?php _e('Email:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
 								<span id="e20r-seq-replyto-status" class="e20r-sequence-status"><?php echo ( !empty( $options->replyto ) ? esc_attr($options->replyto) : esc_attr( $def_email ) ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-replyto" class="e20r-seq-edit">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Enter the email address to use as the sender of the alert', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Enter the email address to use as the sender of the alert', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -606,23 +606,23 @@ class Views {
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-email e20r-sequence-settings e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-email" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-email" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-email" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div><!-- end of row -->
 					</div>
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-fromname e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-fromname"><?php _e('Name:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-seq-fromname"><?php _e('Name:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
 								<span id="e20r-seq-fromname-status" class="e20r-sequence-status"><?php echo ( !empty( $options->fromname ) ? esc_attr($options->fromname) : esc_attr( $def_name ) ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-fromname" class="e20r-seq-edit e20r-sequence-setting-col-3">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Enter the name to use for the sender of the alert', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Enter the name to use for the sender of the alert', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -637,8 +637,8 @@ class Views {
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-email" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-email" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-email" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-email" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div><!-- end of row -->
 					</div>
@@ -648,25 +648,25 @@ class Views {
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-sendas e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-sendas"><?php _e('Transmit:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-seq-sendas"><?php _e('Transmit:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
                                 <span id="e20r-seq-sendas-status" class="e20r-sequence-status e20r-sequence-setting-col-2"><?php
 
 	                                switch($options->noticeSendAs) {
 		                                case E20R_SEQ_SEND_AS_SINGLE:
-			                                _e('One alert per post', "e20rsequence");
+			                                _e('One alert per post', "e20r-sequences");
 			                                break;
 
 		                                case E20R_SEQ_SEND_AS_LIST:
-			                                _e('Digest of posts', "e20rsequence");
+			                                _e('Digest of posts', "e20r-sequences");
 			                                break;
 	                                } ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-sendas" class="e20r-seq-edit e20r-sequence-setting-col-3">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Select the format of the alert notice when posting new content for this sequence', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Select the format of the alert notice when posting new content for this sequence', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -677,12 +677,12 @@ class Views {
 								<input type="hidden" name="hidden-e20r-sequence_noticeSendAs" id="hidden-e20r-sequence_noticeSendAs" value="<?php echo esc_attr($options->noticeSendAs); ?>" >
 								<label for="e20r-sequence_noticeSendAs"></label>
 								<select name="e20r-sequence_noticeSendAs" id="e20r-sequence_noticeSendAs">
-									<option value="<?php echo E20R_SEQ_SEND_AS_SINGLE; ?>" <?php selected( $options->noticeSendAs, E20R_SEQ_SEND_AS_SINGLE ); ?> ><?php _e('One alert per post', "e20rsequence"); ?></option>
-									<option value="<?php echo E20R_SEQ_SEND_AS_LIST; ?>" <?php selected( $options->noticeSendAs, E20R_SEQ_SEND_AS_LIST ); ?> ><?php _e('Digest of post links', "e20rsequence"); ?></option>
+									<option value="<?php echo E20R_SEQ_SEND_AS_SINGLE; ?>" <?php selected( $options->noticeSendAs, E20R_SEQ_SEND_AS_SINGLE ); ?> ><?php _e('One alert per post', "e20r-sequences"); ?></option>
+									<option value="<?php echo E20R_SEQ_SEND_AS_LIST; ?>" <?php selected( $options->noticeSendAs, E20R_SEQ_SEND_AS_LIST ); ?> ><?php _e('Digest of post links', "e20r-sequences"); ?></option>
 								</select>
 								<p class="e20r-seq-btns">
-									<a href="#" id="ok-e20r-seq-sendas" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-									<a href="#" id="cancel-e20r-seq-sendas" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+									<a href="#" id="ok-e20r-seq-sendas" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+									<a href="#" id="cancel-e20r-seq-sendas" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 								</p>
 							</div>
 						</div>
@@ -690,15 +690,15 @@ class Views {
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-template e20r-sequence-settings">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-template"><?php _e('Template:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-seq-template"><?php _e('Template:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
 								<span id="e20r-seq-template-status" class="e20r-sequence-status"><?php esc_attr_e( $options->noticeTemplate ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-template" class="e20r-seq-edit">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Select the template to use when posting new content in this sequence', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Select the template to use when posting new content in this sequence', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -715,23 +715,23 @@ class Views {
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence_fromname e20r-sequence-settings e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-template" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-template" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-template" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-template" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div> <!-- end of row -->
 					</div>
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after e20r-sequence-noticeTime e20r-sequence-email">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-noticeTime"><?php _e('When:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-seq-noticeTime"><?php _e('When:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
 								<span id="e20r-seq-noticetime-status" class="e20r-sequence-status"><?php esc_attr_e($options->noticeTime); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-noticetime" class="e20r-seq-edit">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Select when (tomorrow) to send new content posted alerts for this sequence', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -748,15 +748,15 @@ class Views {
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-noticeTime e20r-sequence-settings e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-noticetime" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-noticetime" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-noticetime" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-noticetime" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div>
 					</div> <!-- end of setting -->
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after e20r-sequence-timezone-setting">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-noticeTZ"><?php _e('Timezone:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-seq-noticeTZ"><?php _e('Timezone:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
 								<span class="e20r-sequence-status" id="e20r-sequence-noticeTZ-status"><?php echo get_option('timezone_string'); ?></span>
@@ -766,15 +766,15 @@ class Views {
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after e20r-sequence-subject">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-seq-subject"><?php _e("Subject", "e20rsequence"); ?></label>
+								<label class="e20r-sequence-label" for="e20r-seq-subject"><?php _e("Subject", "e20r-sequences"); ?></label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-subject-status" class="e20r-sequence-status"><?php echo ( ! empty( $options->subject ) ? esc_attr($options->subject) : __('New Content', "e20rsequence") ); ?></span>
+								<span id="e20r-seq-subject-status" class="e20r-sequence-status"><?php echo ( ! empty( $options->subject ) ? esc_attr($options->subject) : __('New Content', "e20r-sequences") ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-subject" class="e20r-seq-edit">
-									<span aria-hidden="true"><?php _e("Edit", "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e("Update/Edit the Prefix for the subject of the new content alert", "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e("Edit", "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e("Update/Edit the Prefix for the subject of the new content alert", "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -782,30 +782,30 @@ class Views {
 					<div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-subject e20r-sequence-settings e20r-sequence-full-row">
 							<div id="e20r-seq-subject-input">
-								<input type="hidden" name="hidden-e20r-sequence-subject" id="hidden-e20r-sequence_subject" value="<?php echo ( ! empty( $options->subject ) ? esc_attr($options->subject) : __('New Content', "e20rsequence") ); ?>" />
+								<input type="hidden" name="hidden-e20r-sequence-subject" id="hidden-e20r-sequence_subject" value="<?php echo ( ! empty( $options->subject ) ? esc_attr($options->subject) : __('New Content', "e20r-sequences") ); ?>" />
 								<label for="e20r-sequence_subject"></label>
-								<input type="text" name="e20r-sequence_subject" id="e20r-sequence_subject" value="<?php echo ( ! empty( $options->subject )  ? esc_attr($options->subject) : __('New Content', "e20rsequence") ); ?>"/>
+								<input type="text" name="e20r-sequence_subject" id="e20r-sequence_subject" value="<?php echo ( ! empty( $options->subject )  ? esc_attr($options->subject) : __('New Content', "e20r-sequences") ); ?>"/>
 							</div>
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-subject e20r-sequence-settings e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-subject" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-subject" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-subject" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-subject" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div>
 					</div><!-- end of setting -->
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings e20r-sequence-excerptIntro">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-sequence-excerptIntro"><?php _e('Intro:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-sequence-excerptIntro"><?php _e('Intro:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-excerpt-status" class="e20r-sequence-status">"<?php echo ( !empty( $options->excerptIntro ) ? esc_attr($options->excerptIntro) : __('A summary for the new content follows:', "e20rsequence") ); ?>"</span>
+								<span id="e20r-seq-excerpt-status" class="e20r-sequence-status">"<?php echo ( !empty( $options->excerptIntro ) ? esc_attr($options->excerptIntro) : __('A summary for the new content follows:', "e20r-sequences") ); ?>"</span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-excerpt" class="e20r-seq-edit">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Update/Edit the introductory paragraph for the new content excerpt', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Update/Edit the introductory paragraph for the new content excerpt', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -813,30 +813,30 @@ class Views {
 					<div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-excerptIntro e20r-sequence-settings e20r-sequence-full-row">
 							<div id="e20r-seq-excerpt-input">
-								<input type="hidden" name="hidden-e20r-sequence_excerptIntro" id="hidden-e20r-sequence_excerptIntro" value="<?php echo ( !empty($options->excerptIntro ) ? esc_attr($options->excerptIntro) : __('A summary for the new content follows:', "e20rsequence") ); ?>" />
+								<input type="hidden" name="hidden-e20r-sequence_excerptIntro" id="hidden-e20r-sequence_excerptIntro" value="<?php echo ( !empty($options->excerptIntro ) ? esc_attr($options->excerptIntro) : __('A summary for the new content follows:', "e20r-sequences") ); ?>" />
 								<label for="e20r-sequence_excerpt"></label>
-								<input type="text" name="e20r-sequence_excerptIntro" id="e20r-sequence_excerptIntro" value="<?php echo ( !empty($options->excerptIntro ) ? esc_attr($options->excerptIntro) : __('A summary for the new content follows:', "e20rsequence") ); ?>"/>
+								<input type="text" name="e20r-sequence_excerptIntro" id="e20r-sequence_excerptIntro" value="<?php echo ( !empty($options->excerptIntro ) ? esc_attr($options->excerptIntro) : __('A summary for the new content follows:', "e20r-sequences") ); ?>"/>
 							</div>
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-excerptIntro e20r-sequence-settings e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-excerpt" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-excerpt" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-excerpt" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-excerpt" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div>
 					</div> <!-- end of setting -->
 					<div class="e20r-sequence-settings-display e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings e20r-sequence-dateformat">
 							<div class="e20r-sequence-setting-col-1">
-								<label class="e20r-sequence-label" for="e20r-sequence_dateformat"><?php _e('Date type:', "e20rsequence"); ?> </label>
+								<label class="e20r-sequence-label" for="e20r-sequence_dateformat"><?php _e('Date type:', "e20r-sequences"); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-dateformat-status" class="e20r-sequence-status">"<?php echo ( empty( $options->dateformat ) ? __('m-d-Y', "e20rsequence") : esc_attr($options->dateformat) ); ?>"</span>
+								<span id="e20r-seq-dateformat-status" class="e20r-sequence-status">"<?php echo ( empty( $options->dateformat ) ? __('m-d-Y', "e20r-sequences") : esc_attr($options->dateformat) ); ?>"</span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-dateformat" class="e20r-seq-edit">
-									<span aria-hidden="true"><?php _e('Edit', "e20rsequence"); ?></span>
-									<span class="screen-reader-text"><?php _e('Update/Edit the format of the !!today!! placeholder (a valid PHP date() format)', "e20rsequence"); ?></span>
+									<span aria-hidden="true"><?php _e('Edit', "e20r-sequences"); ?></span>
+									<span class="screen-reader-text"><?php _e('Update/Edit the format of the !!today!! placeholder (a valid PHP date() format)', "e20r-sequences"); ?></span>
 								</a>
 							</div>
 						</div>
@@ -844,7 +844,7 @@ class Views {
 					<div class="e20r-sequence-settings-input e20r-sequence-hidden e20r-sequence-email clear-after">
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-dateformat e20r-sequence-settings e20r-sequence-full-row">
 							<div id="e20r-seq-dateformat-select">
-								<input type="hidden" name="hidden-e20r-sequence_dateFormat" id="hidden-e20r-sequence_dateFormat" value="<?php echo ( empty( $options->dateformat) == false ? __('m-d-Y', "e20rsequence") : esc_attr($options->dateformat) ); ?>" />
+								<input type="hidden" name="hidden-e20r-sequence_dateFormat" id="hidden-e20r-sequence_dateFormat" value="<?php echo ( empty( $options->dateformat) == false ? __('m-d-Y', "e20r-sequences") : esc_attr($options->dateformat) ); ?>" />
 								<label for="e20r-sequence_dateformat"></label>
 								<select name="e20r-sequence_dateformat" id="e20r-sequence_dateformat">
 									<?php echo $this->list_date_formats(); ?>
@@ -853,8 +853,8 @@ class Views {
 						</div>
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-dateformat e20r-sequence-settings e20r-sequence-full-row">
 							<p class="e20r-seq-btns">
-								<a href="#" id="ok-e20r-seq-dateormat" class="save-pmproseq button"><?php _e('OK', "e20rsequence"); ?></a>
-								<a href="#" id="cancel-e20r-seq-dateformat" class="cancel-pmproseq button-cancel"><?php _e('Cancel', "e20rsequence"); ?></a>
+								<a href="#" id="ok-e20r-seq-dateormat" class="save-e20rseq button"><?php _e('OK', "e20r-sequences"); ?></a>
+								<a href="#" id="cancel-e20r-seq-dateformat" class="cancel-e20rseq button-cancel"><?php _e('Cancel', "e20r-sequences"); ?></a>
 							</p>
 						</div>
 					</div> <!-- end of setting -->
@@ -862,7 +862,7 @@ class Views {
 											<hr style="width: 100%;" />
 										</div> --><!-- end of row -->
 					<!--                         <div class="e20r-sequences-settings-row clear-after e20r-sequence-full-row">
-                        <a class="button button-primary button-large" class="e20r-seq-settings-save" id="e20r_settings_save" onclick="e20r-sequence_saveSettings(<?php esc_attr_e( $sequence->sequence_id ); ?>) ; return false;"><?php _e('Update Settings', "e20rsequence"); ?></a>
+                        <a class="button button-primary button-large" class="e20r-seq-settings-save" id="e20r_settings_save" onclick="e20r-sequence_saveSettings(<?php esc_attr_e( $sequence->sequence_id ); ?>) ; return false;"><?php _e('Update Settings', "e20r-sequences"); ?></a>
                         <?php wp_nonce_field('e20r-sequence-save-settings', 'e20r_sequence_settings_nonce'); ?>
                         <div class="seq_spinner"></div>
                     </div>--><!-- end of row -->
@@ -871,9 +871,9 @@ class Views {
 				<!-- TODO: Enable and implement
                 <tr id="e20r-sequenceseq_start_0" style="display: none;">
                     <td>
-                        <input id='e20r-sequence_enablestartwhen' type="checkbox" value="1" title="<?php _e('Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out.', "e20rsequence"); ?>" name="e20r-sequence_enablestartwhen" <?php echo ( !empty( $options->startWhen ) ? 'checked="checked"' : '' ); ?> />
+                        <input id='e20r-sequence_enablestartwhen' type="checkbox" value="1" title="<?php _e('Configure start parameters for sequence drip. The default is to start day 1 exactly 24 hours after membership started, using the servers timezone and recorded timestamp for the membership check-out.', "e20r-sequences"); ?>" name="e20r-sequence_enablestartwhen" <?php echo ( !empty( $options->startWhen ) ? 'checked="checked"' : '' ); ?> />
                     </td>
-                    <td><label class="selectit"><?php _e('Sequence starts', "e20rsequence"); ?></label></td>
+                    <td><label class="selectit"><?php _e('Sequence starts', "e20r-sequences"); ?></label></td>
                 </tr>
                 <tr id="e20r-sequence_seq_start_1" style="display: none; height: 1px;">
                     <td colspan="2">
@@ -1090,8 +1090,8 @@ class Views {
 		</table>
 		<div id="e20r-seq-new">
 			<hr class="e20r-seq-hr" />
-			<a href="#" id="e20r-seq-new-meta" class="button-primary"><?php _e( "New Sequence", "e20rsequence" ); ?></a>
-			<a href="#" id="e20r-seq-new-meta-reset" class="button"><?php _e( "Reset", "e20rsequence" ); ?></a>
+			<a href="#" id="e20r-seq-new-meta" class="button-primary"><?php _e( "New Sequence", "e20r-sequences" ); ?></a>
+			<a href="#" id="e20r-seq-new-meta-reset" class="button"><?php _e( "Reset", "e20r-sequences" ); ?></a>
 		</div>
 		<?php
 
@@ -1271,7 +1271,7 @@ class Views {
 			case 'byDate':
 
 				E20RTools\DBG::log("Configured to track delays by Date");
-				$delayFormat = __( 'Date', "e20rsequence" );
+				$delayFormat = __( 'Date', "e20r-sequences" );
 				$starts = date_i18n( "Y-m-d", current_time('timestamp') );
 
 				if ( empty( $input_value ) ) {
@@ -1286,12 +1286,12 @@ class Views {
 			default:
 
 				E20RTools\DBG::log("Configured to track delays by Day count: {$active_id}");
-				$delayFormat = __('Day count', "e20rsequence");
+				$delayFormat = __('Day count', "e20r-sequences");
 				$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-days" type="text" name="e20r_seq-delay[]" %s>', $input_value );
 
 		}
 
-		$label = sprintf( __("Delay (Format: %s)", "e20rsequence"), $delayFormat );
+		$label = sprintf( __("Delay (Format: %s)", "e20r-sequences"), $delayFormat );
 
 		return array( $label, $inputHTML );
 	}
@@ -1302,7 +1302,7 @@ class Views {
 		<fieldset>
 		<tr class="select-row-label sequence-select-label<?php // echo ( $active_id == 0 ? ' new-sequence-select-label' : ' sequence-select-label' ); ?>">
 			<td>
-				<label for="e20r_seq-memberof-sequences"><?php _e("Managed by (drip content feed)", "e20rsequence"); ?></label>
+				<label for="e20r_seq-memberof-sequences"><?php _e("Managed by (drip content feed)", "e20r-sequences"); ?></label>
 			</td>
 		</tr>
 		<?php
@@ -1315,7 +1315,7 @@ class Views {
 		<tr class="select-row-input sequence-select">
 			<td class="sequence-list-dropdown">
 				<select class="e20r_seq-memberof-sequences" name="e20r_seq-sequences[]">
-					<option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected="selected"' : '' ); ?>><?php _e("Not managed", "e20rsequence"); ?></option><?php
+					<option value="0" <?php echo ( ( empty( $belongs_to ) || $active_id == 0) ? 'selected="selected"' : '' ); ?>><?php _e("Not managed", "e20r-sequences"); ?></option><?php
 					// Loop through all of the sequences & create an option list
 					foreach ( $sequence_list as $sequence ) {
 
@@ -1337,9 +1337,9 @@ class Views {
 		<tr class="delay-row-input sequence-delay">
 			<td>
 				<?php echo $inputHTML; ?>
-				<label for="remove-sequence_<?php esc_attr_e( $active_id ); ?>" ><?php _e('Remove: ', "e20rsequence"); ?></label>
+				<label for="remove-sequence_<?php esc_attr_e( $active_id ); ?>" ><?php _e('Remove: ', "e20r-sequences"); ?></label>
 				<input type="checkbox" name="remove-sequence" class="e20r_seq-remove-seq" value="<?php esc_attr_e( $active_id ); ?>">
-				<button class="button-secondary e20r-sequence-remove-alert"><?php _e("Clear alerts", "e20rsequence");?></button>
+				<button class="button-secondary e20r-sequence-remove-alert"><?php _e("Clear alerts", "e20r-sequences");?></button>
 			</td>
 		</tr>
 		</fieldset>
@@ -1425,7 +1425,7 @@ class Views {
 
 	if ( count( $seqList ) == 0 ) {
 		// if ( 0 == count( $this->posts ) ) {
-		echo '<span style="text-align: center;">' . __( "There is <em>no content available</em> for you at this time. Please check back later.", "e20rsequence" ) . "</span>";
+		echo '<span style="text-align: center;">' . __( "There is <em>no content available</em> for you at this time. Please check back later.", "e20r-sequences" ) . "</span>";
 
 	} else {
 	if ( $scrollbox ) { ?>
@@ -1455,13 +1455,13 @@ class Views {
 							<tr id="e20r-seq-selected-post">
 								<td class="e20r-seq-post-img"><?php esc_html_e( apply_filters( 'e20r-sequence-closest-post-indicator-image', $closestPostImg ) ); ?></td>
 								<td class="e20r-seq-post-hl">
-									<a href="<?php echo esc_url_raw($p->permalink); ?>" title="<?php esc_attr_e($p->title); ?>"><strong><?php esc_attr_e($p->title); ?></strong>&nbsp;&nbsp;<em>(<?php _e("Current", "e20rsequence");?>)</em></a>
+									<a href="<?php echo esc_url_raw($p->permalink); ?>" title="<?php esc_attr_e($p->title); ?>"><strong><?php esc_attr_e($p->title); ?></strong>&nbsp;&nbsp;<em>(<?php _e("Current", "e20r-sequences");?>)</em></a>
 								</td>
 								<td <?php echo( true === $button ? 'class="e20r-seq-availnow-btn"' : '' ); ?>><?php
 
 									if ( true === $button ) {
 										?>
-									<a class="button primary" href="<?php echo esc_url($p->permalink); ?>"> <?php _e( "Available", "e20rsequence" ); ?></a><?php
+									<a class="button primary" href="<?php echo esc_url($p->permalink); ?>"> <?php _e( "Available", "e20r-sequences" ); ?></a><?php
 									} ?>
 								</td>
 							</tr> <?php
@@ -1475,7 +1475,7 @@ class Views {
 								<td<?php echo( true === $button ? ' class="e20r-seq-availnow-btn">' : '>' );
 								if ( true === $button ) {
 									?>
-								<a class="button" href="<?php echo esc_url_raw( $p->permalink ); ?>"> <?php _e( "Available", "e20rsequence" ); ?></a><?php
+								<a class="button" href="<?php echo esc_url_raw( $p->permalink ); ?>"> <?php _e( "Available", "e20r-sequences" ); ?></a><?php
 								} ?>
 								</td>
 							</tr>
@@ -1499,10 +1499,10 @@ class Views {
                                         <?php esc_attr_e($p->title); ?>
                                     </span>
                                     <span class="e20r_sequence_item-unavailable">
-                                        <?php printf( __( 'available on %s', "e20rsequence" ),
+                                        <?php printf( __( 'available on %s', "e20r-sequences" ),
 											( $options->delayType == 'byDays' &&
 												$options->showDelayAs == E20R_SEQ_AS_DAYNO ) ?
-												__( 'day', "e20rsequence" ) : '' ); ?>
+												__( 'day', "e20r-sequences" ) : '' ); ?>
 										<?php esc_attr_e( $sequence->display_proper_delay( $p->delay )); ?>
                                     </span>
 								</td>
@@ -1516,10 +1516,10 @@ class Views {
 								<td colspan="2">
                                     <span class="e20r_sequence_item-title"><?php esc_attr_e($p->title); ?></span>
                                     <span class="e20r_sequence_item-unavailable">
-                                        <?php printf( __( 'available on %s', "e20rsequence" ),
+                                        <?php printf( __( 'available on %s', "e20r-sequences" ),
                                             ($options->delayType == 'byDays' &&
                                                 $options->showDelayAs == E20R_SEQ_AS_DAYNO ) ?
-                                                __( 'day', "e20rsequence" ) : '' ); ?>
+                                                __( 'day', "e20r-sequences" ) : '' ); ?>
                                         <?php esc_attr_e( $sequence->display_proper_delay( $p->delay ) ); ?>
                                     </span>
                                 </td>
@@ -1530,7 +1530,7 @@ class Views {
 							?>
 							<tr id="e20r-seq-post">
 								<td>
-									<span style="text-align: center;"><?php _e("There is <em>no content available</em> for you at this time. Please check back later.", "e20rsequence"); ?></span>,
+									<span style="text-align: center;"><?php _e("There is <em>no content available</em> for you at this time. Please check back later.", "e20r-sequences"); ?></span>,
 								</td>
 							</tr><?php
 						}
@@ -1575,7 +1575,7 @@ class Views {
 		}
 		elseif ( ( $sequence->sequence_id == 0 ) && ( $title == '' ) ) {
 
-			$title = sprintf( '<h3>%s</h3>', __("Available posts", "e20rsequence") );
+			$title = sprintf( '<h3>%s</h3>', __("Available posts", "e20r-sequences") );
 		}
 		elseif ( $title == '' ) {
 
@@ -1630,8 +1630,8 @@ class Views {
                         <input type="hidden" name="hidden_e20r_seq_uid" id="hidden_e20r_seq_uid" value="<?php esc_attr_e( $current_user->ID ); ?>" >
                         <?php wp_nonce_field('e20r-sequence-user-optin', 'e20r_sequence_optin_nonce'); ?>
                         <span>
-                            <input type="checkbox" value="1" id="e20r_sequence_useroptin" name="e20r_sequence_useroptin" onclick="javascript:e20r_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', "e20rsequence"); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
-                            <label for="e20r-seq-useroptin"><?php _e('Yes, please send me email reminders!', "e20rsequence"); ?></label>
+                            <input type="checkbox" value="1" id="e20r_sequence_useroptin" name="e20r_sequence_useroptin" onclick="javascript:e20r_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', "e20r-sequences"); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
+                            <label for="e20r-seq-useroptin"><?php _e('Yes, please send me email reminders!', "e20r-sequences"); ?></label>
                         </span>
                     </form>
                 </div>
