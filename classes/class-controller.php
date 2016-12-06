@@ -69,7 +69,7 @@ class Controller
     function __construct($id = null)
     {
         if ( null !== self::$_this ) {
-            $error_message = sprintf(__("Attempted to load a second instance of a singleton class (%s)", "e20rsequence"),
+            $error_message = sprintf(__("Attempted to load a second instance of a singleton class (%s)", "e20r-sequences"),
                                     get_class($this)
                             );
 
@@ -87,7 +87,7 @@ class Controller
             if ( $this->sequence_id == false ) {
                 throw new \Exception(
                     sprintf(
-                        __("A Sequence with the specified ID (%s) does not exist on this system", "e20rsequence" ),
+                        __("A Sequence with the specified ID (%s) does not exist on this system", "e20r-sequences" ),
                         $id
                     )
                 );
@@ -251,7 +251,7 @@ class Controller
 
             if ( !$this->is_converted( $sequence->ID ) ) {
 
-                $this->set_error_msg( sprintf( __( "Required action: Please de-activate and then activate the E20R Sequences plugin (%d)", "e20rsequence" ), $sequence->ID ) );
+                $this->set_error_msg( sprintf( __( "Required action: Please de-activate and then activate the E20R Sequences plugin (%d)", "e20r-sequences" ), $sequence->ID ) );
             }
         }
     }
@@ -467,11 +467,11 @@ class Controller
         $settings->noticeSendAs = E20R_SEQ_SEND_AS_SINGLE; // Send the alert notice as one notice per message.
         $settings->noticeTime = '00:00'; // At Midnight (server TZ)
         $settings->noticeTimestamp = current_time('timestamp'); // The current time (in UTC)
-        $settings->excerptIntro = __('A summary of the post follows below:', "e20rsequence");
+        $settings->excerptIntro = __('A summary of the post follows below:', "e20r-sequences");
         $settings->replyto = apply_filters('e20r-sequence-default-sender-email', $admin->user_email); // << Update Name
         $settings->fromname = apply_filters('e20r-sequence-default-sender-name', $admin->display_name); // << Updated Name!
-        $settings->subject = __('New Content ', "e20rsequence");
-        $settings->dateformat = __('m-d-Y', "e20rsequence"); // Using American MM-DD-YYYY format. << Updated name!
+        $settings->subject = __('New Content ', "e20r-sequences");
+        $settings->dateformat = __('m-d-Y', "e20r-sequences"); // Using American MM-DD-YYYY format. << Updated name!
         $settings->trackGoogleAnalytics = false; // Whether to use Google analytics to track message open operations or not
         $settings->gaTid = null; // The Google Analytics ID to use (TID)
 
@@ -629,7 +629,7 @@ class Controller
 			$sequence_id = isset($_POST['e20r_sequence_id']) ? intval($_POST['e20r_sequence_id']) : null;
 
 			if (is_null($sequence_id)) {
-				wp_send_json_error( array( array( 'message' => __("No sequence ID specified. Can't clear cache!", "e20rsequence"))));
+				wp_send_json_error( array( array( 'message' => __("No sequence ID specified. Can't clear cache!", "e20r-sequences"))));
 				wp_die();
 			}
 		}
@@ -645,7 +645,7 @@ class Controller
 
         if( (false === $status) && (true === $direct_operation) &&
             ( isset( $_POST['e20r_sequence_id']) || isset($_POST['e20r_sequence_post_nonce']) )) {
-            wp_send_json_error( array( array('message' => __("No cache to clear, or unable to clear the cache", "e20rsequence"))));
+            wp_send_json_error( array( array('message' => __("No cache to clear, or unable to clear the cache", "e20r-sequences"))));
             wp_die();
         }
 
@@ -1464,7 +1464,7 @@ class Controller
         if ( false === $found_post && ) {
 
             E20RTools\DBG::log("Post {$post_id} with delay {$delay} is already present in sequence {$sequence_id}");
-            $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', "e20rsequence" ) );
+            $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', "e20r-sequences" ) );
             return true;
         }
         **/
@@ -1476,7 +1476,7 @@ class Controller
         if ( (count($posts) > 0 && false === $this->allow_repetition()) || true === $found_post) {
 
             E20RTools\DBG::log("Post is a duplicate and we're not allowed to add duplicates");
-            $this->set_error_msg( sprintf( __("Warning: '%s' does not allow multiple delay values for a single post ID", "e20rsequence"), get_the_title( $sequence_id ) ) );
+            $this->set_error_msg( sprintf( __("Warning: '%s' does not allow multiple delay values for a single post ID", "e20r-sequences"), get_the_title( $sequence_id ) ) );
 
             foreach ( $posts as $p ) {
 
@@ -2153,7 +2153,7 @@ class Controller
 
                                     $timestamp = ( current_time( 'timestamp' ) + $previewAdd + ( $offset * 60*60*24 ) );
 
-                                    $today = date( __( 'Y-m-d', "e20rsequence" ), $timestamp );
+                                    $today = date( __( 'Y-m-d', "e20r-sequences" ), $timestamp );
 
                                     if ( $post->delay <= $today ) {
 
@@ -2629,7 +2629,7 @@ class Controller
             if ( $type !== 'pmpro_sequence' )
             {
                 $view = apply_filters('get_sequence_views_class_instance', null);
-                add_meta_box( 'e20r-seq-post-meta', __( 'Drip Feed Settings', "e20rsequence" ), array( $view, 'render_post_edit_metabox' ), $type, 'side', 'high' );
+                add_meta_box( 'e20r-seq-post-meta', __( 'Drip Feed Settings', "e20r-sequences" ), array( $view, 'render_post_edit_metabox' ), $type, 'side', 'high' );
             }
         }
     }
@@ -2652,11 +2652,11 @@ class Controller
         E20RTools\DBG::log("Loading sequence settings meta box");
 
         // sequence settings box (for posts & pages)
-        add_meta_box('e20r-sequence-settings', __('Settings for Sequence', "e20rsequence"), array( $view, 'settings' ), 'pmpro_sequence', 'side', 'high');
+        add_meta_box('e20r-sequence-settings', __('Settings for Sequence', "e20r-sequences"), array( $view, 'settings' ), 'pmpro_sequence', 'side', 'high');
 
         E20RTools\DBG::log("Loading sequence post list meta box");
         //sequence meta box
-        add_meta_box('e20r_sequence_meta', __('Posts in Sequence', "e20rsequence"), array( $view, "sequence_list_metabox" ), 'pmpro_sequence', 'normal', 'high');
+        add_meta_box('e20r_sequence_meta', __('Posts in Sequence', "e20r-sequences"), array( $view, "sequence_list_metabox" ), 'pmpro_sequence', 'normal', 'high');
     }
 
     /**
@@ -2743,7 +2743,7 @@ class Controller
             // If we're supposed to show the "days of membership" information, adjust the text for type of delay.
             if ( intval( $this->options->lengthVisible ) == 1 ) {
 
-                $content .= sprintf("<p>%s</p>", sprintf(__("You are on day %s of your membership", "e20rsequence"), $this->get_membership_days()));
+                $content .= sprintf("<p>%s</p>", sprintf(__("You are on day %s of your membership", "e20r-sequences"), $this->get_membership_days()));
             }
 
             // Add the list of posts in the sequence to the content.
@@ -2788,7 +2788,7 @@ class Controller
         }
 
         if (( $id == null ) && ( $this->sequence_id == 0 ) ) {
-            throw new \Exception( __('No sequence ID specified.', "e20rsequence") );
+            throw new \Exception( __('No sequence ID specified.', "e20r-sequences") );
         }
 
         return false;
@@ -2882,18 +2882,18 @@ class Controller
 
             ?>
             <nav class="navigation paging-navigation" role="navigation">
-                <h4 class="screen-reader-text"><?php _e( 'Navigation', "e20rsequence" ); ?></h4>
+                <h4 class="screen-reader-text"><?php _e( 'Navigation', "e20r-sequences" ); ?></h4>
                 <?php echo paginate_links( array(
                     'base'          => $base,
                     'format'        => $format,
                     'total'         => $total,
                     'current'       => $paged,
                     'mid_size'      => 1,
-                    'prev_text'     => sprintf( __( '%s Previous', "e20rsequence"), $prev_arrow),
-                    'next_text'     => sprintf( __( 'Next %s', "e20rsequence"), $next_arrow),
+                    'prev_text'     => sprintf( __( '%s Previous', "e20r-sequences"), $prev_arrow),
+                    'next_text'     => sprintf( __( 'Next %s', "e20r-sequences"), $next_arrow),
                     'prev_next'     => true,
                     'type'          => 'list',
-                    'before_page_number' => '<span class="screen-reader-text">' . __('Page', "e20rsequence") . ' </span>',
+                    'before_page_number' => '<span class="screen-reader-text">' . __('Page', "e20r-sequences") . ' </span>',
                 )); ?>
             </nav>
             <?php
@@ -2966,7 +2966,7 @@ class Controller
                 if ( false !== $insequence ) {
 
                     //user has one of the sequence levels, find out which one and tell him how many days left
-                    $text = sprintf("%s<br/>", sprintf( __("This content is only available to existing members at the specified time or day. (Required membership: <a href='%s'>%s</a>", "e20rsequence"), get_permalink($ps), get_the_title($ps)) );
+                    $text = sprintf("%s<br/>", sprintf( __("This content is only available to existing members at the specified time or day. (Required membership: <a href='%s'>%s</a>", "e20r-sequences"), get_permalink($ps), get_the_title($ps)) );
 
                     switch ( $this->options->delayType ) {
 
@@ -2976,19 +2976,19 @@ class Controller
 
                                 case E20R_SEQ_AS_DAYNO:
 
-                                    $text .= sprintf( __( 'You will be able to access "%s" on day %s of your membership', "e20rsequence" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
+                                    $text .= sprintf( __( 'You will be able to access "%s" on day %s of your membership', "e20r-sequences" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
                                     break;
 
                                 case E20R_SEQ_AS_DATE:
 
-                                    $text .= sprintf( __( 'You will be able to  access "%s" on %s', "e20rsequence" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
+                                    $text .= sprintf( __( 'You will be able to  access "%s" on %s', "e20r-sequences" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
                                     break;
                             }
 
                             break;
 
                         case 'byDate':
-                            $text .= sprintf( __('You will be able to access "%s" on %s', "e20rsequence"), get_the_title($post_id), $delay );
+                            $text .= sprintf( __('You will be able to access "%s" on %s', "e20r-sequences"), get_the_title($post_id), $delay );
                             break;
 
                         default:
@@ -3004,11 +3004,11 @@ class Controller
                         $tmp = $post_sequences;
                         $seqId = array_pop( $tmp );
 
-                        $text = sprintf("%s<br/>", sprintf( __( "This content is only available to existing members who are already logged in. ( Reqired level: <a href='%s'>%s</a>)", "e20rsequence" ), get_permalink( $seqId ), get_the_title( $seqId ) ) );
+                        $text = sprintf("%s<br/>", sprintf( __( "This content is only available to existing members who are already logged in. ( Reqired level: <a href='%s'>%s</a>)", "e20r-sequences" ), get_permalink( $seqId ), get_the_title( $seqId ) ) );
                     }
                     else {
 
-                        $text = sprintf( "<p>%s</p>", __( 'This content is only available to existing members who have logged in. ( For levels:  ', "e20rsequence" ) );
+                        $text = sprintf( "<p>%s</p>", __( 'This content is only available to existing members who have logged in. ( For levels:  ', "e20r-sequences" ) );
                         $seq_links = array();
 
                         foreach ( $post_sequences as $sequence_id ) {
@@ -3494,7 +3494,7 @@ class Controller
                     E20RTools\DBG::log("Adding the post excerpt to email notice");
 
                     if ( empty( $this->options->excerptIntro ) ) {
-                        $this->options->excerptIntro = __('A summary:', "e20rsequence");
+                        $this->options->excerptIntro = __('A summary:', "e20r-sequences");
                     }
 
                     $excerpt = '<p>' . $this->options->excerptIntro . '</p><p>' . $post->excerpt . '</p>';
@@ -3700,7 +3700,7 @@ class Controller
 
         if ( empty( $delays ) && (!in_array(0, $delays)) ) {
 
-            $this->set_error_msg( __( "Error: No delay value(s) received", "e20rsequence") );
+            $this->set_error_msg( __( "Error: No delay value(s) received", "e20r-sequences") );
             E20RTools\DBG::log( "post_save_action() - Error: delay not specified! ", E20R_DEBUG_SEQ_CRITICAL );
             return;
         }
@@ -3732,7 +3732,7 @@ class Controller
 
             if (! $user_can ) {
 
-                $this->set_error_msg( __( 'Incorrect privileges for this operation', "e20rsequence" ) );
+                $this->set_error_msg( __( 'Incorrect privileges for this operation', "e20r-sequences" ) );
                 E20RTools\DBG::log("post_save_action() - User lacks privileges to edit", E20R_DEBUG_SEQ_WARNING);
                 return;
             }
@@ -3744,7 +3744,7 @@ class Controller
             elseif ( is_null($delays[$key]) ||  (empty( $delays[$key] ) && !is_numeric($delays[$key]) ) ) {
 
                 E20RTools\DBG::log("post_save_action() - Not a valid delay value...: " . $delays[$key], E20R_DEBUG_SEQ_CRITICAL);
-                $this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", "e20rsequence"), get_the_title( $id ) ) );
+                $this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", "e20r-sequences"), get_the_title( $id ) ) );
             }
             else {
 
@@ -3801,13 +3801,13 @@ class Controller
 /*        if (! $this->is_valid_delay($delay) )
         {
             E20RTools\DBG::log('add_post(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
-            $this->set_error_msg( sprintf(__('Invalid delay value - %s', "e20rsequence"), ( empty($delay) ? 'blank' : $delay ) ) );
+            $this->set_error_msg( sprintf(__('Invalid delay value - %s', "e20r-sequences"), ( empty($delay) ? 'blank' : $delay ) ) );
             return false;
         }
 */
         if(empty($post_id) || !isset($delay))
         {
-            $this->set_error_msg( __("Please enter a value for post and delay", "e20rsequence") );
+            $this->set_error_msg( __("Please enter a value for post and delay", "e20r-sequences") );
             E20RTools\DBG::log('add_post(): No Post ID or delay specified');
             return false;
         }
@@ -3816,7 +3816,7 @@ class Controller
 
         if ( $post = get_post($post_id) === null ) {
 
-            $this->set_error_msg( __("A post with that id does not exist", "e20rsequence") );
+            $this->set_error_msg( __("A post with that id does not exist", "e20r-sequences") );
             E20RTools\DBG::log('add_post(): No Post with ' . $post_id . ' found');
 
             return false;
@@ -3842,7 +3842,7 @@ class Controller
         if (! $this->add_post_to_sequence( $this->sequence_id, $post_id, $delay) ) {
 
             E20RTools\DBG::log("add_post() - ERROR: Unable to add post {$post_id} to sequence {$this->sequence_id} with delay {$delay}", E20R_DEBUG_SEQ_WARNING);
-            $this->set_error_msg(sprintf(__("Error adding %s to %s", "e20rsequence"), get_the_title($post_id), get_the_title($this->sequence_id)));
+            $this->set_error_msg(sprintf(__("Error adding %s to %s", "e20r-sequences"), get_the_title($post_id), get_the_title($this->sequence_id)));
             return false;
         }
 
@@ -4022,7 +4022,7 @@ class Controller
         // Check that the function was called correctly. If not, just return
         if(empty($sequence_id)) {
             E20RTools\DBG::log('save_settings(): No sequence ID supplied...');
-            $this->set_error_msg( __('No sequence provided', "e20rsequence"));
+            $this->set_error_msg( __('No sequence provided', "e20r-sequences"));
             return false;
         }
 
@@ -4035,7 +4035,7 @@ class Controller
         // Verify that we're allowed to update the sequence data
         if ( ! $this->user_can_edit($current_user->ID) ) {
             E20RTools\DBG::log('save_settings(): User is not allowed to edit this post type', E20R_DEBUG_SEQ_CRITICAL);
-            $this->set_error_msg( __('User is not allowed to change settings', "e20rsequence"));
+            $this->set_error_msg( __('User is not allowed to change settings', "e20r-sequences"));
             return false;
         }
 
@@ -4048,7 +4048,7 @@ class Controller
                 if ( !$this->delete_post_meta_for_sequence( $sequence_id ) ) {
 
                     E20RTools\DBG::log( 'Unable to delete the posts in sequence # ' . $sequence_id, E20R_DEBUG_SEQ_CRITICAL );
-                    $this->set_error_msg( __('Unable to wipe existing posts', "e20rsequence") );
+                    $this->set_error_msg( __('Unable to wipe existing posts', "e20r-sequences") );
                 }
                 else {
                     E20RTools\DBG::log( 'Reloading sequence info');
@@ -4250,7 +4250,7 @@ class Controller
             E20RTools\DBG::log('save_settings(): POST value for settings->dateformat: ' . sanitize_text_field($_POST['hidden_e20r_seq_dateformat']) );
         }
         else
-            $this->options->dateformat = __('m-d-Y', "e20rsequence"); // Default is MM-DD-YYYY (if translation supports it)
+            $this->options->dateformat = __('m-d-Y', "e20r-sequences"); // Default is MM-DD-YYYY (if translation supports it)
 
         if ( isset($_POST['hidden_e20r_seq_replyto']) )
         {
@@ -4266,7 +4266,7 @@ class Controller
             E20RTools\DBG::log('save_settings(): POST value for settings->subject: ' . sanitize_text_field($_POST['hidden_e20r_seq_subject']) );
         }
         else
-            $this->options->subject = __('New Content ', "e20rsequence");
+            $this->options->subject = __('New Content ', "e20r-sequences");
 
 */
         // Schedule cron jobs if the user wants us to send notices.
@@ -4518,7 +4518,7 @@ class Controller
 
                 E20RTools\DBG::log( 'No sequence number specified. Ignoring settings for user', E20R_DEBUG_SEQ_WARNING );
 
-                wp_send_json_error( __('Unable to save your settings', "e20rsequence") );
+                wp_send_json_error( __('Unable to save your settings', "e20r-sequences") );
             }
 
             if ( isset($_POST['hidden_e20r_seq_uid'])) {
@@ -4534,7 +4534,7 @@ class Controller
             else {
                 E20RTools\DBG::log( 'No user ID specified. Ignoring settings!', E20R_DEBUG_SEQ_WARNING );
 
-                wp_send_json_error( __('Unable to save your settings', "e20rsequence") );
+                wp_send_json_error( __('Unable to save your settings', "e20r-sequences") );
             }
 
             if ( !$this->init( $seqId ) ) {
@@ -4606,12 +4606,12 @@ class Controller
             else {
 
                 E20RTools\DBG::log('Error: Mismatched User IDs -- user_id: ' . $user_id . ' current_user: ' . $current_user->ID, E20R_DEBUG_SEQ_CRITICAL);
-                $this->set_error_msg( __( 'Unable to save your settings', "e20rsequence" ) );
+                $this->set_error_msg( __( 'Unable to save your settings', "e20r-sequences" ) );
                 $status = false;
             }
         }
-        catch (Exception $e) {
-            $this->set_error_msg( sprintf( __('Error: %s', "e20rsequence" ), $e->getMessage() ) );
+        catch (\Exception $e) {
+            $this->set_error_msg( sprintf( __('Error: %s', "e20r-sequences" ), $e->getMessage() ) );
             $status = false;
             E20RTools\DBG::log('optin_save() - Exception error: ' . $e->getMessage(), E20R_DEBUG_SEQ_CRITICAL);
         }
@@ -4750,7 +4750,7 @@ class Controller
                 if ( !$this->delete_post_meta_for_sequence($sequence_id) )
                 {
                     E20RTools\DBG::log('Unable to delete the posts in sequence # ' . $sequence_id, E20R_DEBUG_SEQ_CRITICAL);
-                    $this->set_error_msg( __('Could not delete posts from this sequence', "e20rsequence"));
+                    $this->set_error_msg( __('Could not delete posts from this sequence', "e20r-sequences"));
 
                 }
                 else {
@@ -4760,11 +4760,11 @@ class Controller
             }
             else
             {
-                $this->set_error_msg( __('Unable to identify the Sequence', "e20rsequence") );
+                $this->set_error_msg( __('Unable to identify the Sequence', "e20r-sequences") );
             }
         }
         else {
-            $this->set_error_msg( __('Unknown request', "e20rsequence") );
+            $this->set_error_msg( __('Unknown request', "e20r-sequences") );
         }
 
         // Return the status to the calling web page
@@ -4811,15 +4811,15 @@ class Controller
         if ( $this->user_can_edit( $current_user->ID ) && !is_null($seq_post_id) ) {
 
             $this->remove_post( $seq_post_id, $delay );
-            $this->set_error_msg(sprintf(__("'%s' has been removed","e20rsequence"), get_the_title($seq_post_id)));
-            //$result = __('The post has been removed', "e20rsequence");
+            $this->set_error_msg(sprintf(__("'%s' has been removed","e20r-sequences"), get_the_title($seq_post_id)));
+            //$result = __('The post has been removed', "e20r-sequences");
             $success = true;
 
         }
         else {
 
             $success = false;
-            $this->set_error_msg( __( 'Incorrect privileges: Did not update this sequence', "e20rsequence"));
+            $this->set_error_msg( __( 'Incorrect privileges: Did not update this sequence', "e20r-sequences"));
         }
 
         // Return the content for the new listbox (sans the deleted item)
@@ -4866,12 +4866,12 @@ class Controller
 
             E20RTools\DBG::log("Removing post # {$post_id} with delay {$delay} from sequence {$sequence_id}");
             $this->remove_post( $post_id, $delay, true );
-            //$result = __('The post has been removed', "e20rsequence");
+            //$result = __('The post has been removed', "e20r-sequences");
             $success = true;
         } else {
 
             $success = false;
-            $this->set_error_msg( __( 'Incorrect privileges to remove posts from this sequence', "e20rsequence" ) );
+            $this->set_error_msg( __( 'Incorrect privileges to remove posts from this sequence', "e20r-sequences" ) );
         }
 
         $result = $view->load_sequence_list_meta( $post_id, $sequence_id );
@@ -5015,7 +5015,7 @@ class Controller
             if ( $this->is_present( $seq_post_id, $delay ) ) {
 
                 E20RTools\DBG::log("add_post_callback() - Post {$seq_post_id} with delay {$delay} is already present in sequence {$sequence_id}");
-                $this->set_error_msg( __( 'Not configured to allow multiple delays for the same post/page', "e20rsequence" ) );
+                $this->set_error_msg( __( 'Not configured to allow multiple delays for the same post/page', "e20r-sequences" ) );
 
                 wp_send_json_error( $this->get_error_msg() );
                 return;
@@ -5037,12 +5037,12 @@ class Controller
                     }
                     else {
                         $success = false;
-                        $this->set_error_msg( __( sprintf( "Error adding post with ID: %s and delay value: %s to this sequence", 'e20rsequence' ), esc_attr( $seq_post_id ), esc_attr($delay) ));
+                        $this->set_error_msg( __( sprintf( "Error adding post with ID: %s and delay value: %s to this sequence", 'e20r-sequences' ), esc_attr( $seq_post_id ), esc_attr($delay) ));
                     }
 
                 } else {
                     $success = false;
-                    $this->set_error_msg( __( 'Not permitted to modify the sequence', "e20rsequence" ) );
+                    $this->set_error_msg( __( 'Not permitted to modify the sequence', "e20r-sequences" ) );
                 }
 
             } else {
@@ -5051,11 +5051,11 @@ class Controller
 
                 if ( empty( $seq_post_id ) && ( $this->get_error_msg() == null ) ) {
 
-                    $this->set_error_msg( sprintf( __( 'Did not specify a post/page to add', "e20rsequence" ) ) );
+                    $this->set_error_msg( sprintf( __( 'Did not specify a post/page to add', "e20r-sequences" ) ) );
                 }
                 elseif ( ( $delay !== 0 ) && empty( $delay ) ) {
 
-                    $this->set_error_msg( __( 'No delay has been specified', "e20rsequence" ) );
+                    $this->set_error_msg( __( 'No delay has been specified', "e20r-sequences" ) );
                 }
 
                 $delay       = null;
@@ -5068,12 +5068,12 @@ class Controller
             if ( empty( $seq_post_id ) && ( $this->get_error_msg() == null ) ) {
 
                 $success = false;
-                $this->set_error_msg( sprintf( __( 'Did not specify a post/page to add', "e20rsequence" ) ) );
+                $this->set_error_msg( sprintf( __( 'Did not specify a post/page to add', "e20r-sequences" ) ) );
             }
             elseif ( empty( $sequence_id ) && ( $this->get_error_msg() == null ) ) {
 
                 $success = false;
-                $this->set_error_msg( sprintf( __( 'This sequence was not found on the server!', "e20rsequence" ) ) );
+                $this->set_error_msg( sprintf( __( 'This sequence was not found on the server!', "e20r-sequences" ) ) );
             }
 
             $result = $view->get_post_list_for_metabox(true);
@@ -5094,7 +5094,7 @@ class Controller
         }
         else {
             E20RTools\DBG::log( "Sequence ID was 0. That's a 'blank' sequence" );
-            wp_send_json_error( array( array('message' => __('No sequence specified. Did you remember to save this page first?', 'e20rsequence'))) );
+            wp_send_json_error( array( array('message' => __('No sequence specified. Did you remember to save this page first?', 'e20r-sequences'))) );
         }
     }
 
@@ -5127,10 +5127,10 @@ class Controller
             } else {
                 // Ignore this post & return error message to display for the user/admin
                 // NOTE: Format of date is not translatable
-                $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __( 'date: YYYY-MM-DD', "e20rsequence" ) : __( 'number: Days since membership started', "e20rsequence" );
+                $expectedDelay = ( $this->options->delayType == 'byDate' ) ? __( 'date: YYYY-MM-DD', "e20r-sequences" ) : __( 'number: Days since membership started', "e20r-sequences" );
 
                 E20RTools\DBG::log( 'validate_delay_value(): Invalid delay value specified, not adding the post. Delay is: ' . $delay );
-                $this->set_error_msg( sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', "e20rsequence" ), $delay, $expectedDelay ) );
+                $this->set_error_msg( sprintf( __( 'Invalid delay specified ( %1$s ). Expected format is a %2$s', "e20r-sequences" ), $delay, $expectedDelay ) );
 
                 $delay = false;
             }
@@ -5145,7 +5145,7 @@ class Controller
 
             if ( empty( $delay ) ) {
 
-                $this->set_error_msg( __( 'No delay has been specified', "e20rsequence" ) );
+                $this->set_error_msg( __( 'No delay has been specified', "e20r-sequences" ) );
             }
         }
 
@@ -5210,11 +5210,11 @@ class Controller
 
         if ( ! function_exists( 'pmpro_getOption' ) ) {
 
-            $errorMessage = __( "The Eighty/20 Results Sequence plugin requires the ", "e20rsequence" );
-            $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='" . __("Opens in a new window/tab.", "e20rsequence" ) . "'>";
-            $errorMessage .= __( "Paid Memberships Pro</a> membership plugin.<br/><br/>", "e20rsequence" );
-            $errorMessage .= __( "Please install Paid Memberships Pro before attempting to activate this Eighty/20 Results Sequence plugin.<br/><br/>", "e20rsequence");
-            $errorMessage .= __( "Click the 'Back' button in your browser to return to the Plugin management page.", "e20rsequence" );
+            $errorMessage = __( "The Eighty/20 Results Sequence plugin requires the ", "e20r-sequences" );
+            $errorMessage .= "<a href='http://www.paidmembershipspro.com/' target='_blank' title='" . __("Opens in a new window/tab.", "e20r-sequences" ) . "'>";
+            $errorMessage .= __( "Paid Memberships Pro</a> membership plugin.<br/><br/>", "e20r-sequences" );
+            $errorMessage .= __( "Please install Paid Memberships Pro before attempting to activate this Eighty/20 Results Sequence plugin.<br/><br/>", "e20r-sequences");
+            $errorMessage .= __( "Click the 'Back' button in your browser to return to the Plugin management page.", "e20r-sequences" );
             wp_die($errorMessage);
         }
 
@@ -5355,7 +5355,7 @@ class Controller
         else {
 
             $retval = false;
-            $this->set_error_msg( __("Cannot convert to V3 metadata format: No sequences were defined.", "e20rsequence" ) );
+            $this->set_error_msg( __("Cannot convert to V3 metadata format: No sequences were defined.", "e20r-sequences" ) );
         }
 
         if ( $retval == true ) {
@@ -5370,7 +5370,7 @@ class Controller
 
         }
         else {
-            $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence (%s)", "e20rsequence") , get_the_title( $this->sequence_id ) ) );
+            $this->set_error_msg( sprintf( __( "Unable to upgrade post metadata for sequence (%s)", "e20r-sequences") , get_the_title( $this->sequence_id ) ) );
         }
 
         $converting_sequence = false;
@@ -5397,19 +5397,19 @@ class Controller
         $defaultSlug = get_option( 'e20r_sequence_slug', 'sequence' );
 
         $labels =  array(
-            'name' => __( 'Sequences', "e20rsequence"  ),
-            'singular_name' => __( 'Sequence', "e20rsequence" ),
+            'name' => __( 'Sequences', "e20r-sequences"  ),
+            'singular_name' => __( 'Sequence', "e20r-sequences" ),
             'slug' => 'e20r_sequence',
-            'add_new' => __( 'New Sequence', "e20rsequence" ),
-            'add_new_item' => __( 'New Sequence', "e20rsequence" ),
-            'edit' => __( 'Edit Sequence', "e20rsequence" ),
-            'edit_item' => __( 'Edit Sequence', "e20rsequence"),
-            'new_item' => __( 'Add New', "e20rsequence" ),
-            'view' => __( 'View Sequence', "e20rsequence" ),
-            'view_item' => __( 'View This Sequence', "e20rsequence" ),
-            'search_items' => __( 'Search Sequences', "e20rsequence" ),
-            'not_found' => __( 'No Sequence Found', "e20rsequence" ),
-            'not_found_in_trash' => __( 'No Sequence Found In Trash', "e20rsequence" )
+            'add_new' => __( 'New Sequence', "e20r-sequences" ),
+            'add_new_item' => __( 'New Sequence', "e20r-sequences" ),
+            'edit' => __( 'Edit Sequence', "e20r-sequences" ),
+            'edit_item' => __( 'Edit Sequence', "e20r-sequences"),
+            'new_item' => __( 'Add New', "e20r-sequences" ),
+            'view' => __( 'View Sequence', "e20r-sequences" ),
+            'view_item' => __( 'View This Sequence', "e20r-sequences" ),
+            'search_items' => __( 'Search Sequences', "e20r-sequences" ),
+            'not_found' => __( 'No Sequence Found', "e20r-sequences" ),
+            'not_found_in_trash' => __( 'No Sequence Found In Trash', "e20r-sequences" )
         );
 
         $error = register_post_type( 'pmpro_sequence',
@@ -5808,22 +5808,22 @@ class Controller
                 'ajaxurl' => admin_url('admin-ajax.php'),
                 'delay_config' => $delay_config,
                 'lang' => array(
-                    'alert_not_saved' => __("Error: This sequence needs to be saved before you can send alerts", "e20rsequence"),
-                    'save' => __('Update Sequence', "e20rsequence"),
-                    'saving' => __('Saving', "e20rsequence"),
-                    'saveSettings' => __('Update Settings', "e20rsequence"),
-                    'delay_change_confirmation' => __('Changing the delay type will erase all existing posts or pages in the Sequence list. (Cancel if your are unsure)', "e20rsequence"),
-                    'saving_error_1' => __('Error saving sequence post [1]', "e20rsequence"),
-                    'saving_error_2' => __('Error saving sequence post [2]', "e20rsequence"),
-                    'remove_error_1' => __('Error deleting sequence post [1]', "e20rsequence"),
-                    'remove_error_2' => __('Error deleting sequence post [2]', "e20rsequence"),
-                    'undefined' => __('Not Defined', "e20rsequence"),
-                    'unknownerrorrm' => __('Unknown error removing post from sequence', "e20rsequence"),
-                    'unknownerroradd' => __('Unknown error adding post to sequence', "e20rsequence"),
-                    'daysLabel' => __('Delay', "e20rsequence"),
-                    'daysText' => __('Days to delay', "e20rsequence"),
-                    'dateLabel' => __('Avail. on', "e20rsequence"),
-                    'dateText' => __('Release on (YYYY-MM-DD)', "e20rsequence"),
+                    'alert_not_saved' => __("Error: This sequence needs to be saved before you can send alerts", "e20r-sequences"),
+                    'save' => __('Update Sequence', "e20r-sequences"),
+                    'saving' => __('Saving', "e20r-sequences"),
+                    'saveSettings' => __('Update Settings', "e20r-sequences"),
+                    'delay_change_confirmation' => __('Changing the delay type will erase all existing posts or pages in the Sequence list. (Cancel if your are unsure)', "e20r-sequences"),
+                    'saving_error_1' => __('Error saving sequence post [1]', "e20r-sequences"),
+                    'saving_error_2' => __('Error saving sequence post [2]', "e20r-sequences"),
+                    'remove_error_1' => __('Error deleting sequence post [1]', "e20r-sequences"),
+                    'remove_error_2' => __('Error deleting sequence post [2]', "e20r-sequences"),
+                    'undefined' => __('Not Defined', "e20r-sequences"),
+                    'unknownerrorrm' => __('Unknown error removing post from sequence', "e20r-sequences"),
+                    'unknownerroradd' => __('Unknown error adding post to sequence', "e20r-sequences"),
+                    'daysLabel' => __('Delay', "e20r-sequences"),
+                    'daysText' => __('Days to delay', "e20r-sequences"),
+                    'dateLabel' => __('Avail. on', "e20r-sequences"),
+                    'dateText' => __('Release on (YYYY-MM-DD)', "e20r-sequences"),
                 )
             )
         );
@@ -5894,15 +5894,15 @@ class Controller
      */
     public function load_textdomain() {
 
-        $locale = apply_filters( "plugin_locale", get_locale(), 'e20rsequence' );
+        $locale = apply_filters( "plugin_locale", get_locale(), 'e20r-sequences' );
 
-        $mofile = "e20rsequence-{$locale}.mo";
+        $mofile = "e20r-sequences-{$locale}.mo";
 
         $mofile_local = dirname(__FILE__) . "/../languages/" . $mofile;
-        $mofile_global = WP_LANG_DIR . "/e20rsequence/" . $mofile;
+        $mofile_global = WP_LANG_DIR . "/e20r-sequences/" . $mofile;
 
-        load_textdomain( "e20rsequence", $mofile_global );
-        load_textdomain( "e20rsequence", $mofile_local );
+        load_textdomain( "e20r-sequences", $mofile_global );
+        load_textdomain( "e20r-sequences", $mofile_local );
     }
 
     /**
@@ -5913,7 +5913,7 @@ class Controller
         E20RTools\DBG::log('Unprivileged ajax call attempted', E20R_DEBUG_SEQ_CRITICAL);
 
         wp_send_json_error( array(
-            'message' => __('You must be logged in to edit PMPro Sequences', "e20rsequence")
+            'message' => __('You must be logged in to edit PMPro Sequences', "e20r-sequences")
         ) );
     }
 
@@ -6170,7 +6170,7 @@ class Controller
     public function load_actions()
     {
         // Register & validate the license for this plugin
-        \e20rLicense::registerLicense( 'e20r_sequence', __("E20R Drip Feed Sequences for PMPro", "e20rsequence") );
+        \e20rLicense::registerLicense( 'e20r_sequence', __("E20R Drip Feed Sequences for PMPro", "e20r-sequences") );
 
         add_action('upgrader_pre_download', array( $this, 'checkLicense'), 9, 3 );
 
