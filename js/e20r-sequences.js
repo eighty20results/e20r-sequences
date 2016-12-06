@@ -31,9 +31,10 @@ jQuery.noConflict();
 function e20r_sequence_optinSelect( sequence_id, user_id ) {
 
     var hiddenOptin = jQuery('#hidden_e20r_seq_useroptin');
+    var userOptin = jQuery('#e20r_sequence_useroptin');
 
     /* Show/Hide save button & store state of current user opt-in setting */
-    hiddenOptin.val( jQuery('#e20r_sequence_useroptin').is(':checked') ? 1 : 0 );
+    hiddenOptin.val( userOptin.is(':checked') ? 1 : 0 );
 
     // Enable the spinner during the save operation
     jQuery('div .seq_spinner').show();
@@ -59,7 +60,7 @@ function e20r_sequence_optinSelect( sequence_id, user_id ) {
         complete: function() {
 
             var doCheck = (hiddenOptin.val() == 1 ? true : false);
-            jQuery('#e20r_sequence_useroptin').prop('checked', doCheck);
+            userOptin.prop('checked', doCheck);
 
             jQuery('div .seq_spinner').hide();
         }
