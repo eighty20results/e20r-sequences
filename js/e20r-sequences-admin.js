@@ -30,8 +30,8 @@ var sequenceSettings = {
         this.email_settings = jQuery('.e20r-sequence-email');
         this.sendAlertCtl   = jQuery('#e20r-sequence_sendnotice');
         this.checkboxes     = jQuery('.e20r-sequence-settings-display .e20r-sequence-setting-col-1 > input[type="checkbox"]');
-        this.saveBtn        = jQuery('a[class^="save-pmproseq"]');
-        this.cancelBtn      = jQuery('a[class^="cancel-pmproseq"]');
+        this.saveBtn        = jQuery('a[class^="save-e20rseq"]');
+        this.cancelBtn      = jQuery('a[class^="cancel-e20rseq"]');
         this.editBtn        = jQuery('a.e20r-seq-edit');
 
         this.selects        = jQuery('div.e20r-sequence-settings-input select');
