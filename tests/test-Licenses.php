@@ -26,24 +26,142 @@
 class testLicenses extends WP_UnitTestCase {
 
 	/**
+	 *
+	 * Default license structure.
+	 *		$values = array(
+	 *          'fieldname' => array( 'e20r_sequence_A08GQI5B' ),
+	 *          'license_key' => array( 'e20r_sequence_A08GQI5B' ),
+	 *          'license_email' => array( 'thomas+license@eighty20results.com' ),
+	 *          'delete' => array(  'e20r_57dade3586636' ),
+	 *          'new_key' => array( null ),
+	 *          'new_email' => array( null ),
+	 *      );
+	 */
+
+	/**
 	 * Activate an existing (purchased) license on the remote server
 	 */
 	public function test_ValidatePurchasedLicense() {
 
-		$values = array(
-			'new_license' => "e20r_sequence_A08GQI5B",
-			'name' => "e20r_sequence",
-			'new_email' => 'thomas+license@eighty20results.com'
+		$input = array(
+	           'fieldname' => array( null ),
+	           'license_key' => array( null ),
+	           'license_email' => array( null ),
+	           'delete' => array( null ),
+	           'new_key' => array( 'e20r_sequence_A08GQI5B' ),
+	           'new_email' => array( 'thomas+license@eighty20results.com' ),
 		);
 
 		$lic = e20rLicense::get_instance();
 
-		$licenses = $lic->validateLicenseSettings( $values );
+		$settings = $lic->validateLicenseSettings( $input );
+		$licenses = $lic->getAllLicenses();
 
-		$this->assertArrayHasKey( 'e20r_sequence_A08GQI5B', $licenses, "License e20r_sequence_A08GQI5B not present in list of licenses"  );
+		$key = 'e20r_sequence_A08GQI5B';
+		$email = 'thomas+license@eighty20results.com';
 
-		$lic_info = $licenses[ $values['new_license'] ];
-		$this->assertArrayHasKey( 'expires', $lic_info, "Didn't save the upstream license info to the local license list" );
+		$this->assertArrayHasKey( $key, $licenses, "License e20r_sequence_A08GQI5B not present in list of licenses"  );
+
+		$lic_info = $licenses[ $key ];
+		$this->assertArrayHasKey( 'expires', $settings, "Didn't save the upstream license info to the local license list" );
+
+		foreach( $settings as $s ) {
+
+			$this->assertArrayHasKey( 'key', $s, "Didn't save the license info to the local license settings" );
+			if ( $key == $s['key'] ) {
+				$this->assertEquals( $email, $s['email'] );
+			}
+		}
+	}
+
+	public function test_ActivateSecondLicense() {
+
+		$input = array(
+			'fieldname' => array( 'e20r_sequence_A08GQI5B' ),
+			'license_key' => array( 'e20r_sequence_A08GQI5B' ),
+			'license_email' => array( 'thomas+license@eighty20results.com' ),
+			'delete' => array(  null ),
+			'new_key' => array( 'e20r_57dade3586636' ),
+			'new_email' => array( 'thomas@eighty20results.com' ),
+		);
+
+		$lic = e20rLicense::get_instance();
+
+		$settings = $lic->validateLicenseSettings( $input );
+		$licenses = $lic->getAllLicenses();
+
+		$key = 'e20r_57dade3586636';
+		$email = 'thomas@eighty20results.com';
+
+		$this->assertArrayHasKey( $key, $licenses, "License e20r_sequence_A08GQI5B not present in list of licenses"  );
+	}
+
+	public function test_DeactivateSecondLicenseFromSettings() {
+
+		$input = array(
+			'fieldname' => array( 'e20r_sequence_A08GQI5B', 'e20r_57dade3586636' ),
+			'license_key' => array( 'e20r_sequence_A08GQI5B', 'e20r_57dade3586636' ),
+			'license_email' => array( 'thomas+license@eighty20results.com', 'thomas@eighty20results.com' ),
+			'delete' => array(  'e20r_57dade3586636' ),
+			'new_key' => array( null ),
+			'new_email' => array( null ),
+		);
+
+		$lic = e20rLicense::get_instance();
+
+		$settings = $lic->validateLicenseSettings( $input );
+		$licenses = $lic->getAllLicenses();
+
+		$key = 'e20r_57dade3586636';
+		$email = 'thomas@eighty20results.com';
+
+		$this->assertArrayNotHasKey( $key, $licenses, "License e20r_57dade3586636 is still present in list of licenses" );
+	}
+
+	public function test_ActivateWithWrongEmail() {
+
+		$input = array(
+			'fieldname' => array( null ),
+			'license_key' => array( null ),
+			'license_email' => array( null ),
+			'delete' => array(  null ),
+			'new_key' => array( 'e20r_57dade3586636' ),
+			'new_email' => array( 'thomas+license@eighty20results.com' ),
+		);
+
+		$lic = e20rLicense::get_instance();
+
+		$settings = $lic->validateLicenseSettings( $input );
+		$licenses = $lic->getAllLicenses();
+
+		$key = 'e20r_57dade3586636';
+		$email = 'thomas+license@eighty20results.com';
+
+		$this->assertArrayNotHasKey( $key, $licenses, "License e20r_57dade3586636 not present in list of licenses"  );
+	}
+
+	public function test_DeactivateAndActivateFromSettings() {
+
+		$input = array(
+			'fieldname' => array( null ),
+			'license_key' => array( null ),
+			'license_email' => array( null ),
+			'delete' => array(  'e20r_57dade3586636' ),
+			'new_key' => array( 'e20r_sequence_A08GQI5B' ),
+			'new_email' => array( 'thomas+license@eighty20results.com' ),
+		);
+
+		$lic = e20rLicense::get_instance();
+
+		$settings = $lic->validateLicenseSettings( $input );
+		$licenses = $lic->getAllLicenses();
+
+		$key1 = 'e20r_57dade3586636';
+		$key2 = 'e20r_sequence_A08GQI5B';
+		$email = 'thomas+license@eighty20results.com';
+
+		$this->assertArrayNotHasKey( $key1, $licenses, "License e20r_57dade3586636 present in list of licenses"  );
+		$this->assertArrayHasKey( $key2, $licenses, "License e20r_sequence_A08GQI5B is NOT present in list of licenses"  );
 	}
 
 	/**
