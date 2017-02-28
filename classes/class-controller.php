@@ -5775,19 +5775,30 @@ class Controller
         wp_print_scripts( 'e20r-sequence-user' );
     }
 
-    /**
-     * Load all JS & CSS for Admin page
-     */
-/*
-    function enqueue_admin_scripts( $hook ) {
+	/**
+	 * Load all JS & CSS for Admin page
+	 *
+	 * @param string $hook
+	 *
+	 */
+	public function register_admin_scripts( $hook ) {
 
-        global $post;
+		global $post;
 
-        E20RTools\DBG::log("Loading admin scripts & styles for E20R Sequences");
-        $this->register_admin_scripts();
-    }
-*/
-    public function register_admin_scripts() {
+		if ( !is_admin() ) {
+			return;
+		}
+
+		if ( $hook != 'post-new.php' || $hook != 'post.php' ) {
+
+			return;
+		}
+
+		$post_types = apply_filters("e20r-sequence-managed-post-types", array("post", "page") );
+
+		if ( !in_array( $post->post_type, $post_types ) ) {
+			return;
+		}
 
         E20RTools\DBG::log("Loading admin scripts & styles for E20R Sequences");
 
@@ -5800,6 +5811,7 @@ class Controller
         wp_enqueue_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
 
         wp_enqueue_script('select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/js/select2.min.js", array( 'jquery' ), self::$select2_version );
+
         wp_register_script('e20r-sequence-admin', E20R_SEQUENCE_PLUGIN_URL . 'js/e20r-sequences-admin.js', array( 'jquery', 'select2' ), E20R_SEQUENCE_VERSION, true);
 
         /* Localize ajax script */
@@ -5829,9 +5841,8 @@ class Controller
         );
 
         wp_enqueue_style( "e20r-sequence" );
-        wp_enqueue_style( "select2" );
 
-        wp_enqueue_script( array( 'select2', 'e20r-sequence-admin' ) );
+        wp_enqueue_script( 'e20r-sequence-admin' );
     }
 
     /**
