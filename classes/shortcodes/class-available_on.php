@@ -22,7 +22,7 @@ class available_on
     public function __construct()
     {
         if (isset(self::$_this)) {
-            wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20rsequence'), get_class($this)));
+            wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20r-sequences'), get_class($this)));
         }
 
         self::$_this = $this;
@@ -65,7 +65,7 @@ class available_on
         /*
         if (!in_array($attributes['type'], array('days', 'date'))) {
             E20RTools\DBG::log("User didn't specify the correct type attribute in the shortcode definition. Used: {$attributes['type']}");
-            wp_die( sprintf(__('%s is not a valid type attribute for the e20r_available_on shortcode', 'e20rsequence'), $type));
+            wp_die( sprintf(__('%s is not a valid type attribute for the e20r_available_on shortcode', 'e20r-sequences'), $type));
         }
         */
         E20RTools\DBG::log("When attribute is specified: {$attributes['when']}");
@@ -73,7 +73,7 @@ class available_on
         if ( !is_numeric( $attributes['when'] ) && (false === strtotime( $attributes['when'] )) ) {
 
             E20RTools\DBG::log("User didn't specify a recognizable format for the 'when' attribute");
-            wp_die( sprintf(__('%s is not a recognizable format for the when attribute in the e20r_available_on shortcode', 'e20rsequence'), $attributes['when']));
+            wp_die( sprintf(__('%s is not a recognizable format for the when attribute in the e20r_available_on shortcode', 'e20r-sequences'), $attributes['when']));
         }
 
 

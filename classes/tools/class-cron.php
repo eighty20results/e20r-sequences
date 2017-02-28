@@ -34,7 +34,7 @@ class Cron {
 	 */
 	function __construct() {
 		if ( null != self::$_this ) {
-			$error_message = sprintf( __( "Attempted to load a second instance of a singleton class (%s)", "e20rsequence" ),
+			$error_message = sprintf( __( "Attempted to load a second instance of a singleton class (%s)", "e20r-sequences" ),
 				get_class( $this )
 			);
 
@@ -105,7 +105,7 @@ class Cron {
 					)
 				) {
 
-					$sequence->set_error_msg( printf( __( 'Could not schedule new content alert for %s', "e20rsequence" ), $sequence->options->noticeTime ) );
+					$sequence->set_error_msg( printf( __( 'Could not schedule new content alert for %s', "e20r-sequences" ), $sequence->options->noticeTime ) );
 					E20RTools\DBG::log( " Did not schedule the new cron job at " . $sequence->options->noticeTime . " for this sequence (# " . $sequence->sequence_id . ')' );
 
 					return false;
@@ -220,7 +220,7 @@ class Cron {
 			if ( ! $sequence->init( $s->seq_id ) ) {
 
 				E20RTools\DBG::log( "Sequence {$s->seq_id} is not converted to V3 metadata format. Exiting!" );
-				$sequence->set_error_msg( __( "Please de-activiate and activiate the Eighty / 20 Results - Sequences plug-in to facilitate conversion to v3 meta data format.", "e20rsequence" ) );
+				$sequence->set_error_msg( __( "Please de-activiate and activiate the Eighty / 20 Results - Sequences plug-in to facilitate conversion to v3 meta data format.", "e20r-sequences" ) );
 				continue;
 			}
 

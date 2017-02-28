@@ -39,7 +39,7 @@ class upcoming_content
         $this->class_name = get_class($this);
 
         if (isset(self::$_this)) {
-            wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20rsequence'), $this->class_name));
+            wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20r-sequences'), $this->class_name));
         }
 
         self::$_this = $this;
@@ -89,7 +89,7 @@ class upcoming_content
         if ( empty( $attributes['id'] ) ) {
 
             E20RTools\DBG::log("Shortcodes\\upcoming_content::load_shortcode() - Error: NO Sequence ID specified!");
-            return '<div class="e20r-sequences-error">' . __('No upcoming content to be listed (Error: Unknown ID)', 'e20rsequence') . '</div>';
+            return '<div class="e20r-sequences-error">' . __('No upcoming content to be listed (Error: Unknown ID)', 'e20r-sequences') . '</div>';
         }
 
         E20RTools\DBG::log("Shortcodes\\upcoming_content::load_shortcode() - When attribute is specified: {$attributes['when']}");

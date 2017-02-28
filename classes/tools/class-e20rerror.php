@@ -16,7 +16,7 @@ class E20RError extends \WP_Error
     public function __construct()
     {
         if (null !== self::$_this ) {
-            wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20rsequence'), get_class($this)));
+            wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20r-sequences'), get_class($this)));
         }
 
         self::$_this = $this;

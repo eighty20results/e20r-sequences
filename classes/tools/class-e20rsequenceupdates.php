@@ -36,7 +36,7 @@ class e20rSequenceUpdates
         if ( null !== self::$_this ) {
 
             E20RTools\DBG::log("Error loading the sequence update class");
-            $error_message = sprintf(__("Attempted to load a second instance of this singleton class (%s)", "e20rsequence"),
+            $error_message = sprintf(__("Attempted to load a second instance of this singleton class (%s)", "e20r-sequences"),
                 get_class($this)
             );
 
