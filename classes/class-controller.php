@@ -5785,19 +5785,18 @@ class Controller
 
 		global $post;
 
-		if ( !is_admin() ) {
+		if ( $hook != 'post-new.php' && $hook != 'post.php' && $hook != 'edit.php') {
+
+		    E20RTools\DBG::log("Unexpected Hook: {$hook}");
 			return;
 		}
 
-		if ( $hook != 'post-new.php' || $hook != 'post.php' ) {
+		$post_types = apply_filters("e20r-sequence-managed-post-types", array( "post", "page" ) );
+        $post_types[] = 'pmpro_sequence';
 
-			return;
-		}
-
-		$post_types = apply_filters("e20r-sequence-managed-post-types", array("post", "page") );
-
-		if ( !in_array( $post->post_type, $post_types ) ) {
-			return;
+		if ( isset( $post->ID ) && ! in_array( $post->post_type, $post_types ) ) {
+			E20RTools\DBG::log("Incorrect Post Type: {$post->post_type}");
+		    return;
 		}
 
         E20RTools\DBG::log("Loading admin scripts & styles for E20R Sequences");
