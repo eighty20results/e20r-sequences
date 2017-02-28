@@ -3,7 +3,7 @@
 #
 short_name="e20r-sequences"
 server="eighty20results.com"
-include=(classes email css fonts images js license languages upgrades ${short_name}.php ${short_name}-loader.php README.txt)
+include=(classes email css fonts images js languages upgrades ${short_name}.php ${short_name}-loader.php README.txt)
 exclude=(*.yml *.phar composer.* vendor)
 build=(classes/plugin-updates/vendor/*.php)
 plugin_path="${short_name}"
