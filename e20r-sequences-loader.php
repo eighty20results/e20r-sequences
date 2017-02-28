@@ -201,7 +201,7 @@ if (!function_exists('e20r_sequence_loader')) {
         $base_path = plugin_dir_path(__FILE__) . "classes";
         $name = strtolower($parts[(count($parts) - 1)]);
 
-        $types = array('shortcodes', 'tools', 'widgets', 'license', 'utilities');
+        $types = array('shortcodes', 'tools', 'widgets', 'license', 'utilities', 'async-notices');
 
         foreach ($types as $type) {
 
