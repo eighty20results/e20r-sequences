@@ -1,7 +1,7 @@
 /*
   License:
 
-	Copyright 2014 Thomas Sjolshagen (thomas@eighty20results.com)
+	Copyright 2014-2017 Thomas Sjolshagen (thomas@eighty20results.com)
 	Copyright 2013 Stranger Studios (jason@strangerstudios.com)
 
 	This program is free software; you can redistribute it and/or modify
@@ -136,6 +136,7 @@ div#e20r-seq-error {
     min-width: 200px;
     max-height: 250px;
     min-height: 100px;
+    width: 100%;
 }
 
 .e20r-seq-days {
