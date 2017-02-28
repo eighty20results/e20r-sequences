@@ -6181,11 +6181,14 @@ class Controller
     public function load_actions()
     {
         // Register & validate the license for this plugin
+        // TODO: Enable licensing
+        /*
         \e20rLicense::registerLicense( 'e20r_sequence', __("E20R Drip Feed Sequences for PMPro", "e20r-sequences") );
 
         add_action('upgrader_pre_download', array( $this, 'checkLicense'), 9, 3 );
-
         add_action('plugins_loaded', array( $this, 'membership_signup_hooks'));
+*/
+
 
         // Configure all needed class instance filters;
         add_filter( "get_sequence_views_class_instance", [ Sequence\Views::get_instance(), 'get_instance' ] );
