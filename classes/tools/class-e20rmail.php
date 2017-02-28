@@ -136,8 +136,6 @@ class e20rMail
         $this->body = $this->load_template($this->template);
         $this->data = apply_filters('e20r-sequences-email-data', $this->data, $this );
 
-        $this->body = $this->process_body ($this->data, $this->body );
-
         $filtered_email     = apply_filters("e20r-sequence-email-filter", $this);		//allows filtering entire email at once
         $this->to           = apply_filters("e20r-sequence-email-recipient", $filtered_email->to, $this);
         $this->from         = apply_filters("e20r-sequence-email-sender", $filtered_email->from, $this);
@@ -147,7 +145,9 @@ class e20rMail
         $this->body         = apply_filters("e20r-sequence-email-body", $filtered_email->body, $this);
         $this->attachments  = apply_filters("e20r-sequence-email-attachments", $filtered_email->attachments, $this);
 
-        E20RTools\DBG::log("Sending email message...");
+	    $this->body = $this->process_body ($this->data, $this->body );
+
+	    E20RTools\DBG::log("Sending email message...");
 
         if ( wp_mail( $this->to, $this->subject, $this->body, $this->headers, $this->attachments ) ) {
 
