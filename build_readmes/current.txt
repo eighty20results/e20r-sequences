@@ -1,2 +1,1 @@
-ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
-REFACTOR: Removed stale code
+ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox

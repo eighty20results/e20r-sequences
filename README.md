@@ -1,6 +1,6 @@
-#Sequences by Eighty/20 Results
+#Sequences for Paid Memberships Pro by Eighty/20 Results
 
-Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This an extension of the "drip feed content" module for Paid Memberships Pro (pmpro-series).
+Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This is a replacement for the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
 ##Description
 
@@ -214,9 +214,23 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.4.21
-* ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
-* REFACTOR: Removed stale code
+###4.5.2
+* ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox
+
+###4.5.1
+* BUG/FIX: Didn't load CSS & JS when editing Sequence or supported posts/pages
+* ENH/FIX: Removed stub file
+* BUG/FIX: Build script
+
+###4.5.0
+* ENHANCEMENT/FIX: WooCommerce conflict
+* FIX: Disable license check
+* ENHANCEMENT: Initial stub to support async processing of user notices
+* ENHANCEMENT: Add background queue management for user notices
+* ENHANCEMENT: Add Async Request Worker class
+* ENHANCEMENT: Add support for async worker classes
+* ENHANCEMENT: Upgraded to latest Plugin Updater library
+* ENHANCEMENT: Upgraded Plugin Upgrade Checker library
 
 ##Old releases
 ###.1
@@ -1098,3 +1112,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENHANCEMENT: Clean up buffers & returns the content (warning / notice messages) for AJAX calls
 * ENHANCEMENT: New filters to support per-sequence startdate functionality (including using usermeta) - e20r-sequence-use-membership-startdate,  e20r-sequence-use-global-startdate
 * REFACTOR: Make CSS file more readable
+
+###4.4.21
+* ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
+* REFACTOR: Removed stale code

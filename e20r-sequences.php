@@ -3,7 +3,7 @@
 Plugin Name: Sequences for Paid Memberships Pro
 Plugin URI: https://eighty20results.com/wordpress-plugins/e20r-sequences/
 Description: Easy to configure drip feed content plugin for your users.
-Version: 4.5.0
+Version: 4.5.2
 Author: Eighty / 20 Results (Thomas Sjolshagen)
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen
@@ -11,7 +11,7 @@ Text Domain: e20r-sequences
 Domain Path: /languages
 License:
 
-	Copyright 2014-2017 Eighty / 20 Results by Wicked Strong Chicks, LLC (info@eighty20results.com)
+	Copyright 2014-2017 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -28,7 +28,7 @@ License:
 
 */
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '4.5.0');
+define('E20R_SEQUENCE_VERSION', '4.5.2');
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
 define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.4');

@@ -1,20 +1,22 @@
 === Eighty/20 Results - Sequences ===
 Contributors: eighty20results
-Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
-Requires at least: 3.4
-Tested up to: 4.5.3
-Stable tag: 4.4.21
+Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro, sequences, pmpro series
+Requires at least: 3.9
+Tested up to: 4.7.2
+Stable tag: 4.5.1
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
 Requires PHP 5.4 or later.
 
 == Description ==
-This plugin currently requires Paid Memberships Pro and started life as a fork of the PMPro Series
- plugin by Stranger Studios, LLC. However, I needed a drip-content plugin that supported different delay type options, paginated
- lists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type,
- etc, etc, so I wound up with something completely different from PMPro Series. At this point, there's really nothing
- left of the original in this fork.
+This plugin currently requires Paid Memberships Pro by Stranger Studios, LLC. It is replacement for the "drip feed
+content" module for Paid Memberships Pro (pmpro-series).
+
+I needed a drip-content plugin that supported different delay type options, paginated lists of series posts, a way
+ to let a user see an excerpt of the page/post, support a user defined custom post type, etc, etc, so I wound up
+ with something completely different from PMPro Series. At this point, there's really nothing left of the
+ original PMPro Series Add-on in this plugin.
 
 == Features ==
 
@@ -170,8 +172,25 @@ Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
 
-== 4.4.21 ==
+== 4.5.2 ==
+* ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox
 
+== 4.5.1 ==
+* BUG/FIX: Didn't load CSS & JS when editing Sequence or supported posts/pages
+* ENH/FIX: Removed stub file
+* BUG/FIX: Build script
+
+== 4.5.0 ==
+* ENHANCEMENT/FIX: WooCommerce conflict
+* FIX: Disable license check
+* ENHANCEMENT: Initial stub to support async processing of user notices
+* ENHANCEMENT: Add background queue management for user notices
+* ENHANCEMENT: Add Async Request Worker class
+* ENHANCEMENT: Add support for async worker classes
+* ENHANCEMENT: Upgraded to latest Plugin Updater library
+* ENHANCEMENT: Upgraded Plugin Upgrade Checker library
+
+== 4.4.21 ==
 * ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
 * REFACTOR: Removed stale code
 
