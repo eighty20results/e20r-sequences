@@ -1,20 +1,22 @@
 === Eighty/20 Results - Sequences ===
 Contributors: eighty20results
-Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro
-Requires at least: 3.4
-Tested up to: 4.4.2
-Stable tag: 4.4.3
+Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro, sequences, pmpro series
+Requires at least: 3.9
+Tested up to: 4.7.2
+Stable tag: 4.5.1
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
 Requires PHP 5.4 or later.
 
 == Description ==
-This plugin currently requires Paid Memberships Pro and started life as a fork of the PMPro Series
- plugin by Stranger Studios, LLC. However, I needed a drip-content plugin that supported different delay type options, paginated
- lists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type,
- etc, etc, so I wound up with something completely different from PMPro Series. At this point, there's really nothing
- left of the original in this fork.
+This plugin currently requires Paid Memberships Pro by Stranger Studios, LLC. It is replacement for the "drip feed
+content" module for Paid Memberships Pro (pmpro-series).
+
+I needed a drip-content plugin that supported different delay type options, paginated lists of series posts, a way
+ to let a user see an excerpt of the page/post, support a user defined custom post type, etc, etc, so I wound up
+ with something completely different from PMPro Series. At this point, there's really nothing left of the
+ original PMPro Series Add-on in this plugin.
 
 == Features ==
 
@@ -169,6 +171,146 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.5.2 ==
+* ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox
+
+== 4.5.1 ==
+* BUG/FIX: Didn't load CSS & JS when editing Sequence or supported posts/pages
+* ENH/FIX: Removed stub file
+* BUG/FIX: Build script
+
+== 4.5.0 ==
+* ENHANCEMENT/FIX: WooCommerce conflict
+* FIX: Disable license check
+* ENHANCEMENT: Initial stub to support async processing of user notices
+* ENHANCEMENT: Add background queue management for user notices
+* ENHANCEMENT: Add Async Request Worker class
+* ENHANCEMENT: Add support for async worker classes
+* ENHANCEMENT: Upgraded to latest Plugin Updater library
+* ENHANCEMENT: Upgraded Plugin Upgrade Checker library
+
+== 4.4.21 ==
+* ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
+* REFACTOR: Removed stale code
+
+== 4.4.20 ==
+* FIX: Didn't load the Optin handler script correctly
+* FIX: Avoid JS error if the sequence settings were missing
+* FIX: Clean up HTML for post list in admin metabox
+* FIX: Didn't allow translation of 'None' option in offset drop-down.
+* ENHANCEMENT: Started work to make Sequence Post metabox (bottom) responsive
+* ENHANCEMENT: Refactor & clean up
+* ENHANCEMENT: Added user ID to e20r-sequence-add-startdate-offset filter
+* ENHANCEMENT: Added 'e20r_sequences_load_membership_plugin_meta' action (future user)
+* ENHANCEMENT: Clean up buffers & returns the content (warning / notice messages) for AJAX calls
+* ENHANCEMENT: New filters to support per-sequence startdate functionality (including using usermeta) - e20r-sequence-use-membership-startdate,  e20r-sequence-use-global-startdate
+* REFACTOR: Make CSS file more readable
+
+== 4.4.18 ==
+* FIX: Didn't always mark 'future' posts as being 'future'.
+
+== 4.4.17 ==
+* FIX: Delay column formatting/layout
+* FIX: Doesn't properly display the Meta-table for the Sequence members on the editor page
+* FIX: Formatting for table of sequence posts on post-editor page
+
+== 4.4.16 ==
+* FIX: Clean up Navigation links
+
+== 4.4.15 ==
+* FIX: has_post_access() would sometimes return the incorrect access value for the post_id.
+* FIX: [sequence_links] shortcode would sometimes show the sequence info for users who didn't have access to it.
+* FIX: Various styling issues
+* FIX: Make usertstyle URL filter more self-documenting in nature
+* ENH: Load support for user created styles (loads after default Sequences styles)
+* ENH: Filter & use member specific sequence 'access denied' message(s).
+* ENH: Add Member Module specific access denied message(s).
+* ENH: Hook for Member Module Specific access denied message(s)
+* ENH: Added filterable 'Content is inaccessible' message.
+
+== 4.4.14 ==
+* FIX: Escape variables being loaded to the front-end listing of Sequence members.
+* FIX: List upcoming posts if they're supposed to be visible
+* FIX: The default shortcode settings weren't correct.
+* FIX: Flag an update routine as having ran after executing the pre/update/post hooks.
+* FIX: Didn't always find the cache key to use
+* FIX: Didn't always load the sequence data for the user from cache when available
+* FIX: Didn't always paginate sequence lists properly
+* FIX: Would sometimes remove old metadata erroneously
+* FIX: paginate_posts() didn't always return the correct list of posts
+* FIX: Make the display_sequence_content() function behave a little 'better' when being executed by the 'the_content' filter
+* FIX: Didn't always align the future & current availability info.
+* FIX: Resolved a possible CSS element name conflict with themes
+* FIX: Didn't  always load the post title in the sequence list view
+* ENH: Optimize the number of times we attempt to load sequence posts
+* ENH: Use the Wordpress configured date format when listing future (unavailable) posts & the sequence is configured to show dates.
+* ENH: Would sometimes run the update functionality more than once
+* ENH: Clean up debug logging== 4.4.13 ==
+* FIX: Didn't always return all of the configured sequences
+
+== 4.4.12 ==
+* FIX: Didn't always trigger upgrade activity for v4.4.11
+* FIX: get_user_startdate() caused whitescreen due to method visibility.
+
+== 4.4.11 ==
+* FIX: Didn't always return all of the configured sequences
+* FIX: Didn't return the right list of sequences protected by a specific membership level
+* FIX: sequences_for_membership_level() didn't handle cases where there were no sequences configured yet
+* FIX: Didn't consistently return valid SQL for sequence list belonging to a given membership level (PMPRO)
+* ENH: Added update version history
+* ENH: Automatically update active membership user records w/the right startdate for the sequence(s) in the system.
+* ENH: Updated get_user_startdate() to support upgrade functionality
+* ENH: Add sequence ID to filters for startdate
+* ENH: Added PHPDoc for new function(s)
+
+== 4.4.10 ==
+* ENH: Refactor for readability
+* ENH: Record startdates for a user's (new) sequences on membership module purchase action/activity
+* ENH: Add infrastructure to support startdate management for any hookable membership module
+* FIX: Didn't capture the correct startdate for the user with the sequence
+
+== 4.4.9 ==
+* FIX: Refactor for code readability
+* FIX: Simplify error message(s) for non-converted sequences
+* FIX: Didn't always handle start times for users
+* FIX: Don't attempt to fix conversion during sequence load
+* FIX: Didn't handle situations where the timezone for the server wasn't configured yet
+* FIX: Only attempt to upgrade a sequence during activation.
+* FIX: Renamed convert_sequence function to upgrade_sequence() and add $force variable.
+* FIX: Make user notice config a per-sequence update event.
+* FIX: Formatting for sequence configuration metabox
+* ENH: Add more formatting for metaboxes
+
+== 4.4.8 ==
+* FIX: Didn't always handle checkbox settings correctly
+
+== 4.4.7 ==
+* DOC: More functions w/documentation
+* FIX: Didn't always run the deactivation/activation functions
+* FIX: Keep backwards compatibility for now (to old sequence versions)
+* FIX: Didn't force a sequence load after conversion
+* FIX: Didn't always trigger conversion to V3 format
+* ENH: New constant for the main plugin file
+* ENH: Refactor (a little) for code readability
+* ENH: Add support for per-sequence start date (uses membership plugin startdate if there isn't any info in the users usermeta)
+* ENH: Modified user_can_edit to support filter of required permissions (user settable)
+* ENH: Simplified loading of front-end JavaScript & Styles (fewer hoops)
+* ENH: Add update code for 4.4.7
+
+== 4.4.6 ==
+* FIX: Strict standards warning
+* FIX: Better handling of new  values
+* ENH: Update version for upgrade history
+
+== 4.4.5 ==
+* FIX: Disable cleanup on delete
+* ENH: Update version for upgrade history
+* FIX: Debug cleanup
+
+== 4.4.4 ==
+* FIX: Didn't always trigger the cron jobs
+* ENH: Update version for upgrade history
 
 == 4.4.3 ==
 * FIX: Didn't always update the plugin

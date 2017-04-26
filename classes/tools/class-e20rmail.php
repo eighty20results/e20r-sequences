@@ -41,22 +41,17 @@ class e20rMail
 
     public function __get($property)
     {
-        E20RTools\DBG::log("Getting property {$property}");
-
         if (property_exists($this, $property)) {
 
             return $this->{$property};
         }
+
+        return null;
     }
 
     public function __set($property, $value)
     {
-        E20RTools\DBG::log("Setting property {$property} to {$value}");
-
-        if (property_exists($this, $property)) {
-
-            $this->{$property} = $value;
-        }
+        $this->{$property} = $value;
 
         return $this;
     }
@@ -141,8 +136,6 @@ class e20rMail
         $this->body = $this->load_template($this->template);
         $this->data = apply_filters('e20r-sequences-email-data', $this->data, $this );
 
-        $this->body = $this->process_body ($this->data, $this->body );
-
         $filtered_email     = apply_filters("e20r-sequence-email-filter", $this);		//allows filtering entire email at once
         $this->to           = apply_filters("e20r-sequence-email-recipient", $filtered_email->to, $this);
         $this->from         = apply_filters("e20r-sequence-email-sender", $filtered_email->from, $this);
@@ -152,7 +145,9 @@ class e20rMail
         $this->body         = apply_filters("e20r-sequence-email-body", $filtered_email->body, $this);
         $this->attachments  = apply_filters("e20r-sequence-email-attachments", $filtered_email->attachments, $this);
 
-        E20RTools\DBG::log("Sending email message...");
+	    $this->body = $this->process_body ($this->data, $this->body );
+
+	    E20RTools\DBG::log("Sending email message...");
 
         if ( wp_mail( $this->to, $this->subject, $this->body, $this->headers, $this->attachments ) ) {
 
@@ -199,6 +194,13 @@ class e20rMail
         return $this->body;
     }
 
+	/**
+	 * Load email body from specified template (file or editor)
+	 *
+	 * @param string $template_file    - file name
+	 *
+	 * @return mixed|null|string|void   - Body value for template
+	 */
     private function load_template( $template_file ) {
 
         E20RTools\DBG::log("Load template for file {$template_file}");
@@ -222,6 +224,18 @@ class e20rMail
         elseif (file_exists(E20R_SEQUENCE_PLUGIN_DIR . "/email/" . $template_file)) {
 
             $this->body = file_get_contents(E20R_SEQUENCE_PLUGIN_DIR . "/email/" . $template_file);                        //default template in plugin
+        }
+
+	    /**
+	     * @filter e20r-sequence-template-editor-loaded - Determines whether the template editor is loaded & active
+	     */
+	    $use_editor = apply_filters( 'e20r-sequence-template-editor-loaded', false );
+
+	    if ( true === $use_editor ) {
+		    /**
+		     * @filter e20r-sequence-template-editor-contents - Loads the contents of the specific template_file from the email editor add-on.
+		     */
+		    $this->body = apply_filters( 'e20r-sequence-template-editor-contents', null, $template_file );
         }
 
         return $this->body;

@@ -39,7 +39,7 @@ class sequence_links {
 		$this->class_name = get_class($this);
 
 		if (isset(self::$_this)) {
-			wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20rsequence'), $this->class_name));
+			wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20r-sequences'), $this->class_name));
 		}
 
 		self::$_this = $this;
@@ -75,8 +75,8 @@ class sequence_links {
 		$load_e20r_sequence_script = true;
 
 		// To avoid errors in development tool
-		$highlight = false;
-		$button = false;
+		$highlight = true;
+		$button = true;
 		$scrollbox = false;
 		$pagesize = 30;
 		$id = 0;
@@ -86,8 +86,8 @@ class sequence_links {
 			'id' => 0,
 			'pagesize' => 30,
 			'title' => '',
-			'button' => false,
-			'highlight' => false,
+			'button' => true,
+			'highlight' => true,
 			'scrollbox' => false,
 		), $attributes ) );
 
@@ -113,6 +113,16 @@ class sequence_links {
 			}
 		}
 		E20RTools\DBG::log("We're given the ID of: {$id} ");
+
+		$seq_access = $sequence->has_post_access($current_user->ID, $id, false, $id);
+
+		if ( ( is_array( $seq_access ) &&  false == $seq_access[0] ) || (!is_array($seq_access) && false == $seq_access ) )  {
+
+			E20RTools\DBG::log("Not logged in or not a member with access to this sequence. Exiting!");
+
+			$default_message = __("We're sorry, you do not have access to this content. Please either log in to this system, and/or upgrade your membership level", "e20r-sequences");
+			return apply_filters('e20r-sequence-mmodule-access-denied-msg', $default_message, $id, $current_user->ID);
+		}
 
 		// Make sure the sequence exists.
 		if ( ! $sequence->sequence_exists( $id ) ) {

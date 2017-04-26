@@ -39,7 +39,7 @@ class sequence_alert {
 		$this->class_name = get_class($this);
 
 		if (isset(self::$_this)) {
-			wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20rsequence'), $this->class_name));
+			wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20r-sequences'), $this->class_name));
 		}
 
 		self::$_this = $this;

@@ -1,1 +1,1 @@
-FIX: Didn't always update the plugin
+ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox

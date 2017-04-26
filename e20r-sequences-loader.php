@@ -21,10 +21,7 @@ License:
 */
 
 /* Define namespaces */
-use E20R\Sequences\Main as Main;
 use E20R\Sequences\Sequence as Sequence;
-use E20R\Sequences\Tools as Tools;
-use E20R\Sequences\Modules as Modules;
 use E20R\Tools as E20RTools;
 
 define(__NAMESPACE__ . '\NS', __NAMESPACE__ . '\\');
@@ -66,14 +63,14 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
         $importStatus = apply_filters('pmpro-sequence-import-pmpro-series', __return_false());
 
         // Don't import anything.
-        if (__return_false() === $importStatus) {
+        if ( false === $importStatus) {
 
-            return;
+            return $importStatus;
         }
 
         global $wpdb;
 
-        if ((__return_true() === $importStatus) || ('all' === $importStatus)) {
+        if (( true === $importStatus) || ('all' === $importStatus)) {
 
             //Get all of the defined PMPro Series posts to import from this site.
             $series_sql = "
@@ -157,7 +154,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
 
                     if (!$seq->add_post($seq_member->id, $seq_member->delay)) {
                         return new \WP_Error('sequence_import',
-                            sprintf(__('Could not complete import of post id %d for series %s', "e20rsequence"), $seq_member->id, $series->post_title), $seq->getError());
+                            sprintf(__('Could not complete import of post id %d for series %s', "e20r-sequences"), $seq_member->id, $series->post_title), $seq->getError());
                     }
                 } // End of foreach
 
@@ -168,7 +165,7 @@ if (!function_exists('e20r_sequences_import_all_PMProSeries')):
             } else {
 
                 return new \WP_Error('db_query_error',
-                    sprintf(__('Could not complete import for series %s', "e20rsequence"), $series->post_title), $wpdb->last_error);
+                    sprintf(__('Could not complete import for series %s', "e20r-sequences"), $series->post_title), $wpdb->last_error);
 
             }
         } // End of foreach (DB result)
@@ -204,7 +201,7 @@ if (!function_exists('e20r_sequence_loader')) {
         $base_path = plugin_dir_path(__FILE__) . "classes";
         $name = strtolower($parts[(count($parts) - 1)]);
 
-        $types = array('shortcodes', 'tools', 'widgets');
+        $types = array('shortcodes', 'tools', 'widgets', 'license', 'utilities', 'async-notices');
 
         foreach ($types as $type) {
 
@@ -218,11 +215,18 @@ if (!function_exists('e20r_sequence_loader')) {
 
                 require_once("{$dir}/class-{$name}.php");
             }
-/*
-            else {
-                error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
-            }
-*/
+
+	        if (file_exists("{$dir}/class.{$name}.php")) {
+
+		        require_once("{$dir}/class.{$name}.php");
+	        }
+
+
+	        /*
+						else {
+							error_log("e20r_sequence_loader() - {$dir}/class-{$name}.php not found!");
+						}
+			*/
         }
     }
 }
@@ -292,14 +296,19 @@ try {
 
     spl_autoload_register("E20R\\Sequences\\Main\\e20r_sequence_loader");
 
-    $sequence = new Sequence\Controller();
+    global $converting_sequence;
+    $converting_sequence = false;
+
+	$sequence = new Sequence\Controller();
 
     E20RTools\DBG::set_plugin_name('e20r-sequences');
-    $sequence->load_actions();
+
+    register_activation_hook(E20R_SEQUENCE_PLUGIN_FILE, array($sequence, 'activation'));
+    register_deactivation_hook(E20R_SEQUENCE_PLUGIN_FILE, array($sequence, 'deactivation'));
+
+	add_action('plugins_loaded', array( $sequence, 'load_actions' ), 5 );
 
 } catch (\Exception $e) {
     error_log("E20R Sequences startup: Error initializing the specified sequence...: " . $e->getMessage());
 }
 
-register_activation_hook(__FILE__, array(&$sequence, 'activation'));
-register_deactivation_hook(__FILE__, array(&$sequence, 'deactivation'));

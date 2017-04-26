@@ -29,10 +29,10 @@ class PostWidget extends \WP_Widget {
 	public function __construct() {
 		parent::__construct(
 			'e20r_sequences__currentpost_widget',
-			__('Sequences: Current', 'e20rsequence'),
+			__('Sequences: Current', 'e20r-sequences'),
 			array(
 				'description' =>
-					__('Display a summary of the most recently available sequence post (or page) for the currently logged-in user.', "e20rsequence")
+					__('Display a summary of the most recently available sequence post (or page) for the currently logged-in user.', "e20r-sequences")
 			)
 		);
 	}
@@ -83,7 +83,7 @@ class PostWidget extends \WP_Widget {
 		}
 		else {
 			// dbg_log("Widget config: No config found");
-			$default_title = __('Your most recently available content', "e20rsequence");
+			$default_title = __('Your most recently available content', "e20r-sequences");
 			$title = null;
 			$show_title = 0;
 			$sequence_id = 0;
@@ -93,29 +93,29 @@ class PostWidget extends \WP_Widget {
 
 		?>
 		<p>
-			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Widget title', "e20rsequence"); ?></label>
+			<label for="<?php echo $this->get_field_id('title'); ?>"><?php _e('Widget title', "e20r-sequences"); ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('title');?>" name="<?php echo $this->get_field_name('title')?>" type="text" value="<?php echo $title; ?>" />
 		</p>
 
 		<p>
 			<input class="widefat" id="<?php echo $this->get_field_id('show_title');?>" name="<?php echo $this->get_field_name('show_title')?>" type="checkbox" value="1" <?php checked($show_title, 1); ?> />
-			<label for="<?php echo $this->get_field_id('show_title'); ?>"><?php _e('Show Post/Page title', "e20rsequence"); ?></label>
+			<label for="<?php echo $this->get_field_id('show_title'); ?>"><?php _e('Show Post/Page title', "e20r-sequences"); ?></label>
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id('default_post_title'); ?>"><?php _e('Default post/page title (if "hidden")', "e20rsequence"); ?></label>
+			<label for="<?php echo $this->get_field_id('default_post_title'); ?>"><?php _e('Default post/page title (if "hidden")', "e20r-sequences"); ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('default_post_title');?>" name="<?php echo $this->get_field_name('default_post_title')?>" type="text" value="<?php echo $default_title; ?>" />
 		</p>
 
 		<p>
-			<label for="<?php echo $this->get_field_id('prefix'); ?>"><?php _e('Post title prefix', "e20rsequence"); ?></label>
+			<label for="<?php echo $this->get_field_id('prefix'); ?>"><?php _e('Post title prefix', "e20r-sequences"); ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('prefix');?>" name="<?php echo $this->get_field_name('prefix')?>" type="text" value="<?php echo $seqPrefix; ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id('wordcount'); ?>"><?php _e('Max size of post/page excerpt (# of words)', "e20rsequence"); ?></label>
+			<label for="<?php echo $this->get_field_id('wordcount'); ?>"><?php _e('Max size of post/page excerpt (# of words)', "e20r-sequences"); ?></label>
 			<input class="widefat" id="<?php echo $this->get_field_id('wordcount');?>" name="<?php echo $this->get_field_name('wordcount')?>" type="text" value="<?php echo $excerpt_wordcount; ?>" />
 		</p>
 		<p>
-			<label for="<?php echo $this->get_field_id('sequence_id'); ?>"><?php _e('Sequence to use', "e20rsequence"); ?></label>
+			<label for="<?php echo $this->get_field_id('sequence_id'); ?>"><?php _e('Sequence to use', "e20r-sequences"); ?></label>
 			<select id="<?php echo $this->get_field_id('sequence_id'); ?>" name="<?php echo $this->get_field_name('sequence_id')?>">
 				<?php echo $this->sequenceOptions( $sequence_id ); ?>
 			</select>
@@ -148,7 +148,7 @@ class PostWidget extends \WP_Widget {
 		ob_start();
 		if ( $sequences->found_posts == 0 ) {
 			?>
-			<option value="0" selected="selected"><?php _e('No sequences defined', "e20rsequence"); ?></option><?php
+			<option value="0" selected="selected"><?php _e('No sequences defined', "e20r-sequences"); ?></option><?php
 		}
 		else {
 			?><option value="0" <?php echo ( $sequence_id != 0 ? '' : 'selected="selected"' ); ?>></option><?php
@@ -179,7 +179,7 @@ class PostWidget extends \WP_Widget {
 			<li class="widget widget-text">
 				<h3 id="e20r-seq-post-notfound">Error</h3>
 				<div class="text-widget">
-					<?php _e("No sequence specified for this widget!", "e20rsequence"); ?>
+					<?php _e("No sequence specified for this widget!", "e20r-sequences"); ?>
 				</div>
 			</li>
 
@@ -196,7 +196,7 @@ class PostWidget extends \WP_Widget {
 				<span id="e20r-seq-post-notfound">
 				<h3 id="<?php echo apply_filters('e20r-seq-recentpost-widget-nopostfound', 'e20r-seq-widget-recentpost-nopostfound-title'); ?>" class="widget-title">Configuration Error</h3>
 					<div id="e20r-seq-post-body" class="text-widget <?php echo apply_filters( 'e20r-seq-widget-recentpost-nopostfound-body', ''); ?>">
-						<?php echo ( $sequence_id != 0 ? get_the_title( $sequence_id ) . __(': No post(s) found!', "e20rsequence") : __('No sequence specified', "e20rsequence") ); ?>
+						<?php echo ( $sequence_id != 0 ? get_the_title( $sequence_id ) . __(': No post(s) found!', "e20r-sequences") : __('No sequence specified', "e20r-sequences") ); ?>
 					</div>
 				</span><?php
 			}
@@ -225,7 +225,7 @@ class PostWidget extends \WP_Widget {
 						echo $this->limit_excerpt_words( get_the_excerpt( $seqPost->id ), $excerpt_length ); ?>
 					</div>
 					<div id="e20r-seq-post-link" <?php echo apply_filters('e20r-seq-widget-postlink-class', ''); ?>>
-						<a href="<?php echo $seqPost->permalink; ?>" title="<?php echo $seqPost->title; ?>"><?php _e('Click to read', "e20rsequence"); ?></a>
+						<a href="<?php echo $seqPost->permalink; ?>" title="<?php echo $seqPost->title; ?>"><?php _e('Click to read', "e20r-sequences"); ?></a>
 					</div>
 				</div> <?php
 			}
@@ -233,7 +233,7 @@ class PostWidget extends \WP_Widget {
 				<span id="e20r-seq-post-notfound">
 					<h3 class="widget-title">Membership Level Error</h3>
 					<div id="e20r-seq-post-body" class="text-widget">
-						<?php _e( "Sorry, your current membership level does not give you access to this content.", "e20rsequence" ); ?>
+						<?php _e( "Sorry, your current membership level does not give you access to this content.", "e20r-sequences" ); ?>
 					</div>
 				</span><?php
 			}
