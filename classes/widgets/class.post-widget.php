@@ -26,7 +26,7 @@ use E20R\Sequences\Sequence\Sequence_Controller;
 
 use E20R\Tools\DBG;
 
-class PostWidget extends \WP_Widget {
+class Post_Widget extends \WP_Widget {
 	
 	public function __construct() {
 	    
