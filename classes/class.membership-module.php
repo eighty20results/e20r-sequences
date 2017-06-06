@@ -24,7 +24,7 @@ use E20R\Sequences\Main as Main;
 use E20R\Sequences\Sequence as Sequence;
 use E20R\Sequences\Tools as Tools;
 
-class membership_module
+class Membership_Module
 {
     public function __construct() {
 
