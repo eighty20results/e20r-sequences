@@ -395,6 +395,19 @@ class Sequence_Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
 							<div class="e20r-sequence-setting-col-1">
+								<input type="checkbox" value="1" id="e20r-sequence_includeFeatured" name="e20r-sequence_includeFeatured" title="<?php _e('Include featured image as thumbnail in sequence listing', "e20r-sequences"); ?>" <?php checked( $options->includeFeatured, true); ?> />
+								<input type="hidden" name="hidden-e20r-sequence_includeFeatured" id="hidden-e20r-sequence_includeFeatured" value="<?php esc_attr_e($options->includeFeatured); ?>" >
+							</div>
+							<div class="e20r-sequence-setting-col-2">
+								<label class="selectit e20r-sequence-setting-col-2"><?php _e('Show Featured Images for Posts', "e20r-sequences"); ?></label>
+							</div>
+							<div class="e20r-sequence-setting-col-3"></div>
+						</div>
+					</div>
+					
+					<div class="e20r-sequence-settings-display clear-after">
+						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
+							<div class="e20r-sequence-setting-col-1">
 								<input type="checkbox" value="1" id="e20r-sequence_allowRepeatPosts" name="e20r-sequence_allowRepeatPosts" title="<?php _e('Allow the admin to repeat the same post/page with different delay values', "e20r-sequences"); ?>" <?php checked( $options->allowRepeatPosts, 1); ?> />
 								<input type="hidden" name="hidden-e20r-sequence_allowRepeatPosts" id="hidden-e20r-sequence_allowRepeatPosts" value="<?php esc_attr_e($options->allowRepeatPosts); ?>" >
 							</div>
@@ -1455,7 +1468,7 @@ class Sequence_Views {
 
 	if ( count( $seq_list ) == 0 ) {
 		// if ( 0 == count( $this->posts ) ) {
-		echo '<span style="text-align: center;">' . __( "There is <em>no content available</em> for you at this time. Please check back later.", "e20r-sequences" ) . "</span>";
+		printf( '<span style="text-align: center;">%s</span>', __( "There is <em>no content available</em> for you at this time. Please check back later.", "e20r-sequences" ) );
 
 	} else {
 	if ( $scrollbox ) { ?>
@@ -1499,7 +1512,12 @@ class Sequence_Views {
 						} else {
 							?>
 							<tr id="e20r-seq-post">
-								<td class="e20r-seq-post-img">&nbsp;</td>
+								<td class="e20r-seq-post-img">
+								<?php if ( $sequence->include_featured_image_for_posts() && has_post_thumbnail( $s_post->id ) ) {
+								    echo get_the_post_thumbnail( $s_post->id, 'thumbnail', 'alignleft' );
+								} else {
+								    ?>&nbsp;<?php } ?>
+                                </td>
 								<td class="e20r-seq-post-fade">
 									<a href="<?php echo esc_url_raw($s_post->permalink); ?>" title="<?php esc_attr_e($s_post->title); ?>"><?php esc_attr_e($s_post->title); ?></a>
 								</td>
