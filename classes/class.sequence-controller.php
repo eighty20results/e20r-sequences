@@ -20,13 +20,13 @@
 */
 namespace E20R\Sequences\Sequence;
 
-use E20R\Sequences\Tools as Tools;
 use E20R\Sequences\Shortcodes\Available_On;
 use E20R\Sequences\Shortcodes\Upcoming_Content;
 use E20R\Sequences\Shortcodes\Sequence_Links;
 use E20R\Sequences\Shortcodes\Sequence_Alert;
 use E20R\Tools\DBG;
 use E20R\Sequences\Tools\E20R_Error;
+use E20R\Sequences\Tools\E20R_Mail;
 use E20R\Sequences\Tools\Cron;
 use E20R\Tools\License\E20R_License;
 use E20R\Sequences\Tools\Importer;
@@ -2544,13 +2544,13 @@ class Sequence_Controller {
 	/**
 	 * Compares the object to the array of posts in the sequence
 	 *
-	 * @param $delayComp -- Delay value to compare to
+	 * @param $delay_comp -- Delay value to compare to
 	 *
-	 * @return stdClass -- The post ID of the post with the delay value closest to the $delayVal
+	 * @return stdClass -- The post ID of the post with the delay value closest to the $delay_val
 	 *
 	 * @access private
 	 */
-	private function find_closest_post_by_delay_val( $delayComp, $user_id = null ) {
+	private function find_closest_post_by_delay_val( $delay_comp, $user_id = null ) {
 		
 		
 		if ( null === $user_id ) {
@@ -2564,21 +2564,21 @@ class Sequence_Controller {
 		
 		foreach ( $this->posts as $key => $post ) {
 			
-			$nDelay            = $this->normalize_delay( $post->delay );
-			$distances[ $key ] = abs( $delayComp - ( $nDelay /* + 1 */ ) );
+			$n_delay            = $this->normalize_delay( $post->delay );
+			$distances[ $key ] = abs( $delay_comp - ( $n_delay /* + 1 */ ) );
 		}
 		
 		// Verify that we have one or more than one element
 		if ( count( $distances ) > 1 ) {
 			
-			$retVal = $this->posts[ array_search( min( $distances ), $distances ) ];
+			$ret_val = $this->posts[ array_search( min( $distances ), $distances ) ];
 		} else if ( count( $distances ) == 1 ) {
-			$retVal = $this->posts[ $key ];
+			$ret_val = $this->posts[ $key ];
 		} else {
-			$retVal = null;
+			$ret_val = null;
 		}
 		
-		return $retVal;
+		return $ret_val;
 		
 	}
 	
@@ -3430,13 +3430,13 @@ class Sequence_Controller {
 	 * @param \WP_User $user     - User Object
 	 * @param          $template - Template name (string)
 	 *
-	 * @return Tools\E20R_Mail - Mail object to process
+	 * @return E20R_Mail - Mail object to process
 	 */
 	private function prepare_mail_obj( $post, $user, $template ) {
 		
 		DBG::log( "Attempting to load email class..." );
 		
-		$email = new Tools\E20R_Mail();
+		$email = new E20R_Mail();
 		
 		DBG::log( "Loaded " . get_class( $email ) );
 		
@@ -3469,7 +3469,7 @@ class Sequence_Controller {
 	public function send_notice( $posts, $user_id, $seq_id ) {
 		// Make sure the email class is loaded.
 		if ( ! class_exists( 'E20R\Sequences\Tools\E20R_Mail' ) ) {
-			DBG::log( 'Tools\E20R_Mail class is missing??' );
+			DBG::log( 'E20R_Mail class is missing??' );
 			
 			return false;
 		}
@@ -5094,16 +5094,16 @@ class Sequence_Controller {
 				if ( ( 'byDate' == $this->options->delayType ) && ( false != strtotime( $_POST['e20r_sequence_delay'] ) ) ) {
 					
 					DBG::log( "add_post_callback() - Validated that Delay value is a date." );
-					$delayVal = isset( $_POST['e20r_sequence_delay'] ) ? sanitize_text_field( $_POST['e20r_sequence_delay'] ) : null;
+					$delay_val = isset( $_POST['e20r_sequence_delay'] ) ? sanitize_text_field( $_POST['e20r_sequence_delay'] ) : null;
 				}
 			} else {
 				
 				DBG::log( "add_post_callback() - Validated that Delay value is probably a day nunmber." );
-				$delayVal = isset( $_POST['e20r_sequence_delay'] ) ? intval( $_POST['e20r_sequence_delay'] ) : null;
+				$delay_val = isset( $_POST['e20r_sequence_delay'] ) ? intval( $_POST['e20r_sequence_delay'] ) : null;
 			}
 			
 			DBG::log( 'add_post_callback() - Checking whether delay value is correct' );
-			$delay = $this->validate_delay_value( $delayVal );
+			$delay = $this->validate_delay_value( $delay_val );
 			
 			if ( $this->is_present( $seq_post_id, $delay ) ) {
 				
