@@ -1448,7 +1448,7 @@ class Sequence_Views {
 		<?php echo apply_filters( 'e20r-sequence-list-title',  $this->set_title_in_shortcode( $title ) ); ?>
 
 		<!-- Add opt-in to the top of the shortcode display. -->
-		<?php esc_html_e( $this->view_user_notice_opt_in() ); ?>
+		<?php $this->view_user_notice_opt_in(); ?>
 
 		<!-- List of sequence entries (paginated as needed) -->
 		<?php
@@ -1614,7 +1614,7 @@ class Sequence_Views {
 		}
 		else {
 
-			$title = esc_html( "<h3>{$title}</h3>" );
+			$title = "<h3>{$title}</h3>";
 		}
 
 		return $title;
