@@ -20,7 +20,6 @@ License:
 */
 
 namespace E20R\Tools;
-use E20R\Tools as E20RTools;
 
 class DBG
 {
