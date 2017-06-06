@@ -19,11 +19,9 @@ namespace E20R\Sequences\Sequence;
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
-use E20R\Sequences\Sequence as Sequence;
-use E20R\Sequences\Tools\E20RError as E20RError;
-use E20R\Tools as E20RTools;
+use E20R\Tools\DBG;
 
-class Views {
+class Sequence_Views {
 
 	private static $_this = null;
 
@@ -48,7 +46,7 @@ class Views {
 			self::$_this = new self;
 		}
 
-		E20RTools\DBG::log("Loading instance for views class");
+		DBG::log("Loading instance for views class");
 		return self::$_this;
 	}
 
@@ -63,31 +61,31 @@ class Views {
 	 */
 	private function set_post_status( $post_state )
 	{
-		$txtState = null;
+		$txt_state = null;
 
 		switch ($post_state)
 		{
 			case 'draft':
-				$txtState = __('-DRAFT', "e20r-sequences");
+				$txt_state = __('-DRAFT', "e20r-sequences");
 				break;
 
 			case 'future':
-				$txtState = __('-SCHED', "e20r-sequences");
+				$txt_state = __('-SCHED', "e20r-sequences");
 				break;
 
 			case 'pending':
-				$txtState = __('-REVIEW', "e20r-sequences");
+				$txt_state = __('-REVIEW', "e20r-sequences");
 				break;
 
 			case 'private':
-				$txtState = __('-PRIVT', "e20r-sequences");
+				$txt_state = __('-PRIVT', "e20r-sequences");
 				break;
 
 			default:
-				$txtState = '';
+				$txt_state = '';
 		}
 
-		return $txtState;
+		return $txt_state;
 	}
 
 	/**
@@ -98,7 +96,7 @@ class Views {
 	 */
 	public function get_post_list_for_metabox( $force = false ) {
 
-		E20RTools\DBG::log("Generating sequence content metabox for back-end");
+		DBG::log("Generating sequence content metabox for back-end");
 		$sequence = apply_filters('get_sequence_class_instance', null);
 		$options = $sequence->get_options();
 
@@ -106,7 +104,7 @@ class Views {
 		$posts = $sequence->load_sequence_post( null, null, null, '=', null, $force, 'any' );
 		$all_posts = $sequence->get_posts_from_db();
 
-		E20RTools\DBG::log('Displaying the back-end meta box content');
+		DBG::log('Displaying the back-end meta box content');
 
 		ob_start();
 		$has_error = $sequence->get_error_msg();
@@ -138,7 +136,7 @@ class Views {
 			$count = 1;
 
 			if ( empty($posts ) ) {
-				E20RTools\DBG::log('No Posts found?');
+				DBG::log('No Posts found?');
 
 				$sequence->set_error_msg( __('No posts/pages found', "e20r-sequences") );
 				?>
@@ -203,13 +201,13 @@ class Views {
 							<?php
 							if  ( $all_posts !== false ) {
 
-								foreach( $all_posts as $p ) { ?>
-									<option value="<?php echo $p->ID;?>"><?php echo esc_textarea($p->post_title);?> (#<?php esc_attr_e( $p->ID );?><?php echo esc_attr_e( $this->set_post_status( $p->post_status ) );?>)</option><?php
+								foreach( $all_posts as $post ) { ?>
+									<option value="<?php echo $post->ID;?>"><?php echo esc_textarea($post->post_title);?> (#<?php esc_attr_e( $post->ID );?><?php echo esc_attr_e( $this->set_post_status( $post->post_status ) );?>)</option><?php
 								}
 							}
 							else {
 								$sequence->set_error_msg( __( 'No posts found in the database!', "e20r-sequences" ) );
-								E20RTools\DBG::log('Error during database search for relevant posts');
+								DBG::log('Error during database search for relevant posts');
 							}
 							?>
 						</select>
@@ -240,7 +238,7 @@ class Views {
 
 		if ( !empty( $errors ) ) {
 
-			E20RTools\DBG::log( "Errors:" . print_r( $errors , true ));
+			DBG::log( "Errors:" . print_r( $errors , true ));
 			foreach( $errors as $e ) {
 				$status .= "{$e['message']}.<br/>";
 			}
@@ -264,7 +262,7 @@ class Views {
 	 */
 	public function sequence_list_metabox() {
 
-		E20RTools\DBG::log("Generating settings metabox for back-end");
+		DBG::log("Generating settings metabox for back-end");
 		global $post;
 
 		$sequence = apply_filters('get_sequence_class_instance', null);
@@ -272,7 +270,7 @@ class Views {
 
 
 		if ( !isset( $this->sequence_id ) /* || ( $this->sequence_id != $post->ID )  */ ) {
-			E20RTools\DBG::log("Loading the sequence metabox for {$post->ID} and not {$sequence->sequence_id}");
+			DBG::log("Loading the sequence metabox for {$post->ID} and not {$sequence->sequence_id}");
 
 			$options = $sequence->get_options( $post->ID );
 
@@ -281,7 +279,7 @@ class Views {
 			}
 		}
 
-		E20RTools\DBG::log('Load the post list meta box');
+		DBG::log('Load the post list meta box');
 
 		// Instantiate the settings & grab any existing settings if they exist.
 		?>
@@ -314,26 +312,26 @@ class Views {
 
 		$new_post = false;
 
-		E20RTools\DBG::log("Post ID: {$post->ID} and Sequence ID: {$sequence->sequence_id}");
+		DBG::log("Post ID: {$post->ID} and Sequence ID: {$sequence->sequence_id}");
 
 		if ( ( !isset( $sequence->sequence_id )  ) || ( $sequence->sequence_id != $post->ID ) ) {
 
-			E20RTools\DBG::log("Using the post ID as the sequence ID {$post->ID} vs {$sequence->sequence_id}");
+			DBG::log("Using the post ID as the sequence ID {$post->ID} vs {$sequence->sequence_id}");
 			$options = $sequence->get_options( $post->ID );
 
 			if ( !isset( $options->lengthVisible ) ) {
-				E20RTools\DBG::log("Unable to load options/settings for {$post->ID}");
+				DBG::log("Unable to load options/settings for {$post->ID}");
 				return;
 			}
 		}
 		else {
-			E20RTools\DBG::log('Not a valid Sequence ID, cannot load options');
+			DBG::log('Not a valid Sequence ID, cannot load options');
 			$sequence->set_error_msg( __('Invalid drip-feed sequence specified', "e20r-sequences") );
 			return;
 		}
 
 		if( ( 'pmpro_sequence' == $current_screen->post_type ) && ( $current_screen->action == 'add' )) {
-			E20RTools\DBG::log("Adding a new post so hiding the 'Send' for notification alerts");
+			DBG::log("Adding a new post so hiding the 'Send' for notification alerts");
 			$new_post = true;
 		}
 
@@ -362,6 +360,20 @@ class Views {
 							<div class="e20r-sequence-setting-col-3"></div>
 						</div>
 					</div>
+					
+					<div class="e20r-sequence-settings-display clear-after">
+						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
+							<div class="e20r-sequence-setting-col-1">
+								<input type="checkbox" value="1" id="e20r-sequence_showAdmin" name="e20r-sequence_showAdmin" title="<?php _e('Show all posts for this sequence to admin users', "e20r-sequences"); ?>" <?php checked( $options->showAdmin, true); ?> />
+								<input type="hidden" name="hidden-e20r-sequence_showAdmin" id="hidden-e20r-sequence_showAdmin" value="<?php esc_attr_e($options->showAdmin); ?>" >
+							</div>
+							<div class="e20r-sequence-setting-col-2">
+								<label class="selectit e20r-sequence-setting-col-2"><?php _e('Display all posts to Admin', "e20r-sequences"); ?></label>
+							</div>
+							<div class="e20r-sequence-setting-col-3"></div>
+						</div>
+					</div>
+					
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
 							<div class="e20r-sequence-setting-col-1">
@@ -408,8 +420,8 @@ class Views {
 								<label for="e20r-sequence_offset"></label>
 								<select name="e20r-sequence_offset" id="e20r-sequence_previewOffset">
 									<option value="0"><?php _e("None", "e20rtracker");?></option>
-									<?php foreach (range(1, 5) as $previewOffset) { ?>
-										<option value="<?php esc_attr_e($previewOffset); ?>" <?php selected( intval($options->previewOffset), $previewOffset); ?> ><?php esc_attr_e( $previewOffset ); ?></option>
+									<?php foreach (range(1, 5) as $preview_offset) { ?>
+										<option value="<?php esc_attr_e($preview_offset); ?>" <?php selected( intval($options->previewOffset), $preview_offset); ?> ><?php esc_attr_e( $preview_offset ); ?></option>
 									<?php } ?>
 								</select>
 							</div>
@@ -897,7 +909,7 @@ class Views {
 		<?php
 		$metabox = ob_get_clean();
 
-		E20RTools\DBG::log('Display the settings meta.');
+		DBG::log('Display the settings meta.');
 		// Display the metabox (print it)
 		echo $metabox;
 	}
@@ -907,14 +919,14 @@ class Views {
 	 */
 	public function render_post_edit_metabox() {
 
-		E20RTools\DBG::log( "Metabox for editor" );
+		DBG::log( "Metabox for editor" );
 		$metabox = '';
 
 		global $post;
 
 		$seq = apply_filters('get_sequence_class_instance', null);
 
-		E20RTools\DBG::log("Page Metabox being loaded");
+		DBG::log("Page Metabox being loaded");
 
 		ob_start();
 		?>
@@ -945,15 +957,15 @@ class Views {
 		$sequence = apply_filters('get_sequence_class_instance', null);
 		$options = $sequence->get_options();
 
-		E20RTools\DBG::log("Generating sequence metabox for post editor page");
-		E20RTools\DBG::log("Parameters for load_sequence_list_meta() {$post_id} and {$seq_id}.");
+		DBG::log("Generating sequence metabox for post editor page");
+		DBG::log("Parameters for load_sequence_list_meta() {$post_id} and {$seq_id}.");
 		$belongs_to = array();
 		$processed_ids = array();
 
 		/* Fetch all Sequence posts */
 		$sequence_list = $sequence->get_all_sequences( array( 'publish', 'pending', 'draft', 'private', 'future' ) );
 
-		E20RTools\DBG::log("Loading Sequences (count: " . count($sequence_list) . ")");
+		DBG::log("Loading Sequences (count: " . count($sequence_list) . ")");
 
 		// Post ID specified so we need to look for any sequence related metadata for this post
 
@@ -963,7 +975,7 @@ class Views {
 			$post_id = $post->ID;
 		}
 
-		E20RTools\DBG::log("Loading sequence ID(s) from DB");
+		DBG::log("Loading sequence ID(s) from DB");
 
 		$belongs_to = $sequence->get_sequences_for_post( $post_id );
 
@@ -971,17 +983,17 @@ class Views {
 		// If not, clean up the $belongs_to array.
 		if ( !empty( $belongs_to ) ) {
 
-			E20RTools\DBG::log("Belongs to " . count($belongs_to) . " sequence(s)");
+			DBG::log("Belongs to " . count($belongs_to) . " sequence(s)");
 
 			foreach ( $belongs_to as $cId ) {
 
 				if ( ! $sequence->sequence_exists( $cId ) ) {
 
-					E20RTools\DBG::log( "Sequence {$cId} does not exist. Remove it (post id: {$post_id})." );
+					DBG::log( "Sequence {$cId} does not exist. Remove it (post id: {$post_id})." );
 
 					if ( ( $key = array_search( $cId, $belongs_to ) ) !== false ) {
 
-						E20RTools\DBG::log( "Sequence ID {$cId} being removed", E20R_DEBUG_SEQ_INFO );
+						DBG::log( "Sequence ID {$cId} being removed", E20R_DEBUG_SEQ_INFO );
 						unset( $belongs_to[ $key ] );
 					}
 				}
@@ -994,14 +1006,14 @@ class Views {
 				( ( ( false == $options->allowRepeatPosts ) && !in_array( $seq_id, $belongs_to ) ) ||
 					( true == $options->allowRepeatPosts ) && ( in_array( $seq_id, $belongs_to ) ) ) ) {
 
-				E20RTools\DBG::log("Adding the new sequence ID to the existing array of sequences");
+				DBG::log("Adding the new sequence ID to the existing array of sequences");
 				// array_push( $belongs_to, $seq_id );
 				$belongs_to[] = $seq_id;
 			}
 		}
 		elseif ( empty( $belongs_to ) && ( $seq_id != 0 ) ) {
 
-			E20RTools\DBG::log("This post has never belonged to a sequence. Adding it to one now");
+			DBG::log("This post has never belonged to a sequence. Adding it to one now");
 			$belongs_to = array( $seq_id );
 		}
 		else {
@@ -1014,12 +1026,12 @@ class Views {
 		// array_push( $belongs_to, 0 );
 		if ( empty( $belongs_to ) ) {
 
-			E20RTools\DBG::log("Ensure there's at least one entry in the table. Sequence ID: {$seq_id}");
+			DBG::log("Ensure there's at least one entry in the table. Sequence ID: {$seq_id}");
 			$belongs_to[] = 0;
 		}
 
 
-		E20RTools\DBG::log("Post belongs to # of sequence(s): " . count( $belongs_to ) . ", content: " . print_r( $belongs_to, true ) );
+		DBG::log("Post belongs to # of sequence(s): " . count( $belongs_to ) . ", content: " . print_r( $belongs_to, true ) );
 		ob_start();
 		?>
 		<?php wp_nonce_field('e20r-sequence-post-meta', 'e20r_sequence_postmeta_nonce');?>
@@ -1029,20 +1041,20 @@ class Views {
 
 			$sequence_value_matrix = array_count_values( $belongs_to );
 
-			E20RTools\DBG::log("The matrix of sequence values: ");
-			E20RTools\DBG::log( $sequence_value_matrix);
+			DBG::log("The matrix of sequence values: ");
+			DBG::log( $sequence_value_matrix);
 
 			foreach( $belongs_to as $active_id ) {
 
 				if ( in_array( $active_id, $processed_ids ) ) {
-					E20RTools\DBG::log("Skipping {$active_id} since it's already added to the metabox");
+					DBG::log("Skipping {$active_id} since it's already added to the metabox");
 					continue;
 				}
 
 				// Figure out the correct delay type and load the value for this post if it exists.
 				if ( $active_id != 0 ) {
 
-					E20RTools\DBG::log("Loading options and posts for {$active_id}");
+					DBG::log("Loading options and posts for {$active_id}");
 					$sequence->get_options( $active_id );
 					// $sequence->load_sequence_post( null, null, null, '=', null, true );
 				}
@@ -1052,7 +1064,7 @@ class Views {
 					$options = $sequence->default_options();
 				}
 
-				E20RTools\DBG::log("Loading all delay values for for {$post_id}");
+				DBG::log("Loading all delay values for for {$post_id}");
 				$d_posts = $sequence->get_delay_for_post( $post_id, false );
 
 				if ( $sequence->sequence_id != 0 ) {
@@ -1061,12 +1073,12 @@ class Views {
 
 						if ( isset( $delay->delay ) && (!is_null( $delay->delay ) && is_numeric($delay->delay)) ) {
 
-							E20RTools\DBG::log( "Delay Value: {$delay->delay}" );
-							$delayVal = " value=\"{$delay->delay}\" ";
+							DBG::log( "Delay Value: {$delay->delay}" );
+							$delay_value = " value=\"{$delay->delay}\" ";
 
-							list( $label, $inputHTML ) = $this->set_delay_input( $delayVal, $active_id );
+							list( $label, $input_html ) = $this->set_delay_input( $delay_value, $active_id );
 							echo $this->print_sequence_header( $active_id );
-							echo $this->print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label );
+							echo $this->print_sequence_entry( $sequence_list, $active_id, $input_html, $label );
 
 						}
 					}
@@ -1076,15 +1088,15 @@ class Views {
 
 				if ( empty( $d_posts ) ) {
 
-					$delayVal = "value=''";
-					list( $label, $inputHTML ) = $this->set_delay_input( $delayVal, $active_id );
+					$delay_value = "value=''";
+					list( $label, $input_html ) = $this->set_delay_input( $delay_value, $active_id );
 					echo $this->print_sequence_header( $active_id );
-					echo $this->print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label );
+					echo $this->print_sequence_entry( $sequence_list, $active_id, $input_html, $label );
 				}
 
 				$processed_ids[] = $active_id;
 
-				// E20RTools\DBG::log(" Label: " . print_r( $label, true ) );
+				// DBG::log(" Label: " . print_r( $label, true ) );
 			} // Foreach ?>
 			</tbody>
 		</table>
@@ -1133,8 +1145,8 @@ class Views {
 		<option value=""></option>
 		<?php
 
-		E20RTools\DBG::log("Found " . count($template_path) . " user specific custom templates:");
-		E20RTools\DBG::log($template_path);
+		DBG::log("Found " . count($template_path) . " user specific custom templates:");
+		DBG::log($template_path);
 
 		$f_dirs = apply_filters( 'e20r-sequence-email-alert-template-path', array( E20R_SEQUENCE_PLUGIN_DIR . "/email/" ) );
 
@@ -1145,17 +1157,17 @@ class Views {
 
 		$template_path = array_merge($template_path, $f_dirs);
 
-		E20RTools\DBG::log("Total number of template paths: " . count($template_path));
+		DBG::log("Total number of template paths: " . count($template_path));
 
 		foreach ( $template_path as $dir ) {
 
 			chdir($dir);
 
-			E20RTools\DBG::log("Processing directory: {$dir}");
+			DBG::log("Processing directory: {$dir}");
 
 			foreach ( glob('*.html') as $file) {
 
-				E20RTools\DBG::log("File: {$file}");
+				DBG::log("File: {$file}");
 				echo('<option value="' . sanitize_file_name($file) . '" ' . selected( esc_attr( $options->noticeTemplate), sanitize_file_name($file) ) . ' >' . sanitize_file_name($file) .'</option>');
 			}
 
@@ -1174,9 +1186,9 @@ class Views {
 			}
 		}
 
-		$selectList = ob_get_clean();
+		$select_list = ob_get_clean();
 
-		return $selectList;
+		return $select_list;
 	}
 
 	/**
@@ -1211,9 +1223,9 @@ class Views {
 			}
 		}
 
-		$selectList = ob_get_clean();
+		$select_list = ob_get_clean();
 
-		return $selectList;
+		return $select_list;
 	}
 
 	/**
@@ -1257,9 +1269,9 @@ class Views {
 			printf( '<option value="%1$s" %2%s >%3$s</option>', esc_attr($key), selected( $options->dateformat,  $key ), esc_attr($val) );
 		}
 
-		$selectList = ob_get_clean();
+		$select_list = ob_get_clean();
 
-		return $selectList;
+		return $select_list;
 	}
 
 	private function set_delay_input( $input_value, $active_id ) {
@@ -1270,30 +1282,30 @@ class Views {
 
 			case 'byDate':
 
-				E20RTools\DBG::log("Configured to track delays by Date");
-				$delayFormat = __( 'Date', "e20r-sequences" );
+				DBG::log("Configured to track delays by Date");
+				$delay_format = __( 'Date', "e20r-sequences" );
 				$starts = date_i18n( "Y-m-d", current_time('timestamp') );
 
 				if ( empty( $input_value ) ) {
-					$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-date" type="date" min="%s" name="e20r_seq-delay[]">', $starts );
+					$input_html = sprintf( '<input class="e20r-seq-delay-info e20r-seq-date" type="date" min="%s" name="e20r_seq-delay[]">', $starts );
 				}
 				else {
-					$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-date" type="date" name="e20r_seq-delay[]" %s>', $input_value );
+					$input_html = sprintf( '<input class="e20r-seq-delay-info e20r-seq-date" type="date" name="e20r_seq-delay[]" %s>', $input_value );
 				}
 
 				break;
 
 			default:
 
-				E20RTools\DBG::log("Configured to track delays by Day count: {$active_id}");
-				$delayFormat = __('Day count', "e20r-sequences");
-				$inputHTML = sprintf( '<input class="e20r-seq-delay-info e20r-seq-days" type="text" name="e20r_seq-delay[]" %s>', $input_value );
+				DBG::log("Configured to track delays by Day count: {$active_id}");
+				$delay_format = __('Day count', "e20r-sequences");
+				$input_html = sprintf( '<input class="e20r-seq-delay-info e20r-seq-days" type="text" name="e20r_seq-delay[]" %s>', $input_value );
 
 		}
 
-		$label = sprintf( __("Delay (Format: %s)", "e20r-sequences"), $delayFormat );
+		$label = sprintf( __("Delay (Format: %s)", "e20r-sequences"), $delay_format );
 
-		return array( $label, $inputHTML );
+		return array( $label, $input_html );
 	}
 
 	private function print_sequence_header( $active_id ) {
@@ -1310,7 +1322,7 @@ class Views {
 		return $html;
 	}
 
-	private function print_sequence_entry( $sequence_list, $active_id, $inputHTML, $label ) {
+	private function print_sequence_entry( $sequence_list, $active_id, $input_html, $label ) {
 		ob_start(); ?>
 		<tr class="select-row-input sequence-select">
 			<td class="sequence-list-dropdown">
@@ -1336,7 +1348,7 @@ class Views {
 		</tr>
 		<tr class="delay-row-input sequence-delay">
 			<td>
-				<?php echo $inputHTML; ?>
+				<?php echo $input_html; ?>
 				<label for="remove-sequence_<?php esc_attr_e( $active_id ); ?>" ><?php _e('Remove: ', "e20r-sequences"); ?></label>
 				<input type="checkbox" name="remove-sequence" class="e20r_seq-remove-seq" value="<?php esc_attr_e( $active_id ); ?>">
 				<button class="button-secondary e20r-sequence-remove-alert"><?php _e("Clear alerts", "e20r-sequences");?></button>
@@ -1370,31 +1382,31 @@ class Views {
 
 		$html = '';
 
-		$savePost = $post;
+		$save_post = $post;
 
 		// Set a default page size.
 		if ($pagesize == 0) {
 			$pagesize = 30;
 		}
 
-		E20RTools\DBG::log( "Loading posts with pagination enabled. Expecting \\WP_Query result" );
-		$retSeq = $sequence->load_sequence_post( null, null, null, '=', $pagesize, true );
+		DBG::log( "Loading posts with pagination enabled. Expecting \\WP_Query result" );
+		$ret_seq = $sequence->load_sequence_post( null, null, null, '=', $pagesize, true );
 
-		if ( is_array($retSeq ) && !empty($retSeq)) {
+		if ( is_array($ret_seq ) && !empty($ret_seq)) {
 
-			list( $seqList, $max_num_pages ) = $retSeq;
+			list( $seq_list, $max_num_pages ) = $ret_seq;
 		} else {
-			$seqList = null;
+			$seq_list = null;
 			$max_num_pages = 0;
 		}
 
 		// $sequence_posts = $this->posts;
-		$memberDayCount = $sequence->get_membership_days();
+		$member_day_count = $sequence->get_membership_days();
 
-		E20RTools\DBG::log( "Sequence {$sequence->sequence_id} has " . count( $seqList ) . " posts. Current user has been a member for {$memberDayCount} days" );
+		DBG::log( "Sequence {$sequence->sequence_id} has " . count( $seq_list ) . " posts. Current user has been a member for {$member_day_count} days" );
 
 		if ( ! $sequence->has_post_access( $current_user->ID, $post->ID ) ) {
-			E20RTools\DBG::log( 'No access to this page/post/sequence ' . $sequence->sequence_id . ' for user ' . $current_user->ID );
+			DBG::log( 'No access to this page/post/sequence ' . $sequence->sequence_id . ' for user ' . $current_user->ID );
 			return '';
 		}
 
@@ -1404,11 +1416,11 @@ class Views {
 		// $closestPost = apply_filters( 'e20r-sequence-found-closest-post', $sequence->find_closest_post( $current_user->ID ) );
 
 		// Image to bring attention to the closest post item
-		$closestPostImg = sprintf( '<img src="%s">', plugins_url( '/../images/most-recent.png', __FILE__ ) );
+		$closest_post_img = sprintf( '<img src="%s">', plugins_url( '/../images/most-recent.png', __FILE__ ) );
 
-		$listed_postCnt   = 0;
+		$listed_post_cnt   = 0;
 
-		E20RTools\DBG::log( "Loading posts for the sequence_list shortcode...");
+		DBG::log( "Loading posts for the sequence_list shortcode...");
 		ob_start();
 		?>
 
@@ -1423,7 +1435,7 @@ class Views {
 		<!-- List of sequence entries (paginated as needed) -->
 		<?php
 
-	if ( count( $seqList ) == 0 ) {
+	if ( count( $seq_list ) == 0 ) {
 		// if ( 0 == count( $this->posts ) ) {
 		echo '<span style="text-align: center;">' . __( "There is <em>no content available</em> for you at this time. Please check back later.", "e20r-sequences" ) . "</span>";
 
@@ -1438,30 +1450,31 @@ class Views {
 
 				// Loop through all of the posts in the sequence
 
-				// $posts = $seqList->get_posts();
+				// $posts = $seq_list->get_posts();
 
-				foreach( $seqList as $p ) {
+				foreach( $seq_list as $s_post ) {
 
-					if ( ( false === $p->is_future && ( true === $p->list_include )) ) {
-						E20RTools\DBG::log("Adding post {$p->id} with delay {$p->delay}");
-						$listed_postCnt++;
+					if ( ( false === $s_post->is_future && ( true === $s_post->list_include )) ) {
+					 
+						DBG::log("Adding post {$s_post->id} with delay {$s_post->delay}");
+						$listed_post_cnt++;
 
-						if ( ( true === $p->closest_post ) && ( $highlight ) ) {
+						if ( ( true === $s_post->closest_post ) && ( $highlight ) ) {
 
-							E20RTools\DBG::log( 'The most recently available post for user #' . $current_user->ID . ' is post #' . $p->id );
+							DBG::log( 'The most recently available post for user #' . $current_user->ID . ' is post #' . $s_post->id );
 
 							// Show the highlighted post info
 							?>
 							<tr id="e20r-seq-selected-post">
-								<td class="e20r-seq-post-img"><?php esc_html_e( apply_filters( 'e20r-sequence-closest-post-indicator-image', $closestPostImg ) ); ?></td>
+								<td class="e20r-seq-post-img"><?php echo apply_filters( 'e20r-sequence-closest-post-indicator-image', $closest_post_img ); ?></td>
 								<td class="e20r-seq-post-hl">
-									<a href="<?php echo esc_url_raw($p->permalink); ?>" title="<?php esc_attr_e($p->title); ?>"><strong><?php esc_attr_e($p->title); ?></strong>&nbsp;&nbsp;<em>(<?php _e("Current", "e20r-sequences");?>)</em></a>
+									<a href="<?php echo esc_url_raw($s_post->permalink); ?>" title="<?php esc_attr_e($s_post->title); ?>"><strong><?php esc_attr_e($s_post->title); ?></strong>&nbsp;&nbsp;<em>(<?php _e("Current", "e20r-sequences");?>)</em></a>
 								</td>
 								<td <?php echo( true === $button ? 'class="e20r-seq-availnow-btn"' : '' ); ?>><?php
 
 									if ( true === $button ) {
 										?>
-									<a class="button primary" href="<?php echo esc_url($p->permalink); ?>"> <?php _e( "Available", "e20r-sequences" ); ?></a><?php
+									<a class="button primary" href="<?php echo esc_url($s_post->permalink); ?>"> <?php _e( "Available", "e20r-sequences" ); ?></a><?php
 									} ?>
 								</td>
 							</tr> <?php
@@ -1470,40 +1483,40 @@ class Views {
 							<tr id="e20r-seq-post">
 								<td class="e20r-seq-post-img">&nbsp;</td>
 								<td class="e20r-seq-post-fade">
-									<a href="<?php echo esc_url_raw($p->permalink); ?>" title="<?php esc_attr_e($p->title); ?>"><?php esc_attr_e($p->title); ?></a>
+									<a href="<?php echo esc_url_raw($s_post->permalink); ?>" title="<?php esc_attr_e($s_post->title); ?>"><?php esc_attr_e($s_post->title); ?></a>
 								</td>
-								<td<?php echo( true === $button ? ' class="e20r-seq-availnow-btn">' : '>' );
+								<td <?php echo( true === $button ? 'class="e20r-seq-availnow-btn"' : '' ); ?>>
+								<?php
 								if ( true === $button ) {
 									?>
-								<a class="button" href="<?php echo esc_url_raw( $p->permalink ); ?>"> <?php _e( "Available", "e20r-sequences" ); ?></a><?php
+								<a class="button" href="<?php echo esc_url_raw( $s_post->permalink ); ?>"> <?php _e( "Available", "e20r-sequences" ); ?></a><?php
 								} ?>
 								</td>
 							</tr>
 							<?php
 						}
-					} elseif ( ( true == $p->is_future && true === $p->list_include ) /* &&
-                    ( false === $this->hide_upcoming_posts() ) */ ) {
+					} elseif ( ( true == $s_post->is_future && true === $s_post->list_include ) /* && ( false === $this->hide_upcoming_posts() ) */ ) {
 
-						$listed_postCnt++;
+						$listed_post_cnt++;
 
 						// Do we need to highlight the (not yet available) post?
-						// if ( ( $p->ID == $closestPost->id ) && ( $p->delay == $closestPost->delay ) && $highlight ) {
-						if ( ( true === $p->closest_post ) && ( $highlight ) ) {
+						// if ( ( $s_post->ID == $closestPost->id ) && ( $s_post->delay == $closestPost->delay ) && $highlight ) {
+						if ( ( true === $s_post->closest_post ) && ( $highlight ) ) {
 							?>
 
 							<tr id="e20r-seq-post">
 								<td class="e20r-seq-post-img">&nbsp;</td>
 								<td id="e20r-seq-post-future-hl">
-									<?php E20RTools\DBG::log( "Highlight post #: {$p->id} with future availability" ); ?>
+									<?php DBG::log( "Highlight post #: {$s_post->id} with future availability" ); ?>
 									<span class="e20r_sequence_item-title">
-                                        <?php esc_attr_e($p->title); ?>
+                                        <?php esc_attr_e($s_post->title); ?>
                                     </span>
                                     <span class="e20r_sequence_item-unavailable">
-                                        <?php printf( __( 'available on %s', "e20r-sequences" ),
+                                        <?php printf( __( 'Available: %s', "e20r-sequences" ),
 											( $options->delayType == 'byDays' &&
 												$options->showDelayAs == E20R_SEQ_AS_DAYNO ) ?
 												__( 'day', "e20r-sequences" ) : '' ); ?>
-										<?php esc_attr_e( $sequence->display_proper_delay( $p->delay )); ?>
+										<?php esc_attr_e( $sequence->display_proper_delay( $s_post->delay )); ?>
                                     </span>
 								</td>
 								<td></td>
@@ -1514,19 +1527,19 @@ class Views {
 							<tr id="e20r-seq-post">
 								<td class="e20r-seq-post-img">&nbsp;</td>
 								<td colspan="2">
-                                    <span class="e20r_sequence_item-title"><?php esc_attr_e($p->title); ?></span>
+                                    <span class="e20r_sequence_item-title"><?php esc_attr_e($s_post->title); ?></span>
                                     <span class="e20r_sequence_item-unavailable">
-                                        <?php printf( __( 'available on %s', "e20r-sequences" ),
+                                        <?php printf( __( 'Available: %s', "e20r-sequences" ),
                                             ($options->delayType == 'byDays' &&
                                                 $options->showDelayAs == E20R_SEQ_AS_DAYNO ) ?
                                                 __( 'day', "e20r-sequences" ) : '' ); ?>
-                                        <?php esc_attr_e( $sequence->display_proper_delay( $p->delay ) ); ?>
+                                        <?php esc_attr_e( $sequence->display_proper_delay( $s_post->delay ) ); ?>
                                     </span>
                                 </td>
 							</tr> <?php
 						}
-					} elseif ( false !== $p->list_include ) {
-						if ( ( count( $seqList ) > 0 ) && ( $listed_postCnt > 0 ) ) {
+					} elseif ( false !== $s_post->list_include ) {
+						if ( ( count( $seq_list ) > 0 ) && ( $listed_post_cnt > 0 ) ) {
 							?>
 							<tr id="e20r-seq-post">
 								<td>
@@ -1543,17 +1556,17 @@ class Views {
 		<?php
 
 
-		echo apply_filters( 'e20r-sequence-list-pagination-code', $sequence->post_paging_nav( ceil( count( $seqList ) / $pagesize ) ) );
+		echo apply_filters( 'e20r-sequence-list-pagination-code', $sequence->post_paging_nav( ceil( count( $seq_list ) / $pagesize ) ) );
 	}
 		?>
 		</div><?php
 
-		$post = $savePost;
+		$post = $save_post;
 
 		$html .= ob_get_contents();
 		ob_end_clean();
 
-		E20RTools\DBG::log("create_sequence_list() - Returning the - possibly filtered - HTML for the sequence_list shortcode");
+		DBG::log("create_sequence_list() - Returning the - possibly filtered - HTML for the sequence_list shortcode");
 
 		return apply_filters( 'e20r-sequence-list-html', $html );
 	}
@@ -1598,7 +1611,7 @@ class Views {
      */
     public function view_user_notice_opt_in() {
 
-        $optinForm = '';
+        $optin_form = '';
 
         global $current_user;
 
@@ -1607,16 +1620,16 @@ class Views {
 
         // $meta_key = $wpdb->prefix . "pmpro_sequence_notices";
 
-        E20RTools\DBG::log('User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
+        DBG::log('User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
 
         if ( isset( $options->sendNotice ) && ( $options->sendNotice == 1 ) ) {
 
-            E20RTools\DBG::log("Allow user to opt out of email notices");
-            $optIn = $sequence->load_user_notice_settings( $current_user->ID, $sequence->sequence_id );
+            DBG::log("Allow user to opt out of email notices");
+            $opt_in = $sequence->load_user_notice_settings( $current_user->ID, $sequence->sequence_id );
 
-            // E20RTools\DBG::log('Fetched Meta: ' . print_r( $optIn, true));
+            // DBG::log('Fetched Meta: ' . print_r( $opt_in, true));
 
-            $noticeVal = isset( $optIn->send_notices ) && ( $optIn->send_notices == 1 ) ? $optIn->send_notices : 0;
+            $notice_val = isset( $opt_in->send_notices ) && ( $opt_in->send_notices == 1 ) ? $opt_in->send_notices : 0;
 
             /* Add form information */
             ob_start();
@@ -1625,12 +1638,12 @@ class Views {
                 <div class="e20r_sequence_useroptin">
                     <div class="seq_spinner"></div>
                     <form class="e20r-sequence" action="<?php echo admin_url('admin-ajax.php'); ?>" method="post">
-                        <input type="hidden" name="hidden_e20r_seq_useroptin" id="hidden_e20r_seq_useroptin" value="<?php esc_attr_e( $noticeVal ); ?>" >
+                        <input type="hidden" name="hidden_e20r_seq_useroptin" id="hidden_e20r_seq_useroptin" value="<?php esc_attr_e( $notice_val ); ?>" >
                         <input type="hidden" name="hidden_e20r_seq_id" id="hidden_e20r_seq_id" value="<?php esc_attr_e( $sequence->sequence_id ); ?>" >
                         <input type="hidden" name="hidden_e20r_seq_uid" id="hidden_e20r_seq_uid" value="<?php esc_attr_e( $current_user->ID ); ?>" >
                         <?php wp_nonce_field('e20r-sequence-user-optin', 'e20r_sequence_optin_nonce'); ?>
                         <span>
-                            <input type="checkbox" value="1" id="e20r_sequence_useroptin" name="e20r_sequence_useroptin" onclick="javascript:e20r_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', "e20r-sequences"); ?>" <?php echo ($noticeVal == 1 ? ' checked="checked"' : null); ?> " />
+                            <input type="checkbox" value="1" id="e20r_sequence_useroptin" name="e20r_sequence_useroptin" onclick="javascript:e20r_sequence_optinSelect(); return false;" title="<?php _e('Please email me an alert/reminder when any new content in this sequence becomes available', "e20r-sequences"); ?>" <?php echo ($notice_val == 1 ? ' checked="checked"' : null); ?> " />
                             <label for="e20r-seq-useroptin"><?php _e('Yes, please send me email reminders!', "e20r-sequences"); ?></label>
                         </span>
                     </form>
@@ -1638,13 +1651,13 @@ class Views {
             </div>
 
             <?php
-            $optinForm = ob_get_clean();
+            $optin_form = ob_get_clean();
         }
         else {
-            E20RTools\DBG::log("Not configured to allow sending of notices. {$options->sendNotice}");
+            DBG::log("Not configured to allow sending of notices. {$options->sendNotice}");
         }
 
-        E20RTools\DBG::log("Returning opt-in form HTML (if applicable)");
-        return $optinForm;
+        DBG::log("Returning opt-in form HTML (if applicable)");
+        return $optin_form;
     }
 }
