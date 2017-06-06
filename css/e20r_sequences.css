@@ -455,14 +455,15 @@ a:hover.page-numbers {
     border-bottom: 2pt dashed rgba(0, 204, 0, 0.5);
 }
 
-.e20r-seq-availnow-btn {
+/*.e20r-seq-availnow-btn {
     width: 170px;
     display: inline-block;
-    /* position: relative; */
+    position: relative;
     right: 5px;
     float: right;
     padding: 6px 0;
 }
+*/
 
 #e20r-seq-post-summary {
     max-height: 150px;
