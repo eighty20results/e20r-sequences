@@ -1,5 +1,5 @@
 <?php
-use E20R\Tools as E20RTools;
+use E20R\Tools\DBG;
 
 // Set startdate for all users and their sequences.
 function e20r_sequence_upgrade_settings_4411()
@@ -13,7 +13,7 @@ function e20r_sequence_upgrade_settings_4411()
         $levels = pmpro_getAllLevels(true, true);
     }
 
-    E20RTools\DBG::log("Updating user startdate per sequence for all active users");
+    DBG::log("Updating user startdate per sequence for all active users");
 
     $levels = apply_filters('e20r-sequences-membership-module-get-level-id-array', $levels);
     $seq = apply_filters('get_sequence_class_instance', null);
@@ -32,7 +32,7 @@ function e20r_sequence_upgrade_settings_4411()
                 foreach ($users as $u_id ) {
 
                     $startdate = $seq->get_user_startdate( $u_id, $level->id, $s_id );
-                    E20RTools\DBG::log("Setting startdate for user {$u_id} for sequence {$s_id} in level {$level->id}: {$startdate}");
+                    DBG::log("Setting startdate for user {$u_id} for sequence {$s_id} in level {$level->id}: {$startdate}");
                 }
             }
         }
