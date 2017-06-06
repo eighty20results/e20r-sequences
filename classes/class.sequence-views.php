@@ -293,6 +293,24 @@ class Sequence_Views {
 		<?php
 	}
 
+	public function view_sequence_id_required( $code ) {
+	    
+	    $errormsg = null;
+	    
+	    switch( $code ) {
+	        case 'ERRNOSEQUENCEID':
+	            $errormsg = __("No sequence to opt in for", "e20r-sequences");
+	            break;
+	    }
+	    
+	    ob_start();
+	    ?>
+	    <div class="notice-warning">
+	        <?php printf( __("Please notify the webmaster (include message): %s", "e20r-sequences" ), $errormsg ); ?>
+        </div>
+	    <?php
+	    return ob_get_clean();
+	}
 	/**
 	 * Defines the metabox for the Sequence Settings (per sequence page/list) on the Admin page
 	 *
