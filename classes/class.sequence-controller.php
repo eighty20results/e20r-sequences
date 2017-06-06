@@ -465,6 +465,7 @@ class Sequence_Controller {
 		$settings->loaded               = false;
 		$settings->hideFuture           = 0; // 'hidden' (Show them)
 		$settings->showAdmin            = true; // 'hidden' (Show them)
+		$settings->includeFeatured      = false; // Show featured image for a sequence member in post listing
 		$settings->lengthVisible        = 1; //'lengthVisible'
 		$settings->sortOrder            = SORT_ASC; // 'sortOrder'
 		$settings->delayType            = 'byDays'; // 'delayType'
@@ -1120,10 +1121,12 @@ class Sequence_Controller {
 		$startdate = $this->get_user_startdate( $user_id, $level_id );
 		$tz        = get_option( 'timezone_string' );
 		
+		DBG::log("Startdate for {$user_id}: {$startdate}");
+		
 		//check we received a start date
 		if ( empty( $startdate ) ) {
 			
-			$stardate = strtotime( 'today ' . $tz );
+			$startdate = strtotime( 'today ' . $tz );
 		}
 		
 		$now  = current_time( "timestamp" );
@@ -1315,43 +1318,43 @@ class Sequence_Controller {
 	 *
 	 * @param $date    - Take a date in the format YYYY-MM-DD and convert it to a number of days since membership start
 	 *                 (for the current member)
-	 * @param $userId  - Optional ID for the user being processed
-	 * @param $levelId - Optional ID for the level of the user
+	 * @param $user_id  - Optional ID for the user being processed
+	 * @param $level_id - Optional ID for the level of the user
 	 *
 	 * @return mixed -- Return the # of days calculated
 	 *
 	 * @access public
 	 */
-	public function convert_date_to_days( $date, $userId = null, $levelId = null ) {
+	public function convert_date_to_days( $date, $user_id = null, $level_id = null ) {
 		
 		$days = 0;
 		
-		if ( null == $userId ) {
+		if ( null == $user_id ) {
 			
 			if ( ! empty ( $this->e20r_sequence_user_id ) ) {
 				
-				$userId = $this->e20r_sequence_user_id;
+				$user_id = $this->e20r_sequence_user_id;
 			} else {
 				
 				global $current_user;
 				
-				$userId = $current_user->ID;
+				$user_id = $current_user->ID;
 			}
 		}
 		
-		if ( null == $levelId ) {
+		if ( null == $level_id ) {
 			
 			if ( ! empty( $this->e20r_sequence_user_level ) ) {
 				
-				$levelId = $this->e20r_sequence_user_level;
+				$level_id = $this->e20r_sequence_user_level;
 			} else {
 				
-				$level = $this->get_membership_level_for_user( $userId );
+				$level = $this->get_membership_level_for_user( $user_id );
 				
 				if ( is_object( $level ) ) {
-					$levelId = $level->id;
+					$level_id = $level->id;
 				} else {
-					$levelId = $level;
+					$level_id = $level;
 				}
 				
 			}
@@ -1362,32 +1365,37 @@ class Sequence_Controller {
 			return $date;
 		}
 		
-		DBG::log( $levelId );
+		DBG::log( "User {$user_id}'s level ID {$level_id}" );
 		
 		if ( $this->is_valid_date( $date ) ) {
-			// DBG::log("Using {$userId} and {$levelId} for the credentials");
-			$startDate = $this->get_user_startdate( $userId, $levelId ); /* Needs userID & Level ID ... */
+			// DBG::log("Using {$user_id} and {$level_id} for the credentials");
+			$start_date = $this->get_user_startdate( $user_id, $level_id ); /* Needs userID & Level ID ... */
 			
-			if ( empty( $startDate ) && ( current_user_can( 'manage_options' ) ) ) {
+			if ( empty( $start_date ) && true === $this->show_all_for_admin() ) {
 				
-				$startDate = strtotime( "2013-01-01" );
-			} else if ( empty( $startDate ) ) {
+			    DBG::log("No start date specified, but admin should be shown everything");
 				
-				$startDate = strtotime( "tomorrow" );
+				$start_date = strtotime( "2013-01-01" );
+			} else if ( empty( $start_date ) ) {
+				
+				DBG::log("No start date specified, and admin shouldn't be shown everything");
+				$start_date = strtotime( "tomorrow" );
 			}
 			
-			DBG::log( "Given date: {$date} and startdate: {$startDate} for user {$userId} with level {$levelId}" );
+			DBG::log( "Given date: {$date} and startdate: {$start_date} for user {$user_id} with level {$level_id}" );
 			
 			try {
 				
 				// Use PHP v5.2 and v5.3 compatible function to calculate difference
-				$compDate = strtotime( "{$date} 00:00:00" );
-				$days     = $this->datediff( $startDate, $compDate ); // current_time('timestamp')
+				$comp_date = strtotime( "{$date} 00:00:00" );
+				$days     = $this->datediff( $start_date, $comp_date ); // current_time('timestamp')
 				
-			} catch ( Exception $e ) {
+			} catch ( \Exception $e ) {
 				DBG::log( 'Error calculating days: ' . $e->getMessage() );
 			}
 		}
+  
+		DBG::log("Days calculated: {$days} ");
 		
 		return $days;
 	}
@@ -1424,9 +1432,24 @@ class Sequence_Controller {
 		return ( $this->options->hideFuture == 1 ? true : false );
 	}
 	
+	/**
+     * Whether to show all current and upcoming posts in a sequence list for users with admin privilege
+     *
+	 * @return bool
+	 */
 	public function show_all_for_admin() {
-		return ( $this->options->showAdmin == 1 ? true : false );
+		return ( isset($this->options->showAdmin) && $this->options->showAdmin == 1 ? true : false );
     }
+	
+	/**
+     * Whether to include the featured image(s) for the post in the post listing(s)
+     *
+	 * @return bool
+	 */
+    public function include_featured_image_for_posts() {
+	    return isset( $this->options->includeFeatured) && $this->options->includeFeatured == 1 ? true : false;
+    }
+    
 	/**
 	 * Save post specific metadata to indicate sequence & delay value(s) for the post.
 	 *
@@ -2132,7 +2155,7 @@ class Sequence_Controller {
 			$access = $this->has_membership_access( $sid, $user_id, true );
 			
 			DBG::log( "Checking sequence access for membership level {$sid}: Access = " . ( $access[0] ? 'true' : 'false' ) );
-			// DBG::log($access);
+			DBG::log($access);
 			
 			// $usersLevels = pmpro_getMembershipLevelsForUser( $user_id );
 			
@@ -2146,7 +2169,7 @@ class Sequence_Controller {
 					
 					foreach ( $s_posts as $post ) {
 						
-						DBG::log( "UserID: {$user_id}, post: {$post->id}, delay: {$post->delay}, Alert: {$isAlert} for sequence: {$sid} - sequence_list: " . print_r( $sequence_list, true ) );
+						DBG::log( "UserID: {$user_id}, post: {$post->id}, delay: {$post->delay}, Alert: {$isAlert} for sequence: {$sid} " );
 						
 						if ( $post->id == $post_id ) {
 							
@@ -2291,17 +2314,20 @@ class Sequence_Controller {
 		if ( function_exists( 'pmpro_has_membership_access' ) ) {
 			
 			DBG::log( "Found the PMPro Membership access function" );
-			$has_access = pmpro_has_membership_access( $post_id, $user_id, $return_membership_levels );
+			$access = pmpro_has_membership_access( $post_id, $user_id, $return_membership_levels );
 			
-			DBG::log( $has_access );
+			DBG::log( "For: {$post_id}: " . print_r( $access, true) );
 			
-			if ( ( is_array( $has_access ) && true == $has_access[0] ) || ( ! is_array( $has_access ) && true == $has_access ) ) {
-				$access = true;
+			if ( ( (!is_array( $access ) ) && true == $access ) ) {
+			    DBG::log("Didn't receive an array for the access info");
+			    $user_level = pmpro_getMembershipLevelForUser( $user_id, true );
+				$access = array( true, array( $access ), array( $user_level->name ) );
 			}
 			
-			
+			DBG::log("User {$user_id} has access? " . ( $access[0] ? "Yes" : "No") );
 		}
-		
+  
+		DBG::log("After membership access filter: " . print_r( $access, true ));
 		return apply_filters( 'e20r-sequence-membership-access', $access, $post_id, $user_id, $return_membership_levels );
 	}
 	
@@ -3671,24 +3697,24 @@ class Sequence_Controller {
 	/**
 	 * Resets the user-specific alert settings for a specified sequence Id.
 	 *
-	 * @param $userId     - User's ID
+	 * @param $user_id     - User's ID
 	 * @param $sequenceId - ID of the sequence we're clearning
 	 *
 	 * @return mixed - false means the reset didn't work.
 	 */
-	public function reset_user_alerts( $userId, $sequenceId ) {
+	public function reset_user_alerts( $user_id, $sequenceId ) {
 		
 		global $wpdb;
 		
 		DBG::log( "reset_user_alerts() - Attempting to delete old-style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO );
-		$old_style = delete_user_meta( $userId, $wpdb->prefix . 'pmpro_sequence_notices' );
+		$old_style = delete_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence_notices' );
 		
 		DBG::log( "reset_user_alerts() - Attempting to delete v3 style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO );
-		$v3_style = delete_user_meta( $userId, "pmpro_sequence_id_{$sequenceId}_notices" );
+		$v3_style = delete_user_meta( $user_id, "pmpro_sequence_id_{$sequenceId}_notices" );
 		
 		if ( $old_style || $v3_style ) {
 			
-			DBG::log( "reset_user_alerts() - Successfully delted user notice settings for user {$userId}" );
+			DBG::log( "reset_user_alerts() - Successfully delted user notice settings for user {$user_id}" );
 			
 			return true;
 		}
@@ -4175,6 +4201,7 @@ class Sequence_Controller {
 		$form_checkboxes = array(
 			'hideFuture',
 			'showAdmin',
+			'includeFeatured',
 			'allowRepeatPosts',
 			'previewOffset',
 			'lengthVisible',
@@ -5989,13 +6016,14 @@ class Sequence_Controller {
 		
 		$sl = new Sequence_Links();
 		$sa = new Sequence_Alert();
-		$uc = new Upcoming_Content();
+		// $uc = new Upcoming_Content();
 		
 		
 		// Generates paginated list of links to sequence members
 		add_shortcode( 'sequence_links', array( $sl, 'load_shortcode' ) );
 		add_shortcode( 'sequence_alert', array( $sa, 'load_shortcode' ) );
-		add_shortcode( 'upcoming_content', array( $uc, 'load_shortcode' ) );
+		// TODO: Implement Upcoming_Content class/shortcode
+		// add_shortcode( 'upcoming_content', array( $uc, 'load_shortcode' ) );
 	}
 	
 	/**
@@ -6221,7 +6249,9 @@ class Sequence_Controller {
 		
 		// neither default nor received sequence id to process.
 		if ( empty( $sequence_id ) && empty( $this->sequence_id ) ) {
-			return null;
+			
+		    DBG::log("No Sequence ID configured. Returning NULL");
+		    return null;
 		}
 		
 		// if the user doesn't have a membership level...
@@ -6267,10 +6297,10 @@ class Sequence_Controller {
 		
 		$startdate = $m_startdate_ts;
 		
-		DBG::log( "Using startdate value of : {$startdate_ts}" );
+		DBG::log( "Using startdate value of : {$startdate}" );
 		
 		// finally, allow the user to filter the startdate to whatever they want it to be.
-		return apply_filters( 'e20r-sequence-user-startdate', $startdate_ts, $sequence_id, $user_id, $level_id );
+		return apply_filters( 'e20r-sequence-user-startdate', $startdate, $sequence_id, $user_id, $level_id );
 	}
 	
 	/**
