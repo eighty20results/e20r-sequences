@@ -45,14 +45,14 @@ if ( ! defined( 'E20R_LICENSE_ERROR' ) ) {
 }
 
 // Don't redefine the class if it exists in memory already
-if ( class_exists( 'e20rLicense' ) ) {
+if ( class_exists( '\E20R_License' ) ) {
 	return;
 }
 
-class e20rLicense {
+class E20R_License {
 
 	/**
-	 * @var e20rLicense $instance The class instance
+	 * @var E20R_License $instance The class instance
 	 */
 	private static $instance = null;
 
@@ -72,12 +72,12 @@ class e20rLicense {
 	protected $license_list = array();
 
 	/**
-	 * @var e20rLicense $license
+	 * @var E20R_License $license
 	 */
 	private $license;
 
 	/**
-	 * e20rLicense constructor.
+	 * E20R_License constructor.
 	 */
 	public function __construct() {
 
@@ -118,7 +118,7 @@ class e20rLicense {
 	/**
 	 * Retrieve and initiate the class instance
 	 *
-	 * @return e20rLicense
+	 * @return E20R_License
 	 */
 	public static function get_instance() {
 
@@ -208,7 +208,7 @@ class e20rLicense {
 	 *
 	 * @return bool
 	 *
-	 * TODO: Include e20rLicense::isLicenseActive() in class using this infrastructure
+	 * TODO: Include E20R_License::isLicenseActive() in class using this infrastructure
 	 */
 	public static function isLicenseActive( $license_name, $package, $reply ) {
 
