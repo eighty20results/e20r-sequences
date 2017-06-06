@@ -293,7 +293,7 @@ class Sequence_Views {
 		<?php
 	}
 
-	public function view_sequence_id_required( $code ) {
+	public function view_sequence_error( $code ) {
 	    
 	    $errormsg = null;
 	    
