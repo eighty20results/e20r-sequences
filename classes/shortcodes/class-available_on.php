@@ -9,7 +9,7 @@
 namespace E20R\Sequences\Shortcodes;
 use E20R\Tools as E20RTools;
 
-class available_on
+class Available_On
 {
 
     private static $_this;
@@ -27,7 +27,7 @@ class available_on
 
         self::$_this = $this;
 
-        add_filter('get_available_class_instance', [$this, 'get_instance']);
+        add_filter('get_available_class_instance', 'E20R\Sequences\Shortcodes\Available_On::get_instance' );
         add_shortcode('e20r_available_on', array($this, 'load_shortcode'));
     }
 
@@ -37,7 +37,7 @@ class available_on
      *
      * @param null $attr - Attributes included in shortcode
      * @param null $content -- The content between [e20r_available_on][/e20r_available_on]
-     * @return mixed|string|void - $content or a message about unavailability (default is null)
+     * @return mixed|string - $content or a message about unavailability (default is null)
      *
      * @since v4.0.1
      */
@@ -95,12 +95,16 @@ class available_on
     /**
      * Returning the instance (used by the 'get_available_class_instance' hook)
      *
-     * @return availableOn_shortcode
+     * @return Available_On
      *
      * * @since v4.0.1
      */
-    public function get_instance()
+    public static function get_instance()
     {
+    	if ( is_null( self::$_this ) ) {
+    		self::$_this = new self;
+	    }
+	    
         return self::$_this;
     }
 }
