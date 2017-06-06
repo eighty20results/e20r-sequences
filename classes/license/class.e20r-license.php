@@ -18,6 +18,8 @@
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+namespace E20R\Tools\License;
+
 defined( 'ABSPATH' ) or die( 'Cannot access plugin sources directly' );
 
 if ( !defined( 'E20R_LICENSE_VERSION' ) ) {
@@ -57,7 +59,7 @@ class E20R_License {
 	private static $instance = null;
 
 	/**
-	 * @var e20rUtils   Utilities class instance
+	 * @var \E20R_Utils   Utilities class instance
 	 */
 	private $utils;
 
@@ -109,8 +111,8 @@ class E20R_License {
 
 		add_action( 'http_api_curl', array( $this, 'force_tls_12' ) );
 
-		if ( class_exists( 'e20rUtils' ) ) {
-			$this->utils = e20rUtils::get_instance();
+		if ( class_exists( '\E20R_Utils' ) ) {
+			$this->utils = \E20R_Utils::get_instance();
 			$this->utils->add_to_autoloader_list( get_class( $this ) );
 		}
 	}
@@ -132,9 +134,9 @@ class E20R_License {
 	}
 
 	/**
-	 * Return the existing instance of the e20rUtils class (for notices/etc)
+	 * Return the existing instance of the \E20R_Utils class (for notices/etc)
 	 *
-	 * @return e20rUtils
+	 * @return \E20R_Utils
 	 */
 	public function get_utils() {
 		return $this->utils;
@@ -310,8 +312,8 @@ class E20R_License {
 	/**
 	 * Compare license entries by the timestamp they were updated on the local system
 	 *
-	 * @param stdClass $lic_a - First license
-	 * @param stdClass $lic_b - Second license
+	 * @param \stdClass $lic_a - First license
+	 * @param \stdClass $lic_b - Second license
 	 *
 	 * @return int
 	 */
