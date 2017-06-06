@@ -60,7 +60,7 @@ class Sequence_Alert {
 
 	/**
 	 * Shortcode to display notification opt-in checkbox
-	 * @param string $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
+	 * @param array $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
 	 * @param string $content - Would be unexpected. Included for completeness purposes
 	 *
 	 * @return string - HTML of the opt-in
@@ -75,12 +75,11 @@ class Sequence_Alert {
 		), $attributes ) );
 
 		DBG::log("shortcode specified sequence id: {$sequence_id}");
-
+		$view_class = apply_filters('get_sequence_views_class_instance', null);
+		$sequence = apply_filters('get_sequence_class_instance', null);
+		
 		if ( !empty( $sequence_id ) ) {
-
-			$sequence = apply_filters('get_sequence_class_instance', null);
-			$view_class = apply_filters('get_sequence_views_class_instance', null);
-
+			
 			if ( !$sequence->init( $sequence_id ) ) {
 
 				return $sequence->get_error_msg();
@@ -88,11 +87,8 @@ class Sequence_Alert {
 
 			return $view_class->view_user_notice_opt_in();
 		}
-		else {
-
-			DBG::log("ERROR: No sequence ID specified!", E20R_DEBUG_SEQ_WARNING );
-		}
-
-		return null;
+		
+		DBG::log("ERROR: No sequence ID specified!", E20R_DEBUG_SEQ_WARNING );
+		return $view_class->view_sequence_error( 'ERRNOSEQUENCEID' );
 	}
 }
