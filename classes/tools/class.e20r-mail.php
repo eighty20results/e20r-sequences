@@ -10,7 +10,7 @@ namespace E20R\Sequences\Tools;
 use E20R\Sequences\Tools\E20RError as Errors;
 use E20R\Tools as E20RTools;
 
-class e20rMail
+class E20R_Mail
 {
     private $to;
     private $from;
