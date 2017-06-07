@@ -1421,8 +1421,10 @@ class Sequence_Views {
 		}
 
 		DBG::log( "Loading posts with pagination enabled. Expecting \\WP_Query result" );
-		$ret_seq = $sequence->load_sequence_post( null, null, null, '=', $pagesize, true );
-
+		// $ret_seq = $sequence->load_sequence_post( null, null, null, '=', $pagesize, true );
+		$ret_seq = $sequence->load_sequence_post( null, null, null, '=', $pagesize );
+  
+		// DBG::log("Got: " . print_r( $ret_seq, true ) );
 		if ( is_array($ret_seq ) && !empty($ret_seq)) {
 
 			list( $seq_list, $max_num_pages ) = $ret_seq;
