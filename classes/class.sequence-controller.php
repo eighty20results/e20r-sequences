@@ -6334,7 +6334,7 @@ class Sequence_Controller {
 		add_filter( "pmpro_after_phpmailer_init", array( &$this, "email_body" ) );
 		add_filter( 'pmpro_sequencepost_types', array( &$this, 'included_cpts' ) );
 		
-		// add_filter("pmpro_has_membership_access_filter", array(&$this, "has_membership_access_filter"), 9, 4);
+		add_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9, 4 );
 		add_filter( "pmpro_non_member_text_filter", array( &$this, "text_filter" ) );
 		add_filter( "pmpro_not_logged_in_text_filter", array( &$this, "text_filter" ) );
 		add_action( 'e20r_sequence_load_membership_signup_hook', array(
