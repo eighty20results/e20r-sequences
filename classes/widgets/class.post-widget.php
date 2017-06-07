@@ -281,7 +281,7 @@ class Post_Widget extends \WP_Widget {
 		
 		foreach ( $seq_post as $k => $post ) {
 			
-			if ( $post->delay < $max_delay->delay ) {
+			if ( isset( $post->delay) && isset($max_delay->delay) && ( $post->delay < $max_delay->delay ) ) {
 				
 				unset( $seq_post[ $k ] );
 			} else {
