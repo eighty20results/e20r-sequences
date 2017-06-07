@@ -214,6 +214,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
+###4.6.2
+
+* BUG FIX: Too many columns in current post listing table for sequence
+
 ###4.6.1
 
 * BUG FIX: PHP Warnings from Sequence_Links class/shortcode

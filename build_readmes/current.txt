@@ -1,1 +1,1 @@
-BUG FIX: PHP Warnings from Sequence_Links class/shortcode
+BUG FIX: Too many columns in current post listing table for sequence
