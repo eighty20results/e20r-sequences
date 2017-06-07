@@ -1542,7 +1542,7 @@ class Sequence_Views {
 
 							<tr id="e20r-seq-post">
 								<td class="e20r-seq-post-img">&nbsp;</td>
-								<td id="e20r-seq-post-future-hl">
+								<td colspan="2" id="e20r-seq-post-future-hl">
 									<?php DBG::log( "Highlight post #: {$s_post->id} with future availability" ); ?>
 									<span class="e20r_sequence_item-title">
                                         <?php esc_attr_e($s_post->title); ?>
@@ -1555,7 +1555,6 @@ class Sequence_Views {
 										<?php esc_attr_e( $sequence->display_proper_delay( $s_post->delay )); ?>
                                     </span>
 								</td>
-								<td></td>
 							</tr>
 							<?php
 						} else {
