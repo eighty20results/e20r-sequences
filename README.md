@@ -214,6 +214,37 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
+###4.6.6
+
+* BUG FIX: Formatting for no-access messages
+
+
+###4.6.5
+
+* ENHANCEMENT/FIX: Only show info about when post can be accessed in certain situations
+
+###4.6.4
+
+* BUG FIX: Cache timeout fixes
+* BUG FIX: find_by_id() method didn't always return the correct post(s)
+* ENHANCEMENT/FIX: Didn't use cached data when loading the page view
+* ENHANCEMENT: Simplified Cache handling
+* ENHANCEMENT: Reduced timeout for cache
+* ENHANCEMENT: Use Cache class to manage sequence post/page cache
+* ENHANCEMENT: WP Style updates/formatting of Sequence_Controller class
+* ENHANCEMENT: Simplified & improved post cache (adding Cache / Cache_Object class)
+
+
+###4.6.3
+
+* BUG FIX: PHP Warning in Post_Widget class
+* BUG FIX: Restore access control filter
+* BUG FIX: Restore access control filter for unprotected individual posts/pages that are in a sequence
+* BUG FIX: Didn't provide link to checkout page for sequence protected posts in the 'required membership' section
+* BUG FIX: Properly handle multiple sequences for a post/page in denied access text
+* BUG FIX: PHP warning in membership access filter handler
+* ENHANCEMENT: Can replace the 'members'/'membership(s)' text in Restricted content warning for Sequences with gettext filter magic
+
 ###4.6.2
 
 * BUG FIX: Too many columns in current post listing table for sequence

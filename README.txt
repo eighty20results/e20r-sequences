@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro, sequences, pmpro series
 Requires at least: 3.9
 Tested up to: 4.7.5
-Stable tag: 4.6.2
+Stable tag: 4.6.6
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -171,6 +171,35 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.6.6 ==
+
+* BUG FIX: Formatting for no-access messages
+
+== 4.6.5 ==
+
+* ENHANCEMENT/FIX: Only show info about when post can be accessed in certain situations
+
+== 4.6.4 ==
+
+* BUG FIX: Cache timeout fixes
+* BUG FIX: find_by_id() method didn't always return the correct post(s)
+* ENHANCEMENT/FIX: Didn't use cached data when loading the page view
+* ENHANCEMENT: Simplified Cache handling
+* ENHANCEMENT: Reduced timeout for cache
+* ENHANCEMENT: Use Cache class to manage sequence post/page cache
+* ENHANCEMENT: WP Style updates/formatting of Sequence_Controller class
+* ENHANCEMENT: Simplified & improved post cache (adding Cache / Cache_Object class)
+
+== 4.6.3 ==
+
+* BUG FIX: PHP Warning in Post_Widget class
+* BUG FIX: Restore access control filter
+* BUG FIX: Restore access control filter for unprotected individual posts/pages that are in a sequence
+* BUG FIX: Didn't provide link to checkout page for sequence protected posts in the 'required membership' section
+* BUG FIX: Properly handle multiple sequences for a post/page in denied access text
+* BUG FIX: PHP warning in membership access filter handler
+* ENHANCEMENT: Can replace the 'members'/'membership(s)' text in Restricted content warning for Sequences with gettext filter magic
 
 == 4.6.2 ==
 

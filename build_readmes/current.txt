@@ -1,1 +1,1 @@
-BUG FIX: Too many columns in current post listing table for sequence
+BUG FIX: Formatting for no-access messages
