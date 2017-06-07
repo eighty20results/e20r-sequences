@@ -3017,6 +3017,8 @@ class Sequence_Controller {
 			
 			$post_sequences   = $this->get_sequences_for_post( $post->ID );
 			$days_since_start = $this->get_membership_days( $current_user->ID );
+			$delay = null;
+			$post_id = null;
 			
 			//Update text. The user either will have to wait or sign up.
 			$insequence = false;
@@ -3052,14 +3054,8 @@ class Sequence_Controller {
 						'access' => $access[0],
 					);
 				}
-				
-				DBG::log( "Add links and names for levels" );
-				
-				foreach ( $level_info as $key => $s_access ) {
-					
-					DBG::log( "Updating level info for {$key}/{$ps}: " . print_r( $s_access, true ) );
-					
-				}
+                
+                DBG::log( "Level info: " . print_r( $level_info, true ) );
 				
 				if ( ( is_array( $access ) && true == $access[0] ) || ( ! is_array( $access ) && true == $access ) ) {
 					
@@ -3084,39 +3080,51 @@ class Sequence_Controller {
 						
 						$delay   = $r[0]->delay;
 						$post_id = $r[0]->id;
-					}
+					} else {
+					    DBG::log("Didn't add any delay/post info???");
+                    }
 				}
 				
 				if ( false !== $insequence ) {
 					
 					//user has one of the sequence levels, find out which one and tell him how many days left
-					$text = sprintf( "%s<br/>", sprintf( __( "This content is only available to existing members at the specified time or day. (Required %s: <a href='%s'>%s</a>", "e20r-sequences" ), __( "membership", "e20r-sequences" ), get_permalink( $ps ), get_the_title( $ps ) ) );
+					$text = sprintf( "%s<br/>",
+                        sprintf(
+                                __( "This content is only available to existing members at the specified time or day. <span class=\"e20r-sequences-required-levels\"> Required %1$s: </span><a href='%2$s'>%3$s</a>", "e20r-sequences" ),
+                                __( "membership", "e20r-sequences" ),
+                                get_permalink( $ps ),
+                                get_the_title( $ps )
+                        )
+                    );
 					
-					switch ( $this->options->delayType ) {
-						
-						case 'byDays':
+					if ( !empty( $delay ) && !empty( $post_id )) {
+					 
+						switch ( $this->options->delayType ) {
 							
-							switch ( $this->options->showDelayAs ) {
+							case 'byDays':
 								
-								case E20R_SEQ_AS_DAYNO:
+								switch ( $this->options->showDelayAs ) {
 									
-									$text .= sprintf( __( 'You will be able to access "%s" on day %s of your membership', "e20r-sequences" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
-									break;
+									case E20R_SEQ_AS_DAYNO:
+										
+										$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf( __( 'You will be able to access "%1$s" on day %2$s of your %3$s', "e20r-sequences" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ), __( "membership", "e20r-sequences" ) ) . '</span>';
+										break;
+									
+									case E20R_SEQ_AS_DATE:
+										
+										$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf( __( 'You will be able to  access "%1$s" on %2$s', "e20r-sequences" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) ) . '</span>';
+										break;
+								}
 								
-								case E20R_SEQ_AS_DATE:
-									
-									$text .= sprintf( __( 'You will be able to  access "%s" on %s', "e20r-sequences" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) );
-									break;
-							}
+								break;
 							
-							break;
-						
-						case 'byDate':
-							$text .= sprintf( __( 'You will be able to access "%s" on %s', "e20r-sequences" ), get_the_title( $post_id ), $delay );
-							break;
-						
-						default:
-						
+							case 'byDate':
+								$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf( __( 'You will be able to access "%1$s" on %2$s', "e20r-sequences" ), get_the_title( $post_id ), $delay ) . '</span>';
+								break;
+							
+							default:
+							
+						}
 					}
 					
 				} else {
