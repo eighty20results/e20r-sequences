@@ -18,8 +18,6 @@
 
 namespace E20R\Sequences\Async_Notices;
 
-use E20R\Sequences\Tools\E20R_Background_Process;
-
 class Send_Sequence_Notices extends E20R_Background_Process {
 
 	/**
