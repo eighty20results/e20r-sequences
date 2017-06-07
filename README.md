@@ -214,23 +214,81 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
-###4.5.2
-* ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox
+###4.6.1
 
-###4.5.1
-* BUG/FIX: Didn't load CSS & JS when editing Sequence or supported posts/pages
-* ENH/FIX: Removed stub file
-* BUG/FIX: Build script
+* BUG FIX: PHP Warnings from Sequence_Links class/shortcode
 
-###4.5.0
-* ENHANCEMENT/FIX: WooCommerce conflict
-* FIX: Disable license check
-* ENHANCEMENT: Initial stub to support async processing of user notices
-* ENHANCEMENT: Add background queue management for user notices
-* ENHANCEMENT: Add Async Request Worker class
-* ENHANCEMENT: Add support for async worker classes
-* ENHANCEMENT: Upgraded to latest Plugin Updater library
-* ENHANCEMENT: Upgraded Plugin Upgrade Checker library
+###4.6.0
+* BUG FIX: Showing HTML for header in sequence listing
+* BUG FIX: Didn't consistently adhere to the shortcode attributes for the Sequence Links
+* BUG FIX: Start date calculation failed for some users
+* BUG FIX: Access check for posts would sometimes yield unexpected result
+* ENHANCEMENT/FIX: Entry row formatting for post in sequence on front-end
+* ENHANCEMENT: Add support for using featured image of post/page as the thumbnail in the sequence specific post listing(s)
+* ENHANCEMENT: Add 'show featured image in post list' setting for sequence
+* ENHANCEMENT: More clearly highlighted 'closest post' in sequence post listing if it's a future post
+* ENHANCEMENT: Update class name & loading methods for Available_On class
+* ENHANCEMENT: Update Class name for E20R_Mail class
+* ENHANCEMENT: Renamed Cron class file to class.cron.php
+* ENHANCEMENT: Updated license text
+* ENHANCEMENT: Clean up unused namespace definitions in Sequence_Alert class
+* ENHANCEMENT: Refactor Sequence_Alert class for simplified class loader
+* ENHANCEMENT: Support simplified auto_loader function (rename class file for Sequence_Updates)
+* ENHANCEMENT: Simplified namespaces for Sequence_Updates class
+* ENHANCEMENT: Move PMPro Series import to own class
+* ENHANCEMENT: Simplified namespaces for 4.4.0 upgrade function
+* ENHANCEMENT: Simplified namespaces for 4.4.11 upgrade function
+* ENHANCEMENT: Support simplified auto_loader function (rename class file for Sequence_Views)
+* ENHANCEMENT: Simplified namespaces for Sequence_Views
+* ENHANCEMENT: WordPress code style improvements in Sequence_Views
+* ENHANCEMENT: Renamed class from Views to Sequence_Views
+* ENHANCEMENT: Add show/hide future posts for Administrators setting
+* ENHANCEMENT: Clean up namespaces for Controller/Sequence_Controller class
+* ENHANCEMENT: Relocate license text & update year in Controller/Sequence_Controller class
+* ENHANCEMENT: Rename Controller class to Sequence_Controller
+* ENHANCEMENT: Rename class-controller.php to class.sequence-controller.php
+* ENHANCEMENT: WordPress style update
+* ENHANCEMENT: Simplify namespace for E20R_Mail class
+* ENHANCEMENT: Update code to better align w/WordPress style requirements in E20R_Mail class
+* ENHANCEMENT: Remove unused loader file in build script
+* ENHANCEMENT: Consolidate plugin load functionality
+* ENHANCEMENT: Clean up namespace & constants
+* ENHANCEMENT/FIX: Make all text translatable for PostWidget
+* ENHANCEMENT: Rename class file for new auto-loader method for PostWidget class
+* ENHANCEMENT: Make PostWidget class more WordPress code style compliant
+* ENHANCEMENT: Add license info in Available_On class
+* ENHANCEMENT: Simplify namespace for Available_On class/shortcode
+* ENHANCEMENT: Update code to better align w/WordPress style requirements in Available_On class
+* ENHANCEMENT: Add warning banner syles for front-end
+* ENHANCEMENT: Add ability to display warning banner on front-end
+* ENHANCEMENT: Rename view_sequence_id_required() to view_sequence_error() in Sequence_Views class
+* ENHANCEMENT: Add support for warning banner if sequence ID isn't specified in shortcode in Sequence_Views
+* ENHANCEMENT: WordPress Code Style enhancements in Upcoming_Content class
+* ENHANCEMENT: Better translation support in Upcoming_Content class
+* ENHANCEMENT: Better singleton handling in Upcoming_Content class
+* ENHANCEMENT: Simplify namespace for DBG class
+* ENHANCEMENT: Simplify namespace for E20R_Error class
+* ENHANCEMENT: Update code to better align w/WordPress style requirements
+* ENHANCEMENT: Add license to class.e20r-error.php file
+* ENHANCEMENT: Renamed E20RError to E20R_Error for new auto loader
+* ENHANCEMENT: Simplify namespace for PostWidget class
+* ENHANCEMENT: Update code to better align w/WordPress style requirements in PostWidget class
+* ENHANCEMENT: Renamed PostWidget class to Post_Widget in support of new auto loader
+* ENHANCEMENT: Renamed class.postwidget.php file to class.post-widget.php in support of new auto loader
+* ENHANCEMENT: Clean up and include (temporarily) License handling
+* ENHANCEMENT: Simplify namespace for Membership_Module class
+* ENHANCEMENT: Rename membership_module class to Membership_Module
+* ENHANCEMENT: Move E20R_Async_Request to E20R\Sequences\Async_Notices namespace
+* ENHANCEMENT: Rename file in support of new autoloader
+* ENHANCEMENT: Move E20R_Background_Process to E20R\Sequences\Async_Notices namespace
+* ENHANCEMENT: Rename to class.e20r-background-process.php in support of new autoloader
+* ENHANCEMENT: Simplify namespace for Send_Sequence_Notices class
+* ENHANCEMENT: Updated PostWidget widget_registration to match new name (Post_Widget)
+* REFACTOR: Various file clean-up
+* REFACTOR: Using simple DBG::log() (namespace simplification for Cron class)
+* REFACTOR: Renamed License handler class
+* REFACTOR: Renamed file for Send_Sequence_Notices class
+* REFACTOR: Rename file for and E20R_Utils class
 
 ##Old releases
 ###.1
@@ -1116,3 +1174,21 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 ###4.4.21
 * ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
 * REFACTOR: Removed stale code
+
+###4.5.0
+* ENHANCEMENT/FIX: WooCommerce conflict
+* FIX: Disable license check
+* ENHANCEMENT: Initial stub to support async processing of user notices
+* ENHANCEMENT: Add background queue management for user notices
+* ENHANCEMENT: Add Async Request Worker class
+* ENHANCEMENT: Add support for async worker classes
+* ENHANCEMENT: Upgraded to latest Plugin Updater library
+* ENHANCEMENT: Upgraded Plugin Upgrade Checker library
+
+###4.5.1
+* BUG/FIX: Didn't load CSS & JS when editing Sequence or supported posts/pages
+* ENH/FIX: Removed stub file
+* BUG/FIX: Build script
+
+###4.5.2
+* ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox

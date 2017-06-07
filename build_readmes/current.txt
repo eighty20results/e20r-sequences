@@ -1,1 +1,1 @@
-ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox
+BUG FIX: PHP Warnings from Sequence_Links class/shortcode
