@@ -3090,7 +3090,7 @@ class Sequence_Controller {
 					//user has one of the sequence levels, find out which one and tell him how many days left
 					$text = sprintf( "%s<br/>",
                         sprintf(
-                                __( "This content is only available to existing members at the specified time or day. <span class=\"e20r-sequences-required-levels\"> Required %1$s: </span><a href='%2$s'>%3$s</a>", "e20r-sequences" ),
+                                __( "This content is only available to existing members at the specified time or day. <span class=\"e20r-sequences-required-levels\"> Required %s: </span><a href='%s'>%s</a>", "e20r-sequences" ),
                                 __( "membership", "e20r-sequences" ),
                                 get_permalink( $ps ),
                                 get_the_title( $ps )
@@ -3107,19 +3107,32 @@ class Sequence_Controller {
 									
 									case E20R_SEQ_AS_DAYNO:
 										
-										$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf( __( 'You will be able to access "%1$s" on day %2$s of your %3$s', "e20r-sequences" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ), __( "membership", "e20r-sequences" ) ) . '</span>';
+										$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf(
+										        __( 'You will be able to access "%s" on day %s of your %s', "e20r-sequences" ),
+                                                get_the_title( $post_id ),
+                                                $this->display_proper_delay( $delay ),
+                                                __( "membership", "e20r-sequences" )
+                                            ) . '</span>';
 										break;
 									
 									case E20R_SEQ_AS_DATE:
 										
-										$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf( __( 'You will be able to  access "%1$s" on %2$s', "e20r-sequences" ), get_the_title( $post_id ), $this->display_proper_delay( $delay ) ) . '</span>';
+										$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf(
+										        __( 'You will be able to  access "%s" on %s', "e20r-sequences" ),
+                                                get_the_title( $post_id ),
+                                                $this->display_proper_delay( $delay )
+                                            ) . '</span>';
 										break;
 								}
 								
 								break;
 							
 							case 'byDate':
-								$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf( __( 'You will be able to access "%1$s" on %2$s', "e20r-sequences" ), get_the_title( $post_id ), $delay ) . '</span>';
+								$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf(
+								        __( 'You will be able to access "%s" on %s', "e20r-sequences" ),
+                                        get_the_title( $post_id ),
+                                        $delay
+                                    ) . '</span>';
 								break;
 							
 							default:
@@ -3139,7 +3152,7 @@ class Sequence_Controller {
 						
 						$text = sprintf( "%s<br/>",
 							sprintf(
-								__( 'This content is only available to active %1$s who have logged in. <span class="e20r-sequences-required-levels"> Required %2$s: </span><a href="%3$s">%4$s</a>', "e20r-sequences" ),
+								__( 'This content is only available to active %s who have logged in. <span class="e20r-sequences-required-levels"> Required %s: </span><a href="%s">%s</a>', "e20r-sequences" ),
 								__( 'members', 'e20r-sequences' ),
 								__( "membership(s)", "e20r-sequences" ),
 								( isset( $level_info[ $seqId ]['link'] ) ? $level_info[ $seqId ]['link'] : pmpro_url( 'levels' ) ),
@@ -3153,14 +3166,14 @@ class Sequence_Controller {
 						foreach ( $post_sequences as $sequence_id ) {
 							// $level =$level_info[$sequence_id];
 							
-							$seq_links[] = sprintf( '<a href="%1$s">%2$s</a>&nbsp;',
+							$seq_links[] = sprintf( '<a href="%s">%s</a>&nbsp;',
 								( isset( $level_info[ $sequence_id ]['link'] ) ? $level_info[ $sequence_id ]['link'] : pmpro_url( 'levels' ) ),
 								( isset( $level_info[ $sequence_id ]['name'] ) ? $level_info[ $sequence_id ]['name'] : 'Unknown' )
 							);
 						}
 						
-						$text = sprintf( '<p>%1$s</p>',
-							sprintf( __( 'This content is only available to active %1$s who have logged in. <span class="e20r-sequences-required-levels">Required %2$s: %3$s</span>', "e20r-sequences" ),
+						$text = sprintf( '<p>%s</p>',
+							sprintf( __( 'This content is only available to active %s who have logged in. <span class="e20r-sequences-required-levels">Required %s: %s</span>', "e20r-sequences" ),
 								__( 'members', 'e20r-sequenced' ),
 								__( "membership(s)", "e20r-sequences" ),
 								implode( sprintf( ', %s ', __( 'or', 'e20r-sequences' ) ), $seq_links )
