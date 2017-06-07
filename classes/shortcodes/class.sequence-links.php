@@ -96,29 +96,25 @@ class Sequence_Links {
 		
 		$no_values = apply_filters( 'e20r-sequences-shortcode-novalues', array( 'no', 'false', false, '0' ) );
 		
-		if ( in_array( strtolower( $attributes['button'] ), $no_values ) ) {
+		if ( isset($attributes['button']) && in_array( strtolower( $attributes['button'] ), $no_values ) ) {
 			$button = false;
 		} else {
 			$button = true;
 		}
 		
-		if ( in_array( strtolower( $attributes['highlight'] ), $no_values ) ) {
+		if ( isset($attributes['highlight']) && in_array( strtolower( $attributes['highlight'] ), $no_values ) ) {
 			$highlight = false;
 		} else {
 			$highlight = true;
 		}
 		
-		if ( in_array( strtolower( $attributes['scrollbox'] ), $no_values) ) {
+		if ( isset($attributes['scrollbox']) && in_array( strtolower( $attributes['scrollbox'] ), $no_values) ) {
 			$scrollbox = false;
 		} else {
 			$scrollbox = true;
 		}
 		
-		$pagesize = intval( $attributes['pagesize'] );
-		
-		if ( $pagesize == 0 ) {
-			$pagesize = 30; // Default
-		}
+		$pagesize = isset($attributes['pagesize']) ? intval( $attributes['pagesize'] ) : 30;
 		
 		$sequence = apply_filters('get_sequence_class_instance', null);
 		$view = apply_filters('get_sequence_views_class_instance', null);
