@@ -6006,7 +6006,7 @@ class Sequence_Controller {
 		
 		// Add widget to display a summary for the most recent post/page
 		// in the sequence for the logged in user.
-		register_widget( '\E20R\Sequences\Tools\Widgets\PostWidget' );
+		register_widget( '\E20R\Sequences\Tools\Widgets\Post_Widget' );
 	}
 	
 	/**
