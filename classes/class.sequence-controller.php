@@ -1162,7 +1162,10 @@ class Sequence_Controller {
 		
 		global $current_user;
 		
+		
+		remove_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9 );
 		$hasaccess = pmpro_has_membership_access( $post_id, $user_id, true );
+		add_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9, 4 );
 		
 		if ( is_array( $hasaccess ) ) {
 			//returned an array to give us the membership level values
@@ -2065,7 +2068,7 @@ class Sequence_Controller {
 		}
 		
 		$p_type = get_post_type( $post_id );
-		DBG::log( "Post with ID {$post_id} is of post type {$p_type}..." );
+		DBG::log( "Post with ID {$post_id} is of post type '{$p_type}'..." );
 		
 		$post_access = $this->has_membership_access( $post_id, $user_id );
 		
@@ -2078,13 +2081,9 @@ class Sequence_Controller {
 		
 		$retval    = false;
 		$sequences = $this->get_sequences_for_post( $post_id );
-		
-		// if ( !$this->allow_repetition() ) {
-		
 		$sequence_list = array_unique( $sequences );
 		
 		// is the post we're supplied is a sequence?
-		
 		if ( count( $sequence_list ) < count( $sequences ) ) {
 			
 			DBG::log( "Saving the pruned array of sequences" );
@@ -2159,7 +2158,7 @@ class Sequence_Controller {
 			
 			// $usersLevels = pmpro_getMembershipLevelsForUser( $user_id );
 			
-			if ( $access[0] ) {
+			if ( true == $access[0] ) {
 				
 				$s_posts = $this->find_by_id( $post_id );
 				
@@ -2183,10 +2182,10 @@ class Sequence_Controller {
 									// Don't add 'preview' value if this is for an alert notice.
 									if ( ! $isAlert ) {
 										
-										$durationOfMembership = $this->get_membership_days( $user_id, $level_id ) + $this->options->previewOffset;
+										$membership_duration = $this->get_membership_days( $user_id, $level_id ) + $this->options->previewOffset;
 									} else {
 										
-										$durationOfMembership = $this->get_membership_days( $user_id, $level_id );
+										$membership_duration = $this->get_membership_days( $user_id, $level_id );
 									}
 									
 									/**
@@ -2198,13 +2197,12 @@ class Sequence_Controller {
 									 */
 									$offset = apply_filters( 'e20r-sequence-add-startdate-offset', __return_zero(), $this->sequence_id, $user_id );
 									
-									$durationOfMembership += $offset;
+									$membership_duration += $offset;
 									
-									if ( $post->delay <= $durationOfMembership ) {
+									if ( $post->delay <= $membership_duration ) {
 										
 										// Set users membership Level
 										$this->e20r_sequence_user_level = $level_id;
-										// DBG::log("has_post_access() - using byDays as the delay type, this user is given access to post ID {$post_id}.");
 										$retval = true;
 										break;
 									}
@@ -2212,9 +2210,9 @@ class Sequence_Controller {
 									DBG::log( "Sequence {$this->sequence_id} is configured to store sequence by dates" );
 									// Don't add 'preview' value if this is for an alert notice.
 									if ( ! $isAlert ) {
-										$previewAdd = ( ( 60 * 60 * 24 ) * $this->options->previewOffset );
+										$preview_add = ( ( 60 * 60 * 24 ) * $this->options->previewOffset );
 									} else {
-										$previewAdd = 0;
+										$preview_add = 0;
 									}
 									
 									/**
@@ -2225,14 +2223,13 @@ class Sequence_Controller {
 									 */
 									$offset = apply_filters( 'e20r-sequence-add-startdate-offset', __return_zero(), $this->sequence_id );
 									
-									$timestamp = ( current_time( 'timestamp' ) + $previewAdd + ( $offset * 60 * 60 * 24 ) );
+									$timestamp = ( current_time( 'timestamp' ) + $preview_add + ( $offset * 60 * 60 * 24 ) );
 									
 									$today = date( __( 'Y-m-d', "e20r-sequences" ), $timestamp );
 									
 									if ( $post->delay <= $today ) {
 										
 										$this->e20r_sequence_user_level = $level_id;
-										// DBG::log("has_post_access() - using byDate as the delay type, this user is given access to post ID {$post_id}.");
 										$retval = true;
 										break;
 									}
@@ -2314,10 +2311,11 @@ class Sequence_Controller {
 		if ( function_exists( 'pmpro_has_membership_access' ) ) {
 			
 			DBG::log( "Found the PMPro Membership access function" );
+			
+			remove_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9 );
 			$access = pmpro_has_membership_access( $post_id, $user_id, $return_membership_levels );
-			
-			DBG::log( "For: {$post_id}: " . print_r( $access, true) );
-			
+			add_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9, 4 );
+   
 			if ( ( (!is_array( $access ) ) && true == $access ) ) {
 			    DBG::log("Didn't receive an array for the access info");
 			    $user_level = pmpro_getMembershipLevelForUser( $user_id, true );
@@ -2327,7 +2325,6 @@ class Sequence_Controller {
 			DBG::log("User {$user_id} has access? " . ( $access[0] ? "Yes" : "No") );
 		}
   
-		DBG::log("After membership access filter: " . print_r( $access, true ));
 		return apply_filters( 'e20r-sequence-membership-access', $access, $post_id, $user_id, $return_membership_levels );
 	}
 	
@@ -3023,25 +3020,49 @@ class Sequence_Controller {
 		
 		if ( ! empty( $current_user ) && ( ! empty( $post ) ) ) {
 			
-			DBG::log( "text_filter() - Current sequence ID: {$this->sequence_id} vs Post ID: {$post->ID}" );
-			
-			// if ( ! $this->has_access( $current_user->ID, $post->ID ) ) {
-			
-			// $post_sequences = get_post_meta($post->ID, "_post_sequences", true);
-			
+			DBG::log( "Current sequence ID: {$this->sequence_id} vs Post ID: {$post->ID}" );
+   
 			$post_sequences   = $this->get_sequences_for_post( $post->ID );
 			$days_since_start = $this->get_membership_days( $current_user->ID );
 			
 			//Update text. The user either will have to wait or sign up.
 			$insequence = false;
+			$level_info = array();
 			
 			foreach ( $post_sequences as $ps ) {
 				
-				DBG::log( "text_filter() - Checking access to {$ps}" );
+				DBG::log( "Checking access to {$ps}" );
 				
-				if ( $this->has_sequence_access( $current_user->ID, $ps ) ) {
+				$access = $this->has_sequence_access( $current_user->ID, $ps );
+				
+				if ( !is_array( $access ) && false === $access ) {
 					
-					DBG::log( "text_filter() - It's possible user has access to sequence: {$ps} " );
+					$level = array();
+					
+					foreach( $this->e20r_sequence_user_level as $level_id ) {
+						$level = pmpro_getLevel( $level_id )->name;
+					}
+					
+					DBG::log("Generating access array entry for {$ps}");
+					$level_info[$ps] = array( 'name' => $level, 'link' => add_query_arg( 'level', $this->e20r_sequence_user_level, pmpro_url( 'checkout' ) ), 'access' => $access );
+					
+				} else if ( is_array( $access ) ) {
+					
+				    DBG::log("Using supplied access array for {$ps}");
+				    $level_info[$ps] = array( 'name' => $access[2][0], 'link' => add_query_arg( 'level', $access[1][0], pmpro_url( 'checkout' ) ), 'access' => $access[0] );
+				}
+    
+				DBG::log("Add links and names for levels");
+				
+				foreach( $level_info as $key => $s_access ) {
+					
+					DBG::log("Updating level info for {$key}/{$ps}: " . print_r( $s_access, true ) );
+					
+				}
+				
+				if (  ( is_array( $access ) && true == $access[0] ) || ( !is_array( $access ) && true == $access ) ) {
+					
+					DBG::log( "It's possible user has access to sequence: {$ps} " );
 					$insequence = $ps;
 					
 					if ( ! $this->init( $ps ) ) {
@@ -3064,12 +3085,11 @@ class Sequence_Controller {
 						$post_id = $r[0]->id;
 					}
 				}
-				
-				
+    
 				if ( false !== $insequence ) {
 					
 					//user has one of the sequence levels, find out which one and tell him how many days left
-					$text = sprintf( "%s<br/>", sprintf( __( "This content is only available to existing members at the specified time or day. (Required membership: <a href='%s'>%s</a>", "e20r-sequences" ), get_permalink( $ps ), get_the_title( $ps ) ) );
+					$text = sprintf( "%s<br/>", sprintf( __( "This content is only available to existing members at the specified time or day. (Required %s: <a href='%s'>%s</a>", "e20r-sequences" ),__("membership", "e20r-sequences"), get_permalink( $ps ), get_the_title( $ps ) ) );
 					
 					switch ( $this->options->delayType ) {
 						
@@ -3100,24 +3120,42 @@ class Sequence_Controller {
 					
 				} else {
 					
+				    DBG::log("Level info: " . print_r( $level_info, true ));
+				    
 					// User has to sign up for one of the sequence(s)
 					if ( count( $post_sequences ) == 1 ) {
 						
 						$tmp   = $post_sequences;
 						$seqId = array_pop( $tmp );
 						
-						$text = sprintf( "%s<br/>", sprintf( __( "This content is only available to existing members who are already logged in. ( Reqired level: <a href='%s'>%s</a>)", "e20r-sequences" ), get_permalink( $seqId ), get_the_title( $seqId ) ) );
+						$text = sprintf( "%s<br/>",
+                            sprintf(
+                                    __( 'This content is only available to active %1$s who have logged in. <span class="e20r-sequences-required-levels"> Required %2$s: </span><a href="%3$s">%4$s</a>', "e20r-sequences" ),
+                                __( 'members', 'e20r-sequences' ),
+	                            __("membership(s)", "e20r-sequences"),
+                                ( isset($level_info[$seqId]['link']) ? $level_info[$seqId]['link'] : pmpro_url( 'levels' ) ),
+                                (isset( $level_info[$seqId]['name'] ) ? $level_info[$seqId]['name'] : 'Unknown' )
+                            )
+                        );
 					} else {
-						
-						$text      = sprintf( "<p>%s</p>", __( 'This content is only available to existing members who have logged in. ( For levels:  ', "e20r-sequences" ) );
+      
 						$seq_links = array();
 						
 						foreach ( $post_sequences as $sequence_id ) {
+							// $level =$level_info[$sequence_id];
 							
-							$seq_links[] = "<p><a href='" . get_permalink( $sequence_id ) . "'>" . get_the_title( $sequence_id ) . "</a></p>";
+							$seq_links[] = sprintf('<a href="%1$s">%2$s</a>&nbsp;',
+                                ( isset($level_info[$sequence_id]['link']) ? $level_info[$sequence_id]['link'] : pmpro_url( 'levels' ) ),
+                                ( isset( $level_info[$sequence_id]['name'] ) ?$level_info[$sequence_id]['name'] : 'Unknown' )
+                            );
 						}
 						
-						$text .= implode( $seq_links ) . " )";
+						$text = sprintf( '<p>%1$s</p>',
+                            sprintf( __( 'This content is only available to active %1$s who have logged in. <span class="e20r-sequences-required-levels">Required %2$s: %3$s</span>', "e20r-sequences" ),
+                                __( 'members', 'e20r-sequenced' ),
+                                __("membership(s)", "e20r-sequences"),
+                                implode( sprintf(', %s ', __( 'or', 'e20r-sequences' ) ), $seq_links )
+                                 ) );
 					}
 				}
 			}
@@ -3147,9 +3185,11 @@ class Sequence_Controller {
 		}
 		
 		$results = $this->has_membership_access( $sequence_id, $user_id, true );
-		
-		if ( $results[0] ) {
-			return true;
+  
+		if ( is_array( $results ) ) {
+			
+		    $this->e20r_sequence_user_level = $results[1];
+		    return $results;
 		}
 		
 		return false;
@@ -3302,19 +3342,19 @@ class Sequence_Controller {
 	 * @param $user      (WP_User) -- The user ID we're testing
 	 * @param $levels    (array) -- The membership level(s) we're testing against
 	 *
-	 * @return bool -- True if access is granted, false if not
+	 * @return array|bool -- array|true if access is granted, false if not
 	 */
 	public function has_membership_access_filter( $hasaccess, $post, $user, $levels ) {
 		
 		//See if the user has access to the specific post
-		if ( ! $this->is_managed( $post->ID ) ) {
+		if ( isset( $post->ID ) && ! $this->is_managed( $post->ID ) ) {
 			DBG::log( "Post {$post->ID} is not managed by a sequence (it is one?). Returning original access value: " . ( $hasaccess ? 'true' : 'false' ) );
 			
 			return $hasaccess;
 		}
 		
 		if ( $hasaccess ) {
-			
+   
 			if ( isset( $user->ID ) && isset( $post->ID ) && $this->has_post_access( $user->ID, $post->ID ) ) {
 				
 				$hasaccess = true;
