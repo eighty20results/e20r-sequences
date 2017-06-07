@@ -18,17 +18,16 @@
  * Thanks to @A5hleyRich at https://github.com/A5hleyRich/wp-background-processing
  */
 
-namespace E20R\Sequences\Tools;
-use E20R\Sequences\Tools\E20R_Async_Request AS E20R_Async_Request;
+namespace E20R\Sequences\Async_Notices;
 
 /**
  * WP Background Process
  *
- * @package WP-Background-Processing
+ * @package E20R_Background_Process
  *
  * @credit A5hleyRich at https://github.com/A5hleyRich/wp-background-processing
  */
-if ( ! class_exists( '\\E20R\Sequences\\Tools\\WP_Background_Process' ) ) {
+if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) ) {
 	/**
 	 * Abstract E20R_Background_Process class.
 	 *
