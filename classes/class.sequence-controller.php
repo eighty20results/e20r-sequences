@@ -133,7 +133,7 @@ class Sequence_Controller {
 		
 		$this->refreshed = null;
 		
-		// Should only do this once, unless the timeout is past.
+		// Should only do this once, unless the timeout is in the past.
 		if ( is_null( $this->expires ) ||
 		     ( ! is_null( $this->expires ) && $this->expires < current_time( 'timestamp' ) )
 		) {
@@ -5431,7 +5431,7 @@ class Sequence_Controller {
 		
 		DBG::log( "Process {$seq_id} for V3 upgrade?" );
 		
-		if ( false === $this->is_converted( $seq_id ) ) {
+		if ( ( version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '<=')) && false === $this->is_converted( $seq_id ) ) {
 			
 			DBG::log( "Need to convert sequence #{$seq_id} to V3 format" );
 			$this->get_options( $seq_id );
@@ -5443,6 +5443,10 @@ class Sequence_Controller {
 			} else {
 				DBG::log( "Error during conversion of {$seq_id} to V3 format" );
 			}
+		} else if ( version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '>') && false === $this->is_converted( $seq_id ) ) {
+			DBG::log( "Sequence id# {$this->sequence_id} doesn't need to be converted to v3 metadata format" );
+			$this->current_metadata_versions[ $this->sequence_id ] = 3;
+			update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
 		}
 	}
 	
@@ -5727,7 +5731,7 @@ class Sequence_Controller {
 					}
 				}
 				
-				if ( ! $this->remove_old_user_alert_setting( $user->user_id ) ) {
+				if ( isset($user->user_id) && ! $this->remove_old_user_alert_setting( $user->user_id ) ) {
 					
 					DBG::log( "Unable to remove old user_alert settings!", E20R_DEBUG_SEQ_WARNING );
 				}
