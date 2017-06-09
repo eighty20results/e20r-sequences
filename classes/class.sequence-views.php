@@ -420,7 +420,7 @@ class Sequence_Views {
 					<div class="e20r-sequence-settings-display clear-after">
 						<div class="e20r-sequences-settings-row e20r-sequence-settings clear-after">
 							<div class="e20r-sequence-setting-col-1">
-								<input type="checkbox" value="1" id="e20r-sequence_previewOffset" name="e20r-sequence_previewOffset" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', "e20r-sequences"); ?>" <?php echo ( $options->previewOffset != 0 ? ' checked="checked"' : '' ); ?> />
+								<input type="checkbox" value="1" id="e20r-sequence-checkbox_previewOffset" name="e20r-sequence-checkbox_previewOffset" title="<?php _e('Let the user see a number of days worth of technically unavailable posts as a form of &quot;sneak-preview&quot;', "e20r-sequences"); ?>" <?php echo ( $options->previewOffset != 0 ? ' checked="checked"' : '' ); ?> />
 							</div>
 							<div class="e20r-sequence-setting-col-2">
 								<label class="selectit"><?php _e('Allow "preview" of sequence', "e20r-sequences"); ?></label>
@@ -448,8 +448,8 @@ class Sequence_Views {
 						<div class="e20r-sequences-settings-row clear-after e20r-sequence-settings e20r-sequence-offset e20r-sequence-full-row">
 							<div id="e20r-seq-offset-select">
 								<input type="hidden" name="hidden-e20r-sequence_previewOffset" id="hidden-e20r-sequence_previewOffset" value="<?php esc_attr_e($options->previewOffset); ?>" >
-								<label for="e20r-sequence_offset"></label>
-								<select name="e20r-sequence_offset" id="e20r-sequence_previewOffset">
+								<label for="e20r-sequence_previewOffset"></label>
+								<select name="e20r-sequence_previewOffset" id="e20r-sequence_previewOffset">
 									<option value="0"><?php _e("None", "e20rtracker");?></option>
 									<?php foreach (range(1, 5) as $preview_offset) { ?>
 										<option value="<?php esc_attr_e($preview_offset); ?>" <?php selected( intval($options->previewOffset), $preview_offset); ?> ><?php esc_attr_e( $preview_offset ); ?></option>
