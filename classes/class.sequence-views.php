@@ -107,11 +107,16 @@ class Sequence_Views {
 		DBG::log('Displaying the back-end meta box content');
 
 		ob_start();
+		if ( empty( $posts ) ) {
+            DBG::log('No Posts found?');
+            $sequence->set_error_msg( __('No posts/pages found', "e20r-sequences") );
+		}
 		$has_error = $sequence->get_error_msg();
 		?>
 
-		<?php if(!empty( $has_error )) { ?>
-		<?php 	esc_html_e( $sequence->display_error() ); ?>
+		<?php if(!empty( $has_error )) {
+		    DBG::log("Found error: " . print_r( $has_error, true ));
+		    $sequence->display_error(); ?>
 		<?php } ?>
 		<table id="e20r_sequencetable" class="e20r_sequence_postscroll wp-list-table widefat">
 			<thead>
@@ -135,14 +140,7 @@ class Sequence_Views {
 			<?php
 			$count = 1;
 
-			if ( empty($posts ) ) {
-				DBG::log('No Posts found?');
-
-				$sequence->set_error_msg( __('No posts/pages found', "e20r-sequences") );
-				?>
-				<?php
-			}
-			else {
+			if ( ! empty($posts ) ) {
 				foreach( $posts as $post ) {
 					?>
 					<tr>
@@ -238,9 +236,9 @@ class Sequence_Views {
 
 		if ( !empty( $errors ) ) {
 
-			DBG::log( "Errors:" . print_r( $errors , true ));
+			DBG::log( "Errors: " . print_r( $errors , true ));
 			foreach( $errors as $e ) {
-				$status .= "{$e['message']}.<br/>";
+				$status .= "{$e}<br/>";
 			}
 		}
 
@@ -280,10 +278,12 @@ class Sequence_Views {
 		}
 
 		DBG::log('Load the post list meta box');
-
+        $has_error = $sequence->get_error_msg();
+        DBG::log("Has error? {$has_error}");
+        
 		// Instantiate the settings & grab any existing settings if they exist.
 		?>
-		<div id="e20r-seq-error"></div>
+		<div id="e20r-seq-error"><?php echo ( !empty($has_error) ? $has_error : null ); ?></div>
 		<div id="e20r_sequence_posts">
 			<?php
 			$box = $this->get_post_list_for_metabox();
