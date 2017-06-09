@@ -83,7 +83,7 @@ var sequenceSettings = {
 
             $checkbox = jQuery(this);
 
-            if ( 'e20r-sequence_previewOffset' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
+            if ( 'e20r-sequence-checkbox_previewOffset' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
 
                 var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
                 window.console.log("The checkbox for the preview functionality is set, show its status", $status);
