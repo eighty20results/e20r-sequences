@@ -2,8 +2,8 @@
 Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro, sequences, pmpro series
 Requires at least: 3.9
-Tested up to: 4.7.5
-Stable tag: 4.6.6
+Tested up to: 4.8
+Stable tag: 4.6.8
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -171,6 +171,19 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.6.8 ==
+
+* BUG FIX: Logic for testing metadata version was invalid
+* BUG FIX: Didn't save the Preview offset value correctly
+* BUG FIX: Element ID collision for offset value vs checkbox for Preview Offset setting
+
+== 4.6.7 ==
+
+* BUG FIX: Incorrectly assumed a new sequence had to be converted to v3 in v3+.
+* BUG FIX: Would incorrectly request reactivation for metadata conversion
+* BUG FIX: Didn't display the sequence preview offset value setting when configured
+* ENHANCEMENT/FIX: Warning message for empty sequences on initial load
 
 == 4.6.6 ==
 

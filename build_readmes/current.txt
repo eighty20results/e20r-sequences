@@ -1,1 +1,3 @@
-BUG FIX: Formatting for no-access messages
+BUG FIX: Logic for testing metadata version was invalid
+BUG FIX: Didn't save the Preview offset value correctly
+BUG FIX: Element ID collision for offset value vs checkbox for Preview Offset setting

@@ -214,6 +214,20 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
+###4.6.8
+
+* BUG FIX: Logic for testing metadata version was invalid
+* BUG FIX: Didn't save the Preview offset value correctly
+* BUG FIX: Element ID collision for offset value vs checkbox for Preview Offset setting
+
+###4.6.7
+
+* BUG FIX: Incorrectly assumed a new sequence had to be converted to v3 in v3+.
+* BUG FIX: Would incorrectly request reactivation for metadata conversion
+* BUG FIX: Didn't display the sequence preview offset value setting when configured
+* ENHANCEMENT/FIX: Warning message for empty sequences on initial load
+
+
 ###4.6.6
 
 * BUG FIX: Formatting for no-access messages
