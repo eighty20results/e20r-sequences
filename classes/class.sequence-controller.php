@@ -312,7 +312,7 @@ class Sequence_Controller {
 		
 		$has_pre_v3 = get_post_meta( $sequence_id, "_sequence_posts", true );
 		
-		if ( ( false !== $has_pre_v3 ) && ( ! isset( $this->current_metadata_versions[ $sequence_id ] ) || ( 3 != $this->current_metadata_versions[ $sequence_id ] ) ) ) {
+		if ( ( false !== $has_pre_v3 ) && version_compare( E20R_SEQUENCE_VERSION,'3.0', '<' ) && ( ! isset( $this->current_metadata_versions[ $sequence_id ] ) || ( 3 != $this->current_metadata_versions[ $sequence_id ] ) ) ) {
 			DBG::log( "{$sequence_id} needs to be converted to V3 format" );
 			
 			return false;
@@ -5431,7 +5431,7 @@ class Sequence_Controller {
 		
 		DBG::log( "Process {$seq_id} for V3 upgrade?" );
 		
-		if ( ( version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '<=')) && false === $this->is_converted( $seq_id ) ) {
+		if ( ( true === version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '<=')) && false === $this->is_converted( $seq_id ) ) {
 			
 			DBG::log( "Need to convert sequence #{$seq_id} to V3 format" );
 			$this->get_options( $seq_id );
@@ -5443,7 +5443,7 @@ class Sequence_Controller {
 			} else {
 				DBG::log( "Error during conversion of {$seq_id} to V3 format" );
 			}
-		} else if ( version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '>') && false === $this->is_converted( $seq_id ) ) {
+		} else if ( true === version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '>') && false === $this->is_converted( $seq_id ) ) {
 			DBG::log( "Sequence id# {$this->sequence_id} doesn't need to be converted to v3 metadata format" );
 			$this->current_metadata_versions[ $this->sequence_id ] = 3;
 			update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
