@@ -248,7 +248,8 @@ class Sequence_Controller {
 	 * warning banner if not.
 	 */
 	public function check_conversion() {
-		DBG::log( "Check whether we need to convert any sequences" );
+     
+	    DBG::log( "Check whether we need to convert any sequences" );
 		$sequences = $this->get_all_sequences();
 		
 		foreach ( $sequences as $sequence ) {
@@ -256,7 +257,7 @@ class Sequence_Controller {
 			DBG::log( "Check whether we need to convert sequence # {$sequence->ID}" );
 			
 			if ( ! $this->is_converted( $sequence->ID ) ) {
-				
+    
 				$this->set_error_msg( sprintf( __( "Required action: Please de-activate and then activate the E20R Sequences plugin (%d)", "e20r-sequences" ), $sequence->ID ) );
 			}
 		}
@@ -300,19 +301,27 @@ class Sequence_Controller {
 			
 			$this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
 		}
-		
+  
 		DBG::log( "Sequence metadata map: " );
 		DBG::log( $this->current_metadata_versions );
 		
+		if ( !isset( $this->current_metadata_versions[$sequence_id]) && true === version_compare( E20R_SEQUENCE_VERSION,'3.0', '>=' ) ) {
+		    
+		    DBG::log("No need to convert {$sequence_id} to v3 as we're past that point");
+			$this->current_metadata_versions[ $sequence_id ] = 3;
+			update_option( 'pmpro_sequence_metadata_version', $this->current_metadata_versions, true );
+		    return true;
+        }
+        
 		if ( empty( $this->current_metadata_versions ) ) {
-			DBG::log( "{$sequence_id} needs to be converted to V3 format" );
+			DBG::log( "{$sequence_id} needs to be converted to V3 format (nothing)" );
 			
 			return false;
 		}
 		
 		$has_pre_v3 = get_post_meta( $sequence_id, "_sequence_posts", true );
 		
-		if ( ( false !== $has_pre_v3 ) && version_compare( E20R_SEQUENCE_VERSION,'3.0', '<' ) && ( ! isset( $this->current_metadata_versions[ $sequence_id ] ) || ( 3 != $this->current_metadata_versions[ $sequence_id ] ) ) ) {
+		if ( ( false !== $has_pre_v3 ) && ( ! isset( $this->current_metadata_versions[ $sequence_id ] ) || ( 3 != $this->current_metadata_versions[ $sequence_id ] ) ) ) {
 			DBG::log( "{$sequence_id} needs to be converted to V3 format" );
 			
 			return false;
