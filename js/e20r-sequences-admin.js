@@ -83,9 +83,9 @@ var sequenceSettings = {
 
             $checkbox = jQuery(this);
 
-            if ( 'e20r-sequence_offsetchk' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
+            if ( 'e20r-sequence_previewOffset' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
 
-                var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence_offset');
+                var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
                 window.console.log("The checkbox for the preview functionality is set, show its status", $status);
                 $status.show();
             }
@@ -1169,7 +1169,9 @@ function e20r_sequence_removeEntry(post_id, delay) {
 
 jQuery(document).ready(function(){
 
-    jQuery('div#e20r-seq-error').hide();
+    if ( '' === jQuery('div#e20r-seq-error' ).text ) {
+        jQuery('div#e20r-seq-error').hide();
+    }
 
     var adminUI = sequenceSettings;
     var posts = postMeta;
