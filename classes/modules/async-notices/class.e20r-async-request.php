@@ -18,7 +18,7 @@
  * Thanks to @A5hleyRich at https://github.com/A5hleyRich/wp-background-processing
  */
 
-namespace E20R\Sequences\Async_Notices;
+namespace E20R\Sequences\Modules\Async_Notices;
 
 /**
  * WP Async Request

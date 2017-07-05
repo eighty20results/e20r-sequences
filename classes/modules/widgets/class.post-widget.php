@@ -1,6 +1,6 @@
 <?php
 
-namespace E20R\Sequences\Tools\Widgets;
+namespace E20R\Sequences\Modules\Widgets;
 
 /**
  * License:

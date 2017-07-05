@@ -19,7 +19,7 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
  **/
 
-namespace E20R\Sequences\Shortcodes;
+namespace E20R\Sequences\Modules\Shortcodes;
 use E20R\Tools\DBG;
 
 class Sequence_Alert {
