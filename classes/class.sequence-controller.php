@@ -36,6 +36,8 @@ use E20R\Sequences\Tools\Sequence_Updates;
 
 class Sequence_Controller {
 	
+    const plugin_slug = 'e20r-sequences';
+    
 	public $options;
 	public $sequence_id = 0;
 	public $error = null;
@@ -6147,14 +6149,14 @@ class Sequence_Controller {
 		do_action( 'e20r_sequence_cron_hook', array( $sequence_id ) );
 		
 		DBG::log( 'send_user_alert_notices() - Completed action for sequence #' . $sequence_id );
-		wp_redirect( '/wp-admin/edit.php?post_type=pmpro_sequence' );
+		wp_redirect( add_query_arg( 'post_type', 'pmpro_sequence', admin_url( 'edit.php' ) ) );
 	}
 	
 	/**
 	 * Trigger send of any new content alert messages for a sequence in the Sequence Edit menu
 	 *
-	 * @param         $actions - Action
-	 * @param WP_Post $post    - Post object
+	 * @param  string       $actions - Action
+	 * @param \WP_Post $post    - Post object
 	 *
 	 * @return array - Array containing the list of actions to list in the menu
 	 */
@@ -6169,7 +6171,8 @@ class Sequence_Controller {
 			if ( 1 == $options->sendNotice ) {
 				
 				DBG::log( "send_alert_notice_from_menu() - Adding send action" );
-				$actions['send_notices'] = '<a href="admin.php?post=' . $post->ID . '&amp;action=send_user_alert_notices&amp;e20r_sequence_id=' . $post->ID . '" title="' . __( "Send user alerts", "e20rtracker" ) . '" rel="permalink">' . __( "Send Notices", "e20rtracker" ) . '</a>';
+				$send_url = add_query_arg( array( 'post' => $post->ID, 'action' => 'send_user_alert_notices', 'e20r_sequence_id' => $post->ID ) , admin_url( 'admin.php' ) );
+				$actions['send_notices'] = sprintf( '<a href="%s" title="%s" rel="permalink">%s</a>', esc_url_raw( $send_url ),__( "Send user alerts", "e20r-sequences" ), __( "Send Notices", "e20r-sequences" ) );
 			}
 		}
 		
