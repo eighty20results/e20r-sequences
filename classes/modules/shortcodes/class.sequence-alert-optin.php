@@ -20,15 +20,19 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  **/
 
 namespace E20R\Sequences\Modules\Shortcodes;
-use E20R\Tools\DBG;
 
-class Sequence_Alert {
+use E20R\Sequences\Sequence\Sequence_Controller;
+use E20R\Sequences\Sequence\Sequence_Views;
+use E20R\Sequences\Utilities\Utilities;
 
-	private static $_this;
+class Sequence_Alert_Optin {
+
+	private static $_this = null;
+	
 	private $class_name;
 
 	/**
-	 * Sequence_Alert shortcode constructor.
+	 * Sequence_Alert_Optin shortcode constructor.
 	 *
 	 * @since v4.2.9
 	 */
@@ -49,17 +53,22 @@ class Sequence_Alert {
 	/**
 	 * Returning the instance (used by the 'get_{class_name}_class_instance' hook)
 	 *
-	 * @return Sequence_Alert
+	 * @return Sequence_Alert_Optin|null
 	 *
 	 * * @since v4.2.9
 	 */
 	public function get_instance()
 	{
+		if ( is_null( self::$_this ) ) {
+			self::$_this = new self;
+		}
+		
 		return self::$_this;
 	}
 
 	/**
 	 * Shortcode to display notification opt-in checkbox
+	 *
 	 * @param array $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
 	 * @param string $content - Would be unexpected. Included for completeness purposes
 	 *
@@ -67,16 +76,17 @@ class Sequence_Alert {
 	 */
 	public function load_shortcode( $attributes = array(), $content = '' ) {
 
-		DBG::log("Loading user alert opt-in");
+		$utils = Utilities::get_instance();
+		$utils->log("Loading user alert opt-in");
 		$sequence_id = null;
 
 		extract( shortcode_atts( array(
 			'sequence_id' => 0,
 		), $attributes ) );
 
-		DBG::log("shortcode specified sequence id: {$sequence_id}");
-		$view_class = apply_filters('get_sequence_views_class_instance', null);
-		$sequence = apply_filters('get_sequence_class_instance', null);
+		$utils->log("shortcode specified sequence id: {$sequence_id}");
+		$view_class = Sequence_Views::get_instance();
+		$sequence = Sequence_Controller::get_instance();
 		
 		if ( !empty( $sequence_id ) ) {
 			
@@ -88,7 +98,7 @@ class Sequence_Alert {
 			return $view_class->view_user_notice_opt_in();
 		}
 		
-		DBG::log("ERROR: No sequence ID specified!", E20R_DEBUG_SEQ_WARNING );
+		$utils->log("ERROR: No sequence ID specified!" );
 		return $view_class->view_sequence_error( 'ERRNOSEQUENCEID' );
 	}
 }
