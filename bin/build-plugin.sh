@@ -3,11 +3,11 @@
 #
 short_name="e20r-sequences"
 server="eighty20results.com"
-include=(classes email css fonts images js languages upgrades ${short_name}.php README.txt)
+include=(classes email css fonts images js languages lib LICENSES upgrades class.${short_name}.php README.txt)
 exclude=(*.yml *.phar composer.* vendor)
 build=(classes/plugin-updates/vendor/*.php)
 plugin_path="${short_name}"
-version=$(egrep "^Version:" ../${short_name}.php | sed 's/[[:alpha:]|(|[:space:]|\:]//g' | awk -F- '{printf "%s", $1}')
+version=$(egrep "^Version:" ../class.${short_name}.php | sed 's/[[:alpha:]|(|[:space:]|\:]//g' | awk -F- '{printf "%s", $1}')
 metadata="../metadata.json"
 src_path="../"
 dst_path="../build/${plugin_path}"
