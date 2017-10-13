@@ -20,7 +20,7 @@
 
 namespace E20R\Sequences\Modules\Async_Notices;
 
-use E20R\Sequences\Utilities\Utilities;
+use E20R\Utilities\Utilities;
 
 /**
  * WP Background Process
