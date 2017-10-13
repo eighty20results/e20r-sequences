@@ -1,12 +1,12 @@
 <?php
 use E20R\Tools\DBG;
-use E20R\Sequences\Sequence\Sequence_Controller;
+use E20R\Sequences\Sequence\Controller;
 
 function e20r_sequence_upgrade_settings_433() {
 
-    $obj = apply_filters('get_sequence_class_instance', null);
+    $obj = Controller::get_instance();
 
-    $sequence_list = Sequence_Controller::all_sequences('all');
+    $sequence_list = Controller::all_sequences('all');
     $settings_map = array(
         'hidden' => 'hideFuture', 'lengthVisible' => 'lengthVisible',
         'sortOrder' => 'sortOrder', 'delayType' => 'delayType', 'byDays' => 'byDays',
