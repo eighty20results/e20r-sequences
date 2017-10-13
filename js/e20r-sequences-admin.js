@@ -82,14 +82,22 @@ var sequenceSettings = {
         $class.checkboxes.each(function() {
 
             $checkbox = jQuery(this);
+            var $status;
+            window.console.log("Processing checkbox on page: ", this );
 
-            if ( 'e20r-sequence-checkbox_previewOffset' == $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
+            if ( 'e20r-sequence-checkbox_previewOffset' === $checkbox.attr('id') && ( $checkbox.is(':checked'))) {
 
-                var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
+                $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
                 window.console.log("The checkbox for the preview functionality is set, show its status", $status);
                 $status.show();
             }
 
+            if ( 'e20r-sequence-checkbox_nonMemberAccess' === $checkbox.attr('id') && $checkbox.is( ':checked' ) ) {
+                // e20r-sequence-nonmember
+                $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-nonmember');
+                window.console.log("The checkbox for the non-member access functionality is set, show status", $status);
+                $status.show();
+            }
             $checkbox.unbind().on('click', function() {
 
                 $class.checked_box( this );
@@ -146,7 +154,9 @@ var sequenceSettings = {
         window.console.log("Updating checkbox for ", $checkbox );
 
         var $class = this;
-
+        var $inputs;
+        var $status;
+        var $text;
         if ( !( $checkbox instanceof jQuery ) ) {
             $checkbox = jQuery($checkbox);
         }
@@ -160,20 +170,20 @@ var sequenceSettings = {
         else if ( $checkbox.not(':checked') &&
             $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-settings-display').hasClass('e20r-sequence-offset') ) {
 
-            var $inputs = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset').next('.e20r-sequence-offset');
-            var $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
+            $inputs = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset').next('.e20r-sequence-offset');
+            $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset');
 
             $inputs.find('input[type="hidden"]').val(0);
             $inputs.find('#e20r-sequence_offset').val(0);
 
-            var $text = '<span class="e20r-sequence-status">' + $inputs.find('#e20r_sequence_offset option:selected').text() + '</span>';
+            $text = '<span class="e20r-sequence-status">' + $inputs.find('#e20r_sequence_offset option:selected').text() + '</span>';
             $status.find('.e20r-sequence-setting-col-2').html( $text );
 
             $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-offset').hide();
             // jQuery('.e20r-sequence-offset').hide();
         }
 
-        if ( 'e20r-sequence_sendnotice' == $checkbox.attr('id')  ) {
+        if ( 'e20r-sequence_sendnotice' === $checkbox.attr('id')  ) {
 
             window.console.log('Show all alert related variables');
             if ( $checkbox.is(':checked') ) {
@@ -189,7 +199,48 @@ var sequenceSettings = {
                     jQuery(this).hide();
                 });
 
-            };
+            }
+        }
+
+        if ( $checkbox.is(':checked') &&
+            $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-settings-display').hasClass('e20r-sequence-nonmember') ) {
+
+            window.console.log("Need to manage visibility for nonmember setting");
+            $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-nonmember').show();
+        }
+        else if ( $checkbox.not(':checked') &&
+            $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-settings-display').hasClass('e20r-sequence-nonmember') ) {
+
+            $inputs = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-nonmember').next('.e20r-sequence-nonmember');
+            $status = $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-nonmember');
+
+            $inputs.find('input[type="hidden"]').val(0);
+            $inputs.find('#e20r-sequence_nonmember').val(0);
+
+            $text = '<span class="e20r-sequence-status">' + $inputs.find('#e20r-sequence_nonMemberAccessChoice option:selected').text() + '</span>';
+            $status.find('.e20r-sequence-setting-col-2').html( $text );
+
+            $checkbox.closest('.e20r-sequence-settings-display').next('.e20r-sequence-nonmember').hide();
+            // jQuery('.e20r-sequence-offset').hide();
+        }
+
+        if ( 'e20r-sequence_sendnotice' === $checkbox.attr('id')  ) {
+
+            window.console.log('Show all alert related variables');
+            if ( $checkbox.is(':checked') ) {
+
+                $class.email_settings.each(function () {
+                    jQuery(this).show();
+                    $class.hide_rows();
+                });
+            }
+            else {
+
+                $class.email_settings.each( function() {
+                    jQuery(this).hide();
+                });
+
+            }
         }
 
         // if ( $checkbox.is(':checked') ) {
@@ -216,7 +267,7 @@ var sequenceSettings = {
         var $val;
 
         // Only update if the new value is different from the current (may not yet be saved) setting.
-        if ( ( $val = input.val() ) != hidden_input.val() ) {
+        if ( ( $val = input.val() ) !== hidden_input.val() ) {
 
             hidden_input.val($val);
             status.html( '<span class="e20r-sequence-status">' + $val + '</span>');
@@ -233,7 +284,7 @@ var sequenceSettings = {
         var $class = this;
         select = jQuery(select);
 
-        if ( 'e20r_sequence_delaytype' ==  select.attr('id')) {
+        if ( 'e20r_sequence_delaytype' ===  select.attr('id')) {
 
             $class.change_delay_type();
         }
@@ -246,7 +297,7 @@ var sequenceSettings = {
         /* Check whether the setting has changed */
         var $val;
 
-        if ( ($val = select.find('option:selected').val()) != hidden_input.val() ) {
+        if ( ($val = select.find('option:selected').val()) !== hidden_input.val() ) {
 
             /* Save the new text (for label) */
             var $text = '<span class="e20r-sequence-status">' + select.find('option:selected').text() +"</span>";
