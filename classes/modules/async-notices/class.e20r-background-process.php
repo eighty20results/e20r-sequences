@@ -28,6 +28,7 @@ use E20R\Sequences\Utilities\Utilities;
  * @package E20R_Background_Process
  *
  * @credit  A5hleyRich at https://github.com/A5hleyRich/wp-background-processing
+ * @since v5.0 - ENHANCEMENT: Added fixes and updates from EWWW Image Optimizer code
  */
 if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) ) {
 	/**
@@ -71,12 +72,25 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		protected $cron_interval_identifier;
 		
 		/**
+		 * @var string $active_queue - Either 'a' or 'b' depending on running queue
+		 */
+		protected $active_queue;
+		
+		/**
+		 * @var string $second_queue - Either 'b' or 'a', depending on running queue
+		 */
+		protected $second_queue;
+		
+		/**
 		 * Initiate new background process
 		 */
 		public function __construct() {
+			
 			parent::__construct();
+			
 			$this->cron_hook_identifier     = $this->identifier . '_cron';
 			$this->cron_interval_identifier = $this->identifier . '_cron_interval';
+			
 			add_action( $this->cron_hook_identifier, array( $this, 'handle_cron_healthcheck' ) );
 			add_filter( 'cron_schedules', array( $this, 'schedule_cron_healthcheck' ) );
 		}
@@ -85,9 +99,10 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * Dispatch
 		 *
 		 * @access public
-		 * @return void
+		 * @return mixed
 		 */
 		public function dispatch() {
+			
 			// Schedule the cron healthcheck.
 			$this->schedule_event();
 			
@@ -103,6 +118,7 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return $this
 		 */
 		public function push_to_queue( $data ) {
+			
 			$this->data[] = $data;
 			
 			return $this;
@@ -114,10 +130,21 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return $this
 		 */
 		public function save() {
+			
 			$key = $this->generate_key();
+			
 			if ( ! empty( $this->data ) ) {
-				update_site_option( $key, $this->data );
+				
+				$existing_data = get_option( $key );
+				
+				if ( ! empty( $existing_data ) ) {
+					$this->data = array_merge( $existing_data, $this->data );
+				}
+				
+				update_option( $key, $this->data, 'no' );
 			}
+			
+			$this->data = array();
 			
 			return $this;
 		}
@@ -131,8 +158,14 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return $this
 		 */
 		public function update( $key, $data ) {
+			
 			if ( ! empty( $data ) ) {
-				update_site_option( $key, $data );
+				
+				$existing_data = get_option( $key );
+				
+				if ( ! empty( $existing_data ) ) {
+					update_option( $key, $data, 'no' );
+				}
 			}
 			
 			return $this;
@@ -146,7 +179,8 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return $this
 		 */
 		public function delete( $key ) {
-			delete_site_option( $key );
+			
+			update_option( $key, '' );
 			
 			return $this;
 		}
@@ -162,8 +196,16 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return string
 		 */
 		protected function generate_key( $length = 64 ) {
-			$unique  = md5( microtime() . rand() );
-			$prepend = $this->identifier . '_batch_';
+			
+			// $unique  = md5( microtime() . rand() );
+			$unique = 'a';
+			
+			if ( $this->is_queue_active( $unique ) ) {
+				$unique = 'b';
+			}
+			
+			$this->second_queue = $unique;
+			$prepend            = $this->identifier . '_batch_';
 			
 			return substr( $prepend . $unique, 0, $length );
 		}
@@ -175,18 +217,24 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * the process is not already running.
 		 */
 		public function maybe_handle() {
+			
 			// Don't lock up other requests while processing
 			session_write_close();
+			
 			if ( $this->is_process_running() ) {
 				// Background process already running.
 				wp_die();
 			}
+			
 			if ( $this->is_queue_empty() ) {
 				// No data to process.
 				wp_die();
 			}
+			
 			check_ajax_referer( $this->identifier, 'nonce' );
+			
 			$this->handle();
+			
 			wp_die();
 		}
 		
@@ -196,19 +244,25 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return bool
 		 */
 		protected function is_queue_empty() {
+			
 			global $wpdb;
+			
 			$table  = $wpdb->options;
 			$column = 'option_name';
-			if ( is_multisite() ) {
-				$table  = $wpdb->sitemeta;
-				$column = 'meta_key';
-			}
-			$key   = $this->identifier . '_batch_%';
+			/*
+						if ( is_multisite() ) {
+							$table  = $wpdb->sitemeta;
+							$column = 'meta_key';
+						}
+			*/
+			$key = $this->identifier . '_batch_%';
+			
 			$count = $wpdb->get_var( $wpdb->prepare( "
 			SELECT COUNT(*)
-			FROM {$table}
-			WHERE {$column} LIKE %s
-		", $key ) );
+				FROM {$table}
+				WHERE {$column} LIKE %s AND option_value != ''",
+				$key )
+			);
 			
 			return ( $count > 0 ) ? false : true;
 		}
@@ -220,10 +274,38 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * in a background process.
 		 */
 		protected function is_process_running() {
-			if ( get_site_transient( $this->identifier . '_process_lock' ) ) {
+			
+			// $locked = get_option( "{$this->identifier}_process_lock" , 0 );
+			
+			if ( get_transient( "{$this->identifier}_process_lock" ) ) {
 				// Process already running.
 				return true;
 			}
+			
+			return false;
+		}
+		
+		protected function is_queue_active( $queue_id ) {
+			
+			global $wpdb;
+			$utils = \E20R\Utilities\Utilities::get_instance();
+			
+			$lock_transient = "_transient_{$this->identifier}_process_lock";
+			
+			$sql = $wpdb->prepare(
+				"SELECT option_value FROM {$wpdb->options}
+					WHERE option_name LIKE %s",
+				$lock_transient
+			);
+			
+			if ( $wpdb->get_var( $sql ) == $queue_id ) {
+				
+				$utils->log( "Queue ({$queue_id}) is running" );
+				
+				return true;
+			}
+			
+			$utils->log( "Queue ({$queue_id}) is not running, checked with: {$this->identifier}_process_lock" );
 			
 			return false;
 		}
@@ -236,10 +318,33 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * defined in the time_exceeded() method.
 		 */
 		protected function lock_process() {
-			$this->start_time = time(); // Set start time of current process.
-			$lock_duration    = ( property_exists( $this, 'queue_lock_time' ) ) ? $this->queue_lock_time : 60; // 1 minute
-			$lock_duration    = apply_filters( $this->identifier . '_queue_lock_time', $lock_duration );
-			set_site_transient( $this->identifier . '_process_lock', microtime(), $lock_duration );
+			
+			$this->start_time = current_time( 'timestamp' ); // Set start time of current process.
+			
+			$lock_duration = ( property_exists( $this, 'queue_lock_time' ) ) ? $this->queue_lock_time : 60; // 1 minute
+			$lock_duration = apply_filters( $this->identifier . '_queue_lock_time', $lock_duration );
+			
+			if ( empty( $this->active_queue ) ) {
+				$this->active_queue = 'a';
+			}
+			
+			// update_option( "{$this->identifier}_process_lock", ( current_time('timestamp' ) + $lock_duration ) );
+			// set_transient( $this->identifier . '_process_lock', microtime(), $lock_duration );
+		}
+		
+		/**
+		 * Update the lock for the queue(s)
+		 */
+		protected function update_lock() {
+			
+			if ( empty( $this->active_queue ) ) {
+				return;
+			}
+			
+			$lock_duration = ( property_exists( $this, 'queue_lock_time' ) ) ? $this->queue_lock_time : 60; // 1 minute
+			$lock_duration = apply_filters( $this->identifier . '_queue_lock_time', $lock_duration );
+			
+			set_transient( "{$this->identifier}_process_lock", $this->active_queue, $lock_duration );
 		}
 		
 		/**
@@ -250,7 +355,8 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return $this
 		 */
 		protected function unlock_process() {
-			delete_site_transient( $this->identifier . '_process_lock' );
+			
+			delete_transient( "{$this->identifier}_process_lock" );
 			
 			return $this;
 		}
@@ -261,28 +367,37 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return \stdClass Return the first batch from the queue
 		 */
 		protected function get_batch() {
+			
 			global $wpdb;
+			
 			$table        = $wpdb->options;
 			$column       = 'option_name';
 			$key_column   = 'option_id';
 			$value_column = 'option_value';
-			if ( is_multisite() ) {
-				$table        = $wpdb->sitemeta;
-				$column       = 'meta_key';
-				$key_column   = 'meta_id';
-				$value_column = 'meta_value';
-			}
-			$key         = $this->identifier . '_batch_%';
-			$query       = $wpdb->get_row( $wpdb->prepare( "
+			/*
+						if ( is_multisite() ) {
+							$table        = $wpdb->sitemeta;
+							$column       = 'meta_key';
+							$key_column   = 'meta_id';
+							$value_column = 'meta_value';
+						}
+			*/
+			$key   = "{$this->identifier}_batch_%";
+			$query = $wpdb->get_row( $wpdb->prepare( "
 			SELECT *
-			FROM {$table}
-			WHERE {$column} LIKE %s
-			ORDER BY {$key_column} ASC
-			LIMIT 1
-		", $key ) );
-			$batch       = new stdClass();
-			$batch->key  = $query->$column;
-			$batch->data = maybe_unserialize( $query->$value_column );
+				FROM {$table}
+				WHERE {$column} LIKE %s AND {$value_column} != ''
+				ORDER BY {$key_column} ASC
+				LIMIT 1",
+				$key )
+			);
+			
+			$batch       = new \stdClass();
+			$batch->key  = $query->{$column};
+			$batch->data = maybe_unserialize( $query->{$value_column} );
+			
+			$this->active_queue = substr( $batch->key, - 1 );
+			$this->update_lock();
 			
 			return $batch;
 		}
@@ -294,35 +409,47 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * within server memory and time limit constraints.
 		 */
 		protected function handle() {
+			
 			$this->lock_process();
+			
 			do {
 				$batch = $this->get_batch();
+				
 				foreach ( $batch->data as $key => $value ) {
+					
 					$task = $this->task( $value );
+					
 					if ( false !== $task ) {
 						$batch->data[ $key ] = $task;
 					} else {
 						unset( $batch->data[ $key ] );
 					}
+					
 					if ( $this->time_exceeded() || $this->memory_exceeded() ) {
 						// Batch limits reached.
 						break;
 					}
 				}
+				
 				// Update or delete current batch.
 				if ( ! empty( $batch->data ) ) {
+					
 					$this->update( $batch->key, $batch->data );
 				} else {
 					$this->delete( $batch->key );
 				}
+				
 			} while ( ! $this->time_exceeded() && ! $this->memory_exceeded() && ! $this->is_queue_empty() );
+			
 			$this->unlock_process();
+			
 			// Start next batch or complete process.
 			if ( ! $this->is_queue_empty() ) {
 				$this->dispatch();
 			} else {
 				$this->complete();
 			}
+			
 			wp_die();
 		}
 		
@@ -335,14 +462,16 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return bool
 		 */
 		protected function memory_exceeded() {
+			
 			$memory_limit   = $this->get_memory_limit() * 0.9; // 90% of max memory
 			$current_memory = memory_get_usage( true );
 			$return         = false;
+			
 			if ( $current_memory >= $memory_limit ) {
 				$return = true;
 			}
 			
-			return apply_filters( $this->identifier . '_memory_exceeded', $return );
+			return apply_filters( "{$this->identifier}_memory_exceeded", $return );
 		}
 		
 		/**
@@ -351,13 +480,18 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * @return int
 		 */
 		protected function get_memory_limit() {
+			
 			if ( function_exists( 'ini_get' ) ) {
+				
 				$memory_limit = ini_get( 'memory_limit' );
 			} else {
+				
 				// Sensible default.
 				$memory_limit = '128M';
 			}
-			if ( ! $memory_limit || - 1 === $memory_limit ) {
+			
+			if ( ! $memory_limit || -1 === intval( $memory_limit ) ) {
+				
 				// Unlimited, set to 32GB.
 				$memory_limit = '32000M';
 			}
@@ -375,26 +509,60 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 */
 		protected function time_exceeded() {
 			
-			$util               = Utilities::get_instance();
-			$current_timeout    = ini_get( 'max_execution_time' );
+			$current_timeout    = intval( ini_get( 'max_execution_time' ) );
 			$default_time_limit = 20;
 			
 			if ( ! empty( $current_timeout ) ) {
-				$default_time_limit = floor( $current_timeout * 0.8 );
 				
+				$default_time_limit = intval( floor( $current_timeout * 0.95 ) );
+				
+				// Shouldn't be less than 20 seconds (change web host provider if this is necessary!)
 				if ( $default_time_limit < 20 ) {
 					$default_time_limit = 20;
 				}
 			}
 			
-			$util->log( "Timeout value during processing: {$default_time_limit}" );
-			$finish = $this->start_time + apply_filters( $this->identifier . '_default_time_limit', $default_time_limit ); // 20 seconds
+			if ( $default_time_limit >= 60 ) {
+				
+				add_filter( "{$this->identifier}_queue_lock_time", array( $this, 'increase_lock_timeout' ) );
+			}
+			
+			$finish = $this->start_time + apply_filters( "{$this->identifier}_default_time_limit", $default_time_limit ); // 20 seconds
 			$return = false;
-			if ( time() >= $finish ) {
+			
+			if ( current_time( 'timestamp' ) >= $finish ) {
 				$return = true;
 			}
 			
-			return apply_filters( $this->identifier . '_time_exceeded', $return );
+			return apply_filters( "{$this->identifier}_time_exceeded", $return );
+		}
+		
+		/**
+		 * @param int $lock_duration
+		 *
+		 * @return int
+		 */
+		public function increase_lock_timeout( $lock_duration ) {
+			
+			$current_timeout    = intval( ini_get( 'max_execution_time' ) );
+			$default_time_limit = 20;
+			
+			if ( ! empty( $current_timeout ) ) {
+				
+				$default_time_limit = intval( floor( $current_timeout * 0.90 ) );
+				
+				// Shouldn't be less than 20 seconds (change web host provider if this is necessary!)
+				if ( $default_time_limit < 20 ) {
+					$default_time_limit = 18;
+				}
+			}
+			
+			if ( $default_time_limit >= 60 ) {
+				
+				$lock_duration = $default_time_limit;
+			}
+			
+			return $lock_duration;
 		}
 		
 		/**
@@ -419,7 +587,6 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 */
 		public function schedule_cron_healthcheck( $schedules ) {
 			
-			$util            = Utilities::get_instance();
 			$current_timeout = ini_get( 'max_execution_time' );
 			$min_interval    = 2;
 			
@@ -428,14 +595,14 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 				$min_interval = $max_in_mins + 1;
 			}
 			
-			$util->log( "Setting timeout value for cron handler to {$min_interval}" );
+			$interval = apply_filters( "{$this->identifier}_cron_interval", $min_interval );
 			
-			$interval = apply_filters( $this->identifier . '_cron_interval', $min_interval );
 			if ( property_exists( $this, 'cron_interval' ) ) {
-				$interval = apply_filters( $this->identifier . '_cron_interval', $this->cron_interval_identifier );
+				$interval = apply_filters( "{$this->identifier}_cron_interval", $this->cron_interval_identifier );
 			}
-			// Adds every 5 minutes to the existing schedules.
-			$schedules[ $this->identifier . '_cron_interval' ] = array(
+			
+			// Adds every the calculated minutes (+1) to the existing schedules.
+			$schedules[ "{$this->identifier}_cron_interval" ] = array(
 				'interval' => MINUTE_IN_SECONDS * $interval,
 				'display'  => sprintf( __( 'Every %d Minutes' ), $interval ),
 			);
@@ -450,15 +617,18 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * and data exists in the queue.
 		 */
 		public function handle_cron_healthcheck() {
+			
 			if ( $this->is_process_running() ) {
 				// Background process already running.
 				exit;
 			}
+			
 			if ( $this->is_queue_empty() ) {
 				// No data to process.
 				$this->clear_scheduled_event();
 				exit;
 			}
+			
 			$this->handle();
 			exit;
 		}
@@ -467,8 +637,13 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * Schedule event
 		 */
 		protected function schedule_event() {
+			
+			$util = Utilities::get_instance();
+			
 			if ( ! wp_next_scheduled( $this->cron_hook_identifier ) ) {
-				wp_schedule_event( time(), $this->cron_interval_identifier, $this->cron_hook_identifier );
+				
+				$util->log( "Scheduling {$this->cron_hook_identifier} to run:  {$this->cron_interval_identifier}" );
+				wp_schedule_event( current_time( 'timestamp' ), $this->cron_interval_identifier, $this->cron_hook_identifier );
 			}
 		}
 		
@@ -476,7 +651,11 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 * Clear scheduled event
 		 */
 		protected function clear_scheduled_event() {
+			$utils = Utilities::get_instance();
+			
 			$timestamp = wp_next_scheduled( $this->cron_hook_identifier );
+			$utils->log( "Found scheduled event for {$this->cron_hook_identifier}? {$timestamp}" );
+			
 			if ( $timestamp ) {
 				wp_unschedule_event( $timestamp, $this->cron_hook_identifier );
 			}
@@ -489,9 +668,13 @@ if ( ! class_exists( '\E20R\Sequences\Async_Notices\E20R_Background_Process' ) )
 		 *
 		 */
 		public function cancel_process() {
+			
 			if ( ! $this->is_queue_empty() ) {
+				
 				$batch = $this->get_batch();
+				
 				$this->delete( $batch->key );
+				
 				wp_clear_scheduled_hook( $this->cron_hook_identifier );
 			}
 		}
