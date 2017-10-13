@@ -7,8 +7,8 @@
  */
 
 namespace E20R\Sequences\Tools;
-use E20R\Sequences\Tools\E20RError as Errors;
-use E20R\Tools as E20RTools;
+use E20R\Sequences\Sequence\Controller;
+use E20R\Utilities\Utilities;
 
 class E20R_Mail
 {
@@ -59,8 +59,9 @@ class E20R_Mail
     public function send( $to = null, $from = null, $fromname = null, $subject = null, $template = null, $data = null ) {
 
         global $current_user;
-
-        $sequence = apply_filters('get_sequence_class_instance', null);
+	    $utils = Utilities::get_instance();
+	    
+        $sequence = Controller::get_instance();
 
         // Set variables.
         if( ! empty( $to ) ) {
@@ -131,7 +132,7 @@ class E20R_Mail
             $this->data = array( 'body' => $this->data );
         }
 
-        E20RTools\DBG::log("Processing main content for email message");
+        $utils->log("Processing main content for email message");
 
         $this->body = $this->load_template($this->template);
         $this->data = apply_filters('e20r-sequences-email-data', $this->data, $this );
@@ -147,20 +148,22 @@ class E20R_Mail
 
 	    $this->body = $this->process_body ($this->data, $this->body );
 
-	    E20RTools\DBG::log("Sending email message...");
+	    $utils->log("Sending email message...");
 
         if ( wp_mail( $this->to, $this->subject, $this->body, $this->headers, $this->attachments ) ) {
 
-            E20RTools\DBG::log("Sent email to {$this->to} about {$this->subject}");
+            $utils->log("Sent email to {$this->to} about {$this->subject}");
             return true;
         }
 
-        E20RTools\DBG::log("Failed to send email to {$this->to} about {$this->subject}");
+        $utils->log("Failed to send email to {$this->to} about {$this->subject}");
         return false;
     }
 
     private function process_body($data_array = array(), $body = null ) {
-
+	    
+    	$utils = Utilities::get_instance();
+    	
         if (is_null($body)) {
 
             if ( ! empty( $data_array['template'] ) ) {
@@ -169,20 +172,20 @@ class E20R_Mail
             }
 
             if ( empty($body)) {
-                E20RTools\DBG::log("No body to substitute in. Returning empty string");
+                $utils->log("No body to substitute in. Returning empty string");
                 $this->body = null;
             }
         }
 
         if ( ! is_array( $data_array ) && empty( $body ) ) {
 
-            E20RTools\DBG::log("Not a valid substitution array: " . print_r( $data_array, true ) );
+            $utils->log("Not a valid substitution array: " . print_r( $data_array, true ) );
             $this->body = null;
         }
 
         if (is_array($data_array) && !empty($data_array) && !empty($body)) {
 
-            E20RTools\DBG::log("Substituting variables in body of email");
+            $utils->log("Substituting variables in body of email");
             $this->body = $body;
 
             foreach( $data_array as $key => $value ) {
@@ -199,11 +202,12 @@ class E20R_Mail
 	 *
 	 * @param string $template_file    - file name
 	 *
-	 * @return mixed|null|string|void   - Body value for template
+	 * @return mixed|null|string   - Body value for template
 	 */
     private function load_template( $template_file ) {
-
-        E20RTools\DBG::log("Load template for file {$template_file}");
+	    
+    	$utils = Utilities::get_instance();
+        $utils->log("Load template for file {$template_file}");
 
         if (file_exists(get_stylesheet_directory() . "/sequence-email-alert/" . $template_file)) {
 
