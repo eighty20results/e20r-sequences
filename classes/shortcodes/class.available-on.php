@@ -79,7 +79,7 @@ class Available_On {
 		
 		/*
 		if (!in_array($attributes['type'], array('days', 'date'))) {
-			DBG::log("User didn't specify the correct type attribute in the shortcode definition. Used: {$attributes['type']}");
+			$utils->log("User didn't specify the correct type attribute in the shortcode definition. Used: {$attributes['type']}");
 			wp_die( sprintf(__('%s is not a valid type attribute for the e20r_available_on shortcode', 'e20r-sequences'), $type));
 		}
 		*/
