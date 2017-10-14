@@ -1,0 +1,3 @@
+[submodule "classes/utilities"]
+	path = classes/utilities
+	url = git@github.com:eighty20results/Utilities.git
