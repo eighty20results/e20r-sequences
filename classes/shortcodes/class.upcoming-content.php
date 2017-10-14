@@ -21,7 +21,7 @@ namespace E20R\Sequences\Shortcodes;
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  **/
 
-use E20R\Tools\DBG;
+use E20R\Utilities\Utilities;
 
 class Upcoming_Content {
 	
@@ -59,7 +59,10 @@ class Upcoming_Content {
 	 * @since   v4.2.9
 	 */
 	public function load_shortcode( $attr = null, $content = null ) {
-		/**
+		
+	    $utils = Utilities::get_instance();
+	    
+	    /**
 		 * Valid shortcode arguments:
 		 *  'id'    => numeric - the Post ID for the pmpro_sequences CPT (i.e. the sequence to display).
 		 *  'number_of_posts' => 'all' | a numeric counter for the number of upcoming posts in the sequence we'll include.
@@ -74,7 +77,7 @@ class Upcoming_Content {
 		$now           = array();
 		
 		$sequence_obj = apply_filters( "get_sequence_class_instance", null );
-		DBG::log( "Processing attributes." );
+		$utils->log( "Processing attributes." );
 		
 		$attributes = shortcode_atts( array(
 			'number_of_posts' => 'all',
@@ -86,16 +89,16 @@ class Upcoming_Content {
 		
 		if ( empty( $attributes['id'] ) ) {
 			
-			DBG::log( "Error: NO Sequence ID specified!" );
+			$utils->log( "Error: NO Sequence ID specified!" );
 			
 			return sprintf( '<div class="e20r-sequences-error">%s</div>', __( 'No upcoming content to be listed (Error: Unknown ID)', 'e20r-sequences' ) );
 		}
 		
-		DBG::log( "When attribute is specified: {$attributes['when']}" );
+		$utils->log( "When attribute is specified: {$attributes['when']}" );
 		
 		if ( ! is_numeric( $attributes['number_of_posts'] ) && 'all' === $attributes['number_of_posts'] ) {
 			
-			DBG::log( "User specified 'all' as the number of upcoming posts we'll include" );
+			$utils->log( "User specified 'all' as the number of upcoming posts we'll include" );
 			$include_count = - 1;
 			
 		} else {
@@ -140,7 +143,7 @@ class Upcoming_Content {
 		$posts = $past + $future;
 		
 		foreach ( $posts as $post ) {
-		
+            // TODO: Add code to process posts
 		}
 	}
 	
