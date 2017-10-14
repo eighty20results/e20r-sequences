@@ -21,7 +21,9 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 namespace E20R\Sequences\Shortcodes;
 
-use E20R\Tools\DBG;
+use E20R\Sequences\Sequence\Controller;
+use E20R\Sequences\Sequence\Sequence_Views;
+use E20R\Utilities\Utilities;
 
 
 class Sequence_Links {
@@ -74,7 +76,9 @@ class Sequence_Links {
 
 		global $current_user;
 		global $load_e20r_sequence_script;
-
+		
+		$utils = Utilities::get_instance();
+		
 		$load_e20r_sequence_script = true;
 
 		// To avoid errors in development tool
@@ -116,8 +120,8 @@ class Sequence_Links {
 		
 		$pagesize = isset($attributes['pagesize']) ? intval( $attributes['pagesize'] ) : 30;
 		
-		$sequence = apply_filters('get_sequence_class_instance', null);
-		$view = apply_filters('get_sequence_views_class_instance', null);
+		$sequence = Controller::get_instance();
+		$view = Sequence_Views::get_instance();
 
 		if ( ( $id == 0 ) && ( $sequence->sequence_id == 0 ) ) {
 
@@ -133,13 +137,13 @@ class Sequence_Links {
 				return ''; // No post given so returning no info.
 			}
 		}
-		DBG::log("We're given the ID of: {$id} ");
+		$utils->log("We're given the ID of: {$id} ");
 
 		$seq_access = $sequence->has_post_access($current_user->ID, $id, false, $id);
 
 		if ( ( is_array( $seq_access ) &&  false == $seq_access[0] ) || (!is_array($seq_access) && false == $seq_access ) )  {
-
-			DBG::log("Not logged in or not a member with access to this sequence. Exiting!");
+			
+			$utils->log("Not logged in or not a member with access to this sequence. Exiting!");
 
 			$default_message = __("We're sorry, you do not have access to this content. Please either log in to this system, and/or upgrade your membership level", "e20r-sequences");
 			return apply_filters('e20r-sequence-mmodule-access-denied-msg', $default_message, $id, $current_user->ID);
@@ -147,8 +151,8 @@ class Sequence_Links {
 
 		// Make sure the sequence exists.
 		if ( ! $sequence->sequence_exists( $id ) ) {
-
-			DBG::log("The requested sequence (id: {$id}) does not exist", E20R_DEBUG_SEQ_WARNING );
+			
+			$utils->log("The requested sequence (id: {$id}) does not exist", E20R_DEBUG_SEQ_WARNING );
 			$error_msg = sprintf( '<p class="error" style="text-align: center;">%s<br/>%s</p>', __("The specified Sequence was not found.", "e20r-sequences" ), __( "Please report this error to the webmaster.", "e20r-sequences" ) );
 
 			return apply_filters( 'e20r-sequence-not-found-msg', $error_msg );
@@ -157,8 +161,8 @@ class Sequence_Links {
 		if ( !$sequence->init( $id ) ) {
 			return $sequence->get_error_msg();
 		}
-
-		DBG::log("shortcode() - Ready to build link list for sequence with ID of: " . $id);
+		
+		$utils->log("Ready to build link list for sequence with ID of: " . $id);
 
 		if ( $sequence->has_post_access( $current_user->ID, $id, false, $id ) ) {
 
