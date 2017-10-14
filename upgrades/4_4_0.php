@@ -1,13 +1,13 @@
 <?php
 use E20R\Utilities\Utilities;
-use E20R\Sequences\Sequence\Controller;
+use E20R\Sequences\Data\Model;
 
 function e20r_sequence_upgrade_settings_433() {
-
-    $obj = Controller::get_instance();
+	
 	$utils = Utilities::get_instance();
 	
-    $sequence_list = Controller::all_sequences('all');
+    $sequence_list = Model::all_sequences('all');
+    
     $settings_map = array(
         'hidden' => 'hideFuture', 'lengthVisible' => 'lengthVisible',
         'sortOrder' => 'sortOrder', 'delayType' => 'delayType', 'byDays' => 'byDays',
