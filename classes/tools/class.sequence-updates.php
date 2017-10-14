@@ -21,9 +21,7 @@
 
 namespace E20R\Sequences\Tools;
 
-use E20R\Sequences\Sequence\Controller;
 use E20R\Utilities\Utilities;
-use E20R\Tools\DBG;
 
 class Sequence_Updates
 {
