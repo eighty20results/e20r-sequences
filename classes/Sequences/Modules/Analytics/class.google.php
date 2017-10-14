@@ -20,6 +20,8 @@
 namespace E20R\Sequences\Modules\Analytics;
 
 use E20R\Sequences\Sequence\Controller;
+use E20R\Licensing\Licensing;
+use E20R\Utilities\Utilities;
 
 /**
  * Add Google Analytics tracking by sequence message/notification
@@ -106,6 +108,13 @@ class Google {
 	public function maybeAddGoogleTracking( $sequence_id ) {
 		
 		$ga_tracking   = null;
+		$utils = Utilities::get_instance();
+		
+		if ( false === Licensing::is_licensed( Controller::plugin_slug ) ) {
+			$utils->log("Attempted to use a licensed feature (Google Analytics tracking) without a valid license");
+			return $ga_tracking;
+		}
+		
 		$controller = Controller::get_instance();
 		$track_with_ga = $controller->get_option_by_name( 'trackGoogleAnalytics' );
 		
