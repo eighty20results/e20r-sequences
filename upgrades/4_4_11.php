@@ -1,5 +1,6 @@
 <?php
-use E20R\Tools\DBG;
+use E20R\Utilities\Utilities;
+use E20R\Sequences\Sequence\Controller;
 
 // Set startdate for all users and their sequences.
 function e20r_sequence_upgrade_settings_4411()
@@ -7,32 +8,33 @@ function e20r_sequence_upgrade_settings_4411()
     global $wpdb;
 
     $levels = array();
-
+	$utils= Utilities::get_instance();
+	
     if (function_exists('pmpro_getAllLevels')) {
 
         $levels = pmpro_getAllLevels(true, true);
     }
-
-    DBG::log("Updating user startdate per sequence for all active users");
+	
+	$utils->log("Updating user startdate per sequence for all active users");
 
     $levels = apply_filters('e20r-sequences-membership-module-get-level-id-array', $levels);
-    $seq = apply_filters('get_sequence_class_instance', null);
+    $sequence = Controller::get_instance();
 
-    if ($seq != null ) {
+    if ($sequence != null ) {
 
         foreach( $levels as $level ) {
 
-            $sequences = $seq->sequences_for_membership_level( $level->id);
-            $u_sql = $wpdb->prepare("SELECT user_id FROM {$wpdb->pmpro_memberships_users} WHERE membership_id = %d AND status = 'active'", $level->id);
+            $sequences = $sequence->sequences_for_membership_level( $level->id);
+            $u_sql = $wpdb->prepare("SELECT mu.user_id FROM {$wpdb->pmpro_memberships_users} AS mu WHERE mu.membership_id = %d AND mu.status = 'active'", $level->id);
 
             $users = $wpdb->get_col($u_sql);
 
-            foreach( $sequences as $s_id ) {
+            foreach( $sequences as $seq_id ) {
 
-                foreach ($users as $u_id ) {
+                foreach ($users as $user_id ) {
 
-                    $startdate = $seq->get_user_startdate( $u_id, $level->id, $s_id );
-                    DBG::log("Setting startdate for user {$u_id} for sequence {$s_id} in level {$level->id}: {$startdate}");
+                    $startdate = $sequence->get_user_startdate( $user_id, $level->id, $seq_id );
+	                $utils->log("Setting startdate for user {$user_id} for sequence {$seq_id} in level {$level->id}: {$startdate}");
                 }
             }
         }
