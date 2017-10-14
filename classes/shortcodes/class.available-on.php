@@ -21,11 +21,12 @@
 
 namespace E20R\Sequences\Shortcodes;
 
-use E20R\Tools\DBG;
+use E20R\Sequences\Sequence\Controller;
+use E20R\Utilities\Utilities;
 
 class Available_On {
 	
-	private static $_this;
+	private static $instance = null;
 	
 	/**
 	 * availableOn_shortcode constructor.
@@ -34,11 +35,11 @@ class Available_On {
 	 */
 	public function __construct() {
 		
-		if ( isset( self::$_this ) ) {
+		if ( isset( self::$instance ) ) {
 			wp_die( sprintf( __( '%s is a singleton class and you are not allowed to create a second instance', 'e20r-sequences' ), get_class( $this ) ) );
 		}
 		
-		self::$_this = $this;
+		self::$instance = $this;
 		
 		add_filter( 'get_available_class_instance', 'E20R\Sequences\Shortcodes\Available_On::get_instance' );
 		add_shortcode( 'e20r_available_on', array( $this, 'load_shortcode' ) );
@@ -65,8 +66,10 @@ class Available_On {
 		global $current_user;
 		$delay = 0;
 		
-		$sequence_obj = apply_filters( 'get_sequence_class_instance', null );
-		DBG::log( "Processing attributes." );
+		$sequence_obj = Controller::get_instance();
+		$utils = Utilities::get_instance();
+		
+		$utils->log( "Processing attributes." );
 		
 		$when = 'today';
 		
@@ -80,11 +83,11 @@ class Available_On {
 			wp_die( sprintf(__('%s is not a valid type attribute for the e20r_available_on shortcode', 'e20r-sequences'), $type));
 		}
 		*/
-		DBG::log( "When attribute is specified: {$attributes['when']}" );
+		$utils->log( "When attribute is specified: {$attributes['when']}" );
 		
 		if ( ! is_numeric( $attributes['when'] ) && ( false === strtotime( $attributes['when'] ) ) ) {
 			
-			DBG::log( "User didn't specify a recognizable format for the 'when' attribute" );
+			$utils->log( "User didn't specify a recognizable format for the 'when' attribute" );
 			wp_die( sprintf( __( '%s is not a recognizable format for the when attribute in the e20r_available_on shortcode', 'e20r-sequences' ), $attributes['when'] ) );
 		}
 		
@@ -94,16 +97,16 @@ class Available_On {
 		$delay            = $sequence_obj->convert_date_to_days( $attributes['when'], $current_user->ID );
 		$days_since_start = $sequence_obj->get_membership_days( $current_user->ID );
 		
-		DBG::log( "Days since start: {$days_since_start} vs delay {$delay}" );
+		$utils->log( "Days since start: {$days_since_start} vs delay {$delay}" );
 		
 		if ( $delay <= $days_since_start ) {
 			
-			DBG::log( "We need to display the content for the shortcode." );
+			$utils->log( "We need to display the content for the shortcode." );
 			
 			return do_shortcode( $content );
 		}
 		
-		DBG::log( "We can't display the content within the shortcode block: {$delay} vs {$days_since_start}" );
+		$utils->log( "We can't display the content within the shortcode block: {$delay} vs {$days_since_start}" );
 		
 		return apply_filters( 'e20r-sequence-shortcode-text-not-available', null );
 	}
@@ -117,10 +120,10 @@ class Available_On {
 	 */
 	public static function get_instance() {
 		
-		if ( is_null( self::$_this ) ) {
-			self::$_this = new self;
+		if ( is_null( self::$instance ) ) {
+			self::$instance = new self;
 		}
 		
-		return self::$_this;
+		return self::$instance;
 	}
 }
