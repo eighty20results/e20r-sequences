@@ -21,13 +21,18 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 namespace E20R\Sequences\Modules\Shortcodes;
 
-use E20R\Sequences\Sequence\Sequence_Controller;
+use E20R\Sequences\Sequence\Controller;
 use E20R\Sequences\Sequence\Sequence_Views;
-use E20R\Sequences\Utilities\Utilities;
+use E20R\Utilities\Utilities;
 
 class Sequence_Alert_Optin {
-
-	private static $_this = null;
+	
+	/**
+	 * @var Sequence_Alert_Optin|null
+	 *
+	 * @since 5.0 - ENHANCEMENT: Renamed $_this to $instance for singleton pattern
+	 */
+	private static $instance = null;
 	
 	private $class_name;
 
@@ -40,11 +45,11 @@ class Sequence_Alert_Optin {
 	{
 		$this->class_name = get_class($this);
 
-		if (isset(self::$_this)) {
+		if (isset(self::$instance)) {
 			wp_die(sprintf(__('%s is a singleton class and you are not allowed to create a second instance', 'e20r-sequences'), $this->class_name));
 		}
 
-		self::$_this = $this;
+		self::$instance = $this;
 
 		add_filter("get_{$this->class_name}_class_instance", array( $this, 'get_instance' ) );
 		// add_shortcode('sequence_alert', array( $this, 'load_shortcode' ) );
@@ -59,11 +64,11 @@ class Sequence_Alert_Optin {
 	 */
 	public function get_instance()
 	{
-		if ( is_null( self::$_this ) ) {
-			self::$_this = new self;
+		if ( is_null( self::$instance ) ) {
+			self::$instance = new self;
 		}
 		
-		return self::$_this;
+		return self::$instance;
 	}
 
 	/**
@@ -86,7 +91,7 @@ class Sequence_Alert_Optin {
 
 		$utils->log("shortcode specified sequence id: {$sequence_id}");
 		$view_class = Sequence_Views::get_instance();
-		$sequence = Sequence_Controller::get_instance();
+		$sequence = Controller::get_instance();
 		
 		if ( !empty( $sequence_id ) ) {
 			
