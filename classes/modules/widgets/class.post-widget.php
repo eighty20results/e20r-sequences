@@ -22,15 +22,18 @@ namespace E20R\Sequences\Modules\Widgets;
  **/
 
 use E20R\Sequences as Sequences;
-use E20R\Sequences\Sequence\Sequence_Controller;
+use E20R\Sequences\Sequence\Controller;
 
-use E20R\Tools\DBG;
+use E20R\Utilities\Utilities;
 
 class Post_Widget extends \WP_Widget {
 	
 	public function __construct() {
 	    
-	    DBG::log("Loading Sequence Widget for Current post");
+	    $utils = Utilities::get_instance();
+	    
+	    $utils->log("Loading Sequence Widget for Current post");
+	    
 		parent::__construct(
 			'e20r_sequences__currentpost_widget',
 			__( 'Sequences: Current', 'e20r-sequences' ),
@@ -46,6 +49,7 @@ class Post_Widget extends \WP_Widget {
 		// global $load_pmpro_sequence_script;
 		
 		// $load_pmpro_sequence_script = true;
+		$utils = Utilities::get_instance();
 		
 		extract( $args );
 		
@@ -67,7 +71,7 @@ class Post_Widget extends \WP_Widget {
 		if ( $title ) {
 			echo $before_title . $title . $after_title;
 		}
-		DBG::log("Loading Sequence post data");
+		$utils->log("Loading Sequence post data");
 		$this->get_sequence_post_data( $sequence_id, $seq_prefix, $wordcount, $show_title, $default_title );
 		
 		echo $after_widget;
@@ -182,11 +186,14 @@ class Post_Widget extends \WP_Widget {
 	
 	private function get_sequence_post_data( $sequence_id, $seq_prefix = null, $excerpt_length = 0, $show_title = true, $default_title ) {
 		
-		global $post, $current_user;
+		global $post;
+		global $current_user;
+		
+		$utils = Utilities::get_instance();
 		
 		if ( $sequence_id != 0 ) {
-			DBG::log("Loading Sequence (ID: {$sequence_id})");
-			$sequence = apply_filters( 'get_sequence_class_instance', null );
+			$utils->log("Loading Sequence (ID: {$sequence_id})");
+			$sequence = Controller::get_instance();
 			$sequence->init( $sequence_id );
 		} else {
 			?>
@@ -220,7 +227,7 @@ class Post_Widget extends \WP_Widget {
     
 				add_image_size( 'e20r_seq_recentpost_widget_size', 85, 45, false );
 				
-				DBG::log( "Widget - Posts: " . print_r( $seq_post, true ) );
+				$utils->log( "Widget - Posts: " . print_r( $seq_post, true ) );
 				
 				$image = ( has_post_thumbnail( $seq_post->id ) ? get_the_post_thumbnail( $seq_post->id, 'e20r_seq_recentpost_widget_size' ) : '<div class="noThumb"></div>' );
 				
@@ -271,10 +278,10 @@ class Post_Widget extends \WP_Widget {
 	}
 	
 	/**
-	 * @param Sequence_Controller $seq
+	 * @param Controller $seq
 	 * @param integer             $postId
 	 */
-	private function print_available_date( Sequence_Controller $seq, $postId ) {
+	private function print_available_date( Controller $seq, $postId ) {
 		
 		$seq_post  = $seq->get_post_details( $postId );
 		$max_delay = 0;
