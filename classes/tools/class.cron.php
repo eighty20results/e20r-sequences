@@ -29,19 +29,21 @@ use E20R\Sequences\Main\E20R_Sequences;
 use E20R\Utilities\Cache;
 
 class Cron {
+	
 	/**
 	 * Refers to a single instance of this class.
 	 *
 	 * @var Cron|null
+	 * @since v5.0 - ENHANCEMENT: Renamed $_this variable to $instance
 	 */
-	private static $_this = null;
+	private static $instance = null;
 	
 	/**
 	 * Cron constructor.
 	 */
 	function __construct() {
 		
-		if ( null != self::$_this ) {
+		if ( null != self::$instance ) {
 			$error_message = sprintf(
 				__( "Attempted to load a second instance of a singleton class (%s)", Controller::plugin_slug ),
 				get_class( $this )
@@ -51,7 +53,7 @@ class Cron {
 			wp_die( $error_message );
 		}
 		
-		self::$_this = $this;
+		self::$instance = $this;
 	}
 	
 	/**
@@ -94,6 +96,7 @@ class Cron {
 				$utils->log( "Current cron job for sequence # {$sequence->sequence_id} scheduled for{$timestamp}" );
 				$prev_scheduled = true;
 				
+				// TODO: self::update_for_DST( $timestamp );
 				// wp_clear_scheduled_hook($timestamp, 'e20r_sequence_cron_hook', array( $this->sequence_id ));
 			}
 			
@@ -149,6 +152,20 @@ class Cron {
 		}
 		
 		return true;
+	}
+	
+	/**
+	 * Update when the 'e20r_sequence_cron_hook' job runs due to DST changes if needed
+	 *
+	 * @param int $timestamp
+	 *
+	 * @since 5.0 - ENHANCEMENT: Stub function for future ability to update the cron job based on DST changes
+	 */
+	static public function update_for_DST( $timestamp ) {
+		
+		// TODO: Figure out whether today is a DST change day
+		
+		// TODO: Change the scheduled time for the cron job to match the new (DST) time.
 	}
 	
 	/**
@@ -431,20 +448,6 @@ class Cron {
 	}
 	
 	/**
-	 * Return the Cron class instance (when using singleton pattern)
-	 *
-	 * @return Cron $this
-	 */
-	public static function get_instance() {
-		
-		if ( is_null( self::$_this ) ) {
-			self::$_this = new self;
-		}
-		
-		return self::$_this;
-	}
-	
-	/**
 	 * Loads a sequence (or a list of sequences) and its consumers (users)
 	 *
 	 * @param null $sequence_id - The ID of the sequence to load info about
@@ -452,7 +455,8 @@ class Cron {
 	 * @return mixed -  Returns records containing
 	 *
 	 * @since 4.2.6
-	 * @since 5.0 - Cache the user sequence list (is membership plugin specific)
+	 * @since 5.0 - ENHANCEMENT: Cache the protected user/post list for the sequence(s) (is membership plugin specific)
+	 * @since 5.0 - ENHANCEMENT: Using filter to fetch list of protected posts for the active members
 	 */
 	private static function get_user_sequence_list( $sequence_id = null ) {
 		
@@ -469,5 +473,19 @@ class Cron {
 		}
 		
 		return $result;
+	}
+	
+	/**
+	 * Return the Cron class instance (when using singleton pattern)
+	 *
+	 * @return Cron $this
+	 */
+	public static function get_instance() {
+		
+		if ( is_null( self::$instance ) ) {
+			self::$instance = new self;
+		}
+		
+		return self::$instance;
 	}
 }
