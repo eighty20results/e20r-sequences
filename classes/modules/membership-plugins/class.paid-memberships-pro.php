@@ -24,6 +24,7 @@ use E20R\Licensing\Licensing;
 use E20R\Sequences\Modules\Membership_Module;
 use E20R\Sequences\Sequence\Controller;
 use E20R\Utilities\Utilities;
+use E20R\Sequences\Data\Model;
 
 class Paid_Memberships_Pro extends Membership_Module {
 	
@@ -51,7 +52,10 @@ class Paid_Memberships_Pro extends Membership_Module {
 		add_filter( 'e20r-sequence-use-membership-startdate', '__return_true' );
 		add_filter( 'e20r-sequence-use-global-startdate', '__return_true' );
 		add_filter( 'e20r-sequence-mmodule-access-denied-msg', array( $this, 'access_denied_msg' ), 15, 3 );
+		add_filter( 'e20r-sequence-get-protected-users-posts', array( $this, 'protected_users_posts' ), 10 , 2 );
+		
 		add_action( 'e20r_sequence_load_membership_signup_hook', array( $this, 'membership_module_signup_hook', ) );
+		
 		
 		add_filter( "pmpro_after_phpmailer_init", array( $this, "email_body" ) );
 		
@@ -61,6 +65,67 @@ class Paid_Memberships_Pro extends Membership_Module {
 		
 	}
 	
+	/**
+	 * Fetch the combination of sequences that a user ID is supposed to have access to
+	 *
+	 * @param array     $result
+	 * @param null|int $sequence_id
+	 *
+	 * @return array
+	 */
+	public function protected_users_posts( $result, $sequence_id = null ) {
+		
+		$utils = Utilities::get_instance();
+		
+		if ( function_exists( 'pmpro_has_membership_access' ) ) {
+			
+			global $wpdb;
+			
+			// Prepare SQL to get all sequences and users associated in the system who _may_ need to be notified
+			if ( empty( $sequence_id ) ) {
+				
+				$all_sequences = true;
+				$utils->log( "Loading and processing ALL sequences" );
+				$sql_stmnt = $wpdb->prepare( "
+                        SELECT usrs.*, pgs.page_id AS seq_id
+                        FROM {$wpdb->pmpro_memberships_users} AS usrs
+                            INNER JOIN {$wpdb->pmpro_memberships_pages} AS pgs
+                                ON (usrs.membership_id = pgs.membership_id)
+                            INNER JOIN {$wpdb->posts} AS posts
+                                ON ( pgs.page_id = posts.ID AND posts.post_type = %s )
+                        WHERE (usrs.status = 'active')
+                    ",
+					apply_filters( 'e20r-sequences-sequence-post-type', Model::cpt_type )
+				);
+			} else {
+				
+				// Get the specified sequence and its associated users
+				$utils->log( "Loading and processing specific sequence: {$sequence_id}" );
+				
+				$sql_stmnt = $wpdb->prepare(
+					"
+                        SELECT usrs.*, pgs.page_id AS seq_id
+                        FROM {$wpdb->pmpro_memberships_users} AS usrs
+                            INNER JOIN {$wpdb->pmpro_memberships_pages} AS pgs
+                                ON (usrs.membership_id = pgs.membership_id)
+                            INNER JOIN {$wpdb->posts} AS posts
+                                ON ( posts.ID = pgs.page_id AND posts.post_type = %s)
+                        WHERE (usrs.status = 'active') AND (pgs.page_id = %d)
+                    ",
+					apply_filters( 'e20r-sequences-sequence-post-type', Model::cpt_type ),
+					$sequence_id
+				);
+			}
+			
+			$result = $wpdb->get_results( $sql_stmnt );
+		}
+		
+		return $result;
+	}
+	
+	/**
+	 * The hook used by the membership plugin when a member has been signed up (successfully)
+	 */
 	public function membership_module_signup_hook() {
 		add_action( 'pmpro_after_checkout', array( $this, 'pmpro_after_checkout' ), 10, 2 );
 	}
