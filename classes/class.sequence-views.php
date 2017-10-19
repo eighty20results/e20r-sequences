@@ -22,25 +22,34 @@ namespace E20R\Sequences\Sequence;
 
 */
 use E20R\Utilities\Utilities;
-
 use E20R\Sequences\Data\Model;
 
 class Sequence_Views {
 
-	private static $_this = null;
+    /**
+      * @var null|Sequence_Views
+      */
+	private static $instance = null;
 
+	/**
+      * Sequence_Views constructor.
+      */
 	private function __construct() {
 	}
 
+	/**
+      * Instantiate or return a Sequence_Views class.
+      * @return Sequence_Views|null
+      */
 	public static function get_instance() {
 
-		if (is_null( self::$_this )) {
-			self::$_this = new self;
+		if (is_null( self::$instance )) {
+			self::$instance = new self;
 		}
 
 		$utils = Utilities::get_instance();
 		$utils->log("Loading instance for views class");
-		return self::$_this;
+		return self::$instance;
 	}
 
 	/**
@@ -85,6 +94,9 @@ class Sequence_Views {
 	 * Refreshes the Post list for the sequence (on the sequence page)
 	 *
 	 * @access public
+     * @since 5.0 - ENHANCEMENT: Make content warning less severe (from error to warning)
+     * @since 5.0 - ENHANCEMENT: Warn admin if the sequence isn't protected by the membership system
+     *
 	 * TODO: Make get_post_list_for_metabox() fully responsive!
      * TODO: Add 'visible before/after' days field to get_post_list_for_metabox()
 	 */
@@ -102,11 +114,21 @@ class Sequence_Views {
 		$all_posts = $sequence->get_posts_from_db();
 
 		$utils->log('Displaying the back-end meta box content');
-
+  
+		$status = get_post_status( $sequence->sequence_id );
+		$is_protected = $model->is_protected( $sequence->sequence_id );
+		
+		$utils->log("Sequence status for {$sequence->sequence_id}: {$status}");
 		ob_start();
+		
 		if ( empty( $posts ) ) {
             $utils->log('No Posts found?');
-            $sequence->set_error_msg( __('No posts/pages found', Controller::plugin_slug) );
+            $utils->add_message( __('No posts/pages/content included in this Sequence', Controller::plugin_slug), 'warning', 'backend' );
+		}
+		
+		if ( false === $is_protected && 'publish' == $status ) {
+		    $utils->log("Warn that sequence needs to be assigned membership protection");
+		    $utils->add_message( __( 'May need to configure membership protection for this sequence', Controller::plugin_slug ), 'warning', 'backend' );
 		}
 		$has_error = $sequence->get_error_msg();
 		?>
