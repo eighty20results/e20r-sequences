@@ -23,6 +23,7 @@ namespace E20R\Sequences\Modules\Widgets;
 
 use E20R\Sequences as Sequences;
 use E20R\Sequences\Sequence\Controller;
+use E20R\Sequences\Data\Model;
 
 use E20R\Utilities\Utilities;
 
@@ -36,10 +37,10 @@ class Post_Widget extends \WP_Widget {
 	    
 		parent::__construct(
 			'e20r_sequences__currentpost_widget',
-			__( 'Sequences: Current', 'e20r-sequences' ),
+			__( 'Sequences: Current', Controller::plugin_slug ),
 			array(
 				'description' =>
-					__( 'Display a summary of the most recently available sequence post (or page) for the currently logged-in user.', "e20r-sequences" ),
+					__( 'Display a summary of the most recently available sequence post (or page) for the currently logged-in user.', Controller::plugin_slug ),
 			)
 		);
 	}
@@ -91,7 +92,7 @@ class Post_Widget extends \WP_Widget {
 			
 		} else {
 			// dbg_log("Widget config: No config found");
-			$default_title     = __( 'Your most recently available content', "e20r-sequences" );
+			$default_title     = __( 'Your most recently available content', Controller::plugin_slug );
 			$title             = null;
 			$show_title        = 0;
 			$sequence_id       = 0;
@@ -101,7 +102,7 @@ class Post_Widget extends \WP_Widget {
 		
 		?>
         <p>
-            <label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Widget title', "e20r-sequences" ); ?></label>
+            <label for="<?php echo $this->get_field_id( 'title' ); ?>"><?php _e( 'Widget title', Controller::plugin_slug ); ?></label>
             <input class="widefat" id="<?php echo $this->get_field_id( 'title' ); ?>"
                    name="<?php echo $this->get_field_name( 'title' ) ?>" type="text" value="<?php echo $title; ?>"/>
         </p>
@@ -110,29 +111,29 @@ class Post_Widget extends \WP_Widget {
             <input class="widefat" id="<?php echo $this->get_field_id( 'show_title' ); ?>"
                    name="<?php echo $this->get_field_name( 'show_title' ) ?>" type="checkbox"
                    value="1" <?php checked( $show_title, 1 ); ?> />
-            <label for="<?php echo $this->get_field_id( 'show_title' ); ?>"><?php _e( 'Show Post/Page title', "e20r-sequences" ); ?></label>
+            <label for="<?php echo $this->get_field_id( 'show_title' ); ?>"><?php _e( 'Show Post/Page title', Controller::plugin_slug ); ?></label>
         </p>
         <p>
-            <label for="<?php echo $this->get_field_id( 'default_post_title' ); ?>"><?php _e( 'Default post/page title (if "hidden")', "e20r-sequences" ); ?></label>
+            <label for="<?php echo $this->get_field_id( 'default_post_title' ); ?>"><?php _e( 'Default post/page title (if "hidden")', Controller::plugin_slug ); ?></label>
             <input class="widefat" id="<?php echo $this->get_field_id( 'default_post_title' ); ?>"
                    name="<?php echo $this->get_field_name( 'default_post_title' ) ?>" type="text"
                    value="<?php echo $default_title; ?>"/>
         </p>
 
         <p>
-            <label for="<?php echo $this->get_field_id( 'prefix' ); ?>"><?php _e( 'Post title prefix', "e20r-sequences" ); ?></label>
+            <label for="<?php echo $this->get_field_id( 'prefix' ); ?>"><?php _e( 'Post title prefix', Controller::plugin_slug ); ?></label>
             <input class="widefat" id="<?php echo $this->get_field_id( 'prefix' ); ?>"
                    name="<?php echo $this->get_field_name( 'prefix' ) ?>" type="text"
                    value="<?php echo $seq_prefix; ?>"/>
         </p>
         <p>
-            <label for="<?php echo $this->get_field_id( 'wordcount' ); ?>"><?php _e( 'Max size of post/page excerpt (# of words)', "e20r-sequences" ); ?></label>
+            <label for="<?php echo $this->get_field_id( 'wordcount' ); ?>"><?php _e( 'Max size of post/page excerpt (# of words)', Controller::plugin_slug ); ?></label>
             <input class="widefat" id="<?php echo $this->get_field_id( 'wordcount' ); ?>"
                    name="<?php echo $this->get_field_name( 'wordcount' ) ?>" type="text"
                    value="<?php echo $excerpt_wordcount; ?>"/>
         </p>
         <p>
-            <label for="<?php echo $this->get_field_id( 'sequence_id' ); ?>"><?php _e( 'Sequence to use', "e20r-sequences" ); ?></label>
+            <label for="<?php echo $this->get_field_id( 'sequence_id' ); ?>"><?php _e( 'Sequence to use', Controller::plugin_slug ); ?></label>
             <select id="<?php echo $this->get_field_id( 'sequence_id' ); ?>"
                     name="<?php echo $this->get_field_name( 'sequence_id' ) ?>">
 				<?php echo $this->sequence_options( $sequence_id ); ?>
@@ -161,13 +162,13 @@ class Post_Widget extends \WP_Widget {
 		global $id;
 		
 		$sequences = new \WP_Query( array(
-			"post_type" => "pmpro_sequence",
+			"post_type" => Model::cpt_type,
 		) );
 		
 		ob_start();
 		if ( $sequences->found_posts == 0 ) {
 			?>
-            <option value="0" selected="selected"><?php _e( 'No sequences defined', "e20r-sequences" ); ?></option><?php
+            <option value="0" selected="selected"><?php _e( 'No sequences defined', Controller::plugin_slug ); ?></option><?php
 		} else {
 			?>
             <option value="0" <?php echo( $sequence_id != 0 ? '' : 'selected="selected"' ); ?>></option><?php
@@ -201,7 +202,7 @@ class Post_Widget extends \WP_Widget {
             <li class="widget widget-text">
                 <h3 id="e20r-seq-post-notfound">Error</h3>
                 <div class="text-widget">
-					<?php _e( "No sequence specified for this widget!", "e20r-sequences" ); ?>
+					<?php _e( "No sequence specified for this widget!", Controller::plugin_slug ); ?>
                 </div>
             </li>
 			
@@ -217,10 +218,10 @@ class Post_Widget extends \WP_Widget {
 			if ( empty( $seq_post ) ) { ?>
                 <span id="e20r-seq-post-notfound">
                 <h3 id="<?php echo apply_filters( 'e20r-seq-recentpost-widget-nopostfound', 'e20r-seq-widget-recentpost-nopostfound-title' ); ?>"
-                    class="widget-title"><?php _e( "Configuration Error", "e20r-sequences" ); ?></h3>
+                    class="widget-title"><?php _e( "Configuration Error", Controller::plugin_slug ); ?></h3>
 					<div id="e20r-seq-post-body"
                          class="text-widget <?php echo apply_filters( 'e20r-seq-widget-recentpost-nopostfound-body', '' ); ?>">
-						<?php echo( $sequence_id != 0 ? get_the_title( $sequence_id ) . __( ': No post(s) found!', "e20r-sequences" ) : __( 'No sequence specified', "e20r-sequences" ) ); ?>
+						<?php echo( $sequence_id != 0 ? get_the_title( $sequence_id ) . __( ': No post(s) found!', Controller::plugin_slug ) : __( 'No sequence specified', Controller::plugin_slug ) ); ?>
 					</div>
                 </span><?php
 			} else if ( $sequence->has_post_access( $current_user->ID, $seq_post->id, false, $sequence_id ) ) {
@@ -251,14 +252,14 @@ class Post_Widget extends \WP_Widget {
                     </div>
                     <div id="e20r-seq-post-link" <?php echo apply_filters( 'e20r-seq-widget-postlink-class', '' ); ?>>
                         <a href="<?php esc_url_raw( $seq_post->permalink ); ?>"
-                           title="<?php esc_html_e( $seq_post->title ); ?>"><?php _e( 'Click to read', "e20r-sequences" ); ?></a>
+                           title="<?php esc_html_e( $seq_post->title ); ?>"><?php _e( 'Click to read', Controller::plugin_slug ); ?></a>
                     </div>
                 </div> <?php
 			} else { ?>
                 <span id="e20r-seq-post-notfound">
-                <h3 class="widget-title"><?php _e( "Membership Level Error", "e20r-sequences" ); ?></h3>
+                <h3 class="widget-title"><?php _e( "Membership Level Error", Controller::plugin_slug ); ?></h3>
 					<div id="e20r-seq-post-body" class="text-widget">
-						<?php _e( "Sorry, your current membership level does not give you access to this content.", "e20r-sequences" ); ?>
+						<?php _e( "Sorry, your current membership level does not give you access to this content.", Controller::plugin_slug ); ?>
 					</div>
                 </span><?php
 			}
@@ -299,7 +300,7 @@ class Post_Widget extends \WP_Widget {
 		$post = $seq_post[0];
 		
 		if ( ( $seq->options->delayType == 'byDays' ) && ( $seq->options->showDelayAs == E20R_SEQ_AS_DAYNO ) ) {
-			printf( __( 'day %d of membership', 'e20r-sequences' ), $seq->display_proper_delay( $post->delay ) );
+			printf( __( 'day %d of membership', Controller::plugin_slug ), $seq->display_proper_delay( $post->delay ) );
 		} else {
 			echo $seq->display_proper_delay( $post->delay );
 		}
