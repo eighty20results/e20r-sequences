@@ -36,6 +36,10 @@ class Google {
 	private function __construct() {
 	}
 	
+	public function load_hooks() {
+		add_filter( 'e20r-seq-google-tracking-info', array( $this, 'maybeAddGoogleTracking' ), 10, 2 );
+	}
+	
 	/**
 	 * Returning the instance
 	 *
@@ -101,11 +105,12 @@ class Google {
 	/**
 	 * Add Google Analytics tracking image/URL
 	 *
+	 * @param string $ga_tracking
 	 * @param int $sequence_id
 	 *
 	 * @return null|string
 	 */
-	public function maybeAddGoogleTracking( $sequence_id ) {
+	public function maybeAddGoogleTracking( $ga_tracking, $sequence_id ) {
 		
 		$ga_tracking   = null;
 		$utils = Utilities::get_instance();
