@@ -21,11 +21,12 @@ namespace E20R\Utilities\Licensing;
 
 use E20R\Sequences\Sequence\Controller;
 use E20R\Utilities\Utilities;
+use E20R\Utilities\Licensing\Licensing;
 
-class SequencesPlus_License extends License_Client {
+class Sequences_License extends License_Client {
 	
 	/**
-	 * @var null|SequencesPlus_License
+	 * @var null|Sequences_License
 	 */
 	private static $instance = null;
 	
@@ -38,7 +39,7 @@ class SequencesPlus_License extends License_Client {
 	/**
 	 * Return, or create, instance of SequencesPlus_License class
 	 *
-	 * @return SequencesPlus_License|null
+	 * @return Sequences_License|null
 	 */
 	public static function get_instance() {
 		
@@ -56,7 +57,7 @@ class SequencesPlus_License extends License_Client {
 		
 		$utils = Utilities::get_instance();
 		
-		switch ( Licensing::is_license_expiring( 'e20r_sequences' ) ) {
+		switch ( Licensing::is_license_expiring( Controller::plugin_prefix ) ) {
 			
 			case true:
 				$utils->add_message( sprintf( __( 'The license for %s will renew soon. As this is an automatic payment, you will not have to do anything. To modify %syour license%s, you will need to go to %syour account page%s' ), 'Support and Updates Plus License', '<a href="https://eighty20results.com/shop/licenses/" target="_blank">', '</a>', '<a href="https://eighty20results.com/account/" target="_blank">', '</a>' ), 'info', 'backend' );
@@ -89,14 +90,14 @@ class SequencesPlus_License extends License_Client {
 			$plugin_settings = array();
 		}
 		
-		$plugin_settings['e20r_mc'] = array(
-			'label'      => __( 'E20R Sequences Plus', Controller::plugin_slug ),
-			'key_prefix' => 'e20r_sequences',
-			'stub'       => Controller::plugin_slug,
+		$plugin_settings[Controller::plugin_prefix] = array(
+			'label'      => __( 'Sequences Plus', Controller::plugin_prefix ),
+			'key_prefix' => Controller::plugin_prefix,
+			'stub'       => Controller::plugin_prefix,
 		);
 		
 		
-		$license_settings = parent::add_new_license_info( $license_settings, $plugin_settings['SequencesPlus_License'] );
+		$license_settings = parent::add_new_license_info( $license_settings, $plugin_settings[Controller::plugin_prefix] );
 		
 		return $license_settings;
 	}
