@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version 1.5
+ * @version 1.6
  */
 
 namespace E20R\Utilities\Editor;
@@ -407,8 +407,9 @@ abstract class Editor {
 				Editor::version
 			);
 			
-			wp_enqueue_script( 'e20r-email-editor-admin', plugins_url( 'javascript/e20r-email-editor-admin.js', __FILE__ ), array( 'jquery' ), Editor::version, true );
-			
+			if ( file_exists( plugin_dir_path('javascript/e20r-email-editor-admin.js' ) ) ) {
+				wp_enqueue_script( 'e20r-email-editor-admin', plugins_url( 'javascript/e20r-email-editor-admin.js', __FILE__ ), array( 'jquery' ), Editor::version, true );
+			}
 			
 			wp_register_script( 'e20r-email-editor', plugins_url( 'javascript/e20r-email-editor.js', __FILE__ ), array(
 				'jquery',
