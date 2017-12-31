@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version 1.3
+ * @version 1.4
  */
 
 namespace E20R\Utilities\Editor;
@@ -46,9 +46,30 @@ abstract class Editor {
 	const taxonomy = 'e20r_email_type';
 	
 	/**
+	 * The child class taxonomy name to use (TODO: Override $taxonomy_name in child class!)
+	 *
+	 * @var null|string $taxonomy_name
+	 */
+	protected $taxonomy_name = null;
+	
+	/**
+	 * The child class taxonomy nicename to use (TODO: Override $taxonomy_nicename in child class!)
+	 *
+	 * @var null|string $taxonomy_nicename
+	 */
+	protected $taxonomy_nicename = null;
+	
+	/**
+	 * The child class taxonomy description to use (TODO: Override $taxonomy_description in child class!)
+	 *
+	 * @var null|string $taxonomy_description
+	 */
+	protected $taxonomy_description = null;
+	
+	/**
 	 * Version number for the edition of the Email Editor we're loading
 	 */
-	const version = '1.0';
+	const version = '1.4';
 	/**
 	 * @var null|Editor
 	 */
@@ -112,18 +133,6 @@ abstract class Editor {
 	}
 	
 	/**
-	 * Return the current settings for the specified message template
-	 *
-	 * @param string $template_name
-	 * @param bool   $load_body
-	 *
-	 * @return array
-	 *
-	 * @access public
-	 */
-	abstract public function load_template_settings( $template_name, $load_body = false );
-	
-	/**
 	 * Return the specified template (by name)
 	 *
 	 * @param string $template_name
@@ -148,22 +157,6 @@ abstract class Editor {
 		$types = apply_filters( 'e20r-email-editor-message-types', array() );
 		Template_Editor_View::add_type_metabox( $types );
 	}
-	
-	/**
-	 * Save the message specific metadata (from child class)
-	 *
-	 * @param int $post_id
-	 */
-	abstract public function save_message_meta( $post_id );
-	
-	/**
-	 * Verify if the child function is processing this term
-	 *
-	 * @param $type
-	 *
-	 * @return bool
-	 */
-	abstract public function processing_this_term( $type );
 	
 	/**
 	 * Class instance
@@ -332,21 +325,34 @@ abstract class Editor {
 	}
 	
 	/**
-	 * Filter handler to load the Editor Email Notice content
-	 *
-	 * @filter 'e20r-email-editor-notice-content'
-	 *
-	 * @param string $content
-	 * @param string $template_slug
-	 *
-	 * @return string|null
-	 */
-	abstract public function load_template_content( $content, $template_slug );
-	
-	/**
 	 * Install custom Taxonomy for child Editor class
+	 *
+	 * @param string $taxonomy_name
+	 * @param string $taxonomy_nicename
+	 * @param string $taxonomy_description
 	 */
-	abstract public function install_taxonomy();
+	public function install_taxonomy( $taxonomy_name, $taxonomy_nicename, $taxonomy_description ) {
+		
+		$utils = Utilities::get_instance();
+		$utils->log( "Testing custom taxonomy {$taxonomy_name} for {$taxonomy_nicename} email notices: " . Editor::taxonomy );
+		
+		if ( ! term_exists( $taxonomy_name, Editor::taxonomy ) ) {
+			$utils->log( "Adding {$taxonomy_nicename} taxonomy" );
+			
+			$new_term = wp_insert_term(
+				$taxonomy_nicename,
+				Editor::taxonomy,
+				array(
+					'slug'        => $taxonomy_name,
+					'description' => $taxonomy_description,
+				)
+			);
+			
+			if ( is_wp_error( $new_term ) ) {
+				$utils->log( "Error creating new taxonomy term: " . $new_term->get_error_message() );
+			}
+		}
+	}
 	
 	/**
 	 * Add the WP_User content to the email object
@@ -433,15 +439,6 @@ abstract class Editor {
 			wp_enqueue_script( 'e20r-email-editor' );
 		}
 	}
-	
-	/**
-	 * Default settings for any new template(s)
-	 *
-	 * @param string $template_name
-	 *
-	 * @return array
-	 */
-	abstract public function default_template_settings( $template_name );
 	
 	/**
 	 * Set/select the default reminder schedule based on the type of reminder
@@ -540,22 +537,6 @@ abstract class Editor {
 		
 		return $content_body;
 	}
-	
-	/**
-	 * Return the default templates with per template settings
-	 *
-	 * @return array
-	 */
-	abstract public function default_templates();
-	
-	/**
-	 * Return the Message templates for the specified type
-	 *
-	 * @param string $type - The type of template to return
-	 *
-	 * @return array
-	 */
-	abstract public function configure_cpt_templates( $type );
 	
 	/**
 	 * AJAX request handle for 'save template' action
@@ -826,14 +807,6 @@ abstract class Editor {
 	}
 	
 	/**
-	 * @param array $variable_list
-	 * @param mixed $type
-	 *
-	 * @return array
-	 */
-	abstract public function default_data_variables( $variable_list, $type );
-	
-	/**
 	 * Trigger as part of plugin deactivation
 	 *
 	 * @param bool $clear_options
@@ -844,4 +817,79 @@ abstract class Editor {
 			delete_option( $this->option_name );
 		}
 	}
+	
+	/**
+	 * Save the message specific metadata (from child class)
+	 *
+	 * @param int $post_id
+	 */
+	abstract public function save_message_meta( $post_id );
+	
+	/**
+	 * Verify if the child function is processing this term
+	 *
+	 * @param $type
+	 *
+	 * @return bool
+	 */
+	abstract public function processing_this_term( $type );
+	
+	/**
+	 * Return the current settings for the specified message template
+	 *
+	 * @param string $template_name
+	 * @param bool   $load_body
+	 *
+	 * @return array
+	 *
+	 * @access public
+	 */
+	abstract public function load_template_settings( $template_name, $load_body = false );
+	
+	/**
+	 * Define the substitution variables for the email messages and how/where to find their data
+	 *
+	 * @param array $variable_list
+	 * @param mixed $type
+	 *
+	 * @return array
+	 */
+	abstract public function default_data_variables( $variable_list, $type );
+	
+	/**
+	 * Return the default templates with per template settings
+	 *
+	 * @return array
+	 */
+	abstract public function default_templates();
+	
+	/**
+	 * Return the Message templates for the specified type
+	 *
+	 * @param string $type - The type of template to return
+	 *
+	 * @return array
+	 */
+	abstract public function configure_cpt_templates( $type );
+	
+	/**
+	 * Default settings for any new template(s)
+	 *
+	 * @param string $template_name
+	 *
+	 * @return array
+	 */
+	abstract public function default_template_settings( $template_name );
+	
+	/**
+	 * Filter handler to load the Editor Email Notice content
+	 *
+	 * @filter 'e20r-email-editor-notice-content'
+	 *
+	 * @param string $content
+	 * @param string $template_slug
+	 *
+	 * @return string|null
+	 */
+	abstract public function load_template_content( $content, $template_slug );
 }
