@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version 1.4
+ * @version 1.5
  */
 
 namespace E20R\Utilities\Editor;
@@ -816,6 +816,24 @@ abstract class Editor {
 		if ( true === $clear_options ) {
 			delete_option( $this->option_name );
 		}
+	}
+	
+	/**
+	 * Return arguments to use for Taxonomy/Term searches
+	 *
+	 * @param string $term_slug
+	 *
+	 * @return array
+	 */
+	protected function get_term_args( $term_slug ) {
+		
+		return array(
+			'fields' => 'all',
+			'slug' => $term_slug,
+			'hide_empty' => false,
+			'orderby' => 'slug',
+			'taxonomy' => self::taxonomy
+		);
 	}
 	
 	/**
