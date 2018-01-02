@@ -897,6 +897,9 @@ class Send_Email {
 					case 'enddate':
 						$value = date('Y-m-d', $level->enddate );
 						break;
+					case 'startdate':
+						$value = date( 'Y-m-d', $level->startdate );
+						break;
 				}
 				break;
 			
