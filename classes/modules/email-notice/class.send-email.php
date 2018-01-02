@@ -15,6 +15,8 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @version 2.2
  */
 
 namespace E20R\Utilities\Email_Notice;
@@ -516,9 +518,12 @@ class Send_Email {
 			} else if ( file_exists( get_template_directory() . "/{$tlocation}/" . $template_file ) ) {
 				
 				$this->body .= file_get_contents( get_template_directory() . "/{$tlocation}/" . $template_file );        //typo in path for email folder in parent theme
-			} else if ( file_exists( E20R_SEQUENCE_PLUGIN_DIR . "/email/" . $template_file ) ) {
+			} else if ( file_exists( plugin_dir_path( __FILE__ ) . "/templates/" . $template_file ) ) {
 				
-				$this->body .= file_get_contents( E20R_SEQUENCE_PLUGIN_DIR . "/email/" . $template_file );                        //default template in plugin
+				$this->body .= file_get_contents( plugin_dir_path( __FILE__ ) . "/templates/" . $template_file );   //default template in plugin
+			} else if ( file_exists( plugin_dir_path( __FILE__ ) . "/email/" . $template_file ) ) {
+				
+				$this->body .= file_get_contents( plugin_dir_path( __FILE__ ) . "/email/" . $template_file );       //default email directory in plugin
 			}
 		}
 		
