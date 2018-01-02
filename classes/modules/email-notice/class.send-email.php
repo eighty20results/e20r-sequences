@@ -506,24 +506,24 @@ class Send_Email {
 			$tlocation = apply_filters( 'e20r-email-notice-custom-template-location', 'email-notice', $extless_file );
 			
 			// Haven't got the plus license, using file system saved template(s)
-			if ( file_exists( get_stylesheet_directory() . "/{$tlocation}/" . $template_file ) ) {
+			if ( file_exists( get_stylesheet_directory() . "/{$tlocation}/{$template_file}" ) ) {
 				
-				$this->body .= file_get_contents( get_stylesheet_directory() . "/{$tlocation}/" . $template_file );        //email template folder in child theme
-			} else if ( file_exists( get_stylesheet_directory() . "/{$tlocation}/" . $template_file ) ) {
+				$this->body .= file_get_contents( get_stylesheet_directory() . "/{$tlocation}/{$template_file}" );        //email template folder in child theme
+			} else if ( file_exists( get_stylesheet_directory() . "/{$tlocation}/{$template_file}" ) ) {
 				
-				$this->body .= file_get_contents( get_stylesheet_directory() . "/{$tlocation}/" . $template_file );    //typo in path for email template folder in child theme
-			} else if ( file_exists( get_template_directory() . "/{$tlocation}/" . $template_file ) ) {
+				$this->body .= file_get_contents( get_stylesheet_directory() . "/{$tlocation}/{$template_file}" );    //typo in path for email template folder in child theme
+			} else if ( file_exists( get_template_directory() . "/{$tlocation}/{$template_file}" ) ) {
 				
-				$this->body .= file_get_contents( get_template_directory() . "/{$tlocation}/" . $template_file );        //email folder in parent theme
-			} else if ( file_exists( get_template_directory() . "/{$tlocation}/" . $template_file ) ) {
+				$this->body .= file_get_contents( get_template_directory() . "/{$tlocation}/{$template_file}" );        //email folder in parent theme
+			} else if ( file_exists( get_template_directory() . "/{$tlocation}/{$template_file}" ) ) {
 				
-				$this->body .= file_get_contents( get_template_directory() . "/{$tlocation}/" . $template_file );        //typo in path for email folder in parent theme
-			} else if ( file_exists( plugin_dir_path( __FILE__ ) . "/templates/" . $template_file ) ) {
+				$this->body .= file_get_contents( get_template_directory() . "/{$tlocation}/{$template_file}" );        //typo in path for email folder in parent theme
+			} else if ( file_exists( plugin_dir_path( __FILE__ ) . "/templates/{$template_file}") ) {
 				
-				$this->body .= file_get_contents( plugin_dir_path( __FILE__ ) . "/templates/" . $template_file );   //default template in plugin
-			} else if ( file_exists( plugin_dir_path( __FILE__ ) . "/email/" . $template_file ) ) {
+				$this->body .= file_get_contents( plugin_dir_path( __FILE__ ) . "/templates/{$template_file}" );   //default template in plugin
+			} else if ( file_exists( plugin_dir_path( __FILE__ ) . "/email/{$template_file}" ) ) {
 				
-				$this->body .= file_get_contents( plugin_dir_path( __FILE__ ) . "/email/" . $template_file );       //default email directory in plugin
+				$this->body .= file_get_contents( plugin_dir_path( __FILE__ ) . "/email/{$template_file}" );       //default email directory in plugin
 			}
 		}
 		
