@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) 2017 - Eighty / 20 Results by Wicked Strong Chicks.
+ * Copyright (c) 2017-2018 - Eighty / 20 Results by Wicked Strong Chicks.
  * ALL RIGHTS RESERVED
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
- * @version 2.1
+ * @version 2.2
  */
 
 namespace E20R\Utilities\Email_Notice;
@@ -69,7 +69,8 @@ abstract class Email_Notice {
 	/**
 	 * Version number for the edition of the Email Editor we're loading
 	 */
-	const version = '1.4';
+	const version = '2.2';
+	
 	/**
 	 * @var null|Email_Notice
 	 */
@@ -154,7 +155,7 @@ abstract class Email_Notice {
 	
 	public function display_message_metabox() {
 		
-		$types = apply_filters( 'e20r-email-email-notice-message-types', array() );
+		$types = apply_filters( 'e20r-email-notice-message-types', array() );
 		Email_Notice_View::add_type_metabox( $types );
 	}
 	
@@ -181,7 +182,7 @@ abstract class Email_Notice {
 	 *
 	 * @return array
 	 *
-	 * @since 1.9.6 - ENHANCEMENT: Added e20r-email-email-notice-variable-help filter to result of default_variable_help()
+	 * @since 1.9.6 - ENHANCEMENT: Added e20r-email-notice-variable-help filter to result of default_variable_help()
 	 */
 	public function default_variable_help( $variables, $type ) {
 		
@@ -214,6 +215,9 @@ abstract class Email_Notice {
 		$save_action = "save_post_" . Email_Notice::cpt_type;
 		
 		add_action( $save_action, array( $this, 'save_metadata' ), 10, 1 );
+		
+		// Add PHP Mail Error Handler
+		add_action( 'wp_mail_failed', 'E20R\Utilities\Email_Notice\Send_Email::email_error_handler', 10 );
 	}
 	
 	/**
@@ -227,7 +231,7 @@ abstract class Email_Notice {
 		
 		add_meta_box(
 			'e20r-email-notice-settings',
-			__( 'Email Notice Type', Email_Notice::plugin_slug ),
+			__( 'Configure Email Notice Type', Email_Notice::plugin_slug ),
 			'E20R\Utilities\Email_Notice\Email_Notice_View::add_default_metabox',
 			Email_Notice::cpt_type,
 			'side',
@@ -388,33 +392,9 @@ abstract class Email_Notice {
 	public function enqueue() {
 		
 		$utils = Utilities::get_instance();
-		
-		// In backend
-		/*
-		if ( is_admin() && isset( $_REQUEST['page'] ) && 'e20r-email-email-notice-templates' === $_REQUEST['page'] ) {
-			
-			global $post;
-			
-			wp_enqueue_editor();
-			
-			if ( ! empty( $post->ID ) ) {
-				wp_enqueue_media( $post->ID );
-			}
-			
-			$utils->log( "Loading style(s) for Email Editor plugin" );
-			
-			wp_enqueue_style( 'e20r-email-email-notice-admin', plugins_url( 'css/e20r-email-email-notice-admin.css', __FILE__ ), null, Email_Notice::version );
-			
-			wp_enqueue_script( 'e20r-email-email-notice-admin', plugins_url( 'javascript/e20r-email-email-notice-admin.js', __FILE__ ), array(
-				'jquery',
-				'email-notice',
-			), Email_Notice::version, true );
-			
-			$this->i18n_script();
-		}
-		*/
 		global $post;
 		
+		// At the WP backend & the post editor for the Email Notices?
 		if ( is_admin() && isset( $post->post_type ) && Email_Notice::cpt_type == $post->post_type ) {
 			
 			$utils->log("Loading scripts for Editor CPT page");
@@ -450,7 +430,7 @@ abstract class Email_Notice {
 				)
 			);
 			
-			wp_enqueue_script( 'e20r-email-email-notice' );
+			wp_enqueue_script( 'e20r-email-notice' );
 		}
 	}
 	
@@ -465,7 +445,7 @@ abstract class Email_Notice {
 	 */
 	public function default_schedule( $schedule, $type = 'recurring', $slug = Email_Notice::plugin_slug ) {
 		
-		$schedule = apply_filters( 'e20r-email-email-notice-default-schedules', $schedule, $type, $slug );
+		$schedule = apply_filters( 'e20r-email-notice-default-schedules', $schedule, $type, $slug );
 		
 		return $schedule;
 	}
@@ -496,20 +476,9 @@ abstract class Email_Notice {
 			$terms = array( 'slug' => 'default' );
 		}
 		
-		foreach ( $terms as $term ) {
-			do_action( 'e20r-email-notice-load-message-meta', $term->slug );
+		foreach ( $terms as $tax_term ) {
+			do_action( 'e20r-email-notice-load-message-meta', $tax_term->slug );
 		}
-	}
-	
-	
-	/**
-	 * Load the template email-notice page (html)
-	 */
-	public function load_message_template_page() {
-		
-		$all_settings = $this->load_template_settings( 'all', true );
-		
-		Editor_View::editor( $all_settings );
 	}
 	
 	/**
@@ -524,7 +493,7 @@ abstract class Email_Notice {
 		$utils = Utilities::get_instance();
 		
 		$default_templ = $this->default_templates();
-		$location      = apply_filters( 'e20r-email-email-notice-template-location', plugin_dir_path( __FILE__ ) );
+		$location      = apply_filters( 'e20r-email-notice-template-location', plugin_dir_path( __FILE__ ) );
 		$content_body  = null;
 		$file_name     = false;
 		
@@ -761,7 +730,7 @@ abstract class Email_Notice {
 		
 		$error = register_post_type( $post_type,
 			array(
-				'labels'             => apply_filters( 'e20r-email-email-notice-cpt-labels', $labels ),
+				'labels'             => apply_filters( 'e20r-email-notice-cpt-labels', $labels ),
 				'public'             => true,
 				'show_ui'            => true,
 				'show_in_menu'       => true,
@@ -774,7 +743,7 @@ abstract class Email_Notice {
 					'slug'       => $default_slug,
 					'with_front' => false,
 				),
-				'has_archive'        => apply_filters( 'e20r-email-email-notice-cpt-archive-slug', Email_Notice::plugin_slug . "-archive" ),
+				'has_archive'        => apply_filters( 'e20r-email-notice-cpt-archive-slug', Email_Notice::plugin_slug . "-archive" ),
 			)
 		);
 		
@@ -924,7 +893,7 @@ abstract class Email_Notice {
 	/**
 	 * Filter handler to load the Editor Email Notice content
 	 *
-	 * @filter 'e20r-email-email-notice-notice-content'
+	 * @filter 'e20r-email-notice-notice-content'
 	 *
 	 * @param string $content
 	 * @param string $template_slug
