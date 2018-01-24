@@ -79,7 +79,7 @@
 
 #e20r_sequence_meta td {
 	font-size: 0.8em !important;
-	display: inline-block;
+	display: table-cell;
 	overflow: hidden;
 	text-overflow: ellipsis;
 	clear: both;
@@ -334,7 +334,9 @@ table#newmeta td {
 }
 
 .e20r_sequence_postscroll tbody td {
-    text-align: left;
+    text-align: center;
+	text-align: -webkit-center;
+	text-align: -moz-center;
 }
 
 .e20r_sequence_postscroll a {
@@ -438,6 +440,7 @@ a:hover.page-numbers {
 }
 
 .e20r_seq_linklist td {
+	padding: 0 10px;
     border: none;
 }
 
@@ -591,7 +594,12 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
     min-width: 250px;
     */
 }
-
+.meta-box-sortables select {
+	width: 100% !important;
+	max-width: 100% !important;
+	text-overflow: ellipsis;
+	overflow: hidden;
+}
 .e20r-meta-table-col-2 {
     width: 25%;
 	/*
