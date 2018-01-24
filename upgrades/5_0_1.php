@@ -59,4 +59,4 @@ function e20r_sequence_upgrade_settings_501()  {
 		}
 	}
 }
-add_action('e20r_sequence_update_5.0.0', 'e20r_sequence_upgrade_settings_500');
+add_action('e20r_sequence_update_5.0.1', 'e20r_sequence_upgrade_settings_501');
