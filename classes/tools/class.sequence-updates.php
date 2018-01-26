@@ -47,90 +47,149 @@ class Sequence_Updates
 
         self::$instance = $this;
     }
-
-    public static function init()
-    {
+	
+	
+	/**
+	 * Generate list of version(s) to upgrade the DB for
+	 *
+	 * @return array
+	 */
+    public static function load_upgrade_versions() {
+    	
+    	$versions = array();
+    	$utils = Utilities::get_instance();
+    	
+    	$location = E20R_SEQUENCE_PLUGIN_DIR . "/upgrades/";
+    	
+    	if ( file_exists( $location ) ) {
+		    
+    		if ( false !== ( $files = scandir( $location ) ) ) {
+			
+			    foreach ( $files as $file ) {
+				
+				    // Skip (ignore) as add-ons to process/list
+				    if ( '.' === $file || '..' === $file ) {
+					    continue;
+				    }
+				
+				    $parts      = explode( '.', $file );
+				    $filename = array_shift( $parts );
+				    $version = preg_replace( '/_/', '.', $filename );
+				
+				    if ( ! in_array( $version, $versions ) ) {
+					
+					    $utils->log( "Added {$version} to list of items to include in upgrade" );
+					    $versions[] = $version;
+				    }
+			    }
+		    }
+	    }
+	    
+	    if ( !empty( $versions ) ) {
+    		sort($versions);
+	    }
+	    
+    	return $versions;
+    }
+	
+	/**
+	 * Configure and start upgrade functionality
+	 */
+    public static function init() {
+    	
 	    $utils = Utilities::get_instance();
         $utils->log("Getting plugin data for E20R Sequences");
 
-        $update_functions = array(
-            '4.4.0', '4.4.11'
-        );
-
-        if (function_exists('get_plugin_data'))
-            $plugin_status = get_plugin_data(E20R_SEQUENCE_PLUGIN_DIR . 'class.e20r-sequences.php', false, false);
-
+        $update_functions = self::load_upgrade_versions();
+	    
+        $utils->log("Can upgrade for: " . print_r( $update_functions, true ) );
+        
+        if (function_exists('get_plugin_data')) {
+	        $plugin_status = get_plugin_data( E20R_SEQUENCE_PLUGIN_DIR . 'class.e20r-sequences.php', false, false );
+        }
+        
+        $utils->log("Current plugin version is: {$plugin_status['Version']}");
         $version = ( !empty($plugin_status['Version']) ? $plugin_status['Version'] : E20R_SEQUENCE_VERSION );
 
-        $me = self::get_instance();
-        $me->set_version($version);
+        $class = self::get_instance();
+	    $class->set_version($version);
 
-        $is_updated = get_option('e20r-sequence-updated', array() );
-        $a_versions = array_keys($is_updated);
-        $a_versions = array_unique(array_merge($update_functions, $a_versions));
+        $already_updated = get_option( 'e20r-sequence-updated', array() );
 
-        if (false === in_array( $version, $a_versions ) ) {
-
-            $utils->log("Appending {$version} to list of stuff to upgrade");
-            $is_updated[$version] = false;
-            $a_versions[] = $version;
-        }
-
-        foreach($is_updated as $upd_ver => $status) {
-
-            $upgrade_file = str_replace('.', '_', $upd_ver);
-
-            if (!empty($upd_ver) &&
-                (file_exists(E20R_SEQUENCE_PLUGIN_DIR . "upgrades/{$upgrade_file}.php") &&
-                    (false == $status)  ) ) {
-
-                $utils->log("Adding update action for {$upd_ver}");
-                add_action("e20r_sequence_before_update_{$upd_ver}", array(self::get_instance(), 'e20r_sequence_before_update'));
-                add_action("e20r_sequence_update_{$upd_ver}", array(self::get_instance(), 'e20r_sequence_update'));
-                add_action("e20r_sequence_after_update_{$upd_ver}", array(self::get_instance(), 'e20r_sequence_after_update'));
+        foreach( $update_functions as $vconsider ) {
+        
+        	$utils->log("Processing possible upgrade for {$vconsider}");
+            if ( 1 === version_compare( $version,$vconsider, 'ge' ) && false === in_array( $vconsider, array_keys($already_updated ) )) {
+	            
+            	$utils->log("Permit running update functionality for v{$vconsider}");
+	
+	            $upgrade_file = str_replace('.', '_', $vconsider );
+	
+	            if (!empty($upgrade_file) &&
+	                (file_exists(E20R_SEQUENCE_PLUGIN_DIR . "upgrades/{$upgrade_file}.php") &&
+	                 (!isset( $already_updated[$vconsider] ) || false === $already_updated[$vconsider] )  ) ) {
+		
+		            $utils->log("Adding update actions for file: {$upgrade_file}");
+		            
+		            add_action("e20r_sequence_before_update_{$upgrade_file}", array(self::get_instance(), 'e20r_sequence_before_update'));
+		            add_action("e20r_sequence_update_{$upgrade_file}", array(self::get_instance(), 'e20r_sequence_update'));
+		            add_action("e20r_sequence_after_update_{$upgrade_file}", array(self::get_instance(), 'e20r_sequence_after_update'));
+		            
+		            $already_updated[$vconsider] = true;
+	            }
             }
         }
 
-        update_option('e20r-sequence-updated', $is_updated, 'no');
+        update_option('e20r-sequence-updated', $already_updated, 'no');
     }
-
-    public function get_version()
-    {
+	
+	/**
+	 * Return the version we're processing
+	 *
+	 * @return null|string
+	 */
+    public function get_version() {
         return isset( $this->current_version ) ? $this->current_version : null;
     }
-
-    public function set_version( $version )
-    {
+	
+	/**
+	 * Save the version we're processing
+	 *
+	 * @param string|null $version
+	 */
+    public function set_version( $version ) {
         $this->current_version = $version;
     }
-
-    public static function get_instance()
-    {
-	    $utils = Utilities::get_instance();
-	    
+	
+	/**
+	 * Get or instantiate the Sequence_Updates class (DB upgrade handler)
+	 *
+	 * @return Sequence_Updates|null
+	 */
+    public static function get_instance() {
+    	
         if ( is_null( self::$instance ) ) {
         	
-            $utils->log("Instantiating the " . get_class(self::$instance) . " class");
             self::$instance = new self;
         }
 
         return self::$instance;
     }
-
-    static public function update()
-    {
+	
+	/**
+	 * Run database updater
+	 */
+    static public function update() {
+    	
 	    $utils = Utilities::get_instance();
-        $su_class = self::get_instance();
-        $version = $su_class->get_version();
+        $version = self::get_instance()->get_version();
 
         if (empty($version)) {
             return;
         }
 
         $is_updated = get_option('e20r-sequence-updated', array() );
-
-        $processed = array_keys($is_updated);
-
+        
         if (!array_key_exists( $version, $is_updated )) {
 
             $utils->log("Appending {$version} to list of stuff to upgrade");
@@ -154,10 +213,8 @@ class Sequence_Updates
 
                 $utils->log("Running clean-up (after) update action for {$update_ver}");
                 do_action("e20r_sequence_after_update_{$update_ver}");
-
-                if (array_key_exists($v, $is_updated)) {
-                    $is_updated[$v] = true;
-                }
+                $is_updated[$update_ver] = true;
+                
             }
         }
 
@@ -179,7 +236,7 @@ class Sequence_Updates
     }
 
     /**
-     * Stub function
+     * Handler to update
      */
     public function e20r_sequence_update() {
         return;
