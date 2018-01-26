@@ -84,7 +84,7 @@
 	text-overflow: ellipsis;
 	clear: both;
 	position: relative;
-	width: auto !important;
+	/* width: auto !important; */
 }
 
 .e20r-seq-centered {
@@ -333,12 +333,6 @@ table#newmeta td {
     width: 100%;
 }
 
-.e20r_sequence_postscroll tbody td {
-    text-align: center;
-	text-align: -webkit-center;
-	text-align: -moz-center;
-}
-
 .e20r_sequence_postscroll a {
     text-align: left;
 }
@@ -550,9 +544,10 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
 }
 
 .e20r-meta-table {
-    display: table;
+    display: inline-table;
     width: 100%;
     background-color: #d5d5d5;
+	border: 2px solid #d5d5d5;
 	padding: 10px 0;
 }
 
@@ -584,10 +579,10 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
     display: table-cell;
 	text-align: justify;
     padding: 0 5px 0 5px;
-    vertical-align: top;
+    /* vertical-align: top; */
 }
 
-.e20r-meta-table-col-1 {
+div#newmeta .e20r-meta-table-col-1 {
     width: 60%;
 	/*
     max-width: 400px;
@@ -600,7 +595,10 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
-.e20r-meta-table-col-2 {
+.e20r_sequence_postscroll .e20r_sequence_metabox_row {
+	display: table-row;
+}
+div#newmeta .e20r-meta-table-col-2 {
     width: 25%;
 	/*
     max-width: 200px;
@@ -612,7 +610,7 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
     width: 90%;
 }
 */
-.e20r-meta-table-col-3 {
+div#newmeta .e20r-meta-table-col-3 {
     width: 15%;
 	/*
     max-width: 100px;
@@ -620,7 +618,8 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
     */
 }
 
-.table_newmeta .e20r-empty {
+.table_newmeta .e20r-empty,
+div#newmeta .e20r-empty {
     width: 15%;
     /*
     min-width: 75px;
@@ -636,21 +635,35 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
 }
 
 .table_newmeta .select2-container {
-    width: 100%;
+    width: 100% !important;
 }
 
-th#e20r_sequence_delaylabel,
-td.e20r_sequence_tblNumber {
-    /* max-width: 0; */
-    width: 20%;
-    /* min-width: 75px; */
-    /* text-align: center; */
-    /* padding: 8px 20px !important; */
-    overflow: hidden;
+#e20r_sequencetable .e20r-table-body {
+	background: white;
+	border: 1px solid darkgray;
+	padding: 2px 2px;
 }
 
-td.e20r_sequence_tblPostname,
-th.e20r_sequence_titlelabel {
+.e20r_sequence_postscroll tbody td {
+	text-align: left;
+	text-align: -webkit-left;
+	text-align: -moz-left;
+}
+
+.e20r_sequence_delaylabel,
+.e20r_sequence_tblNumber {
+	/* max-width: 0; */
+	/* width: 20%; */
+	/* min-width: 75px; */
+	text-align: center;
+	text-align: -webkit-center;
+	text-align: -moz-center;
+	/* padding: 8px 20px !important; */
+	overflow: hidden;
+}
+
+.e20r_sequence_tblPostname,
+.e20r_sequence_titlelabel {
 	/*
 	min-width: 100px;
     max-width: 0;
@@ -664,32 +677,29 @@ th.e20r_sequence_titlelabel {
     -ms-text-overflow: ellipsis;
 }
 
-th.e20r_sequence_orderlabel,
-td.e20r_sequence_tblOrder {
-    /*
-   	max-width: 0;
-    width: 75px;
-	min-width: 75px;
-	*/
-    /* padding: 8px 10px 8px 10px!important; */
+.e20r_sequence_orderlabel,
+.e20r_sequence_tblOrder {
+	width: 5%;
+	max-width: 30px;
+	min-width: 30px;
 }
 
-th.e20r_edit_label_big {
+.e20r_edit_label_big {
     /* max-width: 100px; */
     /* min-width: 75px; */
     width: 10%;
     white-space: nowrap;
 }
 
-th.e20r_edit_label_small {
+.e20r_edit_label_small {
     /* max-width: 100px; */
     /* min-width: 50px; */
     width: 5%;
 
 }
 
-th.e20r_sequence_idlabel,
-td.e20r_sequence_tblPostId {
+.e20r_sequence_idlabel,
+.e20r_sequence_tblPostId {
 /*
     min-width: 75px;
 	max-width: 100%;
@@ -699,24 +709,27 @@ td.e20r_sequence_tblPostId {
     text-align: center;
 }
 
-table#e20r_sequencetable tbody tr:nth-of-type(2n) {
+div#e20r_sequencetable .e20r-table-body .e20r-sequence-full-row:nth-of-type(2n) {
     background-color: #f0f0f0;
 }
 
-table#e20r_sequencetable th {
+div#e20r_sequencetable .e20r-table-head {
     background-color: #d5d5d5;
     font-weight: bold;
     color: #fff;
 }
 
-table#e20r_sequencetable tbody tr td:nth-of-type(1) {
+#e20r_sequencetable .e20r-table-body .e20r-sequence-full-row .cell:nth-of-type(1) {
     font-weight: bold;
 }
 
-table#e20r_sequencetable thead th {
+#e20r_sequencetable .e20r-table-head .cell {
     font-size: 0.8rem !important;
 }
 
+.e20r-table-body .e20r-sequence-full-row:nth-child(even) {
+	background: #eee;
+}
 @media screen and (max-width: 600px) {
     table#e20r_sequencetable {
         width: 100%;
