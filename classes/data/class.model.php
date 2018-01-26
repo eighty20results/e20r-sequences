@@ -1347,7 +1347,6 @@ class Model {
 		global $current_user;
 		global $loading_sequence;
 		
-		$model      = Model::get_instance();
 		$controller = Controller::get_instance();
 		
 		$find_by_delay = false;
@@ -1441,7 +1440,7 @@ class Model {
 		
 		if ( is_null( $post_id ) ) {
 			
-			$utils->log( "No post ID specified. Loading posts...." );
+			$utils->log( "No post ID specified. Loading all posts...." );
 			
 			$seq_args = array(
 				'post_type'      => apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) ),
@@ -1567,9 +1566,9 @@ class Model {
 						$found[]             = $new_post;
 					} else {
 						
-						// Or if we're not supposed to hide the upcomping posts.
+						// Or if we're not supposed to hide the upcoming posts.
 						
-						if ( false === $controller->hide_upcoming_posts() ) {
+						if ( false === $controller->hide_upcoming_posts() || is_admin() ) {
 							
 							$utils->log( "Loading {$new_post->id} with delay {$new_post->delay} to list of upcoming posts. User is administrator level? " . ( $is_admin ? 'true' : 'false' ) );
 							$new_post->is_future = true;
