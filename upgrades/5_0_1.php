@@ -43,7 +43,9 @@ function e20r_sequence_upgrade_settings_501()  {
 			
 			// Process all metadata columns and update them
 			foreach( $old_meta_info as $old_meta ) {
-				$utils->log("Updating info for {%old_meta}");
+				
+				$utils->log("Updating info for {$old_meta}");
+				
 				$new_meta_key = preg_replace( '/pmpro_sequence_/', 'e20r_sequence_', $old_meta );
 				
 				$result = $wpdb->query(
