@@ -1,11 +1,8 @@
 <?php
-
-namespace E20R\Sequences\Sequence;
-
 /*
   License:
 
-	Copyright 2014-2017 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
+	Copyright 2014-2018 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -21,9 +18,17 @@ namespace E20R\Sequences\Sequence;
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 
 */
+
+namespace E20R\Sequences\Sequence;
+
 use E20R\Utilities\Utilities;
 use E20R\Sequences\Data\Model;
 
+/**
+ * Class Sequence_Views - Front-end display for metaboxes, etc
+ *
+ * @package E20R\Sequences\Sequence
+ */
 class Sequence_Views {
 
     /**
@@ -38,56 +43,45 @@ class Sequence_Views {
 	}
 
 	/**
-      * Instantiate or return a Sequence_Views class.
-      * @return Sequence_Views|null
-      */
-	public static function get_instance() {
-
-		if (is_null( self::$instance )) {
-			self::$instance = new self;
-		}
-
-		$utils = Utilities::get_instance();
-		$utils->log("Loading instance for views class");
-		return self::$instance;
-	}
-
-	/**
-	 * Used to label the post list in the metabox
+	 * Defines the Admin UI interface for adding posts to the sequence
 	 *
-	 * @param $post_state -- The current post state (Draft, Scheduled, Under Review, Private, other)
-	 *
-	 * @return null|string -- Return the correct postfix for the post
-	 *
-	 * @access private
+	 * @access public
+	 * @since 4.3.3
 	 */
-	private function set_post_status( $post_state )
-	{
-		$txt_state = null;
+	public function sequence_list_metabox() {
 
-		switch ($post_state)
-		{
-			case 'draft':
-				$txt_state = __('-DRAFT', Controller::plugin_slug);
-				break;
+	    $utils = Utilities::get_instance();
+		$utils->log("Generating settings metabox for back-end");
+		global $post;
 
-			case 'future':
-				$txt_state = __('-SCHED', Controller::plugin_slug);
-				break;
+		$sequence = Controller::get_instance();
+		$options = $sequence->get_options();
 
-			case 'pending':
-				$txt_state = __('-REVIEW', Controller::plugin_slug);
-				break;
 
-			case 'private':
-				$txt_state = __('-PRIVT', Controller::plugin_slug);
-				break;
+		if ( isset( $this->sequence_id ) && ( $this->sequence_id != $post->ID ) ) {
+			$utils->log("Loading the sequence metabox for {$post->ID} and not {$sequence->sequence_id}");
 
-			default:
-				$txt_state = '';
+			$options = $sequence->get_options( $post->ID );
+
+			if ( !isset( $options->lengthVisisble ) ) {
+				echo $sequence->get_error_msg();
+			}
 		}
 
-		return $txt_state;
+		$utils->log('Load the post list meta box');
+        $has_error = $sequence->get_error_msg();
+        $utils->log("Has error? {$has_error}");
+        
+		// Instantiate the settings & grab any existing settings if they exist.
+		?>
+		<div id="e20r-seq-error"><?php echo ( !empty($has_error) ? $has_error : null ); ?></div>
+		<div id="e20r_sequence_posts">
+			<?php
+			$metabox = $this->get_post_list_for_metabox();
+			echo $metabox['html'];
+			?>
+		</div>
+		<?php
 	}
 
 	/**
@@ -96,9 +90,8 @@ class Sequence_Views {
 	 * @access public
      * @since 5.0 - ENHANCEMENT: Make content warning less severe (from error to warning)
      * @since 5.0 - ENHANCEMENT: Warn admin if the sequence isn't protected by the membership system
+     * @since 5.0 - ENHANCEMENT: Made the metabox for the sequence/post list responsive
      *
-	 * TODO: Make get_post_list_for_metabox() fully responsive!
-     * TODO: Add 'visible before/after' days field to get_post_list_for_metabox()
 	 */
 	public function get_post_list_for_metabox( $force = false ) {
 
@@ -112,7 +105,12 @@ class Sequence_Views {
 		//show posts
 		$posts = $model->load_sequence_post( null, null, null, '=', null, $force, 'any' );
 		$all_posts = $sequence->get_posts_from_db();
-
+		$colspan = 2;
+		
+		if (false == $options->allowRepeatPosts) {
+			$colspan = 3;
+		}
+		
 		$utils->log('Displaying the back-end meta box content');
   
 		$status = get_post_status( $sequence->sequence_id );
@@ -128,63 +126,72 @@ class Sequence_Views {
 		
 		if ( false === $is_protected && 'publish' == $status ) {
 		    $utils->log("Warn that sequence needs to be assigned membership protection");
-		    $utils->add_message( __( 'May need to configure membership protection for this sequence', Controller::plugin_slug ), 'warning', 'backend' );
+		    $utils->add_message( __( 'May need to configure membership protection for this sequence!', Controller::plugin_slug ), 'error', 'backend' );
 		}
-		$has_error = $sequence->get_error_msg();
+		$has_error = $utils->get_message('error');
 		?>
 
 		<?php if(!empty( $has_error )) {
 		    $utils->log("Found error: " . print_r( $has_error, true ));
 		    $sequence->display_error(); ?>
 		<?php } ?>
-		<table id="e20r_sequencetable" class="e20r_sequence_postscroll wp-list-table widefat">
-			<thead>
-			<tr>
-			<th class="e20r_sequence_orderlabel"><?php // _e('Order', Controller::plugin_slug ); ?></label></th>
-			<th class="e20r_sequence_titlelabel"><?php _e('Title', Controller::plugin_slug); ?></th>
-			<th class="e20r_sequence_idlabel"><?php _e('ID', Controller::plugin_slug); ?></th>
-			<?php if ($options->delayType == 'byDays'): ?>
-				<th id="e20r_sequence_delaylabel"><?php _e('Delay', Controller::plugin_slug); ?></th>
-			<?php elseif ( $options->delayType == 'byDate'): ?>
-				<th id="e20r_sequence_delaylabel"><?php _e('Avail. On', Controller::plugin_slug); ?></th>
-			<?php else: ?>
-				<th id="e20r_sequence_delaylabel"><?php _e('Not Defined', Controller::plugin_slug); ?></th>
-			<?php endif; ?>
-			<th class="e20r_edit_label_big"></th>
-			<?php if ( false == $options->allowRepeatPosts ) { ?><th class="e20r_edit_label_small"></th><?php } ?>
-			<th class="e20r_edit_label_big"></th>
-			</tr>
+		<table id="e20r_sequencetable" class="e20r_sequence_postscroll e20r-meta-table"> <!-- wp-list-table widefat -->
+			<thead class="e20r-table-head ">
+				<tr class="e20r_sequence_metabox_row e20r-sequence-full-row row heading">
+				<?php if ($options->delayType == 'byDays'): ?>
+					<th scope="col" class="e20r_sequence_delaylabel"><?php _e('Delay', Controller::plugin_slug); ?></th>
+				<?php elseif ( $options->delayType == 'byDate'): ?>
+					<th scope="col" class="e20r_sequence_delaylabel"><?php _e('Avail. On', Controller::plugin_slug); ?></th>
+				<?php else: ?>
+					<th scope="col" class="e20r_sequence_delaylabel"><?php _e('Not Defined', Controller::plugin_slug); ?></th>
+				<?php endif; ?>
+					<th scope="col" class="e20r_sequence_titlelabel"><?php _e('Title', Controller::plugin_slug); ?></th>
+					<th scope="col" class="e20r_sequence_idlabel"><?php _e('ID', Controller::plugin_slug); ?></th>
+					<th scope="col" class="e20r_edit_label_big" colspan="<?php esc_attr_e($colspan); ?>"></th>
+				</tr>
 			</thead>
-			<tbody>
+			<tbody class="e20r-table-body">
 			<?php
 			$count = 1;
 
 			if ( ! empty($posts ) ) {
-				foreach( $posts as $p_post ) {
-					?>
-					<tr>
-						<td class="e20r_sequence_tblOrder"><?php echo $count; ?>.</td>
-						<td class="e20r_sequence_tblPostname"><?php echo ( get_post_status( $p_post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", Controller::plugin_slug ) ) : null ) . get_the_title($p_post->id); ?></td>
-						<td class="e20r_sequence_tblPostId"><?php printf( __("(ID: %d)", Controller::plugin_slug ), esc_attr( $p_post->id )); ?></td>
-						<td class="e20r_sequence_tblNumber"><?php esc_attr_e( $p_post->delay ); ?></td>
-						<td class="e20r_edit_label_big"><?php
-							if ( true == $options->allowRepeatPosts ) { ?>
+				
+				if ($options->delayType == 'byDays') {
+					$data_label = __('Delay', Controller::plugin_slug);
+				} elseif ($options->delayType == 'byDate') {
+					$data_label = __('Avail. On', Controller::plugin_slug);
+				} else {
+					$data_label = __('Not Defined', Controller::plugin_slug);
+				}
+				foreach( $posts as $p_post ) { ?>
+				<tr class="e20r_sequence_metabox_row e20r-sequence-full-row row">
+					<td scope="row" data-label="<?php esc_attr_e( $data_label ); ?>" class="e20r_sequence_tblNumber e20r-meta-table-col-1 cell"><?php esc_attr_e( $p_post->delay ); ?></td>
+					<td data-label="<?php _e('Title', Controller::plugin_slug); ?>" class="e20r_sequence_tblPostname e20r-meta-table-col-2 cell"><?php echo ( get_post_status( $p_post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", Controller::plugin_slug ) ) : null ) . get_the_title($p_post->id); ?></td>
+					<td data-label="<?php _e('ID', Controller::plugin_slug); ?>" class="e20r_sequence_tblPostId e20r-meta-table-col-3 cell"><?php printf( __("(ID: %d)", Controller::plugin_slug ), esc_attr( $p_post->id )); ?></td>
+					<td data-label="" class="e20r_edit_label_big e20r-meta-table-col-4 cell" colspan="<?php esc_attr_e( $colspan ); ?>">
+						<div class="e20r-table-cell-operations">
+							<div class="e20r_edit_label_big cell">
+					<?php
+						if ( true == $options->allowRepeatPosts ) { ?>
 								<a href="javascript:e20r_sequence_editPost( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?> ); void(0); "><?php _e('Edit',Controller::plugin_slug); ?></a><?php
-							}
-							else { ?>
+						}
+						else { ?>
 								<a href="javascript:e20r_sequence_editPost( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?> ); void(0); "><?php _e('Post',Controller::plugin_slug); ?></a><?php
-							} ?>
-						</td>
-						<?php
-							if ( false == $options->allowRepeatPosts ) { ?>
-						<td class="e20r_edit_label_small">
-								<a href="javascript:e20r_sequence_editEntry( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?> ); void(0);"><?php _e('Edit', Controller::plugin_slug); ?></a>
-						</td><?php
-							} ?>
-						<td class="e20r_edit_label_big">
-							<a href="javascript:e20r_sequence_removeEntry( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?>); void(0);"><?php _e('Remove', Controller::plugin_slug); ?></a>
-						</td>
-					</tr><?php
+						} ?>
+							</div>
+					<?php
+						if ( false == $options->allowRepeatPosts ) { ?>
+							<div class="e20r_edit_label_smallcell">
+									<a href="javascript:e20r_sequence_editEntry( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?> ); void(0);"><?php _e('Edit', Controller::plugin_slug); ?></a>
+							</div><?php
+						} ?>
+							<div class="e20r_edit_label_big cell">
+								<a href="javascript:e20r_sequence_removeEntry( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?>); void(0);"><?php _e('Remove', Controller::plugin_slug); ?></a>
+							</div>
+						</div>
+						<div class="clear"></div>
+					</td>
+				</tr><?php
 
 					$count++;
 				}
@@ -192,34 +199,35 @@ class Sequence_Views {
 			?>
 			</tbody>
 		</table>
-
+		
 		<div id="postcustomstuff">
 			<div class="e20r-sequence-float-left"><strong><?php _e('Add/Edit Posts:', Controller::plugin_slug); ?></strong></div>
 			<div class="e20r-sequence-float-right"><button class="primary-button button e20r-sequences-clear-cache"><?php _e("Clear cache", Controller::plugin_slug);?></button></div>
-			<div id="newmeta" class="e20r-meta-table">
-				<div class="e20r-table-head clear">
-					<div class="table_newmeta e20r-sequence-full-row row heading">
-						<div class="table_newmeta e20r-meta-table-col-1 cell"><?php _e('Post/Page', Controller::plugin_slug); ?></div>
+			<table id="newmeta" class="e20r-meta-table">
+				<thead class="e20r-table-head row">
+					<tr class="table_newmeta e20r-sequence-full-row row heading">
+						<td scope="col" class="table_newmeta e20r-meta-table-col-1 cell"><?php _e('Post/Page', Controller::plugin_slug); ?></td>
 						<?php if ($options->delayType == 'byDays'): ?>
-							<div class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Days to delay', Controller::plugin_slug); ?></label></div>
+							<td scope="col" class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel">
+								<label for="e20r_sequencedelay"><?php _e('Delay', Controller::plugin_slug); ?></label></td>
 						<?php elseif ( $options->delayType == 'byDate'): ?>
-							<div class="table_newmeta e20r-meta-table-col-2 cell"  id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e("Release on (YYYY-MM-DD)", Controller::plugin_slug); ?></label></div>
+							<td scope="col" class="table_newmeta e20r-meta-table-col-2 cell"  id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e("Date", Controller::plugin_slug); ?></label></td>
 						<?php else: ?>
-							<div class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Not Defined', Controller::plugin_slug); ?></label></div>
+							<td scope="col" class="table_newmeta e20r-meta-table-col-2 cell" id="e20r_sequence_delayentrylabel"><label for="e20r_sequencedelay"><?php _e('Not Defined', Controller::plugin_slug); ?></label></td>
 						<?php endif; ?>
-						<div class="table_newmeta e20r-meta-table-col-3 cell e20r-empty"></div>
-					</div>
-				</div>
-				<div class="e20r-table-body clear">
-					<div class="table_newmeta e20r-sequence-full-row row">
-						<div class="table_newmeta e20r-meta-table-col-1 cell">
-						<select id="e20r_sequencepost" name="e20r_sequencepost">
-							<option value=""></option>
+						<td class="table_newmeta e20r-meta-table-col-3 cell e20r-empty"></td>
+					</tr>
+				</thead>
+				<tbody class="e20r-table-body clear">
+					<tr class="table_newmeta e20r-sequence-full-row row">
+						<td data-label="<?php _e('Title', Controller::plugin_slug); ?>" class="table_newmeta e20r-meta-table-col-1 cell">
+							<select id="e20r_sequencepost" name="e20r_sequencepost">
+								<option value=""></option>
 							<?php
 							if  ( $all_posts !== false ) {
 
 								foreach( $all_posts as $post ) { ?>
-									<option value="<?php echo $post->ID;?>"><?php echo esc_textarea($post->post_title);?> (#<?php esc_attr_e( $post->ID );?><?php echo esc_attr_e( $this->set_post_status( $post->post_status ) );?>)</option><?php
+								<option value="<?php echo $post->ID;?>"><?php echo esc_textarea($post->post_title);?> (#<?php esc_attr_e( $post->ID );?><?php echo esc_attr_e( $this->set_post_status( $post->post_status ) );?>)</option><?php
 								}
 							}
 							else {
@@ -227,22 +235,26 @@ class Sequence_Views {
 								$utils->log('Error during database search for relevant posts');
 							}
 							?>
-						</select>
-					</div>
-						<div class="table_newmeta e20r-meta-table-col-2 cell">
+							</select>
+						</td>
+						<?php if ($options->delayType == 'byDays') { ?>
+						<td data-label="<?php _e('Delay', Controller::plugin_slug); ?>" class="table_newmeta e20r-meta-table-col-2 cell">
+						<?php } else if ( $options->delayType == 'byDate') { ?>
+						<td data-label="<?php _e("Date", Controller::plugin_slug); ?>" class="table_newmeta e20r-meta-table-col-2 cell">
+						<?php } else { ?>
+						<td data-label="<?php _e('Not Defined', Controller::plugin_slug); ?>" class="table_newmeta e20r-meta-table-col-2 cell">
+						<?php } ?>
+										
                             <input id="e20r_sequencedelay" name="e20r_sequencedelay" type="text" value="" size="7" />
                             <input id="e20r_sequence_id" name="e20r_sequence_id" type="hidden" value="<?php esc_attr_e( $sequence->sequence_id ); ?>" size="7" />
                             <?php wp_nonce_field('e20r-sequence-post', 'e20r_sequence_post_nonce'); ?>
-					</div>
-						<div class="table_newmeta e20r-meta-table-col-3 cell">
-						<!-- <a class="button" id="e20r_sequencesave" onclick="javascript:e20r_sequence_addEntry(); return false;"> -->
-						<a class="button" id="e20r_sequencesave">
-							<?php _e('Add to Sequence', Controller::plugin_slug); ?>
-						</a>
-					</div>
-					</div>
-				</div>
-			</div>
+						</td>
+						<td data-label="" class="table_newmeta e20r-meta-table-col-3 cell">
+							<a class="button" id="e20r_sequencesave"><?php _e('Add', Controller::plugin_slug); ?></a>
+						</td>
+					</tr>
+				</tbody>
+			</table>
 		</div>
 		<script>
 			// e20r_sequence_admin_responsive();
@@ -272,48 +284,123 @@ class Sequence_Views {
 		);
 	}
 
-	/**
-	 * Defines the Admin UI interface for adding posts to the sequence
-	 *
-	 * @access public
-	 * @since 4.3.3
-	 */
-	public function sequence_list_metabox() {
-
-	    $utils = Utilities::get_instance();
-		$utils->log("Generating settings metabox for back-end");
-		global $post;
-
-		$sequence = Controller::get_instance();
-		$options = $sequence->get_options();
-
-
-		if ( !isset( $this->sequence_id ) /* || ( $this->sequence_id != $post->ID )  */ ) {
-			$utils->log("Loading the sequence metabox for {$post->ID} and not {$sequence->sequence_id}");
-
-			$options = $sequence->get_options( $post->ID );
-
-			if ( !isset( $options->lengthVisisble ) ) {
-				echo $sequence->get_error_msg();
-			}
-		}
-
-		$utils->log('Load the post list meta box');
-        $has_error = $sequence->get_error_msg();
-        $utils->log("Has error? {$has_error}");
-        
-		// Instantiate the settings & grab any existing settings if they exist.
+	private function div_post_table() {
 		?>
-		<div id="e20r-seq-error"><?php echo ( !empty($has_error) ? $has_error : null ); ?></div>
-		<div id="e20r_sequence_posts">
+	<!-- <div id="e20r_sequencetable" class="e20r-meta-table e20r_sequence_postscroll wp-list-table widefat">
+			<div class="e20r-table-head clear">
+				<div class="table_newmeta e20r-sequence-full-row row heading">
+					<?php if ($options->delayType == 'byDays') { ?>
+					<div id="e20r_sequence_delaylabel" class="table_newmeta e20r-meta-table-col-4 cell e20r_sequence_delaylabel">
+						<?php _e('Delay', Controller::plugin_slug); ?>
+					</div>
+			<?php } elseif ( $options->delayType == 'byDate') { ?>
+					<div id="e20r_sequence_delaylabel" class="table_newmeta e20r-meta-table-col-1 cell e20r_sequence_delaylabel">
+						<?php _e('Avail. On', Controller::plugin_slug); ?>
+					</div>
+			<?php  } else { ?>
+					<div id="e20r_sequence_delaylabel" class="table_newmeta e20r-meta-table-col-1 cell e20r_sequence_delaylabel">
+						<?php _e('Not Defined', Controller::plugin_slug); ?>
+					</div>
+			<?php } ?>
+					<div class="table_newmeta e20r-meta-table-col-2 cell e20r_sequence_titlelabel">
+						<?php _e('Title', Controller::plugin_slug); ?>
+					</div>
+					<div class="table_newmeta e20r-meta-table-col-3 cell e20r_sequence_idlabel">
+						<?php _e('ID', Controller::plugin_slug); ?>
+					</div>
+					
+					<div class="table_newmeta e20r-meta-table-col-5 cell e20r_edit_label_big"></div>
+			<?php if ( false == $options->allowRepeatPosts ) { ?>
+					<div class="table_newmeta e20r-meta-table-col-6 cell e20r_edit_label_small"></div>
+			<?php } ?>
+					<div class="table_newmeta e20r-meta-table-col-6 cell e20r_edit_label_big"></div>
+				</div> --><!-- end of header row -->
+			<!-- </div> --> <!-- end of header section -->
+			<!-- <div class="e20r-table-body clear"> -->
 			<?php
-			$metabox = $this->get_post_list_for_metabox();
-			echo $metabox['html'];
-			?>
-		</div>
+			$count = 1;
+
+		if ( ! empty($posts ) ) {
+			
+			foreach( $posts as $p_post ) { ?>
+			<!-- <div class="table_newmeta e20r-sequence-full-row row e20r_sequence_metabox_row">
+					<div id="e20r_sequence_delaylabel" class="table_newmeta e20r-meta-table-col-1 cell e20r_sequence_tblNumber">
+						<?php esc_attr_e( $p_post->delay ); ?>
+					</div>
+					<div class="table_newmeta e20r-meta-table-col-2 cell e20r_sequence_tblPostname">
+					<?php echo ( get_post_status( $p_post->id ) == 'draft' ? sprintf( "<strong>%s</strong>: ", __("DRAFT", Controller::plugin_slug ) ) : null ) . get_the_title($p_post->id); ?>
+					</div>
+					<div class="table_newmeta e20r-meta-table-col-3 cell e20r_sequence_tblPostId">
+						<?php printf( __("(ID: %d)", Controller::plugin_slug ), esc_attr( $p_post->id )); ?>
+					</div>
+					
+					<div class="table_newmeta e20r-meta-table-col-5 cell e20r_edit_label_big"><?php
+					if ( true == $options->allowRepeatPosts ) { ?>
+						<a href="javascript:e20r_sequence_editPost( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?> ); void(0); "><?php _e('Edit',Controller::plugin_slug); ?></a><?php
+					} else { ?>
+						<a href="javascript:e20r_sequence_editPost( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?> ); void(0); "><?php _e('Post',Controller::plugin_slug); ?></a><?php
+					} ?>
+					</div>
+					<?php if ( false == $options->allowRepeatPosts ) { ?>
+					<div class="table_newmeta e20r-meta-table-col-6 cell e20r_edit_label_small">
+						<a href="javascript:e20r_sequence_editEntry( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?> ); void(0);"><?php _e('Edit', Controller::plugin_slug); ?></a>
+					</div><?php
+					} ?>
+					<div class="table_newmeta e20r-meta-table-col-6 cell e20r_edit_label_big">
+						<a href="javascript:e20r_sequence_removeEntry( <?php printf( "%s, %s", esc_attr( $p_post->id ), esc_attr( $p_post->delay ) ); ?>); void(0);"><?php _e('Remove', Controller::plugin_slug); ?></a>
+					</div>
+				</div> --> <!-- end of body row -->
+			<?php
+				$count++;
+				}
+			} ?>
+			<!-- </div> --><!-- end of bodysection -->
+		<!-- </div> --><!-- end of table -->
 		<?php
 	}
+	/**
+	 * Used to label the post list in the metabox
+	 *
+	 * @param $post_state -- The current post state (Draft, Scheduled, Under Review, Private, other)
+	 *
+	 * @return null|string -- Return the correct postfix for the post
+	 *
+	 * @access private
+	 */
+	private function set_post_status( $post_state ) {
+	 
+		$txt_state = null;
 
+		switch ($post_state)
+		{
+			case 'draft':
+				$txt_state = __('-DRAFT', Controller::plugin_slug);
+				break;
+
+			case 'future':
+				$txt_state = __('-SCHED', Controller::plugin_slug);
+				break;
+
+			case 'pending':
+				$txt_state = __('-REVIEW', Controller::plugin_slug);
+				break;
+
+			case 'private':
+				$txt_state = __('-PRIVT', Controller::plugin_slug);
+				break;
+
+			default:
+				$txt_state = '';
+		}
+
+		return $txt_state;
+	}
+
+	/**
+* @param $code
+ *
+* @return string
+ */
 	public function view_sequence_error( $code ) {
 	    
 	    $errormsg = null;
@@ -332,7 +419,7 @@ class Sequence_Views {
 	    <?php
 	    return ob_get_clean();
 	}
-	
+
 	/**
 	 * Defines the metabox for the Sequence Settings (per sequence page/list) on the Admin page
 	 *
@@ -347,10 +434,10 @@ class Sequence_Views {
 		global $post;
 		global $current_screen;
 
-		$non_member_choices = array(
+		$choices = array(
 		        -1 => __('Not Applicable', Controller::plugin_slug ),
 		        0 => __('Hide after delay', Controller::plugin_slug ),
-		        1 => __('Show after delay', Controller::plugin_slug )
+		        1 => __('Show after delay', Controller::plugin_slug ),
 		);
 		$sequence = Controller::get_instance();
 
@@ -377,17 +464,17 @@ class Sequence_Views {
 			return;
 		}
 
-		if( ( 'pmpro_sequence' == $current_screen->post_type ) && ( $current_screen->action == 'add' )) {
+		if( ( Model::cpt_type == $current_screen->post_type ) && ( $current_screen->action == 'add' )) {
 			$utils->log("Adding a new post so hiding the 'Send' for notification alerts");
 			$new_post = true;
 		}
 
+		// Get name and email for default settings
 		$def_email = apply_filters( 'e20r-sequence-get-membership-setting', $sequence->get_membership_setting("from_email"), "from_email" );
 		$def_name = apply_filters( 'e20r-sequence-get-membership-setting', $sequence->get_membership_setting('from_name'), "from_name");
+		
 		// Buffer the HTML so we can pick it up in a variable.
-		ob_start();
-
-		?>
+		ob_start(); ?>
 		<div class="submitbox" id="e20r_sequence_meta">
 			<div id="minor-publishing">
 				<input type="hidden" name="e20r_sequence_settings_noncename" id="e20r_sequence_settings_noncename" value="<?php echo wp_create_nonce( plugin_basename(__FILE__) )?>" />
@@ -511,7 +598,7 @@ class Sequence_Views {
 								<label class="e20r-sequence-label" for="e20r-seq-cutoff_nonMemberAccessDelay"><?php _e('Choice:', Controller::plugin_slug); ?> </label>
 							</div>
 							<div class="e20r-sequence-setting-col-2">
-								<span id="e20r-seq-protect-status" class="e20r-sequence-status"><?php esc_attr_e( $non_member_choices[ $options->nonMemberAccessChoice ] ); ?></span>
+								<span id="e20r-seq-protect-status" class="e20r-sequence-status"><?php esc_attr_e( $choices[ $options->nonMemberAccessChoice ] ); ?></span>
 							</div>
 							<div class="e20r-sequence-setting-col-3">
 								<a href="#" id="e20r-seq-edit-nonmember" class="e20r-seq-edit">
@@ -1043,6 +1130,174 @@ class Sequence_Views {
 		// Display the metabox (print it)
 		echo $metabox;
 	}
+	
+	/**
+	 * List all template files in email directory for this plugin.
+	 *
+	 * @param $settings (stdClass) - The settings for the sequence.
+	 *
+	 * @return bool| mixed - HTML containing the Option list
+	 *
+	 * @access private
+	 */
+	private function get_email_templates() {
+		
+	    $utils = Utilities::get_instance();
+		$sequence = Controller::get_instance();
+		$options = $sequence->get_options();
+
+		ob_start();
+  
+		// TODO: Include all template(s) from the Editor add-on
+  
+		$template_path = array();
+
+		if ( file_exists( get_stylesheet_directory() . "/sequence-email-alerts/")) {
+
+			$template_path[] = get_stylesheet_directory() . "/sequence-email-alerts/";
+
+		}
+
+		if ( file_exists( get_template_directory() . "/sequence-email-alerts/" ) ) {
+
+			$template_path[] = get_template_directory() . "/sequence-email-alerts/";
+		} ?>
+  
+  
+		<!-- Default template (blank) -->
+		<option value=""></option>
+		<?php
+
+		$utils->log("Found " . count($template_path) . " user specific custom templates:");
+		
+		$f_dirs = apply_filters( 'e20r-sequence-email-alert-template-path', array( E20R_SEQUENCE_PLUGIN_DIR . "/email/" ) );
+
+		if (!is_array($f_dirs)) {
+
+			$f_dirs = array($f_dirs);
+		}
+
+		// $template_path = array_merge($template_path, $f_dirs);
+
+		$utils->log("Total number of template paths: " . count($template_path));
+
+		foreach ( $template_path as $dir ) {
+
+			chdir($dir);
+
+			$utils->log("Processing directory: {$dir}");
+
+			foreach ( glob('*.html') as $file) {
+
+				$utils->log("File: {$file}");
+				printf('<option value="%1$s" %2$s>%1$s</option>', sanitize_file_name($file),selected( esc_attr( $options->noticeTemplate), sanitize_file_name($file), false ) );
+			}
+			
+		}
+
+		/**
+		  * @since 4.5 - Adding future support for a sequence email template editor (add-on)
+          */
+		$use_editor = apply_filters( 'e20r-email-notice-loaded', false );
+
+		if ( true === $use_editor ) {
+			
+			$utils->log("Loading from the Email Editor CPTs");
+			/**
+			  * @filter e20r-sequence-template-editor-email-entry  - Load the email entry from the editor add-on as a select option for the drop-down list.
+              *
+              * @param null|string  Option values to include in select.
+              */
+			echo do_action( 'e20r-sequence-template-editor-email-entry', $options->noticeTemplate, $options->noticeSendAs );
+		}
+		
+		$select_list = ob_get_clean();
+
+		return $select_list;
+	}
+
+	/**
+	 * Create list of options for time.
+	 *
+	 * @param $settings -- (array) Sequence specific settings
+	 *
+	 * @return bool| mixed - HTML containing the Option list
+	 *
+	 * @access private
+	 */
+	private function load_time_options( )
+	{
+		$sequence = Controller::get_instance();
+		$options = $sequence->get_options();
+
+		$prepend    = array('00','01','02','03','04','05','06','07','08','09');
+		$hours      = array_merge($prepend,range(10, 23));
+		$minutes     = array('00', '30');
+
+		// $prepend_mins    = array('00','30');
+		// $minutes    = array_merge($prepend_mins, range(10, 55, 5)); // For debug
+		// $selTime = preg_split('/\:/', $settings->noticeTime);
+
+		ob_start();
+
+		foreach ($hours as $hour) {
+			foreach ($minutes as $minute) {
+				?>
+				<option value="<?php printf( '%1$s:%2$s', esc_attr( $hour ), esc_attr( $minute ) ); ?>"<?php selected( $options->noticeTime, "{$hour}:{$minute}" ); ?> ><?php printf( '%1$s:%2$s', esc_attr( $hour ), esc_attr( $minute ) ); ?></option>
+				<?php
+			}
+		}
+
+		$select_list = ob_get_clean();
+
+		return $select_list;
+	}
+
+	/**
+	 * List the available date formats to select from.
+	 *
+	 * key = valid dateformat
+	 * value = dateformat example.
+	 *
+	 * @param $settings -- Settings for the sequence
+	 *
+	 * @return bool| mixed - HTML containing the Option list
+	 *
+	 * @access private
+	 */
+	private function list_date_formats() {
+
+		$sequence = Controller::get_instance();
+		$options = $sequence->get_options();
+
+		ob_start();
+
+		$formats = array(
+			"l, F jS, Y" => "Sunday January 25th, 2014",
+			"l, F jS," => "Sunday, January 25th,",
+			"l \\t\\h\\e jS" => "Sunday the 25th",
+			"M. js, " => "Jan. 24th",
+			"M. js, Y" => "Jan. 24th, 2014",
+			"M. js, 'y" => "Jan. 24th, '14",
+			"m-d-Y" => "01-25-2014",
+			"m/d/Y" => "01/25/2014",
+			"m-d-y" => "01-25-14",
+			"m/d/y" => "01/25/14",
+			"d-m-Y" => "25-01-2014",
+			"d/m/Y" => "25/01/2014",
+			"d-m-y" => "25-01-14",
+			"d/m/y" => "25/01/14",
+		);
+
+		foreach ( $formats as $key => $val)
+		{
+			printf( '<option value="%1$s" %2%s >%3$s</option>', esc_attr($key), selected( $options->dateformat,  $key ), esc_attr($val) );
+		}
+
+		$select_list = ob_get_clean();
+
+		return $select_list;
+	}
 
 	/**
 	 * Initial load of the metabox for the editor sidebar
@@ -1246,171 +1501,6 @@ class Sequence_Views {
 	}
 
 	/**
-	 * List all template files in email directory for this plugin.
-	 *
-	 * @param $settings (stdClass) - The settings for the sequence.
-	 *
-	 * @return bool| mixed - HTML containing the Option list
-	 *
-	 * @access private
-	 */
-	private function get_email_templates()
-	{
-	    $utils = Utilities::get_instance();
-		$sequence = Controller::get_instance();
-		$options = $sequence->get_options();
-
-		ob_start();
-  
-		// TODO: Include all template(s) from the Editor add-on
-  
-		$template_path = array();
-
-		if ( file_exists( get_stylesheet_directory() . "/sequence-email-alerts/")) {
-
-			$template_path[] = get_stylesheet_directory() . "/sequence-email-alerts/";
-
-		}
-
-		if ( file_exists( get_template_directory() . "/sequence-email-alerts/" ) ) {
-
-			$template_path[] = get_template_directory() . "/sequence-email-alerts/";
-		} ?>
-  
-  
-		<!-- Default template (blank) -->
-		<option value=""></option>
-		<?php
-
-		$utils->log("Found " . count($template_path) . " user specific custom templates:");
-		
-		$f_dirs = apply_filters( 'e20r-sequence-email-alert-template-path', array( E20R_SEQUENCE_PLUGIN_DIR . "/email/" ) );
-
-		if (!is_array($f_dirs)) {
-
-			$f_dirs = array($f_dirs);
-		}
-
-		$template_path = array_merge($template_path, $f_dirs);
-
-		$utils->log("Total number of template paths: " . count($template_path));
-
-		foreach ( $template_path as $dir ) {
-
-			chdir($dir);
-
-			$utils->log("Processing directory: {$dir}");
-
-			foreach ( glob('*.html') as $file) {
-
-				$utils->log("File: {$file}");
-				echo('<option value="' . sanitize_file_name($file) . '" ' . selected( esc_attr( $options->noticeTemplate), sanitize_file_name($file) ) . ' >' . sanitize_file_name($file) .'</option>');
-			}
-
-			/**
-			  * @since 4.5 - Adding future support for a sequence email template editor (add-on)
-              */
-			$use_editor = apply_filters( 'e20r-sequence-template-editor-loaded', false );
-
-			if ( true === $use_editor ) {
-				/**
-				  * @filter e20r-sequence-template-editor-email-entry  - Load the email entry from the editor add-on as a select option for the drop-down list.
-                  *
-                  * @param null|string  Option values to include in select.
-                  */
-				echo apply_filters( 'e20r-sequence-template-editor-email-entry', null );
-			}
-		}
-
-		$select_list = ob_get_clean();
-
-		return $select_list;
-	}
-
-	/**
-	 * Create list of options for time.
-	 *
-	 * @param $settings -- (array) Sequence specific settings
-	 *
-	 * @return bool| mixed - HTML containing the Option list
-	 *
-	 * @access private
-	 */
-	private function load_time_options( )
-	{
-		$sequence = Controller::get_instance();
-		$options = $sequence->get_options();
-
-		$prepend    = array('00','01','02','03','04','05','06','07','08','09');
-		$hours      = array_merge($prepend,range(10, 23));
-		$minutes     = array('00', '30');
-
-		// $prepend_mins    = array('00','30');
-		// $minutes    = array_merge($prepend_mins, range(10, 55, 5)); // For debug
-		// $selTime = preg_split('/\:/', $settings->noticeTime);
-
-		ob_start();
-
-		foreach ($hours as $hour) {
-			foreach ($minutes as $minute) {
-				?>
-				<option value="<?php printf( '%1$s:%2$s', esc_attr( $hour ), esc_attr( $minute ) ); ?>"<?php selected( $options->noticeTime, "{$hour}:{$minute}" ); ?> ><?php printf( '%1$s:%2$s', esc_attr( $hour ), esc_attr( $minute ) ); ?></option>
-				<?php
-			}
-		}
-
-		$select_list = ob_get_clean();
-
-		return $select_list;
-	}
-
-	/**
-	 * List the available date formats to select from.
-	 *
-	 * key = valid dateformat
-	 * value = dateformat example.
-	 *
-	 * @param $settings -- Settings for the sequence
-	 *
-	 * @return bool| mixed - HTML containing the Option list
-	 *
-	 * @access private
-	 */
-	private function list_date_formats() {
-
-		$sequence = Controller::get_instance();
-		$options = $sequence->get_options();
-
-		ob_start();
-
-		$formats = array(
-			"l, F jS, Y" => "Sunday January 25th, 2014",
-			"l, F jS," => "Sunday, January 25th,",
-			"l \\t\\h\\e jS" => "Sunday the 25th",
-			"M. js, " => "Jan. 24th",
-			"M. js, Y" => "Jan. 24th, 2014",
-			"M. js, 'y" => "Jan. 24th, '14",
-			"m-d-Y" => "01-25-2014",
-			"m/d/Y" => "01/25/2014",
-			"m-d-y" => "01-25-14",
-			"m/d/y" => "01/25/14",
-			"d-m-Y" => "25-01-2014",
-			"d/m/Y" => "25/01/2014",
-			"d-m-y" => "25-01-14",
-			"d/m/y" => "25/01/14",
-		);
-
-		foreach ( $formats as $key => $val)
-		{
-			printf( '<option value="%1$s" %2%s >%3$s</option>', esc_attr($key), selected( $options->dateformat,  $key ), esc_attr($val) );
-		}
-
-		$select_list = ob_get_clean();
-
-		return $select_list;
-	}
-
-	/**
       * Select and return the type of input field for the Date list(s) in the settings
       *
       * @param $input_value
@@ -1419,6 +1509,7 @@ class Sequence_Views {
       * @return array
     */
 	private function set_delay_input( $input_value, $active_id ) {
+		
 	    $utils = Utilities::get_instance();
 		$sequence = Controller::get_instance();
 		$options = $sequence->get_options();
@@ -1548,6 +1639,8 @@ class Sequence_Views {
 	 * @param string $title -- The title of the sequence list. Default is the title of the sequence.
 	 *
      * @return string -- The HTML we generated.
+     *
+     * @throws \Exception
 	 */
 	public function create_sequence_list( $highlight = false, $pagesize = 0, $button = false, $title = null, $scrollbox = false ) {
 
@@ -1559,6 +1652,7 @@ class Sequence_Views {
 		$utils = Utilities::get_instance();
 		$sequence = Controller::get_instance();
 		$model = Model::get_instance();
+		$seq_view = Sequence_Views::get_instance();
 		
 		$options = $sequence->get_options();
 
@@ -1572,7 +1666,6 @@ class Sequence_Views {
 		}
 
 		$utils->log( "Loading posts with pagination enabled. Expecting \\WP_Query result" );
-		// $ret_seq = $model->load_sequence_post( null, null, null, '=', $pagesize, true );
 		$ret_seq = $model->load_sequence_post( null, null, null, '=', $pagesize );
   
 		// $utils->log("Got: " . print_r( $ret_seq, true ) );
@@ -1682,7 +1775,7 @@ class Sequence_Views {
 							<?php
 						}
 					} elseif ( ( true == $s_post->is_future && true === $s_post->list_include ) /* && ( false === $this->hide_upcoming_posts() ) */ ) {
-
+						
 						$listed_post_cnt++;
 
 						// Do we need to highlight the (not yet available) post?
@@ -1738,13 +1831,9 @@ class Sequence_Views {
 				?></table>
 		</div>
 		<div class="clear"></div>
-		<?php
-
-
-		echo apply_filters( 'e20r-sequence-list-pagination-code', $sequence->post_paging_nav( ceil( count( $seq_list ) / $pagesize ) ) );
-	}
-		?>
-		</div><?php
+		<?php  echo apply_filters( 'e20r-sequence-list-pagination-code', $seq_view->post_paging_nav( ceil( count( $seq_list ) / $pagesize ) ) );
+	} ?>
+	</div><?php
 
 		$post = $save_post;
 
@@ -1754,6 +1843,19 @@ class Sequence_Views {
 		$utils->log("create_sequence_list() - Returning the - possibly filtered - HTML for the sequence_list shortcode");
 
 		return apply_filters( 'e20r-sequence-list-html', $html_text );
+	}
+
+	/**
+      * Instantiate or return a Sequence_Views class.
+      * @return Sequence_Views|null
+      */
+	public static function get_instance() {
+
+		if (is_null( self::$instance )) {
+			self::$instance = new self;
+		}
+
+		return self::$instance;
 	}
 
 	/**
@@ -1803,9 +1905,7 @@ class Sequence_Views {
 		$sequence = Controller::get_instance();
 		$utils = Utilities::get_instance();
 		$options = $sequence->get_options();
-
-        // $meta_key = $wpdb->prefix . "pmpro_sequence_notices";
-
+      
         $utils->log('User specific opt-in to sequence display for new content notices for user ' . $current_user->ID);
 
         if ( isset( $options->sendNotice ) && ( $options->sendNotice == 1 ) ) {
@@ -1846,4 +1946,56 @@ class Sequence_Views {
         $utils->log("Returning opt-in form HTML (if applicable)");
         return $optin_form;
     }
+    
+    /**
+	 * @param $total -- Total number of posts to paginate
+	 *
+	 * @return string -- Pagination HTML
+	 */
+	public function post_paging_nav( $total ) {
+		
+		$html_text = '';
+		
+		$utils = Utilities::get_instance();
+		$utils->log( "Total count: {$total}" );
+		
+		if ( $total > 1 ) {
+			
+			if ( ! $current_page = get_query_var( 'page' ) ) {
+				$current_page = 1;
+			}
+			
+			$utils->log( "Current Page #: {$current_page}" );
+			
+			$paged    = ( get_query_var( 'page' ) ) ? absint( get_query_var( 'page' ) ) : 1;
+			$base_url = @add_query_arg( 'page', '%#%' );
+			$format   = '?page=%#%';
+			
+			$prev_arrow = is_rtl() ? '&rarr;' : '&larr;';
+			$next_arrow = is_rtl() ? '&larr;' : '&rarr;';
+			
+			ob_start();
+			
+			?>
+			<nav class="navigation paging-navigation" role="navigation">
+				<h4 class="screen-reader-text"><?php _e( 'Navigation', Controller::plugin_slug ); ?></h4>
+				<?php echo paginate_links( array(
+					'base'               => $base_url,
+					'format'             => $format,
+					'total'              => $total,
+					'current'            => $paged,
+					'mid_size'           => 1,
+					'prev_text'          => sprintf( __( '%s Previous', Controller::plugin_slug ), $prev_arrow ),
+					'next_text'          => sprintf( __( 'Next %s', Controller::plugin_slug ), $next_arrow ),
+					'prev_next'          => true,
+					'type'               => 'list',
+					'before_page_number' => '<span class="screen-reader-text">' . __( 'Page', Controller::plugin_slug ) . ' </span>',
+				) ); ?>
+			</nav>
+			<?php
+			$html_text = ob_get_clean();
+		}
+		
+		return $html_text;
+	}
 }
