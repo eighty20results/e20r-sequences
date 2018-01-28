@@ -77,16 +77,6 @@
     width: 30%;
 }
 
-#e20r_sequence_meta td {
-	font-size: 0.8em !important;
-	display: table-cell;
-	overflow: hidden;
-	text-overflow: ellipsis;
-	clear: both;
-	position: relative;
-	/* width: auto !important; */
-}
-
 .e20r-seq-centered {
     margin-top: 30px;
     margin-bottom: 20px;
@@ -286,7 +276,7 @@ input#e20r_sequence_excerpt {
 table#newmeta td {
     vertical-align: middle !important;
 }
-
+/*
 .e20r_sequence_postscroll {
     width: 100%;
     display: inline-block;
@@ -300,7 +290,6 @@ table#newmeta td {
 
 .e20r_sequence_postscroll thead tr {
     display: table-row;
-    /* text-align: left; */
     width: 100%;
 }
 
@@ -312,20 +301,6 @@ table#newmeta td {
     display: block;
     float: left;
     width: 100%;
-    height: 300px;
-    overflow-y: auto;
-    overflow-x: hidden;
-}
-
-.e20r_sequence_tblPostname {
-    min-width: 100px;
-    max-width: 50%;
-    width: 50%;
-    padding: 8px 10px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -ms-text-overflow: ellipsis;
 }
 
 .e20r_sequence_postscroll tbody tr {
@@ -338,10 +313,10 @@ table#newmeta td {
 }
 
 .e20r_sequence_postscroll tr:after {
-    /* content: "."; */
+
     visibility: hidden;
 }
-
+*/
 /* =Index pagination
 ----------------------------------------------- */
 /* The containing box with a nice white background */
@@ -543,61 +518,145 @@ div.e20r-sequence-settings-display .e20r-sequence-setting-col-3 {
     margin-top: 10px;
 }
 
-.e20r-meta-table {
-    display: inline-table;
-    width: 100%;
-    background-color: #d5d5d5;
-	border: 2px solid #d5d5d5;
-	padding: 10px 0;
-}
-
-.e20r-table-head {
-    display: table-caption;
-    text-align: center;
-    font-weight: 700;
-    font-size: larger;
-    padding: 5px;
-    background-color: #d5d5d5;
-}
-
-.e20r-table-body {
-    padding: 5px;
-	display: table-row-group;
-}
-
-.e20r-meta-table .row {
-    display: table-row;
-}
-
-.e20r-meta-table .heading {
-    font-weight: bold;
-    text-align: center;
-    display: table-header-group;
-}
-
-.e20r-meta-table .cell {
-    display: table-cell;
-	text-align: justify;
-    padding: 0 5px 0 5px;
-    /* vertical-align: top; */
-}
-
-div#newmeta .e20r-meta-table-col-1 {
-    width: 60%;
-	/*
-    max-width: 400px;
-    min-width: 250px;
-    */
-}
 .meta-box-sortables select {
 	width: 100% !important;
 	max-width: 100% !important;
 	text-overflow: ellipsis;
 	overflow: hidden;
 }
+/** Metabox table for Sequence edit page **/
 .e20r_sequence_postscroll .e20r_sequence_metabox_row {
-	display: table-row;
+	/* display: table-row; */
 }
+.e20r-table-head .e20r_sequence_metabox_row th {
+	font-weight: 700;
+}
+.e20r-table-head .e20r_sequence_metabox_row th { border: none; }
+#e20r_sequencetable .e20r-table-body {
+	background: white;
+	border: 2px solid #d5d5d5;
+	padding: 2px 2px;
+}
+
+/*
+.e20r_sequence_postscroll tbody td {
+	text-align: left;
+	text-align: -webkit-left;
+	text-align: -moz-left;
+}
+*/
+.e20r_edit_label_big {
+	width: 10%;
+	white-space: nowrap;
+}
+
+.e20r_edit_label_small {
+	width: 5%;
+}
+
+div#e20r_sequencetable .e20r-table-body .e20r-sequence-full-row:nth-of-type(2n),
+div#e20r_sequencetable .e20r-table-body .e20r_sequence_metabox_row:nth-of-type(2n){
+	background-color: #f0f0f0;
+}
+
+div#e20r_sequencetable .e20r-table-head {
+	background-color: #d5d5d5;
+	font-weight: bold;
+	color: #fff;
+}
+
+#e20r_sequencetable .e20r-table-head .cell {
+	font-size: 0.9rem;
+}
+
+.e20r-table-body .e20r-sequence-full-row:nth-child(even) {
+	background: #eee;
+}
+/** Cell specific settings for metabox **/
+.e20r_sequence_idlabel,
+.e20r_sequence_tblPostId {
+	width: 10%;
+	padding: 8px 10px 8px 0;
+	text-align: justify;
+}
+
+.e20r_sequence_delaylabel,
+.e20r_sequence_tblNumber {
+	text-align: justify;
+	overflow: hidden;
+	width: 5%;
+}
+.e20r_sequence_tblPostname,
+.e20r_sequence_titlelabel {
+	padding: 8px 10px;
+	width: 30%;
+	min-width: 100px;
+	max-width: 250px;
+	text-align: justify;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	-ms-text-overflow: ellipsis;
+}
+
+/** For the "add new post/page" metabox */
+.e20r-meta-table {
+	display: inline-table;
+	width: 100%;
+	height: 100%;
+	background-color: #d5d5d5;
+	border: 2px solid #d5d5d5;
+	/* padding: 10px 0; */
+}
+
+.e20r-table-head {
+	/* display: table-caption; */
+	text-align: justify;
+	font-weight: 700;
+	font-size: larger;
+	padding: 5px;
+	background-color: #d5d5d5;
+}
+
+.e20r-table-body {
+	padding: 5px;
+	/* display: table-row-group; */
+}
+
+.e20r-meta-table .row {
+	/* display: table-row; */
+}
+
+.e20r-meta-table .heading {
+	font-weight: bold;
+	text-align: center;
+	/* display: table-header-group; */
+}
+#e20r_sequence_meta .e20r-table-body .cell {
+	font-size: 0.9em;
+	display: table-cell;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	clear: both;
+	position: relative;
+	/* width: auto !important; */
+}
+.e20r-meta-table .cell {
+	/* display: table-cell; */
+	text-align: justify;
+	padding: 0 5px 0 5px;
+	/* vertical-align: top; */
+}
+
+#e20r_sequencetable.e20r-meta-table {
+	border-collapse: collapse;
+	table-layout: fixed;
+	height: 300px;
+	overflow-y: auto;
+	overflow-x: hidden;
+	border: 2px solid #d5d5d5;
+}
+
 div#newmeta .e20r-meta-table-col-2 {
     width: 25%;
 	/*
@@ -637,99 +696,89 @@ div#newmeta .e20r-empty {
 .table_newmeta .select2-container {
     width: 100% !important;
 }
-
-#e20r_sequencetable .e20r-table-body {
-	background: white;
-	border: 1px solid darkgray;
-	padding: 2px 2px;
+div#newmeta .e20r-meta-table-col-1 {
+	width: 60%;
 }
-
-.e20r_sequence_postscroll tbody td {
-	text-align: left;
-	text-align: -webkit-left;
-	text-align: -moz-left;
+@media screen and (max-width: 600px) {
+	.e20r-meta-table .row:after {
+		content: "";
+		display: table;
+		clear: both;
+	}
+	#e20r_sequence_meta .e20r-table-body .cell {
+		display: block;
+	}
+	#e20r_sequence_meta .e20r-table-body .e20r_edit_label_big.cell {
+		display: flex;
+	}
+	.e20r_sequence_idlabel,
+	.e20r_sequence_tblPostId {
+		width: initial;
+		min-width: initial;
+		max-width: initial;
+	}
+	.e20r_sequence_delaylabel,
+	.e20r_sequence_tblNumber {
+		width: initial;
+		min-width: initial;
+		max-width: initial;
+	}
+	.e20r_sequence_tblPostname,
+	.e20r_sequence_titlelabel {
+		width: initial;
+		min-width: initial;
+		max-width: initial;
+	}
+	.e20r-table-cell-operations .e20r_edit_label_big,
+	.e20r_edit_label_big.cell {
+		width: initial;
+		float: right;
+	}
+	.e20r-table-cell-operations {
+		float: right;
+		display: flex;
+	}
+	table.e20r-meta-table {
+		border: 0;
+	}
+	table.e20r-meta-table .e20r-table-head {
+		border: none;
+		clip: rect(0 0 0 0);
+		height: 1px;
+		margin: -1px;
+		overflow: hidden;
+		padding: 0;
+		position: absolute;
+		width: 1px;
+	}
+	table.e20r-meta-table .e20r-table-body .row {
+		border-bottom: 3px solid #ddd;
+		display: block;
+	}
+	table.e20r-meta-table .e20r-table-body .cell {
+		border-bottom: 1px solid #ddd;
+		display: block;
+		font-size: .8em;
+		text-align: right;
+	}
+	table.e20r-meta-table .e20r-table-body .e20r_edit_label_big .cell {
+		border: none;
+	}
+	table.e20r-meta-table .e20r-table-body .cell:before {
+		/*
+        * aria-label has no advantage, it won't be read inside a table
+        content: attr(aria-label);
+        */
+		content: attr(data-label);
+		float: left;
+		font-weight: bold;
+		/* text-transform: uppercase; */
+	}
+	table.e20r-meta-table .e20r-table-body .cell:last-child {
+		border-bottom: 0;
+	}
 }
-
-.e20r_sequence_delaylabel,
-.e20r_sequence_tblNumber {
-	/* max-width: 0; */
-	/* width: 20%; */
-	/* min-width: 75px; */
-	text-align: center;
-	text-align: -webkit-center;
-	text-align: -moz-center;
-	/* padding: 8px 20px !important; */
-	overflow: hidden;
-}
-
-.e20r_sequence_tblPostname,
-.e20r_sequence_titlelabel {
-	/*
-	min-width: 100px;
-    max-width: 0;
-    */
-    width: 40%;
-    text-align: center;
-    /* padding: 8px 10px 8px 0; */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    -ms-text-overflow: ellipsis;
-}
-
-.e20r_sequence_orderlabel,
-.e20r_sequence_tblOrder {
-	width: 5%;
-	max-width: 30px;
-	min-width: 30px;
-}
-
-.e20r_edit_label_big {
-    /* max-width: 100px; */
-    /* min-width: 75px; */
-    width: 10%;
-    white-space: nowrap;
-}
-
-.e20r_edit_label_small {
-    /* max-width: 100px; */
-    /* min-width: 50px; */
-    width: 5%;
-
-}
-
-.e20r_sequence_idlabel,
-.e20r_sequence_tblPostId {
 /*
-    min-width: 75px;
-	max-width: 100%;
-*/
-    width: 10%;
-    padding: 8px 10px 8px 0;
-    text-align: center;
-}
-
-div#e20r_sequencetable .e20r-table-body .e20r-sequence-full-row:nth-of-type(2n) {
-    background-color: #f0f0f0;
-}
-
-div#e20r_sequencetable .e20r-table-head {
-    background-color: #d5d5d5;
-    font-weight: bold;
-    color: #fff;
-}
-
-#e20r_sequencetable .e20r-table-body .e20r-sequence-full-row .cell:nth-of-type(1) {
-    font-weight: bold;
-}
-
-#e20r_sequencetable .e20r-table-head .cell {
-    font-size: 0.8rem !important;
-}
-
-.e20r-table-body .e20r-sequence-full-row:nth-child(even) {
-	background: #eee;
-}
 @media screen and (max-width: 600px) {
     table#e20r_sequencetable {
         width: 100%;
@@ -744,7 +793,6 @@ div#e20r_sequencetable .e20r-table-head {
     }
 
     tr td:first-child {
-       /* background: #f0f0f0; */
         font-weight: bold;
         font-size: 1.3em;
     }
@@ -760,3 +808,4 @@ div#e20r_sequencetable .e20r-table-head {
         text-align: center;
     }
 }
+*/
