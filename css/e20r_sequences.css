@@ -761,6 +761,22 @@ div#newmeta .e20r-meta-table-col-1 {
 		font-size: .8em;
 		text-align: right;
 	}
+	.e20r-table-body .table_newmeta .cell {
+		text-align: center;
+		text-align: -moz-center;
+		text-align: -webkit-center;
+		padding: 10px;
+	}
+	.e20r-table-body .table_newmeta .cell .select2 {
+		text-align: left;
+		text-align: -moz-left;
+		text-align: -webkit-left;
+	}
+	#newmeta tbody.e20r-table-body .e20r-meta-table-col-3.cell {
+		text-align: center;
+		text-align: -webkit-center;
+		/* padding-bottom: 10px; */
+	}
 	table.e20r-meta-table .e20r-table-body .e20r_edit_label_big .cell {
 		border: none;
 	}
