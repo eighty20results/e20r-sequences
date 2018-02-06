@@ -1,0 +1,10 @@
+
+.editor-block-list__block[data-type="e20r-sequences/recent-sequence-content"] {
+
+	.wp-block-e20r-recent-sequence-content {
+		padding-left: 2.5em;
+		&.is-grid {
+			padding-left: 0;
+		}
+	}
+}
