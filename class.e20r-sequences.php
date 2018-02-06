@@ -3,7 +3,7 @@
 Plugin Name: Sequences for Paid Memberships Pro
 Plugin URI: https://eighty20results.com/wordpress-plugins/e20r-sequences/
 Description: Simple to configure drip feed content plugin for your PMPro users.
-Version: 5.0
+Version: 5.0.1
 Author: Eighty / 20 Results (Thomas Sjolshagen)
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen
@@ -11,7 +11,7 @@ Text Domain: e20r-sequences
 Domain Path: /languages
 License: GPL2
 
-	Copyright 2014-2017 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
+	Copyright 2014-2018 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -31,10 +31,11 @@ License: GPL2
 namespace E20R\Sequences\Main;
 
 use E20R\Sequences\Sequence\Controller;
+use E20R\Sequences\Sequences_License;;
 use E20R\Utilities\Utilities;
 
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '5.0');
+define('E20R_SEQUENCE_VERSION', '5.0.1');
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
 define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.4');
@@ -83,6 +84,11 @@ class E20R_Sequences {
 	const cache_key = 'E20RSEQUENCE';
 	
 	/**
+	 * @var null|string
+	 */
+	private $class_name = null;
+	
+	/**
 	 * E20R_Sequences constructor.
 	 */
 	private function __construct() {
@@ -90,12 +96,65 @@ class E20R_Sequences {
 		global $converting_sequence;
 		$converting_sequence = false;
 		
-		$util = Utilities::get_instance();
+		if ( is_null( self::$instance ) ) {
+			self::$instance = $this;
+		}
+		
+		add_filter( 'e20r-licensing-text-domain', array( $this, 'set_stub_name' ) );
+		add_action( 'plugins_loaded', array( Sequences_License::get_instance(), 'load_hooks' ), 99 );
+		
+	}
+	
+	/**
+	 * Set the name of the add-on (using the class name as an identifier)
+	 *
+	 * @param null $name
+	 *
+	 * @return null|string
+	 */
+	public function set_stub_name( $name = null ) {
+		
+		$name = strtolower( $this->get_class_name() );
+		
+		return $name;
+	}
+	
+	/**
+	 * Get the add-on name
+	 *
+	 * @return string
+	 */
+	public function get_class_name() {
+		
+		if ( empty( $this->class_name ) ) {
+			$this->class_name = $this->maybe_extract_class_name( get_class( self::$instance ) );
+		}
+		
+		return $this->class_name;
+	}
+	
+	/**
+	 * Extract the class name from the Namespace
+	 *
+	 * @param string $string
+	 *
+	 * @return string
+	 */
+	private function maybe_extract_class_name( $string ) {
+		
+		$utils = Utilities::get_instance();
+		$utils->log( "Supplied (potential) class name: {$string}" );
+		
+		$class_array = explode( '\\', $string );
+		$name        = $class_array[ ( count( $class_array ) - 1 ) ];
+		
+		return $name;
 	}
 	
 	public function set_class_name() {
 		return E20R_Sequences::plugin_slug;
 	}
+	
 	
 	/**
 	 * @return E20R_Sequences|null
@@ -195,4 +254,22 @@ if ( version_compare( PHP_VERSION, E20R_SEQ_REQUIRED_PHP_VERSION, '<=' ) ) {
 	}
 }
 
+global $e20r_sequences;
+$stub = apply_filters( "e20r_sequences_name", null );
 
+$e20r_sequences[ $stub ] = array(
+	'class_name'            => 'E20R_Sequences',
+	'handler_name'          => 'sequence_webhook',
+	'is_active'             => ( get_option( "e20r_{$stub}_enabled", false ) == 1 ? true : false ),
+	'active_license'        => ( get_option( "e20r_{$stub}_licensed", false ) == 1 ? true : false ),
+	'status'                => 'deactivated',
+	// ( 1 == get_option( "e20r_{$stub}_enabled", false ) ? 'active' : 'deactivated' ),
+	'label'                 => 'E20R Sequences Plus',
+	'admin_role'            => 'manage_options',
+	'required_plugins_list' => array(
+		'paid-memberships-pro/paid-memberships-pro.php' => array(
+			'name' => 'Paid Memberships Pro',
+			'url'  => 'https://wordpress.org/plugins/paid-memberships-pro/',
+		),
+	),
+);
