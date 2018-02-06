@@ -17,10 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace E20R\Sequences\Modules\Analytics;
+namespace E20R\Sequences\Modules\Licensed\Analytics;
 
 use E20R\Sequences\Sequence\Controller;
-use E20R\Licensing\Licensing;
+use E20R\Utilities\Licensing\Licensing;
 use E20R\Utilities\Utilities;
 
 /**
@@ -115,7 +115,7 @@ class Google {
 		$ga_tracking   = null;
 		$utils = Utilities::get_instance();
 		
-		if ( false === Licensing::is_licensed( Controller::plugin_slug ) ) {
+		if ( false === Licensing::is_licensed( Controller::plugin_prefix ) ) {
 			$utils->log("Attempted to use a licensed feature (Google Analytics tracking) without a valid license");
 			return $ga_tracking;
 		}

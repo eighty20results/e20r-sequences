@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) $today.year. - Eighty / 20 Results by Wicked Strong Chicks.
+ * Copyright (c) 2017 - Eighty / 20 Results by Wicked Strong Chicks.
  * ALL RIGHTS RESERVED
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,36 +17,41 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace E20R\Sequences\Modules;
+namespace E20R\Sequences\Modules\Licensed\Export;
 
+use E20R\Utilities\Licensing\Licensing;
+use E20R\Sequences\Sequence\Controller;
 
-class Unsubscribe_Link {
+class WP_All_Export {
+	
 	/**
-	 * @var null|Unsubscribe_Link
+	 * @var null|WP_All_Export
 	 */
 	private static $instance = null;
 	
-	/**
-	 * Load any action hooks and filter hooks
-	 *
-	 * @access private
-	 */
-	private function load_hooks() {
-		
-		// TODO: Implement any hook handler(s)
-	}
+	private $addon;
 	
+	public function load_hooks() {
+		
+		if ( false === Licensing::is_licensed( Controller::plugin_prefix ) ) {
+			return;
+		} else {
+			
+			include_once( 'rapid-addon.php' );
+			
+			$this->addon = new \RapidAddon( __( "E20R Sequences Drip Feed Content", Controller::plugin_slug ), Controller::plugin_slug );
+		}
+	}
 	/**
-	 * Returns an instance of the class (Singleton pattern)
+	 * Return the class instance (uses singleton pattern)
 	 *
-	 * @return Unsubscribe_Link|null
+	 * @return WP_All_Export|null
 	 */
 	public static function get_instance() {
 		
+		
 		if ( is_null( self::$instance ) ) {
-			
 			self::$instance = new self;
-			
 			self::$instance->load_hooks();
 		}
 		
