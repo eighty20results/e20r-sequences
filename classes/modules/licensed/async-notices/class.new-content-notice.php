@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace E20R\Sequences\Modules\Async_Notices;
+namespace E20R\Sequences\Modules\Licensed\Async_Notices;
 
 if ( ! defined( 'E20R_SEQ_TEMPLATES' ) ) {
 	define( 'E20R_SEQ_TEMPLATES', plugin_dir_path( __FILE__ ) . 'email' );
