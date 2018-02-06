@@ -598,6 +598,11 @@ div#e20r_sequencetable .e20r-table-head {
 	text-overflow: ellipsis;
 	-ms-text-overflow: ellipsis;
 }
+/** For the Opt-in checkbox **/
+.e20r-seq-useroptin {
+	display: inline-block;
+	margin: 0.5em 0;
+}
 
 /** For the "add new post/page" metabox */
 .e20r-meta-table {
