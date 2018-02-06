@@ -22,10 +22,19 @@ namespace E20R\Sequences\Shortcodes;
  **/
 
 use E20R\Utilities\Utilities;
+use E20R\Sequences\Sequence\Controller;
+use E20R\Sequences\Data\Model;
 
 class Upcoming_Content {
 	
-	private static $_this;
+	/**
+	 * @var Upcoming_Content|null
+	 */
+	private static $instance = null;
+	
+	/**
+	 * @var string
+	 */
 	private $class_name;
 	
 	/**
@@ -34,16 +43,15 @@ class Upcoming_Content {
 	 * @since v4.2.9
 	 */
 	public function __construct() {
+		
 		$this->class_name = get_class( $this );
 		
-		if ( isset( self::$_this ) ) {
-			wp_die( sprintf( __( '%s is a singleton class and you are not allowed to create a second instance', 'e20r-sequences' ), $this->class_name ) );
+		if ( isset( self::$instance ) ) {
+			wp_die( sprintf( __( '%s is a singleton class and you are not allowed to create a second instance', Controller::plugin_slug ), $this->class_name ) );
 		}
 		
-		self::$_this = $this;
-		
-		add_filter( "get_{$this->class_name}_class_instance", array( $this, 'get_instance' ) );
-		// add_shortcode('sequence_upcoming_content', [$this, 'load_shortcode']);
+		self::$instance = $this;
+        add_shortcode('sequence_upcoming_content', array( $this, 'load_shortcode' ) );
 	}
 	
 	/**
@@ -53,18 +61,20 @@ class Upcoming_Content {
 	 * @package Upcoming_Content
 	 *
 	 * @param null $attr - Attributes included in shortcode
+     * @param string $content - The content between the shortcodes
 	 *
 	 * @return mixed - Div list of shortcodes (default is null)
 	 *
-	 * @since   v4.2.9
+	 * @since   v5.0 - ENHANCEMENT: Added [sequence_upcoming_content]'
 	 */
 	public function load_shortcode( $attr = null, $content = null ) {
 		
-	    $utils = Utilities::get_instance();
-	    
-	    /**
+		$utils = Utilities::get_instance();
+		$model = Model::get_instance();
+		
+		/**
 		 * Valid shortcode arguments:
-		 *  'id'    => numeric - the Post ID for the pmpro_sequences CPT (i.e. the sequence to display).
+		 *  'id'    => numeric - the Post ID for the e20r_sequence CPT (i.e. the sequence to display).
 		 *  'number_of_posts' => 'all' | a numeric counter for the number of upcoming posts in the sequence we'll include.
 		 *  'include_past' => number of prior posts to include. Valid entries are: 'all', 'none', number (i.e. the number of posts into the past we'll include)
 		 */
@@ -76,22 +86,26 @@ class Upcoming_Content {
 		$past          = array();
 		$now           = array();
 		
-		$sequence_obj = apply_filters( "get_sequence_class_instance", null );
+		$cta_shortcode = null;
+		$cta_attrs     = null;
+		
+		$sequence_obj = Controller::get_instance();
+		
 		$utils->log( "Processing attributes." );
 		
 		$attributes = shortcode_atts( array(
 			'number_of_posts' => 'all',
 			'include_past'    => 'none',
 			'id'              => null,
-			'cta_shortcode'   => '',
-			'cta_attrs'       => '',
+			'cta_shortcode'   => null,
+			'cta_attrs'       => null,
 		), $attr );
 		
 		if ( empty( $attributes['id'] ) ) {
 			
 			$utils->log( "Error: NO Sequence ID specified!" );
 			
-			return sprintf( '<div class="e20r-sequences-error">%s</div>', __( 'No upcoming content to be listed (Error: Unknown ID)', 'e20r-sequences' ) );
+			return sprintf( '<div class="e20r-sequences-error">%s</div>', __( 'No upcoming content to be listed (Error: Unknown ID)', Controller::plugin_slug ) );
 		}
 		
 		$utils->log( "When attribute is specified: {$attributes['when']}" );
@@ -114,11 +128,11 @@ class Upcoming_Content {
 		$today      = $sequence_obj->get_membership_days();
 		
 		// Get content being released after today.
-		$future = $sequence_obj->load_sequence_post( $sequence_obj->sequence_id, $today, null, '>=', $post_count, true );
+		$future = $model->load_sequence_post( $sequence_obj->sequence_id, $today, null, '>=', $post_count, true );
 		
 		// Get content to be released before today (if 'include_past' != 'none')
 		if ( 'none' !== $attributes['include_past'] ) {
-			$past = $sequence_obj->load_sequence_post( $sequence_obj->sequence_id, $today, null, '<', $post_count, true );
+			$past = $model->load_sequence_post( $sequence_obj->sequence_id, $today, null, '<', $post_count, true );
 		}
 		
 		// Get content that already is available today, or as close to today as possible
@@ -136,15 +150,23 @@ class Upcoming_Content {
 			
 		} else {
 			
-			$now = $sequence_obj->load_sequence_post( $sequence_obj->sequence_id, $today, null, '=', $post_count, true );
+			$now = $model->load_sequence_post( $sequence_obj->sequence_id, $today, null, '=', $post_count, true );
 		}
 		
 		// Load posts per the shortcode attributes we received using external loop.
 		$posts = $past + $future;
 		
+		ob_start();
+		?>
+        <div class="e20r-sequences-upcoming-content">
+        <?php
 		foreach ( $posts as $post ) {
-            // TODO: Add code to process posts
-		}
+			$this->view_content_div( $post, $cta_shortcode, $cta_attrs );
+		} ?>
+        </div><?php
+		$return_html = ob_get_clean();
+		
+		return $return_html;
 	}
 	
 	/**
@@ -185,10 +207,11 @@ class Upcoming_Content {
 	 * * @since v4.0.1
 	 */
 	public function get_instance() {
-		if ( is_null( self::$_this ) ) {
-			self::$_this = new self;
+		
+		if ( is_null( self::$instance ) ) {
+			self::$instance = new self;
 		}
 		
-		return self::$_this;
+		return self::$instance;
 	}
 }
