@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (c) $today.year. - Eighty / 20 Results by Wicked Strong Chicks.
+ * Copyright (c) 2018 - Eighty / 20 Results by Wicked Strong Chicks.
  * ALL RIGHTS RESERVED
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,38 +17,29 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace E20R\Sequences\Modules;
+namespace E20R\Sequences\Modules\Licensed\Timed_Release;
 
 
-class Timed_Release {
+class Timed_Release_Settings_view {
 	
-	/**
-	 * @var null|Timed_Release
-	 */
 	private static $instance = null;
 	
-	/**
-	 * Load any action hooks and filter hooks
-	 *
-	 * @access private
-	 */
-	private function load_hooks() {
+	public static function show_setting_fields() {
 	
-		// TODO: Implement any hook handler(s)
+	
 	}
 	
+	
 	/**
-	 * Returns an instance of the class (Singleton pattern)
+	 * Fetch or instantiate the Timed_Release_Settings_View class
 	 *
-	 * @return Timed_Release|null
+	 * @return Timed_Release_Settings_view|null
 	 */
 	public static function get_instance() {
 		
 		if ( is_null( self::$instance ) ) {
 			
 			self::$instance = new self;
-			
-			self::$instance->load_hooks();
 		}
 		
 		return self::$instance;
