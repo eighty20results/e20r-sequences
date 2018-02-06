@@ -1102,7 +1102,7 @@ class Model {
 			
 			if ( ( false === $delays ) || ( ! in_array( $delay, $delays ) ) ) {
 				
-				$utils->log( "add_post_to_seuqence() - Not previously added. Now adding delay value meta ({$delay}) to post id {$post_id}" );
+				$utils->log( "Not previously added. Now adding delay value meta ({$delay}) to post id {$post_id}" );
 				add_post_meta( $post_id, "_e20r_sequence_{$sequence_id}_post_delay", $delay );
 				
 				if ( ! empty( $visibility_delay ) ) {
