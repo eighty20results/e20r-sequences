@@ -2708,6 +2708,7 @@ class Sequence_Controller {
 		global $load_e20r_sequence_admin_script;
 		
 		$load_e20r_sequence_admin_script = true;
+		$this->managed_types = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
 		
 		foreach ( $this->managed_types as $type ) {
 			
@@ -3863,6 +3864,9 @@ class Sequence_Controller {
 			return;
 		}
 		
+		$this->managed_types = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
+		
+		
 		if ( ! in_array( $post->post_type, $this->managed_types ) ) {
 			DBG::log( "post_save_action() - Not saving delay info for {$post->post_type}" );
 			
@@ -4126,9 +4130,12 @@ class Sequence_Controller {
 			return $post_id;
 		}
 		
-		if ( ! $this->init( $post_id ) ) {
-			return;
-		}
+		try {
+			$this->init( $post_id );
+		} catch( \Exception $exception ) {
+		    DBG::log("Unable to initialize the specified sequence: {$post_id}");
+		    return;
+        }
 		
 		DBG::log( 'save_post_meta(): Saving settings for sequence ' . $post_id );
 		// DBG::log('From Web: ' . print_r($_REQUEST, true));
