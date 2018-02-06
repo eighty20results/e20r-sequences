@@ -5,7 +5,7 @@ namespace E20R\Sequences\Tools;
 /*
   License:
 
-	Copyright 2014-2017 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
+	Copyright 2014-2018 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as
@@ -43,13 +43,14 @@ class Cron {
 	 */
 	function __construct() {
 		
+		$utils = Utilities::get_instance();
+		
 		if ( null != self::$instance ) {
 			$error_message = sprintf(
 				__( "Attempted to load a second instance of a singleton class (%s)", Controller::plugin_slug ),
 				get_class( $this )
 			);
-			
-			error_log( $error_message );
+			$utils->log( $error_message );
 			wp_die( $error_message );
 		}
 		
@@ -203,6 +204,7 @@ class Cron {
 	 * @throws \Exception
 	 *
 	 * @since 3.1.0
+	 * @since 5.0 - BUG FIX: Didn't identify the specified sequence number during new content notice transmission
 	 */
 	public static function check_for_new_content( $sequence_id = null ) {
 		
@@ -221,13 +223,16 @@ class Cron {
 			$received_id = array_pop( $sequence_id );
 		}
 		
-		if ( ! is_array( $sequence_id ) && ! is_null( $sequence_id ) ) {
+		if ( ! is_array( $sequence_id ) && ! empty( $sequence_id ) ) {
 			
 			$received_id = $sequence_id;
 		}
 		
 		// No sequence number received, so processing all sequences
-		if ( empty( $sequence_id ) ) {
+		/**
+		 * @since 5.0 - BUG FIX: Didn't identify the specified sequence number during new content notice transmission
+		 */
+		if ( empty( $received_id ) ) {
 			$all_sequences = true;
 		}
 		
@@ -238,17 +243,14 @@ class Cron {
 		
 		$utils->log( "Found " . count( $sequence_list ) . " sequences to process for {$received_id}" );
 		
-		// Track user send-count (just in case we'll need it to ensure there's not too many mails being sent to one user.
-		$send_count[] = array();
-		
 		// Get ready to possibly use the background notice handler
 		$user_handler = $sequence->get_user_handler();
-		$is_licensed = Licensing::is_licensed( Controller::plugin_slug );
+		$plus_license = Licensing::is_licensed( Controller::plugin_prefix );
 		
 		// Loop through all selected sequences and users
 		foreach ( $sequence_list as $user_data ) {
 			
-			if ( true === $is_licensed ) {
+			if ( true === $plus_license ) {
 				
 				$utils->log( "Using background processing" );
 				$queue_data = array( 'user_data' => $user_data, 'all_sequences' => $all_sequences );
@@ -256,194 +258,29 @@ class Cron {
 				
 			} else {
 				
-				// Set the user ID we're processing for:
-				$sequence->e20r_sequence_user_id = $user_data->user_id;
-				$sequence->sequence_id           = $user_data->seq_id;
+				$membership_day = $sequence->get_membership_days( $user_data->user_id );
+				$posts          = $sequence->find_posts_by_delay( $membership_day, $user_data->user_id );
 				
-				// Load sequence data
-				if ( ! $sequence->init( $user_data->seq_id ) ) {
+				$user_notice = new User_Notice( $posts,$user_data->user_id, $received_id, $membership_day, true );
+				
+				if ( !empty( $user_notice ) ) {
 					
-					$utils->log( "Sequence {$user_data->seq_id} is not converted to V3 metadata format. Exiting!" );
-					$sequence->set_error_msg( __( "Please de-activate and activate the E20R Sequences for Paid Memberships Pro plug-in to facilitate conversion to the v3 meta data format.", Controller::plugin_slug ) );
-					continue;
+					if ( false === $user_notice->create_new_notice( $all_sequences ) ) {
+						$utils->log("Error creating new user (content) notice message!");
+					}
 				}
 				
-				$utils->log( "Processing sequence: {$sequence->sequence_id} for user {$user_data->user_id}" );
-				
-				if ( ( $sequence->options->sendNotice == 1 ) && ( $all_sequences === true ) ) {
-					$utils->log( 'This sequence will be processed directly. Skipping it for now (All)' );
-					continue;
-				}
-				
-				// Get user specific settings regarding sequence alerts.
-				$utils->log( "Loading alert settings for user {$user_data->user_id} and sequence {$sequence->sequence_id}" );
-				$notice_settings = $sequence->load_user_notice_settings( $user_data->user_id, $sequence->sequence_id );
-				// $utils->log($notice_settings);
-				
-				// Check if this user wants new content notices/alerts
-				// OR, if they have not opted out, but the admin has set the sequence to allow notices
-				if ( ( isset( $notice_settings->send_notices ) && ( $notice_settings->send_notices == 1 ) ) ||
-				     ( empty( $notice_settings->send_notices ) &&
-				       ( $sequence->options->sendNotice == 1 ) )
-				) {
-					
-					$utils->log( "Sequence {$sequence->sequence_id} is configured to send new content notices to users." );
-					
-					// Load posts for this sequence.
-					// $sequence_posts = $sequence->getPosts();
-					
-					$membership_day = $sequence->get_membership_days( $user_data->user_id );
-					$posts          = $sequence->find_posts_by_delay( $membership_day, $user_data->user_id );
-					
-					if ( empty( $posts ) ) {
-						
-						$utils->log( "Skipping Alert: Did not find a valid/current post for user {$user_data->user_id} in sequence {$sequence->sequence_id}" );
-						// No posts found!
-						continue;
-					}
-					
-					$utils->log( "# of posts we've already notified for: " . count( $notice_settings->posts ) . ", and number of posts to process: " . count( $posts ) );
-					
-					// Set the opt-in timestamp if this is the first time we're processing alert settings for this user ID.
-					if ( empty( $notice_settings->last_notice_sent ) || ( $notice_settings->last_notice_sent == - 1 ) ) {
-						
-						$notice_settings->last_notice_sent = current_time( 'timestamp' );
-					}
-					
-					// $posts = $sequence->get_postDetails( $post->id );
-					$utils->log( "noticeSendAs option is currently: {$sequence->options->noticeSendAs}" );
-					
-					if ( empty( $sequence->options->noticeSendAs ) || E20R_SEQ_SEND_AS_SINGLE == $sequence->options->noticeSendAs ) {
-						
-						$utils->log( "Processing " . count( $posts ) . " individual messages to send to {$user_data->user_id}" );
-						
-						foreach ( $posts as $post_data ) {
-							
-							if ( $post_data->delay == 0 ) {
-								$utils->log( "Since the delay value for this post {$post_data->id} is 0 (confirm: {$post_data->delay}), user {$user_data->user_id} won't be notified for it..." );
-								continue;
-							}
-							
-							$utils->log( "Do we notify {$user_data->user_id} of availability of post # {$post_data->id}?" );
-							$flag_value = "{$post_data->id}_" . $sequence->normalize_delay( $post_data->delay );
-							
-							if ( ! in_array( $flag_value, $notice_settings->posts ) ) {
-								
-								$utils->log( 'Post: "' . get_the_title( $post_data->id ) . '"' .
-								             ', post ID: ' . $post_data->id .
-								             ', membership day: ' . $membership_day .
-								             ', post delay: ' . $sequence->normalize_delay( $post_data->delay ) .
-								             ', user ID: ' . $user_data->user_id .
-								             ', already notified: ' . ( ! is_array( $notice_settings->posts ) || ( in_array( $flag_value, $notice_settings->posts ) == false ) ? 'false' : 'true' ) .
-								             ', has access: ' . ( $sequence->has_post_access( $user_data->user_id, $post_data->id, true, $sequence->sequence_id ) === true ? 'true' : 'false' ) );
-								
-								$utils->log( "Need to send alert to {$user_data->user_id} for '{$post_data->title}': {$flag_value}" );
-								
-								// Does the post alert need to be sent (only if its delay makes it available _after_ the user opted in.
-								if ( $sequence->is_after_opt_in( $user_data->user_id, $notice_settings, $post_data ) ) {
-									
-									$utils->log( 'Preparing the email message' );
-									
-									// Send the email notice to the user
-									if ( $sequence->send_notice( $post_data, $user_data->user_id, $sequence->sequence_id ) ) {
-										
-										$utils->log( 'Email was successfully sent' );
-										// Update the sequence metadata that user has been notified
-										$notice_settings->posts[] = $flag_value;
-										
-										// Increment send count.
-										$send_count[ $user_data->user_id ] = ( isset( $send_count[ $sequence_data->user_id ] ) ? $send_count[ $user_data->user_id ] ++ : 0 ); // Bug/Fix: Sometimes generates an undefined offset notice
-										
-										$utils->log( "Sent email to user {$user_data->user_id} about post {$post_data->id} with delay {$post_data->delay} in sequence {$sequence->sequence_id}. The SendCount is {$send_count[ $user_data->user_id ]}" );
-										$notice_settings->last_notice_sent = current_time( 'timestamp' );
-									} else {
-										
-										$utils->log( "Error sending email message!" );
-									}
-								} else {
-									
-									// Only add this post ID if it's not already present in the notifiedPosts array.
-									if ( ! in_array( "{$post_data->id}_{$post_data->delay}", $notice_settings->posts, true ) ) {
-										
-										$utils->log( "Adding this previously released (old) post to the notified list" );
-										$notice_settings->posts[] = "{$post_data->id}_" . $sequence->normalize_delay( $post_data->delay );
-									}
-								}
-							} else {
-								$utils->log( "Will NOT notify user {$user_data->user_id} about the availability of post {$post_data->id}" );
-							}
-						} // End of foreach
-					} // End of "send as single"
-					
-					if ( E20R_SEQ_SEND_AS_LIST == $sequence->options->noticeSendAs ) {
-						
-						$alerts = array();
-						
-						foreach ( $posts as $post_key => $post_data ) {
-							
-							$flag_value = "{$post_data->id}_" . $sequence->normalize_delay( $post_data->delay );
-							
-							if ( in_array( $flag_value, $notice_settings->posts, true ) ) {
-								
-								dbg( "We already sent notice for {$flag_value}" );
-								unset( $posts[ $post_key ] );
-								
-							} else {
-								
-								$utils->log( 'Adding notification setting for : "' . get_the_title( $post_data->id ) . '"' .
-								             ', post ID: ' . $post_data->id .
-								             ', membership day: ' . $membership_day .
-								             ', post delay: ' . $sequence->normalize_delay( $post_data->delay ) .
-								             ', user ID: ' . $user_data->user_id .
-								             ', already notified: ' . ( ! is_array( $notice_settings->posts ) || ( in_array( $flag_value, $notice_settings->posts ) == false ) ? 'false' : 'true' ) .
-								             ', has access: ' . ( $sequence->has_post_access( $user_data->user_id, $post_data->id, true, $sequence->sequence_id ) === true ? 'true' : 'false' ) );
-								
-								$utils->log( "Adding this ({$post_data->id}) post to the possibly notified list: {$flag_value}" );
-								$alerts[ $post_key ] = $flag_value;
-								
-								$posts[ $post_key ]->after_optin = $sequence->is_after_opt_in( $user_data->user_id, $notice_settings, $post_data );
-							}
-							
-						}
-						
-						$utils->log( "Sending " . count( $posts ) . " as a list of links to {$user_data->user_id}" );
-						
-						// Send the email notice to the user
-						if ( $sequence->send_notice( $posts, $user_data->user_id, $sequence->sequence_id ) ) {
-							
-							$notice_settings->last_notice_sent = current_time( 'timestamp' );
-							$notice_settings->posts            = array_merge( $notice_settings->posts, $alerts );
-							
-							$utils->log( "Merged notification settings for newly sent posts: " );
-							$utils->log( $notice_settings->posts );
-							$utils->log( $alerts );
-							
-						} else {
-							
-							$utils->log( "Will NOT notify user {$user_data->user_id} about these " . count( $posts ) . " new posts" );
-						}
-						
-					} // End of "send as list"
-					
-					// Save user specific notification settings (including array of posts we've already notified them of)
-					$sequence->save_user_notice_settings( $user_data->user_id, $notice_settings, $sequence->sequence_id );
-					$utils->log( 'Updated meta for the user notices' );
-					
-				} // End if
-				else {
-					
-					// Move on to the next one since this one isn't configured to send notices
-					$utils->log( "Sequence {$user_data->seq_id} is not configured for sending alerts. Skipping..." );
-				} // End of sendNotice test
+				// Clean up.
+				unset( $user_notice );
 				
 			} // End of licensing check
-			
 		} // End of data processing loop
 		
-		if ( true === $is_licensed ) {
+		if ( true === $plus_license ) {
 			$utils->log("Save and dispatch background send of alerts");
 			$user_handler->save()->dispatch();
 		}
+		
 		$utils->log( "Completed execution of cron job for {$received_id}" );
 	}
 	
@@ -472,6 +309,7 @@ class Cron {
 			}
 		}
 		
+		$utils->log("Result is: " . print_r( $result, true ));
 		return $result;
 	}
 	
