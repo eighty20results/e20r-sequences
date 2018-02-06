@@ -95,8 +95,9 @@ class Sequence_Alert_Optin {
 		
 		if ( !empty( $sequence_id ) ) {
 			
-			if ( !$sequence->init( $sequence_id ) ) {
-
+			try {
+				$sequence->init( $sequence_id );
+			} catch( \Exception $exception ) {
 				return $sequence->get_error_msg();
 			}
 
