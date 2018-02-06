@@ -16,7 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-namespace E20R\Sequences\Modules\Async_Notices;
+namespace E20R\Sequences\Modules\Licensed\Async_Notices;
 
 use E20R\Sequences\Tools\User_Notice;
 use E20R\Utilities\Utilities;
@@ -26,6 +26,13 @@ use E20R\Utilities\E20R_Background_Process;
 class Handle_User extends E20R_Background_Process {
 	
 	private static $instance = null;
+	
+	/**
+	 * Action name (type)
+	 *
+	 * @var string
+	 */
+	protected $action;
 	
 	/**
 	 * Constructor for Handle_User class
@@ -74,7 +81,7 @@ class Handle_User extends E20R_Background_Process {
 		
 		// Check if this user wants new content notices/alerts
 		// OR, if they have not opted out, but the admin has set the sequence to allow notices
-		if ( ( true === $send_user_notice ) || ( false === $send_user_notice && ( true === $user_notice->send_notices() ) ) ) {
+		if ( ( true === $send_user_notice ) || ( false === $send_user_notice && true === $user_notice->send_notices() ) ) {
 			
 			$utils->log( "Sequence {$queue_data['user_data']->seq_id} is configured to send new content notices to the current user (ID: {$queue_data['user_data']->user_id})." );
 			
@@ -86,10 +93,11 @@ class Handle_User extends E20R_Background_Process {
 			foreach ( $posts as $content_key => $content_data ) {
 				
 				$post_info = array(
-					'send_as'       => $send_as,
-					'user_notice'   => $user_notice,
-					'content_data'  => $content_data,
-					'all_sequences' => (bool) $queue_data['all_sequences'],
+					'send_as'         => $send_as,
+					'user_notice'     => $user_notice,
+					'notice_settings' => $sequence->load_user_notice_settings( $queue_data['user_data']->user_id, $queue_data['user_data']->seq_id ),
+					'content_data'    => $content_data,
+					'all_sequences'   => (bool) $queue_data['all_sequences'],
 				);
 				
 				// Append to list of post(s) to process
