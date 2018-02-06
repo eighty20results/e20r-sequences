@@ -17,11 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace E20R\Utilities\Licensing;
+namespace E20R\Sequences;
 
 use E20R\Sequences\Sequence\Controller;
 use E20R\Utilities\Utilities;
 use E20R\Utilities\Licensing\Licensing;
+use E20R\Utilities\Licensing\License_Client;
 
 class Sequences_License extends License_Client {
 	
@@ -91,7 +92,7 @@ class Sequences_License extends License_Client {
 		}
 		
 		$plugin_settings[Controller::plugin_prefix] = array(
-			'label'      => __( 'Sequences Plus', Controller::plugin_prefix ),
+			'label'      => __( 'Sequences Plus', Controller::plugin_slug ),
 			'key_prefix' => Controller::plugin_prefix,
 			'stub'       => Controller::plugin_prefix,
 		);
