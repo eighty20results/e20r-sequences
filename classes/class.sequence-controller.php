@@ -3642,8 +3642,11 @@ class Sequence_Controller {
 			// Send all of the links to new content in a single email message.
 			if ( E20R_SEQ_SEND_AS_LIST == $send_as ) {
 				
+				$login_link = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $post->permalink ) ), $post, $user, $this->get_option_by_name( 'noticeTemplate' )  );
+				$post_title = apply_filters( 'e20r-sequence-alert-message-post-title', $post->title, $post, $user, $this->get_option_by_name( 'noticeTemplate' ) );
+				
 				$idx        = 0;
-				$post_links .= '<li><a href="' . wp_login_url( $post->permalink ) . '" title="' . $post->title . '">' . $post->title . '</a></li>\n';
+				$post_links .= sprintf( '<li><a href="%1$s" title="%2$s">%2$s</a></li>\n', $login_link, $post_title );
 				
 				if ( false === $as_list ) {
 					
@@ -3658,7 +3661,7 @@ class Sequence_Controller {
 						"today"     => apply_filters( 'e20r-sequence-alert-message-date', $post_date ),
 						"excerpt"   => apply_filters( 'e20r-sequence-alert-message-excerpt-intro', $post->excerpt ),
 						"post_link" => apply_filters( 'e20r-sequence-alert-message-link-href-element', $post_links ),
-						"ptitle"    => apply_filters( 'e20r-sequence-alert-message-title', $post->title ),
+						"ptitle"    => apply_filters( 'e20r-sequence-alert-message-title', $post_title ),
 					);
 					
 					if ( isset( $this->options->track_google_analytics ) && ( true == $this->options->track_google_analytics ) ) {
@@ -3686,8 +3689,11 @@ class Sequence_Controller {
 					$excerpt = '<p>' . $this->options->excerptIntro . '</p><p>' . $post->excerpt . '</p>';
 				}
 				
-				$post_links = '<a href="' . wp_login_url( $post->permalink ) . '" title="' . $post->title . '">' . $post->title . '</a>';
-				$post_url   = wp_login_url( $post->permalink );
+				$post_links = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $post->permalink ) ), $post, $user, $this->get_option_by_name( 'noticeTemplate' )  );
+				$post_title = apply_filters( 'e20r-sequence-alert-message-post-title', $post->title, $post, $user, $this->get_option_by_name( 'noticeTemplate' ) );
+				
+				$post_links = sprintf( '<a href="%1$s" title="%2$s"></a>', $post_links, $post_title );
+				$post_url   = $post_links;
 				
 				$emails[ $idx ]->body = $template_content;
 				
@@ -3703,7 +3709,7 @@ class Sequence_Controller {
 					'post_url'  => apply_filters( 'e20r-sequence-alert-message-post-permalink', $post_url ),
 					"today"     => apply_filters( 'e20r-sequence-alert-message-date', $post_date ),
 					"excerpt"   => apply_filters( 'e20r-sequence-alert-message-excerpt-intro', $excerpt ),
-					"ptitle"    => apply_filters( 'e20r-sequence-alert-message-title', $post->title ),
+					"ptitle"    => apply_filters( 'e20r-sequence-alert-message-title', $post_title ),
 				);
 				
 				$emails[ $idx ]->data = apply_filters( 'e20r-sequence-email-substitution-fields', $data );
