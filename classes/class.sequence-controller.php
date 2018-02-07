@@ -3539,13 +3539,15 @@ class Sequence_Controller {
 		
 		DBG::log( "Loaded " . get_class( $email ) );
 		
+		$title_to_use = apply_filters( 'e20r-sequence-alert-message-post-title', $post->title, $post, $user, $template );
+		
 		$user_started = ( $this->get_user_startdate( $user->ID ) - DAY_IN_SECONDS ) + ( $this->normalize_delay( $post->delay ) * DAY_IN_SECONDS );
 		
 		$email->from       = $this->get_option_by_name( 'replyto' );
 		$email->template   = $template;
 		$email->fromname   = $this->get_option_by_name( 'fromname' );
 		$email->to         = $user->user_email;
-		$email->subject    = sprintf( '%s: %s (%s)', $this->get_option_by_name( 'subject' ), $post->title, strftime( "%x", $user_started ) );
+		$email->subject    = sprintf( '%s: %s (%s)', $this->get_option_by_name( 'subject' ), $title_to_use, strftime( "%x", $user_started ) );
 		$email->dateformat = $this->get_option_by_name( 'dateformat' );
 		
 		return $email;
@@ -3689,11 +3691,11 @@ class Sequence_Controller {
 					$excerpt = '<p>' . $this->options->excerptIntro . '</p><p>' . $post->excerpt . '</p>';
 				}
 				
-				$post_links = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $post->permalink ) ), $post, $user, $this->get_option_by_name( 'noticeTemplate' )  );
+				$login_link = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $post->permalink ) ), $post, $user, $this->get_option_by_name( 'noticeTemplate' )  );
 				$post_title = apply_filters( 'e20r-sequence-alert-message-post-title', $post->title, $post, $user, $this->get_option_by_name( 'noticeTemplate' ) );
 				
-				$post_links = sprintf( '<a href="%1$s" title="%2$s"></a>', $post_links, $post_title );
-				$post_url   = $post_links;
+				$post_url   = $login_link;
+				$post_links = sprintf( '<a href="%1$s" title="%2$s">%2$s</a>', $login_link, $post_title );
 				
 				$emails[ $idx ]->body = $template_content;
 				
