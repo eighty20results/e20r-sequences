@@ -28,16 +28,17 @@ const MAX_POSTS = 100;
 const MAX_POSTS_COLUMNS = 6;
 
 registerBlockType( 'e20r-sequences/recent-sequence-content', {
-	title: __( 'Latest Posts' ),
+	title: __( 'Latest Sequence Posts' ),
 
 	icon: 'list-view',
 
 	category: 'widgets',
 
-	keywords: [ __( 'recent posts' ) ],
+	keywords: [ __( 'recent posts sequence' ) ],
 
 	supportHTML: false,
 
+	sequenceID: null,
 	getEditWrapperProps( attributes ) {
 		const { align } = attributes;
 		if ( 'left' === align || 'right' === align || 'wide' === align || 'full' === align ) {
@@ -103,9 +104,9 @@ registerBlockType( 'e20r-sequences/recent-sequence-content', {
 			const inspectorControls = focus && (
 				<InspectorControls key="inspector">
 					<BlockDescription>
-						<p>{ __( 'Shows a list of your site\'s most recent posts.' ) }</p>
+						<p>{ __( 'Shows a list of the sequence\'s most recent content.' ) }</p>
 					</BlockDescription>
-					<h3>{ __( 'Latest Posts Settings' ) }</h3>
+					<h3>{ __( 'Latest Sequence Member Settings' ) }</h3>
 					<ToggleControl
 						label={ __( 'Display post date' ) }
 						checked={ displayPostDate }
@@ -121,7 +122,7 @@ registerBlockType( 'e20r-sequences/recent-sequence-content', {
 						/>
 					}
 					<TextControl
-						label={ __( 'Number of posts to show' ) }
+						label={ __( 'Number of posts to include' ) }
 						type="number"
 						min={ MIN_POSTS }
 						max={ MAX_POSTS }
@@ -137,11 +138,11 @@ registerBlockType( 'e20r-sequences/recent-sequence-content', {
 					inspectorControls,
 					<Placeholder key="placeholder"
 						icon="admin-post"
-						label={ __( 'Latest Posts' ) }
+						label={ __( 'Most Recent Sequence Members' ) }
 					>
 						{ ! Array.isArray( latestPosts ) ?
 							<Spinner /> :
-							__( 'No posts found.' )
+							__( 'No posts available.' )
 						}
 					</Placeholder>,
 				];

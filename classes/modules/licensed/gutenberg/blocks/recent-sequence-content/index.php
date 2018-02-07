@@ -74,6 +74,10 @@ register_block_type( 'e20r-sequences/recent-sequence-content', array(
 			'type'    => 'boolean',
 			'default' => false,
 		),
+		'sequenceID' => array(
+			'type' => 'number',
+			'default' => null,
+		),
 		'layout'          => array(
 			'type'    => 'string',
 			'default' => 'list',
@@ -87,5 +91,5 @@ register_block_type( 'e20r-sequences/recent-sequence-content', array(
 			'default' => 'center',
 		),
 	),
-	'render_callback' => 'gutenberg_render_block_e20r_recent_sequence_content',
+	'render_callback' => array( GB_Sequence::get_instance(), 'recent_sequence_content' ),
 ) );
