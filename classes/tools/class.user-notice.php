@@ -175,6 +175,7 @@ class User_Notice {
 	public function create_new_notice( $all_sequences = false ) {
 		
 		$utils = Utilities::get_instance();
+		$send_count = array();
 		
 		$utils->log( "Processing sequence: {$this->sequence_id} for user {$this->user_id}" );
 		$send_notice = $this->send_notices();
@@ -428,13 +429,12 @@ class User_Notice {
 			
 			$email = new Send_Email();
 			$email->set_module( Controller::plugin_slug );
-			$email->user_id = $this->user_id;
 			
+			$email->user_id         = $this->user_id;
 			$email->to              = $this->user->user_email;
 			$email->from            = $this->current_sequence->get_option_by_name( 'replyto' );
 			$email->fromname        = $this->current_sequence->get_option_by_name( 'fromname' );
 			$email->template        = $this->current_sequence->get_option_by_name( 'noticeTemplate' );
-			$email->subject         = sprintf( '%s: %s (%s)', $this->current_sequence->get_option_by_name( 'subject' ), $notice_post->title, strftime( "%x", $user_started ) );
 			$email->dateformat      = $this->current_sequence->get_option_by_name( 'dateformat' );
 			$email->user_id         = $this->user->ID;
 			$email->content_id_list = array( $notice_post->id );
@@ -442,21 +442,30 @@ class User_Notice {
 			
 			$post_date = date( $this->current_sequence->get_option_by_name( 'dateformat' ), ( $user_started + ( $this->current_sequence->normalize_delay( $notice_post->delay ) * DAY_IN_SECONDS ) ) );
 			
-			$post_link = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $notice_post->permalink ) ), $notice_post, $this->user, $email->template  );
+			/**
+			 * Let user modify URL and title/subject of email notice based on sequences or other plugins that
+			 * allow embedding of WP_Post content
+			 */
+			$login_redirect_link  = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $notice_post->permalink ) ), $notice_post, $this->user, $email->template );
 			$post_title = apply_filters( 'e20r-sequence-alert-message-post-title', $notice_post->title, $notice_post, $this->user, $email->template );
+			
+			/**
+			 * Set the email subject text
+			 * (Doing it late to let us used the filtered post title)
+			 */
+			$email->subject         = sprintf( '%s: %s (%s)', $this->current_sequence->get_option_by_name( 'subject' ), $post_title, strftime( "%x", $user_started ) );
 			
 			// Send all of the links to new content in a single email message.
 			if ( E20R_SEQ_SEND_AS_LIST === $send_as ) {
 				
-				
 				$index      = 0;
 				$post_links .= sprintf(
 					'<li><a href="%1$s" title="%2$s">$2$s</a></li>',
-					$post_link,
+					$login_redirect_link,
 					$post_title
 				);
 				
-				$post_urls[] = $post_link;
+				$post_urls[] = $login_redirect_link;
 				
 				if ( false === $as_list ) {
 					
@@ -510,11 +519,11 @@ class User_Notice {
 				
 				$post_links = sprintf(
 					'<a href="%1%s" title="%2$s">%3$s</a>',
-					$post_link,
+					$login_redirect_link,
 					sprintf( __( 'Link to: %1$s', Controller::plugin_slug ), $post_title ),
-					 $post_title
+					$post_title
 				);
-				$post_url   = $post_link;
+				$post_url   = $login_redirect_link;
 				
 				
 				$variables = array(
