@@ -121,7 +121,7 @@ class Paid_Memberships_Pro extends Membership_Module {
 	public function is_membership_plugin_active( $is_active ) {
 		
 		$utils = Utilities::get_instance();
-		return  $utils->plugin_is_active( 'paid-memberships-pro/paid-memberships-pro.php', null );
+		return  $utils->plugin_is_active( null, 'pmpro_getGateway' );
 	}
 	
 	/**
