@@ -46,7 +46,7 @@ if ( ! class_exists( 'E20R\Sequences\Modules\Licensed\Import\Importer' ) ) {
 			$import_status = apply_filters( 'e20r-sequence-import-pmpro-series', __return_false() );
 			
 			// Don't import anything.
-			if ( false === $import_status || false === Licensing::is_licensed( Controller::plugin_prefix ) ) {
+			if ( false !== $import_status && false === Licensing::is_licensed( Controller::plugin_prefix ) ) {
 				
 				$utils->add_message(
 					sprintf(
