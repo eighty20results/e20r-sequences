@@ -40,11 +40,11 @@ class Available_On {
 		}
 		
 		self::$instance = $this;
-		
-		add_filter( 'get_available_class_instance', 'E20R\Sequences\Shortcodes\Available_On::get_instance' );
-		add_shortcode( 'e20r_available_on', array( $this, 'load_shortcode' ) );
 	}
 	
+	public function load_hooks() {
+		add_shortcode( 'e20r_available_on', array( $this, 'load_shortcode' ) );
+	}
 	/**
 	 *
 	 * Process the e20r_available_on shortcode
