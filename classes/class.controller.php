@@ -4186,7 +4186,7 @@ class Controller {
 		// Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
 		foreach ( $seqs as $s ) {
 			
-			$this->get_options( $s->ID );
+			$this->get_options( $s->id );
 			
 			if ( $this->options->sendNotice == 1 ) {
 				
@@ -4219,6 +4219,8 @@ class Controller {
 		
 		$utils = Utilities::get_instance();
 		$utils->log( "Processing activation event using {$old_timeout} secs as timeout" );
+		
+		add_filter( 'e20r-sequence-mmodule-is-active', array( Paid_Memberships_Pro::get_instance(), 'is_membership_plugin_active'), 10, 1 );
 		
 		$active_plugin = apply_filters( 'e20r-sequence-mmodule-is-active', false );
 		
@@ -4302,6 +4304,10 @@ class Controller {
 		$found_optin = has_shortcode( $post->post_content, 'sequence_alert' );
 		
 		$utils->log( "'sequence_links' or 'sequence_alert' shortcode present? " . ( $found_links || $found_optin ? 'Yes' : 'No' ) );
+		
+		if ( is_front_page() && !$found_links && !$found_optin ) {
+			return;
+		}
 		
 		if ( ( true === $found_links ) || ( true === $found_optin ) || ( 'e20r_sequence' == $this->get_post_type() ) || 'e20r_sequence' == $post->post_type ) {
 			
@@ -4726,11 +4732,11 @@ class Controller {
 		
 		$utils->log( "Loading unlicensed functionality hooks/filters" );
 		add_action( 'plugins_loaded', array( Paid_Memberships_Pro::get_instance(), 'load_hooks' ), 99 );
-		add_action( 'plugins_loaded', array( Sequence_Updates::get_instance(), 'init' ) );
+		
+		add_action( 'init', array( Sequence_Updates::get_instance(), 'init' ) );
+		add_action( 'wp_loaded', array( Sequence_Updates::get_instance(), 'update' ), 1 ); // Run early
 		
 		add_action( 'admin_init', array( Sequences_License::get_instance(), 'check_licenses' ) );
-		
-		add_action( 'wp_loaded', array( Sequence_Updates::get_instance(), 'update' ), 1 ); // Run early
 		add_action( 'e20r_sequence_cron_hook', array( Cron::get_instance(), 'check_for_new_content' ), 10, 1 );
 		
 		// TODO: Split pmpro filters into own filter management module
@@ -4743,7 +4749,7 @@ class Controller {
 		// Add Custom Post Type
 		// add_action( "init", array( $this, "load_textdomain" ), 9 );
 		add_action( "init", array( Model::get_instance(), "create_sequence_post_type" ), 10 );
-		add_action( "init", array( $this, "register_shortcodes" ), 11 );
+		add_action( "wp_ready", array( $this, "register_shortcodes" ), 11 );
 		
 		add_filter( "post_row_actions", array( $this, 'send_alert_notice_from_menu' ), 10, 2 );
 		add_filter( "page_row_actions", array( $this, 'send_alert_notice_from_menu' ), 10, 2 );
@@ -4806,7 +4812,7 @@ class Controller {
 		add_action( 'wp_ajax_nopriv_e20r_save_settings', array( $this, 'unprivileged_ajax_error' ) );
 		
 		// Load shortcodes (instantiate the object(s).
-		$available_on = new Available_On();
+		add_action( 'wp_ready', array( Available_On::get_instance(), 'load_hooks') );
 		
 		// Load licensed modules (if applicable)
 		add_action( 'e20r-sequence-load-licensed-modules', array( New_Content_Notice::get_instance(), 'load_hooks' ) );
