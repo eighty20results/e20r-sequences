@@ -91,7 +91,7 @@ class Controller {
 	function __construct( $id = null ) {
 		
 		self::$seq_post_type = apply_filters( 'e20r-sequences-sequence-post-type', 'e20r_sequence' );
-		$utils = Utilities::get_instance();
+		$utils               = Utilities::get_instance();
 		
 		if ( null !== self::$instance ) {
 			$error_message = sprintf( __( "Attempted to load a second instance of a singleton class (%s)", Controller::plugin_slug ),
@@ -389,7 +389,8 @@ class Controller {
 		$settings->nonMemberAccessChoice  = - 1; // Either hide/protect after a number of days (public_then_protect), or release to public after a number of days
 		$settings->nonMemberExclusionDays = null; // Days after publication when the nonMemberAccess setting is ignored
 		$settings->nonMemberAccessDelay   = 0;
-		
+		$settings->unsubscribeErrorPage   = null; // Post/Page ID for the Unsubscribe link error page
+		$settings->unsubscribeSuccessPage = null; // Post/Page ID for the Unsubscribe link success page
 		
 		$this->options = $settings; // Save as options for this sequence
 		
@@ -869,7 +870,7 @@ class Controller {
 		$current   = current_time( "timestamp" );
 		$calc_days = $this->datediff( $startdate, $current, $time_zone );
 		
-		$utils->log("Days since startdate: {$calc_days}");
+		$utils->log( "Days since startdate: {$calc_days}" );
 		
 		return apply_filters( 'e20r-sequence-days-as-member', $calc_days, $user_id, $level_id );
 	}
@@ -1027,7 +1028,7 @@ class Controller {
 		/**
 		 * @since 5.0 - BUG FIX: Handle negative (small) day values)
 		 */
-		$utils->log("Calc days is: {$calc_days}");
+		$utils->log( "Calc days is: {$calc_days}" );
 		// $calc_days = round( $calc_days, 0 );
 		
 		if ( $calc_days < 1 || $calc_days = 1 ) {
@@ -1283,7 +1284,7 @@ class Controller {
 	/**
 	 * Configure meta box for the normal Post/Page editor
 	 *
-	 * @param string $post_type
+	 * @param string   $post_type
 	 * @param \WP_Post $post
 	 */
 	public function post_metabox( $post_type = null, $post = null ) {
@@ -1295,11 +1296,11 @@ class Controller {
 		global $load_e20r_sequence_admin_script;
 		
 		$load_e20r_sequence_admin_script = true;
-		$this->managed_types = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
+		$this->managed_types             = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
 		
 		foreach ( $this->managed_types as $post_type ) {
 			
-			$utils->log("Prepare metabox for: {$post_type}");
+			$utils->log( "Prepare metabox for: {$post_type}" );
 			
 			if ( $post_type !== 'e20r_sequence' ) {
 				
@@ -1533,7 +1534,7 @@ class Controller {
 			// Set options for the sequence
 			$this->get_options( $id );
 			
-			if ( ( 0 != $current_user->ID || empty($current_user->ID) && true === $this->is_cron ) ) {
+			if ( ( 0 != $current_user->ID || empty( $current_user->ID ) && true === $this->is_cron ) ) {
 				$utils->log( 'init() - Loading the "' . get_the_title( $id ) . "\" sequence posts for {$current_user->ID}" );
 				$model->load_sequence_post();
 			}
@@ -1585,8 +1586,9 @@ class Controller {
 			// TODO: Have upcoming posts be listed before or after the currently active posts (own section?) - based on sort setting
 			try {
 				$content = $seq_views->create_sequence_list( true, 30, true, null, false );
-			} catch( \Exception $exception ) {
-				$utils->log("Unable to create list of sequence content for {$this->sequence_id}: " . $exception->getMessage() );
+			} catch ( \Exception $exception ) {
+				$utils->log( "Unable to create list of sequence content for {$this->sequence_id}: " . $exception->getMessage() );
+				
 				return null;
 			}
 			
@@ -2086,7 +2088,8 @@ class Controller {
 					$hasaccess = false;
 				}
 			} catch ( \Exception $exception ) {
-				$utils->log("Error checking access for user/post ({$user->ID}/{$post->ID}: " . $exception->getMessage() );
+				$utils->log( "Error checking access for user/post ({$user->ID}/{$post->ID}: " . $exception->getMessage() );
+				
 				return false;
 			}
 		}
@@ -2227,7 +2230,7 @@ class Controller {
 			try {
 				$access = $this->has_membership_access( $f_seq_id, $user_id, true );
 			} catch ( \Exception $exception ) {
-				$utils->log("Unable to check access for sequence/user: {$f_seq_id}/{$user_id} - " . $exception->getMessage() );
+				$utils->log( "Unable to check access for sequence/user: {$f_seq_id}/{$user_id} - " . $exception->getMessage() );
 				
 			}
 			
@@ -2436,6 +2439,7 @@ class Controller {
 	private function has_membership_level( $levels = null, $user_id = null ) {
 		
 		$has_level = false;
+		
 		return apply_filters( 'e20r-sequence-mmodule-has-membership-level', $has_level, $levels, $user_id );
 	}
 	
@@ -2515,23 +2519,6 @@ class Controller {
 		return $delay_ts;
 	}
 	
-	
-	/**
-	 * Find a Sequence option by name and return it's current setting/value
-	 *
-	 * @param $option - The name of the setting to return
-	 *
-	 * @return mixed - The setting value
-	 */
-	public function get_option_by_name( $option ) {
-		if ( ! isset( $this->options->{$option} ) ) {
-			
-			return false;
-		}
-		
-		return $this->options->{$option};
-	}
-	
 	/**
 	 * Set a Sequence option by name to the specified $value.
 	 *
@@ -2541,6 +2528,266 @@ class Controller {
 	public function set_option_by_name( $option, $value ) {
 		$this->options->{$option} = $value;
 	}
+	
+	/**
+	 * Resets the user-specific alert settings for a specified sequence Id.
+	 *
+	 * @param int $user_id     - User's ID
+	 * @param int $sequence_id - ID of the sequence we're clearning
+	 *
+	 * @return mixed - false means the reset didn't work.
+	 */
+	public function reset_user_alerts( $user_id, $sequence_id ) {
+		
+		global $wpdb;
+		
+		$utils = Utilities::get_instance();
+		$utils->log( " Attempting to delete old-style user notices for sequence with ID: {$sequence_id}" );
+		$old_style = delete_user_meta( $user_id, "{$wpdb->prefix}e20r_sequence_notices" );
+		
+		$utils->log( "Attempting to delete v3 style user notices for sequence with ID: {$sequence_id}" );
+		$v3_style = delete_user_meta( $user_id, "e20r_sequence_id_{$sequence_id}_notices" );
+		
+		if ( $old_style || $v3_style ) {
+			
+			$utils->log( "Successfully deleted user notice settings for user {$user_id}" );
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Callback (hook) for the save_post action.
+	 *
+	 * If the contributor has added the necessary settings to include the post in a sequence, we'll add it.
+	 *
+	 * @param $post_id - The ID of the post being saved
+	 */
+	public function post_save_action( $post_id ) {
+		
+		global $current_user;
+		global $post;
+		$utils = Utilities::get_instance();
+		
+		$this->managed_types = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
+		
+		if ( ! isset( $post->post_type ) ) {
+			$utils->log( "No post type defined for {$post_id}" );
+			
+			return;
+		}
+		
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			$utils->log( "Exit during autosave" );
+			
+			return;
+		}
+		
+		if ( wp_is_post_revision( $post_id ) !== false ) {
+			$utils->log( "Not saving revisions ({$post_id}) to sequence" );
+			
+			return;
+		}
+		
+		if ( ! in_array( $post->post_type, $this->managed_types ) ) {
+			$utils->log( "Not saving delay info for {$post->post_type}" );
+			
+			return;
+		}
+		
+		if ( 'trash' == get_post_status( $post_id ) ) {
+			return;
+		}
+		
+		$utils->log( "Sequences & Delays have been configured for page save. " . $utils->_who_called_me() );
+		
+		$seq_ids          = $utils->get_variable( 'e20r_seq-sequences', array() );
+		$delays           = $utils->get_variable( 'e20r_seq-delay', array() );
+		$visibility_delay = $utils->get_variable( 'e20r_seq-nonMemberAccessDelay', array() );
+		
+		if ( empty( $delays ) && ( ! in_array( 0, $delays ) ) ) {
+			
+			$this->set_error_msg( __( "Error: No delay value(s) received", Controller::plugin_slug ) );
+			$utils->log( "Error: delay not specified! " );
+			
+			return;
+		}
+		
+		$err_msg = null;
+		
+		// $already_in = $this->get_sequences_for_post( $post_id );
+		// $already_in = get_post_meta( $post_id, "_post_sequences", true );
+		
+		$utils->log( "Saved received variable values..." );
+		
+		foreach ( $seq_ids as $arr_key => $seq_id ) {
+			
+			$utils->log( "Processing for sequence {$seq_id}" );
+			
+			if ( $seq_id == 0 ) {
+				continue;
+			}
+			
+			if ( $seq_id != $this->sequence_id ) {
+				
+				if ( ! $this->get_options( $seq_id ) ) {
+					$utils->log( "Unable to load settings for sequence with ID: {$seq_id}" );
+					
+					return;
+				}
+			}
+			
+			$user_can = apply_filters( 'e20r-sequence-has-edit-privileges', $this->user_can_edit( $current_user->ID ) );
+			
+			if ( ! $user_can ) {
+				
+				$this->set_error_msg( __( 'Incorrect privileges for this operation', Controller::plugin_slug ) );
+				$utils->log( "User lacks privileges to edit" );
+				
+				return;
+			}
+			
+			if ( $seq_id == 0 ) {
+				
+				$utils->log( "No specified sequence or it's set to 'nothing'" );
+			} else if ( is_null( $delays[ $arr_key ] ) || ( empty( $delays[ $arr_key ] ) && ! is_numeric( $delays[ $arr_key ] ) ) ) {
+				
+				$utils->log( "Not a valid delay value...: " . $delays[ $arr_key ] );
+				$this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", Controller::plugin_slug ), get_the_title( $seq_id ) ) );
+			} else {
+				
+				$utils->log( "Processing post {$post_id} for sequence {$this->sequence_id} with delay {$delays[$arr_key]} and visibility delay {$visibility_delay[$arr_key]}" );
+				$model = Model::get_instance();
+				$model->add_post( $post_id, $delays[ $arr_key ], $visibility_delay[ $arr_key ] );
+			}
+		}
+	}
+	
+	/**
+	 * Save the settings as metadata for the sequence
+	 *
+	 * @param $post_id -- ID of the sequence these options belong to.
+	 *
+	 * @return int | mixed - Either the ID of the Sequence or its content
+	 *
+	 * @access public
+	 */
+	public function save_post_meta( $post_id ) {
+		
+		global $post;
+		$utils = Utilities::get_instance();
+		
+		// Check that the function was called correctly. If not, just return
+		if ( empty( $post_id ) ) {
+			
+			$utils->log( 'No post ID supplied...' );
+			
+			return false;
+		}
+		
+		if ( wp_is_post_revision( $post_id ) ) {
+			return $post_id;
+		}
+		
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return $post_id;
+		}
+		
+		if ( ! isset( $post->post_type ) || ( 'e20r_sequence' != $post->post_type ) ) {
+			return $post_id;
+		}
+		
+		if ( 'trash' == get_post_status( $post_id ) ) {
+			return $post_id;
+		}
+		
+		try {
+			$this->init( $post_id );
+		} catch ( \Exception $exception ) {
+			$utils->log( "Error loading settings for sequence {$post_id}: " . $exception->getMessage() );
+			
+			return $post_id;
+		}
+		
+		$utils->log( 'save_post_meta(): Saving settings for sequence ' . $post_id );
+		// $utils->log('From Web: ' . print_r($_REQUEST, true));
+		
+		// OK, we're authenticated: we need to find and save the data
+		if ( isset( $_POST['e20r_sequence_settings_noncename'] ) ) {
+			
+			$utils->log( 'save_post_meta() - Have to load new instance of Sequence class' );
+			
+			if ( ! $this->options ) {
+				$this->options = $this->default_options();
+			}
+			
+			if ( ( $retval = $this->save_settings( $post_id ) ) === true ) {
+				
+				$utils->log( "save_post_meta(): Saved metadata for sequence #{$post_id} and clearing the cache" );
+				$this->delete_cache( $post_id );
+				
+				return true;
+			} else {
+				return false;
+			}
+			
+		}
+		
+		return false; // Default
+	}
+	
+	/**
+	 * Sanitize supplied field value(s) depending on it's data type
+	 *
+	 * @param $field - The data to santitize
+	 *
+	 * @return array|int|string
+	 */
+	/*
+	public function sanitize( $field ) {
+		
+		if ( ! is_numeric( $field ) ) {
+			
+			if ( is_array( $field ) ) {
+				
+				foreach ( $field as $key => $val ) {
+					$field[ $key ] = $this->sanitize( $val );
+				}
+			}
+			
+			if ( is_object( $field ) ) {
+				
+				foreach ( $field as $key => $val ) {
+					$field->{$key} = $this->sanitize( $val );
+				}
+			}
+			
+			if ( ( ! is_array( $field ) ) && ctype_alpha( $field ) ||
+			     ( ( ! is_array( $field ) ) && strtotime( $field ) ) ||
+			     ( ( ! is_array( $field ) ) && is_string( $field ) )
+			) {
+				
+				$field = sanitize_text_field( $field );
+			}
+			
+		} else {
+			
+			if ( is_float( $field + 1 ) ) {
+				
+				$field = sanitize_text_field( $field );
+			}
+			
+			if ( is_int( $field + 1 ) ) {
+				
+				$field = intval( $field );
+			}
+		}
+		
+		return $field;
+	}
+	*/
 	
 	/**
 	 * Save the settings for a sequence ID as post_meta for that Sequence CPT
@@ -2755,56 +3002,6 @@ class Controller {
 	}
 	
 	/**
-	 * Sanitize supplied field value(s) depending on it's data type
-	 *
-	 * @param $field - The data to santitize
-	 *
-	 * @return array|int|string
-	 */
-	/*
-	public function sanitize( $field ) {
-		
-		if ( ! is_numeric( $field ) ) {
-			
-			if ( is_array( $field ) ) {
-				
-				foreach ( $field as $key => $val ) {
-					$field[ $key ] = $this->sanitize( $val );
-				}
-			}
-			
-			if ( is_object( $field ) ) {
-				
-				foreach ( $field as $key => $val ) {
-					$field->{$key} = $this->sanitize( $val );
-				}
-			}
-			
-			if ( ( ! is_array( $field ) ) && ctype_alpha( $field ) ||
-			     ( ( ! is_array( $field ) ) && strtotime( $field ) ) ||
-			     ( ( ! is_array( $field ) ) && is_string( $field ) )
-			) {
-				
-				$field = sanitize_text_field( $field );
-			}
-			
-		} else {
-			
-			if ( is_float( $field + 1 ) ) {
-				
-				$field = sanitize_text_field( $field );
-			}
-			
-			if ( is_int( $field + 1 ) ) {
-				
-				$field = intval( $field );
-			}
-		}
-		
-		return $field;
-	}
-	*/
-	/**
 	 * Converts a timeString to a timestamp value (UTC compliant).
 	 * Will use the supplied timeString to calculate & return the UTC seconds-since-epoch for that clock time tomorrow.
 	 *
@@ -2843,8 +3040,8 @@ class Controller {
 		}
 		
 		// Now in the Wordpress local timezone
-		$right_now  = current_time( 'timestamp' );
-		$time_str = "today {$time_string} {$saved_tz}";
+		$right_now = current_time( 'timestamp' );
+		$time_str  = "today {$time_string} {$saved_tz}";
 		
 		$utils->log( "Using time string for strtotime(): {$time_str}" );
 		$required_time = strtotime( $time_str, $right_now );
@@ -2949,216 +3146,6 @@ class Controller {
 		// return wp_cache_delete( $key, $group);
 	}
 	
-	
-	/**
-	 * Resets the user-specific alert settings for a specified sequence Id.
-	 *
-	 * @param int $user_id    - User's ID
-	 * @param int $sequence_id - ID of the sequence we're clearning
-	 *
-	 * @return mixed - false means the reset didn't work.
-	 */
-	public function reset_user_alerts( $user_id, $sequence_id ) {
-		
-		global $wpdb;
-		
-		$utils = Utilities::get_instance();
-		$utils->log( " Attempting to delete old-style user notices for sequence with ID: {$sequence_id}" );
-		$old_style = delete_user_meta( $user_id, "{$wpdb->prefix}e20r_sequence_notices" );
-		
-		$utils->log( "Attempting to delete v3 style user notices for sequence with ID: {$sequence_id}" );
-		$v3_style = delete_user_meta( $user_id, "e20r_sequence_id_{$sequence_id}_notices" );
-		
-		if ( $old_style || $v3_style ) {
-			
-			$utils->log( "Successfully deleted user notice settings for user {$user_id}" );
-			
-			return true;
-		}
-		
-		return false;
-	}
-	
-	/**
-	 * Callback (hook) for the save_post action.
-	 *
-	 * If the contributor has added the necessary settings to include the post in a sequence, we'll add it.
-	 *
-	 * @param $post_id - The ID of the post being saved
-	 */
-	public function post_save_action( $post_id ) {
-		
-		global $current_user;
-		global $post;
-		$utils = Utilities::get_instance();
-		
-		$this->managed_types = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page') );
-		
-		if ( ! isset( $post->post_type ) ) {
-			$utils->log( "No post type defined for {$post_id}" );
-			
-			return;
-		}
-		
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			$utils->log( "Exit during autosave" );
-			
-			return;
-		}
-		
-		if ( wp_is_post_revision( $post_id ) !== false ) {
-			$utils->log( "Not saving revisions ({$post_id}) to sequence" );
-			
-			return;
-		}
-		
-		if ( ! in_array( $post->post_type, $this->managed_types ) ) {
-			$utils->log( "Not saving delay info for {$post->post_type}" );
-			
-			return;
-		}
-		
-		if ( 'trash' == get_post_status( $post_id ) ) {
-			return;
-		}
-		
-		$utils->log( "Sequences & Delays have been configured for page save. " . $utils->_who_called_me() );
-		
-		$seq_ids          = $utils->get_variable( 'e20r_seq-sequences', array() );
-		$delays           = $utils->get_variable( 'e20r_seq-delay', array() );
-		$visibility_delay = $utils->get_variable( 'e20r_seq-nonMemberAccessDelay', array() );
-		
-		if ( empty( $delays ) && ( ! in_array( 0, $delays ) ) ) {
-			
-			$this->set_error_msg( __( "Error: No delay value(s) received", Controller::plugin_slug ) );
-			$utils->log( "Error: delay not specified! " );
-			
-			return;
-		}
-		
-		$err_msg = null;
-		
-		// $already_in = $this->get_sequences_for_post( $post_id );
-		// $already_in = get_post_meta( $post_id, "_post_sequences", true );
-		
-		$utils->log( "Saved received variable values..." );
-		
-		foreach ( $seq_ids as $arr_key => $seq_id ) {
-			
-			$utils->log( "Processing for sequence {$seq_id}" );
-			
-			if ( $seq_id == 0 ) {
-				continue;
-			}
-			
-			if ( $seq_id != $this->sequence_id ) {
-				
-				if ( ! $this->get_options( $seq_id ) ) {
-					$utils->log( "Unable to load settings for sequence with ID: {$seq_id}" );
-					
-					return;
-				}
-			}
-			
-			$user_can = apply_filters( 'e20r-sequence-has-edit-privileges', $this->user_can_edit( $current_user->ID ) );
-			
-			if ( ! $user_can ) {
-				
-				$this->set_error_msg( __( 'Incorrect privileges for this operation', Controller::plugin_slug ) );
-				$utils->log( "User lacks privileges to edit" );
-				
-				return;
-			}
-			
-			if ( $seq_id == 0 ) {
-				
-				$utils->log( "No specified sequence or it's set to 'nothing'" );
-			} else if ( is_null( $delays[ $arr_key ] ) || ( empty( $delays[ $arr_key ] ) && ! is_numeric( $delays[ $arr_key ] ) ) ) {
-				
-				$utils->log( "Not a valid delay value...: " . $delays[ $arr_key ] );
-				$this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", Controller::plugin_slug ), get_the_title( $seq_id ) ) );
-			} else {
-				
-				$utils->log( "Processing post {$post_id} for sequence {$this->sequence_id} with delay {$delays[$arr_key]} and visibility delay {$visibility_delay[$arr_key]}" );
-				$model = Model::get_instance();
-				$model->add_post( $post_id, $delays[ $arr_key ], $visibility_delay[ $arr_key ] );
-			}
-		}
-	}
-	
-	/**
-	 * Save the settings as metadata for the sequence
-	 *
-	 * @param $post_id -- ID of the sequence these options belong to.
-	 *
-	 * @return int | mixed - Either the ID of the Sequence or its content
-	 *
-	 * @access public
-	 */
-	public function save_post_meta( $post_id ) {
-		
-		global $post;
-		$utils = Utilities::get_instance();
-		
-		// Check that the function was called correctly. If not, just return
-		if ( empty( $post_id ) ) {
-			
-			$utils->log( 'No post ID supplied...' );
-			
-			return false;
-		}
-		
-		if ( wp_is_post_revision( $post_id ) ) {
-			return $post_id;
-		}
-		
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			return $post_id;
-		}
-		
-		if ( ! isset( $post->post_type ) || ( 'e20r_sequence' != $post->post_type ) ) {
-			return $post_id;
-		}
-		
-		if ( 'trash' == get_post_status( $post_id ) ) {
-			return $post_id;
-		}
-		
-		try {
-			$this->init( $post_id );
-		} catch ( \Exception $exception ) {
-			$utils->log( "Error loading settings for sequence {$post_id}: " . $exception->getMessage() );
-			
-			return $post_id;
-		}
-		
-		$utils->log( 'save_post_meta(): Saving settings for sequence ' . $post_id );
-		// $utils->log('From Web: ' . print_r($_REQUEST, true));
-		
-		// OK, we're authenticated: we need to find and save the data
-		if ( isset( $_POST['e20r_sequence_settings_noncename'] ) ) {
-			
-			$utils->log( 'save_post_meta() - Have to load new instance of Sequence class' );
-			
-			if ( ! $this->options ) {
-				$this->options = $this->default_options();
-			}
-			
-			if ( ( $retval = $this->save_settings( $post_id ) ) === true ) {
-				
-				$utils->log( "save_post_meta(): Saved metadata for sequence #{$post_id} and clearing the cache" );
-				$this->delete_cache( $post_id );
-				
-				return true;
-			} else {
-				return false;
-			}
-			
-		}
-		
-		return false; // Default
-	}
-	
 	/**
 	 * Return the single (specified) option/setting from the membership plugin
 	 *
@@ -3169,6 +3156,7 @@ class Controller {
 	public function get_membership_setting( $option_name ) {
 		
 		$val = null;
+		
 		return apply_filters( 'e20r-sequence-mmodule-get-membership-setting', $val, $option_name );
 	}
 	
@@ -3258,6 +3246,12 @@ class Controller {
 			}
 			
 			$user_id = $utils->get_variable( 'hidden_e20r_seq_uid', null );
+			$member  = null;
+			
+			if ( ! empty( $user_id ) ) {
+				$member = get_user_by( 'ID', $user_id );
+			}
+			
 			$utils->log( 'Updating user settings for user #: ' . $user_id );
 			
 			if ( ! empty( $user_id ) ) {
@@ -3273,57 +3267,7 @@ class Controller {
 				exit();
 			}
 			
-			try {
-				$this->init( $seq_id );
-				
-			} catch ( \Exception $exception ) {
-				wp_send_json_error( $this->get_error_msg() );
-				exit();
-			}
-			
-			$utils->log( 'Updating user settings for sequence #: ' . $this->sequence_id );
-			
-			if ( isset( $usr_settings->id ) && ( $usr_settings->id !== $this->sequence_id ) ) {
-				
-				$utils->log( 'No user specific settings found for this sequence. Creating defaults' );
-				
-				/*
-                // Create new opt-in settings for this user
-                if ( empty($usr_settings->sequence) )
-                    $new = new \stdClass();
-                else // Saves existing settings
-                    $new = $usr_settings;
-*/
-				$utils->log( 'Using default setting for user ' . $current_user->ID . ' and sequence ' . $this->sequence_id );
-				
-				$usr_settings = $this->create_user_notice_defaults();
-			}
-			
-			// $usr_settings->sequence[$seq_id]->sendNotice = ( isset( $_POST['hidden_e20r_seq_useroptin'] ) ?
-			$usr_settings->send_notices = ( isset( $_POST['hidden_e20r_seq_useroptin'] ) ?
-				intval( $_POST['hidden_e20r_seq_useroptin'] ) : $this->options->sendNotice );
-			
-			// If the user opted in to receiving alerts, set the opt-in timestamp to the current time.
-			// If they opted out, set the opt-in timestamp to -1
-			
-			if ( $usr_settings->send_notices == 1 ) {
-				
-				// Fix the alert settings so the user doesn't receive old alerts.
-				
-				$member_days = $this->get_membership_days( $user_id );
-				$post_list   = $model->load_sequence_post( null, $member_days, null, '<=', null, true );
-				
-				$usr_settings = $this->fix_user_alert_settings( $usr_settings, $post_list, $member_days );
-				
-				// Set the timestamp when the user opted in.
-				$usr_settings->last_notice_sent = current_time( 'timestamp' );
-				$usr_settings->optin_at         = current_time( 'timestamp' );
-				
-			} else {
-				$usr_settings->last_notice_sent = - 1; // Opted out.
-				$usr_settings->optin_at         = - 1;
-			}
-			
+			$status = $this->update_notice_settings( $member, $seq_id );
 			
 			// Add an empty array to store posts that the user has already been notified about
 			/*                if ( empty( $usr_settings->posts ) ) {
@@ -3456,6 +3400,69 @@ class Controller {
 	}
 	
 	/**
+	 * Update the Email Alert Notice settings for the user (Member) and sequence
+	 *
+	 * @param \WP_User $member
+	 * @param int      $sequence_id
+	 *
+	 * @return bool
+	 */
+	public function update_notice_settings( $member, $sequence_id ) {
+		
+		$utils = Utilities::get_instance();
+		
+		try {
+			$this->init( $sequence_id );
+			
+		} catch ( \Exception $exception ) {
+			wp_send_json_error( $this->get_error_msg() );
+			wp_die();
+		}
+		
+		$utils->log( "Updating user settings for sequence #: {$sequence_id}" );
+		$settings = $this->load_user_notice_settings( $member->ID, $sequence_id );
+		
+		if ( isset( $usr_settings->id ) && ( $settings->id !== $sequence_id ) ) {
+			
+			$utils->log( "Creating default setting for user {$member->ID} and sequence {$sequence_id}" );
+			
+			$settings = $this->create_user_notice_defaults();
+		}
+		
+		// $usr_settings->sequence[$seq_id]->sendNotice = ( isset( $_POST['hidden_e20r_seq_useroptin'] ) ?
+		$settings->send_notices = $this->get_option_by_name( 'sendNotice' );
+		
+		// If the user opted in to receiving alerts, set the opt-in timestamp to the current time.
+		// If they opted out, set the opt-in timestamp to -1
+		if ( $settings->send_notices == 1 ) {
+			
+			// Fix the alert settings so the user doesn't receive old alerts.
+			
+			$member_days = $this->get_membership_days( $member->ID );
+			$post_list   = Model::get_instance()->load_sequence_post( null, $member_days, null, '<=', null, true );
+			
+			$settings = $this->fix_user_alert_settings( $settings, $post_list, $member_days );
+			
+			// Set the timestamp when the user opted in.
+			$settings->last_notice_sent = current_time( 'timestamp' );
+			$settings->optin_at         = current_time( 'timestamp' );
+			
+		} else {
+			$settings->last_notice_sent = - 1; // Opted out.
+			$settings->optin_at         = - 1;
+		}
+		
+		/* Save the user options we just defined */
+		$utils->log( "Opt-In Timestamp is: {$settings->last_notice_sent}" );
+		$utils->log( "Saving user_meta for UID ({$member->ID}) settings: " . print_r( $settings, true ) );
+		
+		$status = $this->save_user_notice_settings( $member->ID, $settings, $sequence_id );
+		$this->set_error_msg( null );
+		
+		return $status;
+	}
+	
+	/**
 	 * Access the private $error value
 	 *
 	 * @return string|null|mixed -- Error message or NULL
@@ -3478,6 +3485,22 @@ class Controller {
 		} else {
 			return null;
 		}
+	}
+	
+	/**
+	 * Find a Sequence option by name and return it's current setting/value
+	 *
+	 * @param $option - The name of the setting to return
+	 *
+	 * @return mixed - The setting value
+	 */
+	public function get_option_by_name( $option ) {
+		if ( ! isset( $this->options->{$option} ) ) {
+			
+			return false;
+		}
+		
+		return $this->options->{$option};
 	}
 	
 	/**
@@ -4182,12 +4205,12 @@ class Controller {
 		
 		// Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
 		$seqs = new \WP_Query(
-		        array(
-		                'post_type' => Controller::$seq_post_type,
-                        'posts_per_page' => -1,
-                        'fields' => 'ids',
-                )
-        );
+			array(
+				'post_type'      => Controller::$seq_post_type,
+				'posts_per_page' => - 1,
+				'fields'         => 'ids',
+			)
+		);
 		
 		// Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
 		foreach ( $seqs->get_posts() as $sequence_id ) {
@@ -4226,7 +4249,10 @@ class Controller {
 		$utils = Utilities::get_instance();
 		$utils->log( "Processing activation event using {$old_timeout} secs as timeout" );
 		
-		add_filter( 'e20r-sequence-mmodule-is-active', array( Paid_Memberships_Pro::get_instance(), 'is_membership_plugin_active'), 10, 1 );
+		add_filter( 'e20r-sequence-mmodule-is-active', array(
+			Paid_Memberships_Pro::get_instance(),
+			'is_membership_plugin_active',
+		), 10, 1 );
 		
 		$active_plugin = apply_filters( 'e20r-sequence-mmodule-is-active', false );
 		
@@ -4280,12 +4306,12 @@ class Controller {
 	 */
 	public function post_type_icon() {
 		?>
-		<style>
-			#adminmenu .menu-top.menu-icon-<?php esc_attr_e( self::$seq_post_type); ?> div.wp-menu-image:before {
-				font-family: FontAwesome !important;
-				content: '\f160';
-			}
-		</style>
+        <style>
+            #adminmenu .menu-top.menu-icon-<?php esc_attr_e( self::$seq_post_type); ?> div.wp-menu-image:before {
+                font-family: FontAwesome !important;
+                content: '\f160';
+            }
+        </style>
 		<?php
 	}
 	
@@ -4311,7 +4337,7 @@ class Controller {
 		
 		$utils->log( "'sequence_links' or 'sequence_alert' shortcode present? " . ( $found_links || $found_optin ? 'Yes' : 'No' ) );
 		
-		if ( is_front_page() && !$found_links && !$found_optin ) {
+		if ( is_front_page() && ! $found_links && ! $found_optin ) {
 			return;
 		}
 		
@@ -4818,7 +4844,7 @@ class Controller {
 		add_action( 'wp_ajax_nopriv_e20r_save_settings', array( $this, 'unprivileged_ajax_error' ) );
 		
 		// Load shortcodes (instantiate the object(s).
-		add_action( 'wp_ready', array( Available_On::get_instance(), 'load_hooks') );
+		add_action( 'wp_ready', array( Available_On::get_instance(), 'load_hooks' ) );
 		
 		// Load licensed modules (if applicable)
 		add_action( 'e20r-sequence-load-licensed-modules', array( New_Content_Notice::get_instance(), 'load_hooks' ) );
