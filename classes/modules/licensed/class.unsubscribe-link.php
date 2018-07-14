@@ -19,7 +19,6 @@
 
 namespace E20R\Sequences\Modules\Licensed\Unsubscribe;
 
-
 use E20R\Sequences\Sequence\Controller;
 use E20R\Utilities\Utilities;
 use E20R\Utilities\Licensing\Licensing;
@@ -31,47 +30,25 @@ class Unsubscribe_Link {
 	private static $instance = null;
 	
 	/**
-	 * Load any action hooks and filter hooks
+	 * Generate the URL to the "unsubscribe" link for the sequence notice(s)
 	 *
-	 * @access private
+	 * @param int $user_id     - ID of the user in the WordPress instance
+	 * @param int $sequence_id - ID of the sequence we're receiving these notices from/for
+	 *
+	 * @return null|string
 	 */
-	private function load_hooks() {
+	public static function create_unsubscribe_link( $user_id, $sequence_id ) {
 		
-		// TODO: Implement any hook handler(s)
-		if ( Licensing::is_licensed( Controller::plugin_prefix ) ) {
-			add_action( 'wp_ajax_nopriv_unsub_sequence_notification', array( $this, 'unsubscribe_handler' ) );
+		if ( false === Licensing::is_licensed( Controller::plugin_prefix ) ) {
+			return null;
+		} else {
+			return sprintf(
+				'<a href="%1$s" title="%2$s" target="_blank" class="e20r-sequence-unsubscribe">%3$s</a>',
+				esc_url_raw( self::unsubscribe_url_for_user( $user_id, $sequence_id ) ),
+				__( "Unsubscribe from notices", Controller::plugin_slug ),
+				__( "Unsubscribe", Controller::plugin_slug )
+			);
 		}
-	}
-	
-	public function unsubscribe_handler() {
-		
-		$utils = Utilities::get_instance();
-		
-		// No more than 24 hours for the timeout value
-		$window_max = intval( apply_filters( 'e20r-sequence-unsubscribe-timeout-max', DAY_IN_SECONDS ) );
-		
-		if ( $window_max > DAY_IN_SECONDS ) {
-			
-			$utils->add_message( __( 'Invalid max value for the unsubscription timeout', Controller::plugin_slug ), 'warning', 'backend' );
-			$window_max = DAY_IN_SECONDS;
-		}
-		
-		// Use GMT when handling timeout window(s)
-		$timeout = current_time( 'timestamp', true ) - $window_max;
-		
-		$encoded_data = get_query_var( 'sequence_id' );
-		
-		/**
-		 * $user_data = array(
-		 *        'member' => $user_id,
-		 *        'sequence' => $sequence_id,
-		 *        'when' => $timestamp,
-		 * );
-		 */
-		$user_data = json_decode( base64_decode( urldecode( $encoded_data ) ) );
-		
-		// TODO: Process unsubscribe/deactivate notification emails
-		
 	}
 	
 	/**
@@ -82,11 +59,7 @@ class Unsubscribe_Link {
 	 *
 	 * @return string|null
 	 */
-	public static function create_unsubscribe_link( $user_id, $sequence_id ) {
-		
-		if ( false === Licensing::is_licensed( Controller::plugin_prefix ) ) {
-			return null;
-		}
+	public static function unsubscribe_url_for_user( $user_id, $sequence_id ) {
 		
 		$utils     = Utilities::get_instance();
 		$timestamp = current_time( 'timestamp', true ); // Use GMT for timeout window(s)
@@ -95,6 +68,7 @@ class Unsubscribe_Link {
 			'member'   => $user_id,
 			'sequence' => $sequence_id,
 			'when'     => $timestamp,
+			'nonce'    => wp_create_nonce( 'e20r-sequence-optout' ),
 		);
 		
 		$encoded_data = urlencode( base64_encode( json_encode( $user_data ) ) );
@@ -132,5 +106,116 @@ class Unsubscribe_Link {
 		}
 		
 		return self::$instance;
+	}
+	
+	/**
+	 * Load any action hooks and filter hooks
+	 *
+	 * @access private
+	 */
+	private function load_hooks() {
+		
+		// Only available if using the Sequences Plus license
+		if ( Licensing::is_licensed( Controller::plugin_prefix ) ) {
+			add_action( 'wp_ajax_nopriv_unsub_sequence_notification', array( $this, 'unsubscribe_handler' ) );
+		}
+	}
+	
+	/**
+	 * Process unsubscribe request(s) from links in messages
+	 */
+	public function unsubscribe_handler() {
+		
+		$utils = Utilities::get_instance();
+		
+		// No more than 24 hours for the timeout value
+		$window_max = intval( apply_filters( 'e20r-sequence-unsubscribe-timeout-max', DAY_IN_SECONDS ) );
+		
+		if ( $window_max > DAY_IN_SECONDS ) {
+			
+			$utils->add_message( __( 'Invalid max value specified for the unsubscribe timeout', Controller::plugin_slug ), 'warning', 'backend' );
+			$window_max = DAY_IN_SECONDS;
+		}
+		
+		// Use GMT when handling timeout window(s)
+		$timeout      = current_time( 'timestamp', true ) - $window_max;
+		$encoded_data = get_query_var( 'sequence_id' );
+		
+		/**
+		 * $user_data = array(
+		 *        'member' => $user_id,
+		 *        'sequence' => $sequence_id,
+		 *        'when' => $timestamp,
+		 *        'nonce' => wp_create_nonce()
+		 * );
+		 */
+		$user_data       = json_decode( base64_decode( urldecode( $encoded_data ) ) );
+		$controller      = Controller::get_instance();
+		$error_page_id   = apply_filters(
+			'e20r-sequence-unsubscibe-link-error-page-id',
+			$controller->get_option_by_name( 'unsubscribeErrorPage' )
+		);
+		$success_page_id = apply_filters(
+			'e20r-sequence-unsubscibe-link-success-page-id',
+			$controller->get_option_by_name( 'unsubscribeSuccessPage' )
+		);
+		
+		if ( $user_data['when'] < $timeout ) {
+			$utils->log( "Security: Exceeded the timeout window for this link!" );
+			wp_redirect( get_permalink( $error_page_id ) );
+			wp_die();
+		}
+		
+		$sequence_id = intval( $user_data['sequence'] );
+		
+		if ( false === $controller->sequence_exists( $sequence_id ) ) {
+			$utils->log( "Error: {$user_data['sequence']} is not a valid sequence ID!" );
+			wp_redirect( get_permalink( $error_page_id ) );
+			wp_die();
+		}
+		
+		$member_id = intval( $user_data['member'] );
+		
+		if ( empty( $member_id ) ) {
+			$utils->log( "Error: Unable to locate the user identifier data!" );
+			wp_redirect( get_permalink( $error_page_id ) );
+			wp_die();
+		}
+		
+		$member = get_user_by( 'ID', $member_id );
+		
+		if ( empty( $member ) ) {
+			$utils->log( "Error: {$user_data['member']} is not a valid user" );
+			wp_redirect( get_permalink( $error_page_id ) );
+			wp_die();
+		}
+		
+		$member->membership_level = pmpro_getMembershipLevelForUser( $member->ID );
+		
+		if ( empty( $member->membership_level->id ) ) {
+			$utils->log( "Error: User {$member->ID} is not an active member!" );
+			wp_redirect( get_permalink( $error_page_id ) );
+			wp_die();
+		}
+		
+		if ( false === wp_verify_nonce( $user_data['nonce'], 'e20r-sequence-optout' ) ) {
+			$utils->log( "Error: Invalid NONCE value for {$member->ID}/{$sequence_id}" );
+			wp_redirect( get_permalink( $error_page_id ) );;
+			wp_die();
+		}
+		
+		// Unsubscribe from/deactivate notification emails for the specified sequence
+		$status = $controller->update_notice_settings( $member, $sequence_id );
+		
+		if ( true === $status ) {
+			$utils->log( "Successfully updated/unsubscribed member from email alerts" );
+			wp_redirect( get_permalink( $success_page_id ) );
+			wp_die();
+		}
+		
+		$utils->log( "Error: For some reason, the update of the member's unsubscribe action failed" );
+		wp_redirect( get_permalink( $error_page_id ) );
+		wp_die();
+		
 	}
 }
