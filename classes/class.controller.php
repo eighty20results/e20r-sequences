@@ -4181,12 +4181,18 @@ class Controller {
         */
 		
 		// Easiest is to iterate through all Sequence IDs and set the setting to 'sendNotice == 0'
-		$seqs = new \WP_Query( array( 'post_type' => 'e20r_sequence' ) );
+		$seqs = new \WP_Query(
+		        array(
+		                'post_type' => Controller::$seq_post_type,
+                        'posts_per_page' => -1,
+                        'fields' => 'ids',
+                )
+        );
 		
 		// Iterate through all sequences and disable any cron jobs causing alerts to be sent to users
-		foreach ( $seqs as $s ) {
+		foreach ( $seqs->get_posts() as $sequence_id ) {
 			
-			$this->get_options( $s->id );
+			$this->get_options( $sequence_id );
 			
 			if ( $this->options->sendNotice == 1 ) {
 				
@@ -4196,9 +4202,9 @@ class Controller {
 				// save meta for the sequence.
 				$this->save_sequence_meta();
 				
-				Cron::stop_sending_user_notices( $s->ID );
+				Cron::stop_sending_user_notices( $sequence_id );
 				
-				$utils->log( 'Deactivated email alert(s) for sequence ' . $s->ID );
+				$utils->log( 'Deactivated email alert(s) for sequence ' . $sequence_id );
 			}
 		}
 		
