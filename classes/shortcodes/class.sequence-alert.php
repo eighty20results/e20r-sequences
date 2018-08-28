@@ -2,7 +2,7 @@
 /**
 License:
 
-Copyright 2014-2016 Eighty/20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
+Copyright 2014-2017 Eighty/20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License, version 2, as
@@ -20,17 +20,15 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  **/
 
 namespace E20R\Sequences\Shortcodes;
-use E20R\Sequences\Shortcodes as Shortcodes;
-use E20R\Sequences\Sequence as Sequence;
-use E20R\Tools as E20RTools;
+use E20R\Tools\DBG;
 
-class sequence_alert {
+class Sequence_Alert {
 
 	private static $_this;
 	private $class_name;
 
 	/**
-	 * sequence_alert shortcode constructor.
+	 * Sequence_Alert shortcode constructor.
 	 *
 	 * @since v4.2.9
 	 */
@@ -51,7 +49,7 @@ class sequence_alert {
 	/**
 	 * Returning the instance (used by the 'get_{class_name}_class_instance' hook)
 	 *
-	 * @return Shortcodes\sequence_links
+	 * @return Sequence_Alert
 	 *
 	 * * @since v4.2.9
 	 */
@@ -62,39 +60,35 @@ class sequence_alert {
 
 	/**
 	 * Shortcode to display notification opt-in checkbox
-	 * @param string $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
+	 * @param array $attributes - Shortcode attributes (required attribute is 'sequence=<sequence_id>')
 	 * @param string $content - Would be unexpected. Included for completeness purposes
 	 *
 	 * @return string - HTML of the opt-in
 	 */
-	public function load_shortcode( $attributes, $content = '' ) {
+	public function load_shortcode( $attributes = array(), $content = '' ) {
 
-		E20RTools\DBG::log("Loading user alert opt-in");
+		DBG::log("Loading user alert opt-in");
 		$sequence_id = null;
 
 		extract( shortcode_atts( array(
 			'sequence_id' => 0,
 		), $attributes ) );
 
-		E20RTools\DBG::log("shortcode specified sequence id: {$sequence_id}");
-
+		DBG::log("shortcode specified sequence id: {$sequence_id}");
+		$view_class = apply_filters('get_sequence_views_class_instance', null);
+		$sequence = apply_filters('get_sequence_class_instance', null);
+		
 		if ( !empty( $sequence_id ) ) {
-
-			$sequence = apply_filters('get_sequence_class_instance', null);
-			$view = apply_filters('get_sequence_views_class_instance', null);
-
+			
 			if ( !$sequence->init( $sequence_id ) ) {
 
 				return $sequence->get_error_msg();
 			}
 
-			return $view->view_user_notice_opt_in();
+			return $view_class->view_user_notice_opt_in();
 		}
-		else {
-
-			E20RTools\DBG::log("ERROR: No sequence ID specified!", E20R_DEBUG_SEQ_WARNING );
-		}
-
-		return null;
+		
+		DBG::log("ERROR: No sequence ID specified!", E20R_DEBUG_SEQ_WARNING );
+		return $view_class->view_sequence_error( 'ERRNOSEQUENCEID' );
 	}
 }

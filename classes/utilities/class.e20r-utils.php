@@ -19,10 +19,10 @@
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
-class e20rUtils {
+class E20R_Utils {
 
 	/**
-	 * @var     e20rUtils $instance Instance of this class (using singleton pattern)
+	 * @var     E20R_Utils $instance Instance of this class (using singleton pattern)
 	 */
 	private static $instance;
 
@@ -42,7 +42,7 @@ class e20rUtils {
 	protected $autoloader_classes = array();
 
 	/**
-	 * e20rUtils constructor (private: using singleton pattern)
+	 * E20R_Utils constructor (private: using singleton pattern)
 	 */
 	public function __construct() {
 
@@ -51,9 +51,9 @@ class e20rUtils {
 	}
 
 	/**
-	 * Creates or returns an instance of the e20rUtils class.
+	 * Creates or returns an instance of the E20R_Utils class.
 	 *
-	 * @return  e20rUtils A single instance of this class.
+	 * @return  E20R_Utils A single instance of this class.
 	 */
 	public static function get_instance() {
 
@@ -83,8 +83,8 @@ class e20rUtils {
 		if ( empty( $this->autoloader_classes ) ) {
 
 			$this->autoloader_classes = array(
-				'e20rutils',
-				'e20rlicense'
+				'e20r_utils',
+				'e20r_license'
 			);
 		}
 
@@ -318,4 +318,4 @@ class e20rUtils {
 }
 
 // Load ourselves to memory (early).
-// add_action('plugins_loaded', 'e20rUtils::get_instance' );
+// add_action('plugins_loaded', 'E20R_Utils::get_instance' );

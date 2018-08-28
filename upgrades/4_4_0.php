@@ -1,11 +1,12 @@
 <?php
-use E20R\Tools as E20RTools;
+use E20R\Tools\DBG;
+use E20R\Sequences\Sequence\Sequence_Controller;
 
 function e20r_sequence_upgrade_settings_433() {
 
     $obj = apply_filters('get_sequence_class_instance', null);
 
-    $sequence_list = E20R\Sequences\Sequence\Controller::all_sequences('all');
+    $sequence_list = Sequence_Controller::all_sequences('all');
     $settings_map = array(
         'hidden' => 'hideFuture', 'lengthVisible' => 'lengthVisible',
         'sortOrder' => 'sortOrder', 'delayType' => 'delayType', 'byDays' => 'byDays',
@@ -19,7 +20,7 @@ function e20r_sequence_upgrade_settings_433() {
 
     foreach( $sequence_list as $s ) {
 
-        E20RTools\DBG::log("Converting settings for: {$s->ID} - {$s->post_title}");
+        DBG::log("Converting settings for: {$s->ID} - {$s->post_title}");
 
         $old_settings = get_post_meta($s->ID, '_pmpro_sequence_settings', true);
 
@@ -38,7 +39,7 @@ function e20r_sequence_upgrade_settings_433() {
             $new_settings->{$settings_map[$key]} = $value;
         }
 
-        E20RTools\DBG::log("New settings for: {$s->ID}: " . print_r($new_settings, true));
+        DBG::log("New settings for: {$s->ID}: " . print_r($new_settings, true));
         // update_post_meta($s->ID, '_pmpro_sequence_settings', $new_settings);
 
         unset($new_settings);

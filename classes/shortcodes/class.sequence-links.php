@@ -2,7 +2,7 @@
 /**
 License:
 
-Copyright 2014-2016 Eighty/20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
+Copyright 2014-2017 Eighty/20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License, version 2, as
@@ -20,17 +20,17 @@ Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  **/
 
 namespace E20R\Sequences\Shortcodes;
-use E20R\Sequences\Shortcodes as Shortcodes;
-use E20R\Sequences\Sequence as Sequence;
-use E20R\Tools as E20RTools;
 
-class sequence_links {
+use E20R\Tools\DBG;
+
+
+class Sequence_Links {
 
 	private static $_this;
 	private $class_name;
 
 	/**
-	 * sequence_links shortcode constructor.
+	 * Sequence_Links shortcode constructor.
 	 *
 	 * @since v4.2.9
 	 */
@@ -45,18 +45,21 @@ class sequence_links {
 		self::$_this = $this;
 
 		add_filter("get_{$this->class_name}_class_instance", array( $this, 'get_instance' ) );
-		// add_shortcode('sequence_alert', array( $this, 'load_shortcode' ) );
 	}
 
 	/**
 	 * Returning the instance (used by the 'get_available_class_instance' hook)
 	 *
-	 * @return Shortcodes\sequence_alert
+	 * @return Sequence_Links
 	 *
 	 * * @since v4.2.9
 	 */
 	public function get_instance()
 	{
+		if ( is_null( self::$_this ) ) {
+			self::$_this = new self;
+		}
+		
 		return self::$_this;
 	}
 
@@ -90,11 +93,29 @@ class sequence_links {
 			'highlight' => true,
 			'scrollbox' => false,
 		), $attributes ) );
-
-		if ( $pagesize == 0 ) {
-
-			$pagesize = 30; // Default
+		
+		$no_values = apply_filters( 'e20r-sequences-shortcode-novalues', array( 'no', 'false', false, '0' ) );
+		
+		if ( isset($attributes['button']) && in_array( strtolower( $attributes['button'] ), $no_values ) ) {
+			$button = false;
+		} else {
+			$button = true;
 		}
+		
+		if ( isset($attributes['highlight']) && in_array( strtolower( $attributes['highlight'] ), $no_values ) ) {
+			$highlight = false;
+		} else {
+			$highlight = true;
+		}
+		
+		if ( isset($attributes['scrollbox']) && in_array( strtolower( $attributes['scrollbox'] ), $no_values) ) {
+			$scrollbox = false;
+		} else {
+			$scrollbox = true;
+		}
+		
+		$pagesize = isset($attributes['pagesize']) ? intval( $attributes['pagesize'] ) : 30;
+		
 		$sequence = apply_filters('get_sequence_class_instance', null);
 		$view = apply_filters('get_sequence_views_class_instance', null);
 
@@ -112,13 +133,13 @@ class sequence_links {
 				return ''; // No post given so returning no info.
 			}
 		}
-		E20RTools\DBG::log("We're given the ID of: {$id} ");
+		DBG::log("We're given the ID of: {$id} ");
 
 		$seq_access = $sequence->has_post_access($current_user->ID, $id, false, $id);
 
 		if ( ( is_array( $seq_access ) &&  false == $seq_access[0] ) || (!is_array($seq_access) && false == $seq_access ) )  {
 
-			E20RTools\DBG::log("Not logged in or not a member with access to this sequence. Exiting!");
+			DBG::log("Not logged in or not a member with access to this sequence. Exiting!");
 
 			$default_message = __("We're sorry, you do not have access to this content. Please either log in to this system, and/or upgrade your membership level", "e20r-sequences");
 			return apply_filters('e20r-sequence-mmodule-access-denied-msg', $default_message, $id, $current_user->ID);
@@ -127,17 +148,17 @@ class sequence_links {
 		// Make sure the sequence exists.
 		if ( ! $sequence->sequence_exists( $id ) ) {
 
-			E20RTools\DBG::log("shortcode() - The requested sequence (id: {$id}) does not exist", E20R_DEBUG_SEQ_WARNING );
-			$errorMsg = '<p class="error" style="text-align: center;">The specified Sequence was not found. <br/>Please report this error to the webmaster.</p>';
+			DBG::log("The requested sequence (id: {$id}) does not exist", E20R_DEBUG_SEQ_WARNING );
+			$error_msg = sprintf( '<p class="error" style="text-align: center;">%s<br/>%s</p>', __("The specified Sequence was not found.", "e20r-sequences" ), __( "Please report this error to the webmaster.", "e20r-sequences" ) );
 
-			return apply_filters( 'e20r-sequence-not-found-msg', $errorMsg );
+			return apply_filters( 'e20r-sequence-not-found-msg', $error_msg );
 		}
 
 		if ( !$sequence->init( $id ) ) {
 			return $sequence->get_error_msg();
 		}
 
-		E20RTools\DBG::log("shortcode() - Ready to build link list for sequence with ID of: " . $id);
+		DBG::log("shortcode() - Ready to build link list for sequence with ID of: " . $id);
 
 		if ( $sequence->has_post_access( $current_user->ID, $id, false, $id ) ) {
 

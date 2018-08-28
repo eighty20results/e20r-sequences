@@ -16,9 +16,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
-namespace E20R\Sequences\Tools;
+namespace E20R\Sequences\Async_Notices;
 
-class e20rSendUserNotices extends E20R_Background_Process {
+class Send_Sequence_Notices extends E20R_Background_Process {
 
 	/**
 	 * @var string The action to perform

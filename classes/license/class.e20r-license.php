@@ -18,6 +18,8 @@
 	Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
 */
 
+namespace E20R\Tools\License;
+
 defined( 'ABSPATH' ) or die( 'Cannot access plugin sources directly' );
 
 if ( !defined( 'E20R_LICENSE_VERSION' ) ) {
@@ -45,19 +47,19 @@ if ( ! defined( 'E20R_LICENSE_ERROR' ) ) {
 }
 
 // Don't redefine the class if it exists in memory already
-if ( class_exists( 'e20rLicense' ) ) {
+if ( class_exists( '\E20R_License' ) ) {
 	return;
 }
 
-class e20rLicense {
+class E20R_License {
 
 	/**
-	 * @var e20rLicense $instance The class instance
+	 * @var E20R_License $instance The class instance
 	 */
 	private static $instance = null;
 
 	/**
-	 * @var e20rUtils   Utilities class instance
+	 * @var \E20R_Utils   Utilities class instance
 	 */
 	private $utils;
 
@@ -72,12 +74,12 @@ class e20rLicense {
 	protected $license_list = array();
 
 	/**
-	 * @var e20rLicense $license
+	 * @var E20R_License $license
 	 */
 	private $license;
 
 	/**
-	 * e20rLicense constructor.
+	 * E20R_License constructor.
 	 */
 	public function __construct() {
 
@@ -109,8 +111,8 @@ class e20rLicense {
 
 		add_action( 'http_api_curl', array( $this, 'force_tls_12' ) );
 
-		if ( class_exists( 'e20rUtils' ) ) {
-			$this->utils = e20rUtils::get_instance();
+		if ( class_exists( '\E20R_Utils' ) ) {
+			$this->utils = \E20R_Utils::get_instance();
 			$this->utils->add_to_autoloader_list( get_class( $this ) );
 		}
 	}
@@ -118,7 +120,7 @@ class e20rLicense {
 	/**
 	 * Retrieve and initiate the class instance
 	 *
-	 * @return e20rLicense
+	 * @return E20R_License
 	 */
 	public static function get_instance() {
 
@@ -132,9 +134,9 @@ class e20rLicense {
 	}
 
 	/**
-	 * Return the existing instance of the e20rUtils class (for notices/etc)
+	 * Return the existing instance of the \E20R_Utils class (for notices/etc)
 	 *
-	 * @return e20rUtils
+	 * @return \E20R_Utils
 	 */
 	public function get_utils() {
 		return $this->utils;
@@ -208,7 +210,7 @@ class e20rLicense {
 	 *
 	 * @return bool
 	 *
-	 * TODO: Include e20rLicense::isLicenseActive() in class using this infrastructure
+	 * TODO: Include E20R_License::isLicenseActive() in class using this infrastructure
 	 */
 	public static function isLicenseActive( $license_name, $package, $reply ) {
 
@@ -310,8 +312,8 @@ class e20rLicense {
 	/**
 	 * Compare license entries by the timestamp they were updated on the local system
 	 *
-	 * @param stdClass $lic_a - First license
-	 * @param stdClass $lic_b - Second license
+	 * @param \stdClass $lic_a - First license
+	 * @param \stdClass $lic_b - Second license
 	 *
 	 * @return int
 	 */

@@ -453,17 +453,18 @@ a:hover.page-numbers {
 
 #e20r-seq-post-future-hl {
     border-bottom: 2pt dashed rgba(0, 204, 0, 0.5);
+    border-top: 2pt dashed rgba(0, 204, 0, 0.5);
 }
 
-.e20r-seq-availnow-btn {
-    width: 170px;
-    display: inline-block;
-    /* position: relative; */
-    right: 5px;
-    float: right;
-    padding: 6px 0;
+.notice-warning {
+    border-left: 4px solid orange;
+    background: #fff;
+    /* border-left: 4px solid #fff; */
+    -webkit-box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
+    box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);
+    margin: 5px 15px 2px;
+    padding: 1px 12px;
 }
-
 #e20r-seq-post-summary {
     max-height: 150px;
     overflow: hidden;
