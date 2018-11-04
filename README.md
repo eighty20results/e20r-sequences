@@ -214,6 +214,13 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
+###4.6.11
+
+* BUG FIX: Didn't show Drip Feed Settings metabox for all post types it was configured for
+* BUG FIX: PHP Notice when post ID isn't found
+* ENHANCEMENT: Add support for using custom subject and links in notices
+* ENHANCEMENT: Didn't apply the e20r-sequence-alert-message-post-title filter to the Email Subject
+
 ###4.6.8
 
 * BUG FIX: Logic for testing metadata version was invalid
