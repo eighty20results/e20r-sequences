@@ -1558,6 +1558,11 @@ class Sequence_Controller {
 		
 		DBG::log( "Loaded " . count( $p ) . " posts with WP_Query" );
 		
+		if ( empty( $p ) ) {
+		    DBG::log("Didn't locate {$post_id}");
+		    return false;
+        }
+        
 		$new_post     = new \stdClass();
 		$new_post->id = $p[0]->ID;
 		
