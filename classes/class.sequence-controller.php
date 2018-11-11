@@ -1499,6 +1499,8 @@ class Sequence_Controller {
 	 * @param $delay
 	 *
 	 * @return bool
+     *
+     * @throws \Exception
 	 */
 	private function add_post_to_sequence( $sequence_id, $post_id, $delay ) {
 		
@@ -1558,7 +1560,7 @@ class Sequence_Controller {
 		
 		DBG::log( "Loaded " . count( $p ) . " posts with WP_Query" );
 		
-		if ( empty( $p ) ) {
+		if ( empty( $p ) && $post_id !== 0 ) {
 		    DBG::log("Didn't locate {$post_id}");
 		    return false;
         }
