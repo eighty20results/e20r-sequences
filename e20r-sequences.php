@@ -3,7 +3,7 @@
 Plugin Name: Sequences for Paid Memberships Pro
 Plugin URI: https://eighty20results.com/wordpress-plugins/e20r-sequences/
 Description: Simple to configure drip feed content plugin for your PMPro users.
-Version: 4.6.8
+Version: 4.6.12
 Author: Eighty / 20 Results (Thomas Sjolshagen)
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen
@@ -34,7 +34,7 @@ use E20R\Sequences\Sequence\Sequence_Controller;
 use E20R\Tools\DBG;
 
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '4.6.8');
+define('E20R_SEQUENCE_VERSION', '4.6.12');
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
 define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.4');
