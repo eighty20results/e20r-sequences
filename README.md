@@ -6,12 +6,7 @@ Create "Sequence" which are groups of posts/pages where the content is revealed 
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
-== Description ==
-This plugin currently requires Paid Memberships Pro and started life as a fork of the PMPro Series
- plugin by Stranger Studios, LLC. However, I needed a drip-content plugin that supported different delay type options, paginated
- lists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type,
- etc, etc, so I wound up with something completely different from PMPro Series. At this point, there's really nothing
- left of the original in this fork.
+This plugin currently requires Paid Memberships Pro and started life as a fork of the PMPro Series plugin by Stranger Studios, LLC. However, I needed a drip-content plugin that supported different delay type options, paginated lists of series posts, a way to let a user see an excerpt of the page/post, support a user defined custom post type, etc, etc, so I wound up with something completely different from PMPro Series. At this point, there's really nothing left of the original in this fork.
 
 ## Features
 
