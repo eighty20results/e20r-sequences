@@ -214,6 +214,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ##Changelog
 
+###4.6.12
+
+* BUG FIX: PHP Notice when post ID isn't found
+* BUG FIX: Ensure we're not actively looking for post ID 0 (we know there's no post, so nothing to find)
+* BUG FIX: PHP Warning in Sequence_Updates class
+
 ###4.6.11
 
 * BUG FIX: Didn't show Drip Feed Settings metabox for all post types it was configured for

@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro, sequences, pmpro series
 Requires at least: 3.9
 Tested up to: 4.9.8
-Stable tag: 4.6.11
+Stable tag: 4.6.12
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -171,6 +171,12 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.6.12 ==
+
+* BUG FIX: PHP Notice when post ID isn't found
+* BUG FIX: Ensure we're not actively looking for post ID 0 (we know there's no post, so nothing to find)
+* BUG FIX: PHP Warning in Sequence_Updates class
 
 == 4.6.11 ==
 
