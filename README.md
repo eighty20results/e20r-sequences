@@ -1,8 +1,8 @@
-#Sequences for Paid Memberships Pro by Eighty/20 Results
+# Sequences for Paid Memberships Pro by Eighty/20 Results
 
 Create "Sequence" which are groups of posts/pages where the content is revealed to members over time. This is a replacement for the "drip feed content" module for Paid Memberships Pro (pmpro-series).
 
-##Description
+## Description
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -13,7 +13,7 @@ This plugin currently requires Paid Memberships Pro and started life as a fork o
  etc, etc, so I wound up with something completely different from PMPro Series. At this point, there's really nothing
  left of the original in this fork.
 
-== Features ==
+## Features
 
 * Configuration UI for the drip feed sequence (meta box)
 * The plugin is translatable (I18N support)
@@ -44,14 +44,14 @@ See ./email/README.txt for information on templates for the email alerts.
 
     add_post_type_support( 'page', 'excerpt' );
 
-##Installation
+## Installation
 
 1. Upload the `e20r-sequences` directory to the `/wp-content/plugins/` directory of your site.
 2. Activate the plugin through the 'Plugins' menu in WordPress.
 3. Navigate to the Sequences menu in the WordPress dashboard to create a new sequence.
 4. Add posts to sequence using the "Posts in this Sequences" meta box on the sequence editor page, or add it to the actual post/page via the metabox on the top right of that screen.
 
-###Filters & Actions
+### Filters & Actions
 
 | Filter | Description | Default value |
 |--------------|:------------:|-------------:|
@@ -98,13 +98,13 @@ See ./email/README.txt for information on templates for the email alerts.
 | e20r-sequence-site-name | A text/string containing the name you wish to use as the blog name for this site | get_option('blogname') |
 | e20r-sequences-userstyle-url | The URL to a user defined .css file containing styles (will load after the default Sequences styles) | null |
 
-##Roadmap (possible features)
+## Roadmap (possible features)
 1. Add support for admin selected definition of when "Day 1" of content drip starts (i.e. "Immediately", "at midnight the date following the membership start", etc)
 2. Link has_access() to WP role() and membership plugin.
 3. Define own startdate value rather than rely on PMPro.
 4. Must rename plug-in to conform with Wordpress.org naming requirements - Done
 
-##Known Issues
+## Known Issues
 * If you started with this plugin on one of the V2.x versions, you *must* deactivate, and then activate this plugin to convert your sequences to the new metadata formats. (Won't fix)
 * The conversion to the V3 metadata format disables the 'Send alerts' setting, so remember to re-enable it after you've re-enabled the plugin. (Won't fix)
 * Format for "Posts in sequence" metabox only partially handles responsive screens well - Fix underway
@@ -112,7 +112,7 @@ See ./email/README.txt for information on templates for the email alerts.
 
 For more, see the [Issues section](https://github.com/eighty20results/e20r-sequences/issues) for the plugin on Github.com.
 
-###DEBUG
+### DEBUG
  To enable logging for this plugin, define WP_DEBUG as 'true' in wp-config.php (`define('WP_DEBUG', true);`)
  A LOT of data/log info will be dumped into wp-content/uploads/e20r-sequences/debug_log.txt.
 
@@ -144,7 +144,7 @@ For more, see the [Issues section](https://github.com/eighty20results/e20r-seque
   
 ## Shortcode attributes
 
-###[sequence_links]
+### [sequence_links]
 
 This shortcode can be placed on any page or post. It will load a paginated list of links to the available posts or 
 pages that are managed by the specified sequence. This list will respect the "what-to-show" settings in the back-end 
@@ -162,7 +162,7 @@ The following attributes may be used, unless they have the "Required" keyword ne
 Example 1:
 `[sequence_links id="4" pagesize="20" title="My Sequence Links" button="true" highlight="true" scrollbox="true"]`
 
-###[sequence_alert]
+### [sequence_alert]
 
 This shortcode can be placed on any page or post and will load a checkbox allowing the logged-in user to opt in, or 
 out of receiving email alerts about new content. 
@@ -176,7 +176,7 @@ Example 1:
 `[sequence_alert sequence_id="4"]`
 
 
-###[e20r_available_on]
+### [e20r_available_on]
 
 This shortcode is designed to prevent visibility of the content between [e20r_available_on] and [/e20r_available_on] 
 until the specified "when" attribute value has been exceeded by the currently logged in user. If the "when" value is 
@@ -204,36 +204,36 @@ This content will be visible 10 or more days after the start date of the current
 If they are not members of your site, they will *not* see this content
 [/e20r_available_on]`
 
-##Frequently Asked Questions
+## Frequently Asked Questions
 TBD
 
-###I found a bug in your plugin.
+### I found a bug in your plugin.
 
 Please report it in the [issues section](https://github.com/eighty20results/e20r-sequences/issues) of GitHub and we'll fix it as soon as we can. Thanks for helping!
 You can also email you support question(s) to support@eighty20result.zendesk.com
 
-##Changelog
+## Changelog
 
-###4.6.12
+### 4.6.12
 
 * BUG FIX: PHP Notice when post ID isn't found
 * BUG FIX: Ensure we're not actively looking for post ID 0 (we know there's no post, so nothing to find)
 * BUG FIX: PHP Warning in Sequence_Updates class
 
-###4.6.11
+### 4.6.11
 
 * BUG FIX: Didn't show Drip Feed Settings metabox for all post types it was configured for
 * BUG FIX: PHP Notice when post ID isn't found
 * ENHANCEMENT: Add support for using custom subject and links in notices
 * ENHANCEMENT: Didn't apply the e20r-sequence-alert-message-post-title filter to the Email Subject
 
-###4.6.8
+### 4.6.8
 
 * BUG FIX: Logic for testing metadata version was invalid
 * BUG FIX: Didn't save the Preview offset value correctly
 * BUG FIX: Element ID collision for offset value vs checkbox for Preview Offset setting
 
-###4.6.7
+### 4.6.7
 
 * BUG FIX: Incorrectly assumed a new sequence had to be converted to v3 in v3+.
 * BUG FIX: Would incorrectly request reactivation for metadata conversion
@@ -241,16 +241,16 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENHANCEMENT/FIX: Warning message for empty sequences on initial load
 
 
-###4.6.6
+### 4.6.6
 
 * BUG FIX: Formatting for no-access messages
 
 
-###4.6.5
+### 4.6.5
 
 * ENHANCEMENT/FIX: Only show info about when post can be accessed in certain situations
 
-###4.6.4
+### 4.6.4
 
 * BUG FIX: Cache timeout fixes
 * BUG FIX: find_by_id() method didn't always return the correct post(s)
@@ -262,7 +262,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENHANCEMENT: Simplified & improved post cache (adding Cache / Cache_Object class)
 
 
-###4.6.3
+### 4.6.3
 
 * BUG FIX: PHP Warning in Post_Widget class
 * BUG FIX: Restore access control filter
@@ -272,15 +272,15 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * BUG FIX: PHP warning in membership access filter handler
 * ENHANCEMENT: Can replace the 'members'/'membership(s)' text in Restricted content warning for Sequences with gettext filter magic
 
-###4.6.2
+### 4.6.2
 
 * BUG FIX: Too many columns in current post listing table for sequence
 
-###4.6.1
+### 4.6.1
 
 * BUG FIX: PHP Warnings from Sequence_Links class/shortcode
 
-###4.6.0
+### 4.6.0
 * BUG FIX: Showing HTML for header in sequence listing
 * BUG FIX: Didn't consistently adhere to the shortcode attributes for the Sequence Links
 * BUG FIX: Start date calculation failed for some users
@@ -787,7 +787,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Initial update of version number to 3.0.4
 * Update template file for vpt_reminder.html
 
-###4.0.0
+### 4.0.0
 * Fix: Namespace declaration for Sequences class(es)
 * Fix: Move namespace declaration to Sequence class
 * Fix: PHPDoc for some of the classes (apply namespace)
@@ -810,7 +810,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Rename all pmpro_ files to e20r_
 * Update README & .json files
 
-###4.0.1
+### 4.0.1
 * Fix: Namespace for Tools/Cron
 * Fix: Use singleton model for sequence object
 * Fix: Renamed Job() class to Cron() for autoloader purposes Refactor file
@@ -841,7 +841,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Enh: Add autoloader support for classes
 * Enh: Remove static load of classes
 
-###4.0.2
+### 4.0.2
 * Set namespace for main plugin file
 * Define namespaces used by main plugin file
 * Fix autoloader
@@ -852,24 +852,24 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Fixed Namespace issues
 * Fixed PHP Warning message while processing cron jobs
 
-###4.0.3
+### 4.0.3
 * Fix: Namespace for functions to import PMPro Series and PMProSequences data
 
-###4.0.4
+### 4.0.4
 * Fix: Error when loading e20r_available_on shortcode.
 
-###4.0.5
+### 4.0.5
 * Fix: Email alert sent on days where no new/repeating post is released
 * Enh: Load fontawesome fonts from local server (not CDN)
 
-###4.0.6
+### 4.0.6
 * Fix: Format check for 'when' attribute didn't always return the correct result.
 * Fix: Sometimes generates an undefined offset notice while running cron job
 * Fix: Test actual parameter that should be configured unless options haven't been defined yet
 * Enh: Use \\WP_Query() and leverage cache while deactivating the plugin & removing cron jobs.
 * Enh: Add link to issues section on GitHub.com
 
-###4.1.0
+### 4.1.0
 * Fix: Searchable select box would sometimes stop working in backend
 * Fix: More reliable detection of origination of add/remove post/page
 * Fix: More robust error handling during remove post/page operation
@@ -887,19 +887,19 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Enh: Force a  sequence cache clean-up from wp-admin
 * Nit: Refactor Controller class
 
-###4.1.1
+### 4.1.1
 * Fix: Adding/Removing posts to sequence could result in JavaScript error
 * Fix: Would sometimes attempt to process auto-drafts
 
-###4.1.2
+### 4.1.2
 * Fix: Generating warning message while processing delay configuration for sequence(s)
 * Fix: Didn't always ignore unpublished/unavailable sequences
 
-###4.1.3
+### 4.1.3
 * Fix: Didn't always select the correct key for the sequence cache
 * Fix: Didn't always load new sequence data
 
-###4.2.0
+### 4.2.0
 * Fix: Load template (or exit if template can't be found)
 * Fix: Didn't respect settings for individual alerts for new content (not digest)
 * Fix: Remove hidden/inactive code
@@ -913,28 +913,28 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Enh: Add support for sending one or more notices to user for a single day's worth of content.
 * Enh: Add new_content_list template (Improved formatting for list of new content in the sequence).
 
-###4.2.1
+### 4.2.1
 * Fix: Didn't always load the correct font while in backend
 
-###4.2.2
+### 4.2.2
 * Fix: Didn't include all 'unalerted' content prior to the specified delay value when sending alerts to users
 
-###4.2.3
+### 4.2.3
 * Fix: Avoid using reserved variable names
 * Fix: Extend WP_Error wotj E20RError class
 
-###4.2.4
+### 4.2.4
 * Fix: Didn't always allow access to a post that was supposed to be available
 * Fix: The subject of email alerts used the incorrect date for the post alert
 * Enh: Didn't have a default notification type (single post per alert)
 * Enh: Use WP's time constants (DAY|WEEK|etc_IN_SECONDS)
 * Enh: The replaceable value !!today!! didn't use the delay value of the post to calculate the date.
 
-###4.2.5
+### 4.2.5
 * Fix: Would attempt to load sequence posts for users not logged in.
 * Fix: Didn't include the title for the new content in alert(s)
 
-###4.2.6
+### 4.2.6
 * Fix: Various problems with calculating the correct time for the next cron run.
 * Fix: Plugin info Fix: Copyright notice 
 * Fix: Version number bump
@@ -964,17 +964,17 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * Enh: New filter to check membership levels for a user id: 'e20r-sequence-has-membership-level' (Accepts an integer or array representing level id(s) and a user Id to check. Returns true/false)
 * Enh: New filter to check membership access to a post id for a user id: 'e20r-sequence-membership-access' (Accepts optional post id, optional user_id and a boolean flag to determine whether to force a read from any DB table (if it exists).
 
-###4.2.7
+### 4.2.7
 * Fix: Roll back $seq_post_type static use
 * Fix: Remove dependency on pmpro_getMemberStartdate() function
 * Fix: Could fail with error during import of PMPro Series member posts
 * Fix/Enh: Rely completely on autoloader
 * Enh: New version of update-checker for plugin.
 
-###4.2.8
+### 4.2.8
 * Fix: Whitescreened due to undefined function call
 
-###4.2.9
+### 4.2.9
 * FIX: Didn't always handle cases where post/page was given delay value of 0
 * FIX: Make text translatable
 * FIX: Update translation file to include latest updates
@@ -1002,22 +1002,22 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Updated translation files for Norwegian/Bokmål
 * ENH: Refactor debug functionality to own class & namespace
 
-###4.2.10
+### 4.2.10
 * FIX: Would sometimes trip on Singleton error
 * FIX: Updated language files
 * FIX: Removed old language files (didn't load)
 
-###4.2.11
+### 4.2.11
 * FIX: e20r-sequence-email-alert-template-path requires array() of paths as argument
 * FIX: Support for customized reminder templates (stored in 'sequence-email-alert' directory under active theme.
 * FIX: Add login form redirect support to email notices
 * ENH: Add !!post_url!! as valid substitution in email templates.
 * ENH: Add filter to !!sitename!! variable for email alerts
 
-###4.2.12
+### 4.2.12
 * FIX: Error while attempting to print debug output
 
-###4.3
+### 4.3
 * FIX: Remove function name(s) in debug output for cron job(s).
 * FIX: Clean up path management for template(s).
 * ENH: Remove dependency on PMProMailer class and roll our own mailer class.
@@ -1031,7 +1031,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Add filter to modify/set data to substitute
 * ENH: Clean up how we handle directories and files for templates
 
-###4.3.1
+### 4.3.1
 * FIX: Didn't always have a saved setting for the type of alert to send (digest or individual for each post).
 * FIX: Verify correct PHP version before loading the plugin
 * FIX: License header
@@ -1041,11 +1041,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Update README.md to highlight new substitution filter(s)
 * ENH: Add set_option_by_name() function
 
-###4.3.2
+### 4.3.2
 * FIX: Add e20r-sequences loader file to build
 * FIX: Incorrect path to loader file
 
-###4.4.0
+### 4.4.0
 * FIX: Would sometimes error during display of available posts for sequence (in post list metabox)
 * FIX: Simplified security management
 * FIX: Refactored CSS (out of .php & into dedicated CSS files)
@@ -1093,14 +1093,14 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * NIT: Updated fix version
 * NIT: Refactored class
 
-###4.4.1
+### 4.4.1
 * FIX: Intermittent problem changing sort order
 * FIX: Didn't always display full sequence list for shortcode
 * FIX: Sequence listing didn't always display correctly in sequence_list shortcode
 * FIX: Pagination didn't always work after view/controller split
 * FIX: Didn't always run upgrade actions as expected.
 
-###4.4.2
+### 4.4.2
 * FIX: Update version number and link to plugin info
 * FIX: Clean up update checker
 * FIX: Run upgrade process for all versions after v4.4
@@ -1109,25 +1109,25 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Updated Translation files
 * ENH: Update version history for updates
 
-###4.4.3
+### 4.4.3
 * FIX: Didn't always update the plugin
 * FIX: Update WP Compatibility
 
-###4.4.4
+### 4.4.4
 * FIX: Didn't always trigger the cron jobs
 * ENH: Update version for upgrade history
 
-###4.4.5
+### 4.4.5
 * FIX: Disable cleanup on delete
 * FIX: Debug cleanup
 * ENH: Update version for upgrade history
 
-###4.4.6
+### 4.4.6
 * FIX: Strict standards warning
 * FIX: Better handling of new  values
 * ENH: Update version for upgrade history
 
-###4.4.7
+### 4.4.7
 * DOC: More functions w/documentation
 * FIX: Didn't always run the deactivation/activation functions
 * FIX: Keep backwards compatibility for now (to old sequence versions)
@@ -1140,10 +1140,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Simplified loading of front-end JavaScript & Styles (fewer hoops)
 * ENH: Add update code for 4.4.7
 
-###4.4.8
+### 4.4.8
 * FIX: Didn't always handle checkbox settings correctly
 
-###4.4.9
+### 4.4.9
 * FIX: Refactor for code readability
 * FIX: Simplify error message(s) for non-converted sequences
 * FIX: Didn't always handle start times for users
@@ -1155,13 +1155,13 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * FIX: Formatting for sequence configuration metabox
 * ENH: Add more formatting for metaboxes
 
-###4.4.10
+### 4.4.10
 * ENH: Refactor for readability
 * ENH: Record startdates for a user's (new) sequences on membership module purchase action/activity
 * ENH: Add infrastructure to support startdate management for any hookable membership module
 * FIX: Didn't capture the correct startdate for the user with the sequence
 
-###4.4.11
+### 4.4.11
 * FIX: Didn't always return all of the configured sequences
 * FIX: Didn't return the right list of sequences protected by a specific membership level
 * FIX: sequences_for_membership_level() didn't handle cases where there were no sequences configured yet
@@ -1172,14 +1172,14 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Add sequence ID to filters for startdate
 * ENH: Added PHPDoc for new function(s)
 
-###4.4.12
+### 4.4.12
 * FIX: Didn't always trigger upgrade activity for v4.4.11
 * FIX: get_user_startdate() caused whitescreen due to method visibility.
 
-###4.4.13
+### 4.4.13
 * FIX: Didn't always return all of the configured sequences
 
-###4.4.14
+### 4.4.14
 * FIX: Escape variables being loaded to the front-end listing of Sequence members.
 * FIX: List upcoming posts if they're supposed to be visible
 * FIX: The default shortcode settings weren't correct.
@@ -1198,7 +1198,7 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Would sometimes run the update functionality more than once
 * ENH: Clean up debug logging
 
-###4.4.15
+### 4.4.15
 * FIX: has_post_access() would sometimes return the incorrect access value for the post_id.
 * FIX: [sequence_links] shortcode would sometimes show the sequence info for users who didn't have access to it.
 * FIX: Various styling issues
@@ -1209,18 +1209,18 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENH: Hook for Member Module Specific access denied message(s)
 * ENH: Added filterable 'Content is inaccessible' message.
 
-###4.4.16
+### 4.4.16
 * FIX: Clean up Navigation links
 
-###4.4.17
+### 4.4.17
 * FIX: Delay column formatting/layout
 * FIX: Doesn't properly display the Meta-table for the Sequence members on the editor page
 * FIX: Formatting for table of sequence posts on post-editor page
 
-###4.4.18
+### 4.4.18
 * FIX: Didn't always mark 'future' posts as being 'future'.
 
-###4.4.20
+### 4.4.20
 * FIX: Didn't load the Optin handler script correctly
 * FIX: Avoid JS error if the sequence settings were missing
 * FIX: Clean up HTML for post list in admin metabox
@@ -1233,11 +1233,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENHANCEMENT: New filters to support per-sequence startdate functionality (including using usermeta) - e20r-sequence-use-membership-startdate,  e20r-sequence-use-global-startdate
 * REFACTOR: Make CSS file more readable
 
-###4.4.21
+### 4.4.21
 * ENHANCEMENT: Display sequence entries by delay value(s) in the Drip Feed Settings metabox
 * REFACTOR: Removed stale code
 
-###4.5.0
+### 4.5.0
 * ENHANCEMENT/FIX: WooCommerce conflict
 * FIX: Disable license check
 * ENHANCEMENT: Initial stub to support async processing of user notices
@@ -1247,10 +1247,10 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 * ENHANCEMENT: Upgraded to latest Plugin Updater library
 * ENHANCEMENT: Upgraded Plugin Upgrade Checker library
 
-###4.5.1
+### 4.5.1
 * BUG/FIX: Didn't load CSS & JS when editing Sequence or supported posts/pages
 * ENH/FIX: Removed stub file
 * BUG/FIX: Build script
 
-###4.5.2
+### 4.5.2
 * ENHANCEMENT/FIX: CSS for the Drip Feed Settings Metabox
