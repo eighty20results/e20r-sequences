@@ -1,3 +1,2 @@
-BUG FIX: Adding basic support for Sequences in Gutenberg
-BUG FIX: Not escaping Subject properly
-BUG FIX: create_function() is deprecated. Using anonymous function instead (for now)
+BUG FIX: Revert Gutenberg support in sequences (broken)
+BUG FIX: Updated Copyright notices

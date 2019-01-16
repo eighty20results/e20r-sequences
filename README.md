@@ -209,6 +209,11 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ## Changelog
 
+### 4.6.14
+
+* BUG FIX: Revert Gutenberg support in sequences (broken)
+* BUG FIX: Updated Copyright notices
+
 ### 4.6.13
 
 * BUG FIX: Adding basic support for Sequences in Gutenberg
