@@ -3,7 +3,7 @@
 Plugin Name: Sequences for Paid Memberships Pro
 Plugin URI: https://eighty20results.com/wordpress-plugins/e20r-sequences/
 Description: Simple to configure drip feed content plugin for your PMPro users.
-Version: 4.6.12
+Version: 4.6.13
 Author: Eighty / 20 Results (Thomas Sjolshagen)
 Author Email: thomas@eighty20results.com
 Author URI: https://eighty20results.com/thomas-sjolshagen
@@ -34,7 +34,7 @@ use E20R\Sequences\Sequence\Sequence_Controller;
 use E20R\Tools\DBG;
 
 /* Version number */
-define('E20R_SEQUENCE_VERSION', '4.6.12');
+define('E20R_SEQUENCE_VERSION', '4.6.13');
 
 /* Sets the 'hoped for' PHP version - used to display warnings & change date/time calculations if needed */
 define('E20R_SEQ_REQUIRED_PHP_VERSION', '5.4');
@@ -70,7 +70,7 @@ define( 'E20R_SEQUENCE_DEBUG', true );
 define( 'E20R_DEBUG_SEQ_LOG_LEVEL', E20R_DEBUG_SEQ_INFO );
 
 if ( version_compare( PHP_VERSION, E20R_SEQ_REQUIRED_PHP_VERSION, '<=' ) ) {
-    add_action( 'admin_notices', create_function( '', "echo '<div class=\"error\"><p>".sprintf( __('The Sequences by Eighty / 20 Results plugin <strong>requires PHP %s or later</strong> and will not function properly without it. Please upgrade PHP on this server, or deactivate Sequences by Eighty / 20 Results.', 'e20r-sequences'), E20R_SEQ_REQUIRED_PHP_VERSION ) ."</p></div>';" ) );
+    add_action( 'admin_notices', function() { echo '<div class="error"><p>' . sprintf( __( "The Sequences by Eighty / 20 Results plugin <strong>requires PHP %s or later</strong> and will not function properly without it. Please upgrade PHP on this server, or deactivate Sequences by Eighty / 20 Results.", "e20r-sequences" ), E20R_SEQ_REQUIRED_PHP_VERSION ) . "</p></div>"; } );
     return;
 } else {
  
