@@ -209,6 +209,12 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 
 ## Changelog
 
+### 4.6.13
+
+* BUG FIX: Adding basic support for Sequences in Gutenberg
+* BUG FIX: Not escaping Subject properly
+* BUG FIX: create_function() is deprecated. Using anonymous function instead (for now)
+
 ### 4.6.12
 
 * BUG FIX: PHP Notice when post ID isn't found

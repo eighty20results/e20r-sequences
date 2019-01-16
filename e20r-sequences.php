@@ -11,7 +11,7 @@ Text Domain: e20r-sequences
 Domain Path: /languages
 License: GPL2
 
-	Copyright 2014-2018 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
+	Copyright 2014-2019 Eighty / 20 Results by Wicked Strong Chicks, LLC (thomas@eighty20results.com)
 
 	This program is free software; you can redistribute it and/or modify
 	it under the terms of the GNU General Public License, version 2, as

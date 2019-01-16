@@ -2,8 +2,8 @@
 Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro, sequences, pmpro series
 Requires at least: 3.9
-Tested up to: 4.9.8
-Stable tag: 4.6.12
+Tested up to: 5.0.3
+Stable tag: 4.6.13
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -171,6 +171,12 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.6.13 ==
+
+* BUG FIX: Adding basic support for Sequences in Gutenberg
+* BUG FIX: Not escaping Subject properly
+* BUG FIX: create_function() is deprecated. Using anonymous function instead (for now)
 
 == 4.6.12 ==
 
