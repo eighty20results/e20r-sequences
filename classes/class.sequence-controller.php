@@ -36,33 +36,30 @@ use E20R\Sequences\Tools\Sequence_Updates;
 
 class Sequence_Controller {
 	
-	public $options;
-	public $sequence_id = 0;
+	private static $select2_version = '4.0.3';
+	private static $seq_post_type = 'pmpro_sequence';
+	private static $cache_timeout = 5;
+	private static $_this = null; // List of available posts for user ID
+	public $options; // list of future posts for user ID (if the sequence is configured to show hidden posts)
+	public $sequence_id = 0; // WP_POST definition for the sequence
 	public $error = null;
-	public $e20r_sequence_user_level = null; // List of available posts for user ID
-	public $e20r_sequence_user_id = null; // list of future posts for user ID (if the sequence is configured to show hidden posts)
-	public $is_cron = false; // WP_POST definition for the sequence
-	
+	public $e20r_sequence_user_level = null;
+	public $e20r_sequence_user_id = null;
+	public $is_cron = false;
 	private $id;
 	private $posts = array();
 	private $cached_for = null;
 	private $upcoming = array();
 	private $sequence;
-	private $managed_types = null;
-	private $current_metadata_versions = array();
-	
-	private static $select2_version = '4.0.3';
-	private static $seq_post_type = 'pmpro_sequence';
 	
 	// private static $transient_option_key = '_transient_timeout_';
-	private static $cache_timeout = 5; // In minutes
+	private $managed_types = null; // In minutes
+	private $current_metadata_versions = array();
 	private $transient_key = '_';
 	private $expires;
-	private $refreshed;
 	
 	// Refers to a single instance of this class
-	private static $_this = null;
-	
+	private $refreshed;
 	/**
 	 * @var \E20R_Utils $utils Utilities class
 	 */
@@ -107,66 +104,6 @@ class Sequence_Controller {
 		
 		add_filter( "get_sequence_class_instance", 'E20R\Sequences\Sequence\Sequence_Controller::get_instance' );
 		add_action( "init", array( $this, 'load_textdomain' ), 1 );
-	}
-	
-	/**
-	 * Fetch any options for this specific sequence from the database (stored as post metadata)
-	 * Use default options if the sequence ID isn't supplied*
-	 *
-	 * @param int $sequence_id - The Sequence ID to fetch options for
-	 *
-	 * @return mixed -- Returns array of options if options were successfully fetched & saved.
-	 */
-	public function get_options( $sequence_id = null ) {
-		
-		// Does the ID differ from the one this object has stored already?
-		if ( ! is_null( $sequence_id ) && ( $this->sequence_id != $sequence_id ) ) {
-			
-			DBG::log( 'ID defined already but we were given a different sequence ID' );
-			$this->sequence_id = $sequence_id;
-		} else if ( is_null( $sequence_id ) && $sequence_id != 0 ) {
-			
-			// This shouldn't be possible... (but never say never!)
-			DBG::log( "The defined sequence ID is empty so we'll set it to " . $sequence_id );
-			$this->sequence_id = $sequence_id;
-		}
-		
-		$this->refreshed = null;
-		
-		// Should only do this once, unless the timeout is in the past.
-		if ( is_null( $this->expires ) ||
-		     ( ! is_null( $this->expires ) && $this->expires < current_time( 'timestamp' ) )
-		) {
-			
-			$this->expires = $this->get_cache_expiry( $this->sequence_id );
-		}
-		
-		// Check that we're being called in context of an actual Sequence 'edit' operation
-		DBG::log( 'Loading settings from DB for (' . $this->sequence_id . ') "' . get_the_title( $this->sequence_id ) . '"' );
-		
-		$settings = get_post_meta( $this->sequence_id, '_pmpro_sequence_settings', true );
-		// DBG::log("Settings are now: " . print_r( $settings, true ) );
-		
-		// Fix: Offset error when creating a brand new sequence for the first time.
-		if ( empty( $settings ) ) {
-			
-			$settings        = $this->default_options();
-			$this->refreshed = null;
-		}
-		
-		$loaded_options = $settings;
-		$options        = $this->default_options();
-		
-		foreach ( $loaded_options as $key => $value ) {
-			
-			$options->{$key} = $value;
-		}
-		
-		// $this->options = (object) array_replace( (array)$default_options, (array)$loaded_options );
-		// DBG::log( "For {$this->sequence_id}: Current: " . print_r( $this->options, true ) );
-		$options->loaded = true;
-		
-		return $this->options;
 	}
 	
 	/**
@@ -244,12 +181,64 @@ class Sequence_Controller {
 	}
 	
 	/**
+	 * Class auto-loader for this plugin
+	 *
+	 * @param string $class_name Name of the class to auto-load
+	 *
+	 * @since  1.0
+	 * @access public
+	 */
+	public static function auto_loader( $class_name ) {
+		
+		if ( false === stripos( $class_name, 'E20R' ) ) {
+			return;
+		}
+		
+		$parts     = explode( '\\', $class_name );
+		$name      = strtolower( preg_replace( '/_/', '-', $parts[ ( count( $parts ) - 1 ) ] ) );
+		$base_path = plugin_dir_path( __FILE__ );
+		$filename  = "class.{$name}.php";
+		
+		if ( file_exists( "{$base_path}/async-notices/{$filename}" ) ) {
+			require_once( "{$base_path}/async-notices/{$filename}" );
+		}
+		
+		if ( file_exists( "{$base_path}/license/{$filename}" ) ) {
+			require_once( "{$base_path}/license/{$filename}" );
+		}
+		
+		if ( file_exists( "{$base_path}/licensing/{$filename}" ) ) {
+			require_once( "{$base_path}/licensing/{$filename}" );
+		}
+		
+		if ( file_exists( "{$base_path}/shortcodes/{$filename}" ) ) {
+			require_once( "{$base_path}/shortcodes/{$filename}" );
+		}
+		
+		if ( file_exists( "{$base_path}/tools/{$filename}" ) ) {
+			require_once( "{$base_path}/tools/{$filename}" );
+		}
+		
+		if ( file_exists( "{$base_path}/utilities/{$filename}" ) ) {
+			require_once( "{$base_path}/utilities/{$filename}" );
+		}
+		
+		if ( file_exists( "{$base_path}/widgets/{$filename}" ) ) {
+			require_once( "{$base_path}/widgets/{$filename}" );
+		}
+		
+		if ( file_exists( "{$base_path}/{$filename}" ) ) {
+			require_once( "{$base_path}/{$filename}" );
+		}
+	}
+	
+	/**
 	 * Check all sequences in the system for whether or not they've been converted to the v3 metadata format then set
 	 * warning banner if not.
 	 */
 	public function check_conversion() {
-     
-	    DBG::log( "Check whether we need to convert any sequences" );
+		
+		DBG::log( "Check whether we need to convert any sequences" );
 		$sequences = $this->get_all_sequences();
 		
 		foreach ( $sequences as $sequence ) {
@@ -257,7 +246,7 @@ class Sequence_Controller {
 			DBG::log( "Check whether we need to convert sequence # {$sequence->ID}" );
 			
 			if ( ! $this->is_converted( $sequence->ID ) ) {
-    
+				
 				$this->set_error_msg( sprintf( __( "Required action: Please de-activate and then activate the E20R Sequences plugin (%d)", "e20r-sequences" ), $sequence->ID ) );
 			}
 		}
@@ -301,18 +290,19 @@ class Sequence_Controller {
 			
 			$this->current_metadata_versions = get_option( "pmpro_sequence_metadata_version", array() );
 		}
-  
+		
 		DBG::log( "Sequence metadata map: " );
 		DBG::log( $this->current_metadata_versions );
 		
-		if ( !isset( $this->current_metadata_versions[$sequence_id]) && true === version_compare( E20R_SEQUENCE_VERSION,'3.0', '>=' ) ) {
-		    
-		    DBG::log("No need to convert {$sequence_id} to v3 as we're past that point");
+		if ( ! isset( $this->current_metadata_versions[ $sequence_id ] ) && true === version_compare( E20R_SEQUENCE_VERSION, '3.0', '>=' ) ) {
+			
+			DBG::log( "No need to convert {$sequence_id} to v3 as we're past that point" );
 			$this->current_metadata_versions[ $sequence_id ] = 3;
 			update_option( 'pmpro_sequence_metadata_version', $this->current_metadata_versions, true );
-		    return true;
-        }
-        
+			
+			return true;
+		}
+		
 		if ( empty( $this->current_metadata_versions ) ) {
 			DBG::log( "{$sequence_id} needs to be converted to V3 format (nothing)" );
 			
@@ -377,62 +367,137 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Set the private $error value
+	 * Fetch any options for this specific sequence from the database (stored as post metadata)
+	 * Use default options if the sequence ID isn't supplied*
 	 *
-	 * @param $msg -- The error message to set
+	 * @param int $sequence_id - The Sequence ID to fetch options for
 	 *
-	 * @access public
+	 * @return mixed -- Returns array of options if options were successfully fetched & saved.
 	 */
-	public function set_error_msg( $msg ) {
+	public function get_options( $sequence_id = null ) {
 		
-		$this->error = $msg;
-		
-		$this->utils = \E20R_Utils::get_instance();
-		
-		if ( ! empty( $msg ) ) {
+		// Does the ID differ from the one this object has stored already?
+		if ( ! is_null( $sequence_id ) && ( $this->sequence_id != $sequence_id ) ) {
 			
-			DBG::log( "set_error_msg(): {$msg}" );
+			DBG::log( 'ID defined already but we were given a different sequence ID' );
+			$this->sequence_id = $sequence_id;
+		} else if ( is_null( $sequence_id ) && $sequence_id != 0 ) {
 			
-			$this->utils->set_notice( $msg, 'error' );
+			// This shouldn't be possible... (but never say never!)
+			DBG::log( "The defined sequence ID is empty so we'll set it to " . $sequence_id );
+			$this->sequence_id = $sequence_id;
 		}
+		
+		$this->refreshed = null;
+		
+		// Should only do this once, unless the timeout is in the past.
+		if ( is_null( $this->expires ) ||
+		     ( ! is_null( $this->expires ) && $this->expires < current_time( 'timestamp' ) )
+		) {
+			
+			$this->expires = $this->get_cache_expiry( $this->sequence_id );
+		}
+		
+		// Check that we're being called in context of an actual Sequence 'edit' operation
+		DBG::log( 'Loading settings from DB for (' . $this->sequence_id . ') "' . get_the_title( $this->sequence_id ) . '"' );
+		
+		$settings = get_post_meta( $this->sequence_id, '_pmpro_sequence_settings', true );
+		// DBG::log("Settings are now: " . print_r( $settings, true ) );
+		
+		// Fix: Offset error when creating a brand new sequence for the first time.
+		if ( empty( $settings ) ) {
+			
+			$settings        = $this->default_options();
+			$this->refreshed = null;
+		}
+		
+		$loaded_options = $settings;
+		$options        = $this->default_options();
+		
+		foreach ( $loaded_options as $key => $value ) {
+			
+			$options->{$key} = $value;
+		}
+		
+		// $this->options = (object) array_replace( (array)$default_options, (array)$loaded_options );
+		// DBG::log( "For {$this->sequence_id}: Current: " . print_r( $this->options, true ) );
+		$options->loaded = true;
+		
+		return $this->options;
 	}
 	
 	/**
-	 * Access the private $error value
+	 * Return the expiration timestamp for the post cache of a specific sequence
 	 *
-	 * @return string|null|mixed -- Error message or NULL
-	 * @access public
+	 * @param $sequence_id
+	 *
+	 * @return null|string
+	 *
 	 */
-	public function get_error_msg() {
+	private function get_cache_expiry( $sequence_id ) {
 		
-		// $e = apply_filters('get_e20rerror_class_instance', null);
-		$this->utils = \E20R_Utils::get_instance();
+		DBG::log( "Loading cache timeout value for {$sequence_id}" );
 		
-		$this->error = $this->utils->get_error_msg( 'error' );
+		global $wpdb;
+		$expires = null;
 		
-		if ( ! empty( $this->error ) ) {
+		$c_key  = $this->get_cache_key( $sequence_id );
+		$prefix = Cache::CACHE_GROUP;
+		
+		if ( ! is_null( $c_key ) ) {
 			
-			DBG::log( "Error info found: " . print_r( $this->error, true ) );
+			$sql = $wpdb->prepare( "
+                SELECT option_value
+                    FROM {$wpdb->options}
+                    WHERE option_name LIKE %s
+            ",
+				"_transient_timeout_{$prefix}_{$c_key}%"
+			);
 			
-			return $this->error;
-		} else {
-			return null;
+			$expires = $wpdb->get_var( $sql );
 		}
+		
+		DBG::log( "Loaded cache timeout value for {$sequence_id}: " . ( empty( $expires ) ? "NULL" : "{$expires}" ) );
+		
+		return $expires;
 	}
 	
 	/**
-	 * Display the error message (if it's defined).
+	 * Generate a key & identify transient for a user/sequence combination
+	 *
+	 * @param int      $sequence_id - Id of sequence
+	 * @param int|null $user_id
+	 *
+	 * @return string - The transient key being used.
 	 */
-	public function display_error() {
+	private function get_cache_key( $sequence_id, $user_id = null ) {
+		global $current_user;
 		
-		DBG::log( "Display error message(s), if there are any" );
-		global $current_screen;
+		// init variables
+		$c_key = null;
+		// $user_id = null;
 		
-		if ( empty( $this->utils ) ) {
-			$this->utils = \E20R_Utils::get_instance();
+		if ( empty( $user_id ) ) {
+			$user_id = $current_user->ID;
 		}
 		
-		$this->utils->display_notice();
+		if ( empty( $this->e20r_sequence_user_id ) ) {
+			$this->e20r_sequence_user_id = $user_id;
+		}
+		
+		DBG::log( "Cache key for user: {$this->e20r_sequence_user_id}" );
+		
+		if ( ( 0 == $current_user->ID && ! empty( $this->e20r_sequence_user_id ) && true === $this->is_cron ) ||
+		     ( is_numeric( $this->e20r_sequence_user_id ) && 0 < $this->e20r_sequence_user_id )
+		) {
+			
+			$user_id = $this->e20r_sequence_user_id;
+			$c_key   = "{$user_id}_{$sequence_id}";
+		}
+		
+		DBG::log( "Cache key: " . ( is_null( $c_key ) ? 'NULL' : $c_key ) );
+		
+		return $c_key;
 	}
 	
 	/**
@@ -503,232 +568,399 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Find a Sequence option by name and return it's current setting/value
+	 * Set the private $error value
 	 *
-	 * @param $option - The name of the setting to return
+	 * @param $msg -- The error message to set
 	 *
-	 * @return mixed - The setting value
+	 * @access public
 	 */
-	public function get_option_by_name( $option ) {
-		if ( ! isset( $this->options->{$option} ) ) {
+	public function set_error_msg( $msg ) {
+		
+		$this->error = $msg;
+		
+		$this->utils = \E20R_Utils::get_instance();
+		
+		if ( ! empty( $msg ) ) {
 			
-			return false;
+			DBG::log( "set_error_msg(): {$msg}" );
+			
+			$this->utils->set_notice( $msg, 'error' );
+		}
+	}
+	
+	/**
+	 * Paid Memberships Pro specific "access denied" message
+	 *
+	 * @param $msg     - A previously received message.
+	 * @param $post_id - Post ID for the post/sequence ID the message applies to
+	 * @param $user_id - User ID for the user the message applies to
+	 *
+	 * @return string - The text message
+	 */
+	public function pmpro_access_denied_msg( $msg, $post_id, $user_id ) {
+		
+		if ( ! function_exists( 'pmpro_has_membership_access' ) ||
+		     ! function_exists( 'pmpro_getLevel' ) ||
+		     ! function_exists( 'pmpro_implodeToEnglish' ) ||
+		     ! function_exists( 'pmpro_getOption' )
+		) {
+			return $msg;
 		}
 		
-		return $this->options->{$option};
-	}
-	
-	/**
-	 * Set a Sequence option by name to the specified $value.
-	 *
-	 * @param $option
-	 * @param $value
-	 */
-	public function set_option_by_name( $option, $value ) {
-		$this->options->{$option} = $value;
-	}
-	
-	/**
-	 * Generate a key & identify transient for a user/sequence combination
-	 *
-	 * @param int      $sequence_id - Id of sequence
-	 * @param int|null $user_id
-	 *
-	 * @return string - The transient key being used.
-	 */
-	private function get_cache_key( $sequence_id, $user_id = null ) {
 		global $current_user;
 		
-		// init variables
-		$c_key = null;
-		// $user_id = null;
 		
-		if ( empty( $user_id ) ) {
-			$user_id = $current_user->ID;
+		remove_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9 );
+		$hasaccess = pmpro_has_membership_access( $post_id, $user_id, true );
+		add_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9, 4 );
+		
+		if ( is_array( $hasaccess ) ) {
+			//returned an array to give us the membership level values
+			$post_membership_levels_ids   = $hasaccess[1];
+			$post_membership_levels_names = $hasaccess[2];
 		}
 		
-		if ( empty( $this->e20r_sequence_user_id ) ) {
-			$this->e20r_sequence_user_id = $user_id;
-		}
-		
-		DBG::log( "Cache key for user: {$this->e20r_sequence_user_id}" );
-		
-		if ( ( 0 == $current_user->ID && ! empty( $this->e20r_sequence_user_id ) && true === $this->is_cron ) ||
-		     ( is_numeric( $this->e20r_sequence_user_id ) && 0 < $this->e20r_sequence_user_id )
-		) {
-			
-			$user_id = $this->e20r_sequence_user_id;
-			$c_key   = "{$user_id}_{$sequence_id}";
-		}
-		
-		DBG::log( "Cache key: " . ( is_null( $c_key ) ? 'NULL' : $c_key ) );
-		
-		return $c_key;
-	}
-	
-	/**
-	 * Return the expiration timestamp for the post cache of a specific sequence
-	 *
-	 * @param $sequence_id
-	 *
-	 * @return null|string
-	 *
-	 */
-	private function get_cache_expiry( $sequence_id ) {
-		
-		DBG::log( "Loading cache timeout value for {$sequence_id}" );
-		
-		global $wpdb;
-		$expires = null;
-		
-		$c_key = $this->get_cache_key( $sequence_id );
-		$prefix = Cache::CACHE_GROUP;
-		
-		if ( ! is_null( $c_key ) ) {
-			
-			$sql = $wpdb->prepare( "
-                SELECT option_value
-                    FROM {$wpdb->options}
-                    WHERE option_name LIKE %s
-            ",
-				"_transient_timeout_{$prefix}_{$c_key}%"
-			);
-			
-			$expires = $wpdb->get_var( $sql );
-		}
-		
-		DBG::log( "Loaded cache timeout value for {$sequence_id}: " . ( empty( $expires ) ? "NULL" : "{$expires}" ) );
-		
-		return $expires;
-	}
-	
-	/**
-	 * Checks whether the post cache for the active sequence is still valid (timeout based)
-	 *
-	 * @return bool - True if still valid
-	 */
-	private function is_cache_valid() {
-		
-		DBG::log( "We have " . count( $this->posts ) . " posts in the post list" );
-		
-		$this->expires = $this->get_cache_expiry( $this->sequence_id );
-		
-		if ( empty( $this->posts ) || is_null( $this->expires ) ) {
-			
-			DBG::log( "Cache is INVALID" );
-			
-			return false;
-		}
-		
-		DBG::log( "Current refresh value: {$this->expires} vs " . current_time( 'timestamp', true ) );
-		
-		if ( ( $this->expires >= current_time( 'timestamp' ) ) /* && !empty( $this->posts ) */ ) {
-			
-			DBG::log( "Cache IS VALID." );
-			
-			return true;
-		}
-		
-		if ( empty( $this->posts ) && $this->expires >= current_time( 'timestamp' ) ) {
-			DBG::log( "No data in list, but cache IS VALID." );
-			
-			return true;
-		}
-		
-		DBG::log( "Cache is INVALID" );
-		
-		return false;
-	}
-	
-	/**
-	 * Clear the cache for the specified sequence ID
-	 *
-	 * @param null $sequence_id
-	 *
-	 * @return bool
-	 */
-	public function delete_cache( $sequence_id = null ) {
-		
-		$direct_operation = false;
-		$status           = false;
-		
-		if ( empty( $sequence_id ) && ( isset( $_POST['e20r_sequence_id'] ) || isset( $_POST['e20r_sequence_post_nonce'] ) ) ) {
-			
-			DBG::log( "Attempting to clear cache during AJAX operation" );
-			$direct_operation = true;
-			
-			wp_verify_nonce( "e20r-sequence-post", "e20r_sequence_post_nonce" );
-			$sequence_id = isset( $_POST['e20r_sequence_id'] ) ? intval( $_POST['e20r_sequence_id'] ) : null;
-			
-			if ( is_null( $sequence_id ) ) {
-				wp_send_json_error( array( array( 'message' => __( "No sequence ID specified. Can't clear cache!", "e20r-sequences" ) ) ) );
-				wp_die();
+		foreach ( $post_membership_levels_ids as $key => $id ) {
+			//does this level allow registrations?
+			$level_obj = pmpro_getLevel( $id );
+			if ( ! $level_obj->allow_signups ) {
+				unset( $post_membership_levels_ids[ $key ] );
+				unset( $post_membership_levels_names[ $key ] );
 			}
 		}
 		
-		$c_key = $this->get_cache_key( $sequence_id );
-		$prefix = Cache::CACHE_GROUP;
+		DBG::log( "Available PMPro Membership Levels to access this post: " );
+		DBG::log( $post_membership_levels_names );
 		
-		DBG::log( "Removing old/stale cache data for {$sequence_id}: {$prefix}_{$c_key}" );
-		$this->expires = null;
+		$pmpro_content_message_pre  = '<div class="pmpro_content_message">';
+		$pmpro_content_message_post = '</div>';
 		
-		if ( ! is_null( "{$prefix}_{$c_key}" ) ) {
-			$status = delete_transient( "{$prefix}_{$c_key}" );
+		$sr_search  = array( "!!levels!!", "!!referrer!!" );
+		$sr_replace = array(
+			pmpro_implodeToEnglish( $post_membership_levels_names ),
+			urlencode( site_url( $_SERVER['REQUEST_URI'] ) ),
+		);
+		
+		$content = '';
+		
+		if ( is_feed() ) {
+			$newcontent = apply_filters( "pmpro_rss_text_filter", stripslashes( pmpro_getOption( "rsstext" ) ) );
+			$content    .= $pmpro_content_message_pre . str_replace( $sr_search, $sr_replace, $newcontent ) . $pmpro_content_message_post;
+		} else if ( $current_user->ID ) {
+			//not a member
+			$newcontent = apply_filters( "pmpro_non_member_text_filter", stripslashes( pmpro_getOption( "nonmembertext" ) ) );
+			$content    .= $pmpro_content_message_pre . str_replace( $sr_search, $sr_replace, $newcontent ) . $pmpro_content_message_post;
+		} else {
+			//not logged in!
+			$newcontent = apply_filters( "pmpro_not_logged_in_text_filter", stripslashes( pmpro_getOption( "notloggedintext" ) ) );
+			$content    .= $pmpro_content_message_pre . str_replace( $sr_search, $sr_replace, $newcontent ) . $pmpro_content_message_post;
 		}
 		
-		if ( ( false === $status ) && ( true === $direct_operation ) &&
-		     ( isset( $_POST['e20r_sequence_id'] ) || isset( $_POST['e20r_sequence_post_nonce'] ) )
-		) {
-			wp_send_json_error( array( array( 'message' => __( "No cache to clear, or unable to clear the cache", "e20r-sequences" ) ) ) );
-			wp_die();
-		}
-		
-		if ( ( true === $status ) && ( true === $direct_operation ) &&
-		     ( isset( $_POST['e20r_sequence_id'] ) || isset( $_POST['e20r_sequence_post_nonce'] ) )
-		) {
-			
-			wp_send_json_success();
-			wp_die();
-		}
-		
-		return $status;
-		// return wp_cache_delete( $key, $group);
+		return ( ! empty( $content ) ? $content : $msg );
 	}
 	
 	/**
-	 * Configure (load) the post cache for the specific sequence ID
+	 * Whether to include the featured image(s) for the post in the post listing(s)
 	 *
-	 * @param $sequence_posts - array of posts that belong to the sequence
-	 * @param $sequence_id    - The ID of the sequence to load the cache for
-	 *
-	 * @return bool - Whether the cache loaded successfully or not
+	 * @return bool
 	 */
-	private function set_cache( $sequence_posts, $sequence_id ) {
+	public function include_featured_image_for_posts() {
+		return isset( $this->options->includeFeatured ) && $this->options->includeFeatured == 1 ? true : false;
+	}
+	
+	/**
+	 * Save post specific metadata to indicate sequence & delay value(s) for the post.
+	 *
+	 * @param null $sequence_id - The sequence to save data for.
+	 * @param null $post_id     - The ID of the post to save metadata for
+	 * @param null $delay       - The delay value
+	 *
+	 * @return bool - True/False depending on whether the save operation was a success or not.
+	 * @since v3.0
+	 *
+	 */
+	public function save_sequence_post( $sequence_id = null, $post_id = null, $delay = null ) {
 		
-		$success = false;
-		
-		// $this->delete_cache( $this->transient_key . $sequence_id);
-		
-		
-		$c_key = $this->get_cache_key( $sequence_id );
-		DBG::log( "Saving data to cache for {$sequence_id}... using {$c_key}" );
-		
-		if ( ! empty( $c_key ) ) {
+		if ( is_null( $post_id ) && is_null( $delay ) && is_null( $sequence_id ) ) {
 			
-			DBG::log( "Saving Cache w/a timeout of: " . self::$cache_timeout );
-			$success       = Cache::set( $c_key, $sequence_posts, ( self::$cache_timeout * MINUTE_IN_SECONDS ), Cache::CACHE_GROUP );
-			$this->expires = $this->get_cache_expiry( $sequence_id );
-			DBG::log( "Cache set to expire: {$this->expires}" );
+			// Save all posts in $this->posts array to new V3 format.
+			
+			foreach ( $this->posts as $p_obj ) {
+				
+				if ( ! $this->add_post_to_sequence( $this->sequence_id, $p_obj->id, $p_obj->delay ) ) {
+					
+					DBG::log( "Unable to add post {$p_obj->id} with delay {$p_obj->delay} to sequence {$this->sequence_id}", E20R_DEBUG_SEQ_WARNING );
+					
+					return false;
+				}
+			}
 			
 			return true;
 		}
 		
-		DBG::log( "Unable to update the cache for {$sequence_id}!" );
-		$this->expires = null;
+		if ( ! is_null( $post_id ) && ! is_null( $delay ) ) {
+			
+			if ( empty( $sequence_id ) ) {
+				
+				$sequence_id = $this->sequence_id;
+			}
+			
+			DBG::log( "Saving post {$post_id} with delay {$delay} to sequence {$sequence_id}" );
+			
+			return $this->add_post_to_sequence( $sequence_id, $post_id, $delay );
+		} else {
+			DBG::log( "Need both post ID and delay values to save the post to sequence {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
+			
+			return false;
+		}
+	}
+	
+	/**
+	 * Private function to do the heavy lifting for the sequence specific metadata saves (per post)
+	 *
+	 * @param $sequence_id
+	 * @param $post_id
+	 * @param $delay
+	 *
+	 * @return bool
+	 *
+	 * @throws \Exception
+	 */
+	private function add_post_to_sequence( $sequence_id, $post_id, $delay ) {
+		
+		global $current_user;
+		
+		DBG::log( "Adding post {$post_id} to sequence {$sequence_id} using v3 meta format" );
+		
+		/**
+		 * if ( false === $found_post && ) {
+		 *
+		 * DBG::log("Post {$post_id} with delay {$delay} is already present in sequence {$sequence_id}");
+		 * $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', "e20r-sequences" ) );
+		 * return true;
+		 * }
+		 **/
+		
+		$found_post = $this->is_present( $post_id, $delay );
+		
+		$posts = $this->find_by_id( $post_id, $sequence_id, $current_user->ID );
+		
+		if ( ( count( $posts ) > 0 && false === $this->allow_repetition() ) || true === $found_post ) {
+			
+			DBG::log( "Post is a duplicate and we're not allowed to add duplicates" );
+			$this->set_error_msg( sprintf( __( "Warning: '%s' does not allow multiple delay values for a single post ID", "e20r-sequences" ), get_the_title( $sequence_id ) ) );
+			
+			foreach ( $posts as $p ) {
+				
+				DBG::log( "add_post_to_sequence(): Delay is different & we can't have repeat posts. Need to remove existing instances of {$post_id} and clear any notices" );
+				$this->remove_post( $p->id, $p->delay, true );
+			}
+		}
+		
+		if ( is_admin() ) {
+			
+			$member_days = - 1;
+		} else {
+			
+			$member_days = $this->get_membership_days( $current_user->ID );
+		}
+		
+		DBG::log( "The post was not found in the current list of posts for {$sequence_id}" );
+		
+		DBG::log( "Loading post {$post_id} from DB using WP_Query" );
+		$tmp = new \WP_Query( array(
+				'p'              => $post_id,
+				'post_type'      => apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) ),
+				'posts_per_page' => 1,
+				'post_status'    => apply_filters( 'e20r-sequence-allowed-post-statuses', array(
+					'publish',
+					'future',
+					'private',
+				) ),
+			)
+		);
+		
+		$p = $tmp->get_posts();
+		
+		DBG::log( "Loaded " . count( $p ) . " posts with WP_Query" );
+		
+		if ( empty( $p ) && $post_id !== 0 ) {
+			DBG::log( "Didn't locate {$post_id}" );
+			
+			return false;
+		}
+		
+		$new_post     = new \stdClass();
+		$new_post->id = $p[0]->ID;
+		
+		$new_post->delay = $delay;
+		// $new_post->order_num = $this->normalize_delay( $delay ); // BUG: Can't handle repeating delay values (ie. two posts with same delay)
+		$new_post->permalink    = get_permalink( $new_post->id );
+		$new_post->title        = get_the_title( $new_post->id );
+		$new_post->is_future    = ( $member_days < $delay ) && ( $this->hide_upcoming_posts() ) ? true : false;
+		$new_post->current_post = false;
+		$new_post->type         = get_post_type( $new_post->id );
+		
+		$belongs_to = get_post_meta( $new_post->id, "_pmpro_sequence_post_belongs_to" );
+		
+		wp_reset_postdata();
+		
+		DBG::log( "Found the following sequences for post {$new_post->id}: " . ( false === $belongs_to ? 'Not found' : null ) );
+		DBG::log( $belongs_to );
+		
+		if ( ( false === $belongs_to ) || ( is_array( $belongs_to ) && ! in_array( $sequence_id, $belongs_to ) ) ) {
+			
+			if ( false === add_post_meta( $post_id, "_pmpro_sequence_post_belongs_to", $sequence_id ) ) {
+				DBG::log( "Unable to add/update this post {$post_id} for the sequence {$sequence_id}" );
+			}
+		}
+		
+		DBG::log( "Attempting to add delay value {$delay} for post {$post_id} to sequence: {$sequence_id}" );
+		
+		if ( ! $this->allow_repetition() ) {
+			// TODO: Need to check if the meta/value combination already exists for the post ID.
+			if ( false === add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay, true ) ) {
+				
+				DBG::log( "add_post_to_sequenece() - Couldn't add {$post_id} with delay {$delay}. Attempting update operation" );
+				
+				if ( false === update_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay ) ) {
+					DBG::log( "Both add and update operations for {$post_id} in sequence {$sequence_id} with delay {$delay} failed!", E20R_DEBUG_SEQ_WARNING );
+				}
+			}
+			
+		} else {
+			
+			$delays = get_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay" );
+			
+			DBG::log( "Checking whether the '{$delay}' delay value is already recorded for this post: {$post_id}" );
+			
+			if ( ( false === $delays ) || ( ! in_array( $delay, $delays ) ) ) {
+				
+				DBG::log( "add_post_to_seuqence() - Not previously added. Now adding delay value meta ({$delay}) to post id {$post_id}" );
+				add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay );
+			} else {
+				DBG::log( "Post # {$post_id} in sequence {$sequence_id} is already recorded with delay {$delay}" );
+			}
+		}
+		
+		if ( false === get_post_meta( $post_id, "_pmpro_sequence_post_belongs_to" ) ) {
+			
+			DBG::log( "Didn't add {$post_id} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
+			
+			return false;
+		}
+		
+		if ( false === get_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay" ) ) {
+			
+			DBG::log( "Couldn't add post/delay value(s) for {$post_id}/{$delay} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
+			
+			return false;
+		}
+		
+		// If we shoud be allowed to access this post.
+		if ( $this->has_post_access( $current_user->ID, $post_id, false, $sequence_id ) ||
+		     false === $new_post->is_future ||
+		     ( ( true === $new_post->is_future ) && false === $this->hide_upcoming_posts() )
+		) {
+			
+			DBG::log( "Adding post to sequence: {$sequence_id}" );
+			$this->posts[] = $new_post;
+		} else {
+			
+			DBG::log( "User doesn't have access to the post so not adding it." );
+			$this->upcoming[] = $new_post;
+		}
+		
+		usort( $this->posts, array( $this, 'sort_posts_by_delay' ) );
+		
+		if ( ! empty( $this->upcoming ) ) {
+			
+			usort( $this->upcoming, array( $this, 'sort_posts_by_delay' ) );
+		}
+		
+		
+		$this->set_cache( $this->posts, $sequence_id );
+		
+		return true;
+	}
+	
+	public function is_present( $post_id, $delay ) {
+		
+		DBG::log( "Checking whether post {$post_id} with delay {$delay} is already included in {$this->sequence_id}" );
+		
+		if ( empty( $this->posts ) ) {
+			DBG::log( "No posts in sequence {$this->sequence_id}yet. Post was NOT found" );
+			
+			return false;
+		}
+		
+		foreach ( $this->posts as $k => $post ) {
+			
+			if ( ( $post_id == $post->id ) && ( $delay == $post->delay ) ) {
+				DBG::log( "Post and delay combination WAS found!" );
+				
+				return $k;
+			}
+		}
+		
+		DBG::log( "Post {$post_id} and delay {$delay} combination was NOT found." );
 		
 		return false;
+	}
+	
+	public function find_by_id( $post_id, $sequence_id = null, $user_id = null ) {
 		
-		// wp_cache_set( $key, $value );
+		DBG::log( "Locating post {$post_id} for {$user_id}." );
+		global $current_user;
+		
+		$found = array();
+		$posts = array();
+		
+		if ( is_null( $sequence_id ) && ( ! empty( $this->sequence_id ) ) ) {
+			DBG::log( "No sequence ID specified in call. Using default value of {$this->sequence_id}" );
+			$sequence_id = $this->sequence_id;
+		}
+		
+		if ( is_null( $user_id ) && is_user_logged_in() ) {
+			$user_id = $current_user->ID;
+		}
+		
+		$posts = $this->get_cache( $sequence_id );
+		
+		if ( empty( $posts ) ) {
+			
+			DBG::log( "Cache is invalid.  Using load_sequence_post to grab the post(s) by ID: {$post_id}." );
+			$posts = $this->load_sequence_post( $sequence_id, null, $post_id );
+			
+			if ( empty( $posts ) ) {
+				
+				DBG::log( "Couldn't find post based on post ID of {$post_id}. Now loading all posts in sequence" );
+				$posts = $this->load_sequence_post();
+			} else {
+				DBG::log( "Returned " . count( $posts ) . " posts from load_sequnce_post() function" );
+			}
+		} else {
+			
+			DBG::log( "Have valid cache. Using cached post list to locate post with ID {$post_id}" );
+			$this->posts = $posts;
+		}
+		
+		if ( empty( $posts ) ) {
+			DBG::log( "No posts in sequence. Returning empty list." );
+			
+			return array();
+		}
+		
+		foreach ( $posts as $p ) {
+			
+			if ( $p->id == $post_id ) {
+				
+				DBG::log( "Including post # {$post_id}, delay: {$p->delay}" );
+				$found[] = $p;
+			}
+		}
+		
+		return $found;
 	}
 	
 	/**
@@ -920,16 +1152,16 @@ class Sequence_Controller {
 		// DBG::log("Args for \WP_Query(): ");
 		// DBG::log($args);
 		
-        if ( empty( $found ) ) {
-		    
-		    DBG::log("Having to load from database");
-		    
-	        $found = array();
-	        $posts = new \WP_Query( $seq_args );
-	
-	        DBG::log( "Loaded {$posts->post_count} posts from wordpress database for sequence {$sequence_id}" );
-	
-	        /*        if ( ( 0 === $posts->post_count ) && is_null( $pagesize ) && ( is_null( $post_id ) ) && false === $converting_sequence ) {
+		if ( empty( $found ) ) {
+			
+			DBG::log( "Having to load from database" );
+			
+			$found = array();
+			$posts = new \WP_Query( $seq_args );
+			
+			DBG::log( "Loaded {$posts->post_count} posts from wordpress database for sequence {$sequence_id}" );
+			
+			/*        if ( ( 0 === $posts->post_count ) && is_null( $pagesize ) && ( is_null( $post_id ) ) && false === $converting_sequence ) {
 	
 				DBG::log("Didn't find any posts. Checking if we need to convert...?");
 	
@@ -940,76 +1172,76 @@ class Sequence_Controller {
 				}
 			}
 	*/
-	        $is_admin = user_can( $user_id, 'manage_options' );
-	
-	        $member_days = ( ( $is_admin && $this->show_all_for_admin() ) || ( is_admin() && $this->is_cron == false && $this->show_all_for_admin() ) ) ? 9999 : $this->get_membership_days( $user_id );
-	
-	        DBG::log( "User {$user_id} has been a member for {$member_days} days. Admin? " . ( $is_admin ? 'Yes' : 'No' ) );
-	
-	        $post_list = $posts->get_posts();
-	
-	        wp_reset_postdata();
-	
-	        foreach ( $post_list as $post_key => $s_post ) {
-		
-		        DBG::log( "Loading metadata for post #: {$s_post->ID}" );
-		
-		        $s_post_id = $s_post->ID;
-		
-		        $tmp_delay = get_post_meta( $s_post_id, "_pmpro_sequence_{$sequence_id}_post_delay" );
-		
-		        $is_repeat = false;
-		
-		        // Add posts for all delay values with this post_id
-		        foreach ( $tmp_delay as $p_delay ) {
+			$is_admin = user_can( $user_id, 'manage_options' );
 			
-			        $new_post = new \stdClass();
+			$member_days = ( ( $is_admin && $this->show_all_for_admin() ) || ( is_admin() && $this->is_cron == false && $this->show_all_for_admin() ) ) ? 9999 : $this->get_membership_days( $user_id );
 			
-			        $new_post->id = $s_post_id;
-			        // BUG: Doesn't work because you could have multiple post_ids released on same day: $p->order_num = $this->normalize_delay( $p_delay );
-			        $new_post->delay        = isset( $s_post->delay ) ? $s_post->delay : $p_delay;
-			        $new_post->permalink    = get_permalink( $s_post->ID );
-			        $new_post->title        = $s_post->post_title;
-			        $new_post->excerpt      = $s_post->post_excerpt;
-			        $new_post->closest_post = false;
-			        $new_post->current_post = false;
-			        $new_post->is_future    = false;
-			        $new_post->list_include = true;
-			        $new_post->type         = $s_post->post_type;
+			DBG::log( "User {$user_id} has been a member for {$member_days} days. Admin? " . ( $is_admin ? 'Yes' : 'No' ) );
 			
-			        // Only add posts to list if the member is supposed to see them
-			        if ( $member_days >= $this->normalize_delay( $new_post->delay ) ) {
+			$post_list = $posts->get_posts();
+			
+			wp_reset_postdata();
+			
+			foreach ( $post_list as $post_key => $s_post ) {
 				
-				        DBG::log( "Adding {$new_post->id} ({$new_post->title}) with delay {$new_post->delay} to list of available posts" );
-				        $new_post->is_future = false;
-				        $found[]             = $new_post;
-			        } else {
+				DBG::log( "Loading metadata for post #: {$s_post->ID}" );
 				
-				        // Or if we're not supposed to hide the upcomping posts.
+				$s_post_id = $s_post->ID;
 				
-				        if ( false === $this->hide_upcoming_posts() ) {
+				$tmp_delay = get_post_meta( $s_post_id, "_pmpro_sequence_{$sequence_id}_post_delay" );
+				
+				$is_repeat = false;
+				
+				// Add posts for all delay values with this post_id
+				foreach ( $tmp_delay as $p_delay ) {
 					
-					        DBG::log( "Loading {$new_post->id} with delay {$new_post->delay} to list of upcoming posts. User is administrator level? " . ( $is_admin ? 'true' : 'false' ) );
-					        $new_post->is_future = true;
-					        $found[]             = $new_post;
-				        } else {
+					$new_post = new \stdClass();
 					
-					        DBG::log( "Ignoring post {$new_post->id} with delay {$new_post->delay} to sequence list for {$sequence_id}. User is administrator level? " . ( $is_admin ? 'true' : 'false' ) );
-					        if ( ! is_null( $pagesize ) ) {
+					$new_post->id = $s_post_id;
+					// BUG: Doesn't work because you could have multiple post_ids released on same day: $p->order_num = $this->normalize_delay( $p_delay );
+					$new_post->delay        = isset( $s_post->delay ) ? $s_post->delay : $p_delay;
+					$new_post->permalink    = get_permalink( $s_post->ID );
+					$new_post->title        = $s_post->post_title;
+					$new_post->excerpt      = $s_post->post_excerpt;
+					$new_post->closest_post = false;
+					$new_post->current_post = false;
+					$new_post->is_future    = false;
+					$new_post->list_include = true;
+					$new_post->type         = $s_post->post_type;
+					
+					// Only add posts to list if the member is supposed to see them
+					if ( $member_days >= $this->normalize_delay( $new_post->delay ) ) {
 						
-						        $post_list[ $post_key ]->list_include = false;
-						        $post_list[ $post_key ]->is_future    = true;
-						        //unset( $post_list[ $post_key ] );
-					        }
-					
-				        }
-			        }
-		        } // End of foreach for delay values
+						DBG::log( "Adding {$new_post->id} ({$new_post->title}) with delay {$new_post->delay} to list of available posts" );
+						$new_post->is_future = false;
+						$found[]             = $new_post;
+					} else {
+						
+						// Or if we're not supposed to hide the upcomping posts.
+						
+						if ( false === $this->hide_upcoming_posts() ) {
+							
+							DBG::log( "Loading {$new_post->id} with delay {$new_post->delay} to list of upcoming posts. User is administrator level? " . ( $is_admin ? 'true' : 'false' ) );
+							$new_post->is_future = true;
+							$found[]             = $new_post;
+						} else {
+							
+							DBG::log( "Ignoring post {$new_post->id} with delay {$new_post->delay} to sequence list for {$sequence_id}. User is administrator level? " . ( $is_admin ? 'true' : 'false' ) );
+							if ( ! is_null( $pagesize ) ) {
+								
+								$post_list[ $post_key ]->list_include = false;
+								$post_list[ $post_key ]->is_future    = true;
+								//unset( $post_list[ $post_key ] );
+							}
+							
+						}
+					}
+				} // End of foreach for delay values
+				
+				$is_repeat = false;
+			} // End of foreach for post_list
+		}
 		
-		        $is_repeat = false;
-	        } // End of foreach for post_list
-        }
-        
 		DBG::log( "Found " . count( $found ) . " posts for sequence {$sequence_id} and user {$user_id}" );
 		
 		if ( empty( $post_id ) && empty( $delay ) /* && ! empty( $post_list ) */ ) {
@@ -1093,6 +1325,92 @@ class Sequence_Controller {
 	}
 	
 	/**
+	 * Returns the per-sequence startdate to use for a user
+	 *
+	 * @param $user_id -- The user ID to find the startdate for
+	 *
+	 * @return mixed  - A UNIX timestamp (seconds since start of epoch)
+	 */
+	public function get_user_startdate( $user_id = null, $level_id = null, $sequence_id = null ) {
+		$timezone = get_option( 'timezone_string' );
+		
+		// TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
+		if ( function_exists( 'pmpro_getMemberStartdate' ) ) {
+			$startdate_ts = pmpro_getMemberStartdate( $user_id, $level_id );
+		}
+		
+		// we didn't get a sequence id to process for so check if it's set by default
+		if ( empty( $sequence_id ) && ! empty( $this->sequence_id ) ) {
+			$sequence_id = $this->sequence_id;
+		}
+		
+		// neither default nor received sequence id to process.
+		if ( empty( $sequence_id ) && empty( $this->sequence_id ) ) {
+			
+			DBG::log( "No Sequence ID configured. Returning NULL" );
+			
+			return null;
+		}
+		
+		// if the user doesn't have a membership level...
+		if ( empty( $startdate_ts ) ) {
+			
+			// and there's a valid Timezone setting
+			if ( ! empty( $timezone ) ) {
+				
+				// use 'right now' local time' as their startdate.
+				DBG::log( "Using timezone: {$timezone}" );
+				$startdate_ts = strtotime( 'today ' . get_option( 'timezone_string' ) );
+			} else {
+				// or we'll use the registration date for the user.
+				$user         = get_user_by( 'id', $user_id );
+				$startdate_ts = strtotime( $user->user_registered );
+			}
+		}
+		
+		$use_membership_startdate = apply_filters( 'e20r-sequence-use-membership-startdate', false );
+		$user_global_startdate    = apply_filters( 'e20r-sequence-use-global-startdate', false );
+		
+		if ( false === $use_membership_startdate ) {
+			
+			// filter this so other membership modules can set the startdate too.
+			$startdate_ts = apply_filters( 'e20r-sequence-mmodule-user-startdate', $startdate_ts, $user_id, $level_id, $sequence_id );
+			
+			DBG::log( "Filtered startdate: {$startdate_ts}" );
+			
+			if ( false === $user_global_startdate ) {
+				// Use a per-sequence startdate
+				$m_startdate_ts = get_user_meta( $user_id, "_e20r-sequence-startdate-{$sequence_id}", true );
+			} else {
+				// use a global startdate
+				$m_startdate_ts = get_user_meta( $user_id, "_e20r-sequence-startdate-global", true );
+			}
+		}
+		
+		if ( empty( $m_startdate_ts ) ) {
+			
+			update_user_meta( $user_id, "_e20r-sequence-startdate-{$sequence_id}", $startdate_ts );
+			$m_startdate_ts = $startdate_ts;
+		}
+		
+		$startdate = $m_startdate_ts;
+		
+		DBG::log( "Using startdate value of : {$startdate}" );
+		
+		// finally, allow the user to filter the startdate to whatever they want it to be.
+		return apply_filters( 'e20r-sequence-user-startdate', $startdate, $sequence_id, $user_id, $level_id );
+	}
+	
+	/**
+	 * Whether to show all current and upcoming posts in a sequence list for users with admin privilege
+	 *
+	 * @return bool
+	 */
+	public function show_all_for_admin() {
+		return ( isset( $this->options->showAdmin ) && $this->options->showAdmin == 1 ? true : false );
+	}
+	
+	/**
 	 * Return the number of days since this users membership started
 	 *
 	 * @param null|int $user_id  -- ID of the user (can be NULL)
@@ -1130,77 +1448,6 @@ class Sequence_Controller {
 */
 		
 		return apply_filters( 'e20r-sequence-days-as-member', $days, $user_id, $level_id );
-	}
-	
-	/**
-	 * Paid Memberships Pro specific "access denied" message
-	 *
-	 * @param $msg     - A previously received message.
-	 * @param $post_id - Post ID for the post/sequence ID the message applies to
-	 * @param $user_id - User ID for the user the message applies to
-	 *
-	 * @return string - The text message
-	 */
-	public function pmpro_access_denied_msg( $msg, $post_id, $user_id ) {
-		
-		if ( ! function_exists( 'pmpro_has_membership_access' ) ||
-		     ! function_exists( 'pmpro_getLevel' ) ||
-		     ! function_exists( 'pmpro_implodeToEnglish' ) ||
-		     ! function_exists( 'pmpro_getOption' )
-		) {
-			return $msg;
-		}
-		
-		global $current_user;
-		
-		
-		remove_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9 );
-		$hasaccess = pmpro_has_membership_access( $post_id, $user_id, true );
-		add_filter( "pmpro_has_membership_access_filter", array( &$this, "has_membership_access_filter" ), 9, 4 );
-		
-		if ( is_array( $hasaccess ) ) {
-			//returned an array to give us the membership level values
-			$post_membership_levels_ids   = $hasaccess[1];
-			$post_membership_levels_names = $hasaccess[2];
-		}
-		
-		foreach ( $post_membership_levels_ids as $key => $id ) {
-			//does this level allow registrations?
-			$level_obj = pmpro_getLevel( $id );
-			if ( ! $level_obj->allow_signups ) {
-				unset( $post_membership_levels_ids[ $key ] );
-				unset( $post_membership_levels_names[ $key ] );
-			}
-		}
-		
-		DBG::log( "Available PMPro Membership Levels to access this post: " );
-		DBG::log( $post_membership_levels_names );
-		
-		$pmpro_content_message_pre  = '<div class="pmpro_content_message">';
-		$pmpro_content_message_post = '</div>';
-		
-		$sr_search  = array( "!!levels!!", "!!referrer!!" );
-		$sr_replace = array(
-			pmpro_implodeToEnglish( $post_membership_levels_names ),
-			urlencode( site_url( $_SERVER['REQUEST_URI'] ) ),
-		);
-		
-		$content = '';
-		
-		if ( is_feed() ) {
-			$newcontent = apply_filters( "pmpro_rss_text_filter", stripslashes( pmpro_getOption( "rsstext" ) ) );
-			$content    .= $pmpro_content_message_pre . str_replace( $sr_search, $sr_replace, $newcontent ) . $pmpro_content_message_post;
-		} else if ( $current_user->ID ) {
-			//not a member
-			$newcontent = apply_filters( "pmpro_non_member_text_filter", stripslashes( pmpro_getOption( "nonmembertext" ) ) );
-			$content    .= $pmpro_content_message_pre . str_replace( $sr_search, $sr_replace, $newcontent ) . $pmpro_content_message_post;
-		} else {
-			//not logged in!
-			$newcontent = apply_filters( "pmpro_not_logged_in_text_filter", stripslashes( pmpro_getOption( "notloggedintext" ) ) );
-			$content    .= $pmpro_content_message_pre . str_replace( $sr_search, $sr_replace, $newcontent ) . $pmpro_content_message_post;
-		}
-		
-		return ( ! empty( $content ) ? $content : $msg );
 	}
 	
 	/**
@@ -1427,315 +1674,266 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Whether to show all current and upcoming posts in a sequence list for users with admin privilege
+	 * Adds the 'closest post' flag as "true" for the correct post.
 	 *
-	 * @return bool
+	 * @param          $post_list - List of posts to process
+	 * @param int|null $user_id   - User ID (or empty)
+	 *
+	 * @return array - The completed/processed post list
 	 */
-	public function show_all_for_admin() {
-		return ( isset( $this->options->showAdmin ) && $this->options->showAdmin == 1 ? true : false );
-	}
-	
-	/**
-	 * Whether to include the featured image(s) for the post in the post listing(s)
-	 *
-	 * @return bool
-	 */
-	public function include_featured_image_for_posts() {
-		return isset( $this->options->includeFeatured ) && $this->options->includeFeatured == 1 ? true : false;
-	}
-	
-	/**
-	 * Save post specific metadata to indicate sequence & delay value(s) for the post.
-	 *
-	 * @param null $sequence_id - The sequence to save data for.
-	 * @param null $post_id     - The ID of the post to save metadata for
-	 * @param null $delay       - The delay value
-	 *
-	 * @return bool - True/False depending on whether the save operation was a success or not.
-	 * @since v3.0
-	 *
-	 */
-	public function save_sequence_post( $sequence_id = null, $post_id = null, $delay = null ) {
+	public function set_closest_post( $post_list, $user_id = null ) {
 		
-		if ( is_null( $post_id ) && is_null( $delay ) && is_null( $sequence_id ) ) {
+		global $current_user;
+		
+		DBG::log( "Received posts: " . count( $post_list ) . " and user ID: " . ( is_null( $user_id ) ? 'None' : $user_id ) );
+		
+		if ( ! is_null( $user_id ) ) {
 			
-			// Save all posts in $this->posts array to new V3 format.
+			$this->e20r_sequence_user_id = $user_id;
+		} else if ( empty( $this->e20r_sequence_user_id ) && ( $this->e20r_sequence_user_id != $current_user->ID ) ) {
 			
-			foreach ( $this->posts as $p_obj ) {
-				
-				if ( ! $this->add_post_to_sequence( $this->sequence_id, $p_obj->id, $p_obj->delay ) ) {
-					
-					DBG::log( "Unable to add post {$p_obj->id} with delay {$p_obj->delay} to sequence {$this->sequence_id}", E20R_DEBUG_SEQ_WARNING );
-					
-					return false;
-				}
+			$user_id = $this->e20r_sequence_user_id;
+		} else {
+			
+			$user_id = $current_user->ID;
+		}
+		
+		$closest_post = apply_filters( 'e20r-sequence-found-closest-post', $this->find_closest_post( $user_id ) );
+		
+		foreach ( $post_list as $key => $post ) {
+			
+			if ( isset( $post->id ) ) {
+				$post_id = $post->id;
 			}
+			
+			if ( isset( $post->ID ) ) {
+				$post_id = $post->ID;
+			}
+			
+			if ( ( $post->delay == $closest_post->delay ) && ( $post_id == $closest_post->id ) ) {
+				
+				DBG::log( "Most current post for user {$user_id} found for post id: {$post_id}" );
+				$post_list[ $key ]->closest_post = true;
+			}
+		}
+		
+		return $post_list;
+	}
+	
+	/**
+	 * Gets and returns the post_id of the post in the sequence with a delay value
+	 *     closest to the number of days since startdate for the specified user ID.
+	 *
+	 * @param null $user_id -- ID of the user
+	 *
+	 * @return bool -- Post ID or FALSE (if error)
+	 *
+	 * @access public
+	 */
+	public function find_closest_post( $user_id = null ) {
+		
+		if ( empty( $user_id ) ) {
+			
+			DBG::log( "No user ID specified by callee: " . $this->who_called_me() );
+			
+			global $current_user;
+			$user_id = $current_user->ID;
+		}
+		
+		// Get the current day of the membership (as a whole day, not a float)
+		$membership_day = $this->get_membership_days( $user_id );
+		
+		// Load all posts in this sequence
+		/*
+        if ( false === $this->is_cache_valid() ) {
+            $this->load_sequence_post();
+        }
+		*/
+		DBG::log( "Have " . count( $this->posts ) . " posts in sequence." );
+		
+		// Find the post ID in the postList array that has the delay closest to the $membership_day.
+		$closest = $this->find_closest_post_by_delay_val( $membership_day, $user_id );
+		
+		if ( isset( $closest->id ) ) {
+			
+			DBG::log( "For user {$user_id} on day {$membership_day}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})" );
+			
+			return $closest;
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Displays the 2nd function in the current stack trace (i.e. the one that called the one that called "me"
+	 *
+	 * @access private
+	 * @since  v2.0
+	 */
+	private function who_called_me() {
+		
+		$trace  = debug_backtrace();
+		$caller = $trace[2];
+		
+		$trace = "Called by {$caller['function']}()";
+		if ( isset( $caller['class'] ) ) {
+			$trace .= " in {$caller['class']}()";
+		}
+		
+		return $trace;
+	}
+	
+	/**
+	 * Compares the object to the array of posts in the sequence
+	 *
+	 * @param $delay_comp -- Delay value to compare to
+	 *
+	 * @return stdClass -- The post ID of the post with the delay value closest to the $delay_val
+	 *
+	 * @access private
+	 */
+	private function find_closest_post_by_delay_val( $delay_comp, $user_id = null ) {
+		
+		
+		if ( null === $user_id ) {
+			
+			$user_id = $this->e20r_sequence_user_id;
+		}
+		
+		$distances = array();
+		
+		// DBG::log( $postArr );
+		
+		foreach ( $this->posts as $key => $post ) {
+			
+			$n_delay           = $this->normalize_delay( $post->delay );
+			$distances[ $key ] = abs( $delay_comp - ( $n_delay /* + 1 */ ) );
+		}
+		
+		// Verify that we have one or more than one element
+		if ( count( $distances ) > 1 ) {
+			
+			$ret_val = $this->posts[ array_search( min( $distances ), $distances ) ];
+		} else if ( count( $distances ) == 1 ) {
+			$ret_val = $this->posts[ $key ];
+		} else {
+			$ret_val = null;
+		}
+		
+		return $ret_val;
+		
+	}
+	
+	/**
+	 * Configure (load) the post cache for the specific sequence ID
+	 *
+	 * @param $sequence_posts - array of posts that belong to the sequence
+	 * @param $sequence_id    - The ID of the sequence to load the cache for
+	 *
+	 * @return bool - Whether the cache loaded successfully or not
+	 */
+	private function set_cache( $sequence_posts, $sequence_id ) {
+		
+		$success = false;
+		
+		// $this->delete_cache( $this->transient_key . $sequence_id);
+		
+		
+		$c_key = $this->get_cache_key( $sequence_id );
+		DBG::log( "Saving data to cache for {$sequence_id}... using {$c_key}" );
+		
+		if ( ! empty( $c_key ) ) {
+			
+			DBG::log( "Saving Cache w/a timeout of: " . self::$cache_timeout );
+			$success       = Cache::set( $c_key, $sequence_posts, ( self::$cache_timeout * MINUTE_IN_SECONDS ), Cache::CACHE_GROUP );
+			$this->expires = $this->get_cache_expiry( $sequence_id );
+			DBG::log( "Cache set to expire: {$this->expires}" );
 			
 			return true;
 		}
 		
-		if ( ! is_null( $post_id ) && ! is_null( $delay ) ) {
-			
-			if ( empty( $sequence_id ) ) {
-				
-				$sequence_id = $this->sequence_id;
-			}
-			
-			DBG::log( "Saving post {$post_id} with delay {$delay} to sequence {$sequence_id}" );
-			
-			return $this->add_post_to_sequence( $sequence_id, $post_id, $delay );
-		} else {
-			DBG::log( "Need both post ID and delay values to save the post to sequence {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
-			
-			return false;
-		}
+		DBG::log( "Unable to update the cache for {$sequence_id}!" );
+		$this->expires = null;
+		
+		return false;
+		
+		// wp_cache_set( $key, $value );
 	}
 	
 	/**
-	 * Private function to do the heavy lifting for the sequence specific metadata saves (per post)
+	 * Pagination logic for posts.
 	 *
-	 * @param $sequence_id
-	 * @param $post_id
-	 * @param $delay
+	 * @param $post_list    - Posts to paginate
+	 * @param $page_size    - Size of page (# of posts per page).
+	 * @param $current_page - The current page number
 	 *
-	 * @return bool
-     *
-     * @throws \Exception
+	 * @return array - Array of posts to include in the current page.
 	 */
-	private function add_post_to_sequence( $sequence_id, $post_id, $delay ) {
+	private function paginate_posts( $post_list, $page_size, $current_page ) {
 		
-		global $current_user;
+		$page = array();
 		
-		DBG::log( "Adding post {$post_id} to sequence {$sequence_id} using v3 meta format" );
+		$last_key  = ( $page_size * $current_page ) - 1;
+		$first_key = $page_size * ( $current_page - 1 );
+		
+		foreach ( $post_list as $k => $post ) {
+			
+			// skip if we've already marked this post for exclusion.
+			if ( false === $post->list_include ) {
+				
+				continue;
+			}
+			
+			if ( ! ( ( $k <= $last_key ) && ( $k >= $first_key ) ) ) {
+				DBG::log( "Excluding {$post->id} with delay {$post->delay} from post/page/list" );
+				// $page[] = $post;
+				$post_list[ $k ]->list_include = false;
+			}
+		}
+		
+		return $post_list;
+		
+	}
+	
+	/**
+	 * Get the first and last post to include on the page during pagination
+	 *
+	 * @param $pagesize  - The size of the page
+	 * @param $page_num  - The order of the page
+	 * @param $post_list - The posts to paginate
+	 *
+	 * @return array - Array consisting of the max and min delay value for the post(s) on the page.
+	 */
+	private function set_min_max( $pagesize, $page_num, $post_list ) {
 		
 		/**
-		 * if ( false === $found_post && ) {
-		 *
-		 * DBG::log("Post {$post_id} with delay {$delay} is already present in sequence {$sequence_id}");
-		 * $this->set_error_msg( __( 'That post and delay combination is already included in this sequence', "e20r-sequences" ) );
-		 * return true;
-		 * }
-		 **/
+		 * Doesn't account for sort order.
+		 * @since 4.4.1
+		 */
 		
-		$found_post = $this->is_present( $post_id, $delay );
+		/**
+		 * Didn't account for pages < pagesize.
+		 * @since 4.4
+		 */
 		
-		$posts = $this->find_by_id( $post_id, $sequence_id, $current_user->ID );
-		
-		if ( ( count( $posts ) > 0 && false === $this->allow_repetition() ) || true === $found_post ) {
-			
-			DBG::log( "Post is a duplicate and we're not allowed to add duplicates" );
-			$this->set_error_msg( sprintf( __( "Warning: '%s' does not allow multiple delay values for a single post ID", "e20r-sequences" ), get_the_title( $sequence_id ) ) );
-			
-			foreach ( $posts as $p ) {
-				
-				DBG::log( "add_post_to_sequence(): Delay is different & we can't have repeat posts. Need to remove existing instances of {$post_id} and clear any notices" );
-				$this->remove_post( $p->id, $p->delay, true );
-			}
+		if ( $this->options->sortOrder == SORT_DESC ) {
+			$min_key = 0;
+			$max_key = ( count( $post_list ) >= $pagesize ) ? $pagesize - 1 : count( $post_list ) - 1;
 		}
 		
-		if ( is_admin() ) {
-			
-			$member_days = - 1;
-		} else {
-			
-			$member_days = $this->get_membership_days( $current_user->ID );
+		if ( $this->options->sortOrder == SORT_ASC ) {
+			$min_key = ( count( $post_list ) >= $pagesize ) ? $pagesize - 1 : count( $post_list ) - 1;
+			$max_key = 0;
 		}
 		
-		DBG::log( "The post was not found in the current list of posts for {$sequence_id}" );
+		DBG::log( "Max key: {$max_key} and min key: {$min_key}" );
+		$min = $post_list[ $max_key ]->delay;
+		$max = $post_list[ $min_key ]->delay;
 		
-		DBG::log( "Loading post {$post_id} from DB using WP_Query" );
-		$tmp = new \WP_Query( array(
-				'p'              => $post_id,
-				'post_type'      => apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) ),
-				'posts_per_page' => 1,
-				'post_status'    => apply_filters( 'e20r-sequence-allowed-post-statuses', array(
-					'publish',
-					'future',
-					'private',
-				) ),
-			)
-		);
+		DBG::log( "Gives min/max values: Min: {$min}, Max: {$max}" );
 		
-		$p = $tmp->get_posts();
+		return array( $min, $max );
 		
-		DBG::log( "Loaded " . count( $p ) . " posts with WP_Query" );
-		
-		if ( empty( $p ) && $post_id !== 0 ) {
-		    DBG::log("Didn't locate {$post_id}");
-		    return false;
-        }
-        
-		$new_post     = new \stdClass();
-		$new_post->id = $p[0]->ID;
-		
-		$new_post->delay = $delay;
-		// $new_post->order_num = $this->normalize_delay( $delay ); // BUG: Can't handle repeating delay values (ie. two posts with same delay)
-		$new_post->permalink    = get_permalink( $new_post->id );
-		$new_post->title        = get_the_title( $new_post->id );
-		$new_post->is_future    = ( $member_days < $delay ) && ( $this->hide_upcoming_posts() ) ? true : false;
-		$new_post->current_post = false;
-		$new_post->type         = get_post_type( $new_post->id );
-		
-		$belongs_to = get_post_meta( $new_post->id, "_pmpro_sequence_post_belongs_to" );
-		
-		wp_reset_postdata();
-		
-		DBG::log( "Found the following sequences for post {$new_post->id}: " . ( false === $belongs_to ? 'Not found' : null ) );
-		DBG::log( $belongs_to );
-		
-		if ( ( false === $belongs_to ) || ( is_array( $belongs_to ) && ! in_array( $sequence_id, $belongs_to ) ) ) {
-			
-			if ( false === add_post_meta( $post_id, "_pmpro_sequence_post_belongs_to", $sequence_id ) ) {
-				DBG::log( "Unable to add/update this post {$post_id} for the sequence {$sequence_id}" );
-			}
-		}
-		
-		DBG::log( "Attempting to add delay value {$delay} for post {$post_id} to sequence: {$sequence_id}" );
-		
-		if ( ! $this->allow_repetition() ) {
-			// TODO: Need to check if the meta/value combination already exists for the post ID.
-			if ( false === add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay, true ) ) {
-				
-				DBG::log( "add_post_to_sequenece() - Couldn't add {$post_id} with delay {$delay}. Attempting update operation" );
-				
-				if ( false === update_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay ) ) {
-					DBG::log( "Both add and update operations for {$post_id} in sequence {$sequence_id} with delay {$delay} failed!", E20R_DEBUG_SEQ_WARNING );
-				}
-			}
-			
-		} else {
-			
-			$delays = get_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay" );
-			
-			DBG::log( "Checking whether the '{$delay}' delay value is already recorded for this post: {$post_id}" );
-			
-			if ( ( false === $delays ) || ( ! in_array( $delay, $delays ) ) ) {
-				
-				DBG::log( "add_post_to_seuqence() - Not previously added. Now adding delay value meta ({$delay}) to post id {$post_id}" );
-				add_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay", $delay );
-			} else {
-				DBG::log( "Post # {$post_id} in sequence {$sequence_id} is already recorded with delay {$delay}" );
-			}
-		}
-		
-		if ( false === get_post_meta( $post_id, "_pmpro_sequence_post_belongs_to" ) ) {
-			
-			DBG::log( "Didn't add {$post_id} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
-			
-			return false;
-		}
-		
-		if ( false === get_post_meta( $post_id, "_pmpro_sequence_{$sequence_id}_post_delay" ) ) {
-			
-			DBG::log( "Couldn't add post/delay value(s) for {$post_id}/{$delay} to {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
-			
-			return false;
-		}
-		
-		// If we shoud be allowed to access this post.
-		if ( $this->has_post_access( $current_user->ID, $post_id, false, $sequence_id ) ||
-		     false === $new_post->is_future ||
-		     ( ( true === $new_post->is_future ) && false === $this->hide_upcoming_posts() )
-		) {
-			
-			DBG::log( "Adding post to sequence: {$sequence_id}" );
-			$this->posts[] = $new_post;
-		} else {
-			
-			DBG::log( "User doesn't have access to the post so not adding it." );
-			$this->upcoming[] = $new_post;
-		}
-		
-		usort( $this->posts, array( $this, 'sort_posts_by_delay' ) );
-		
-		if ( ! empty( $this->upcoming ) ) {
-			
-			usort( $this->upcoming, array( $this, 'sort_posts_by_delay' ) );
-		}
-		
-		
-		$this->set_cache( $this->posts, $sequence_id );
-		
-		return true;
-	}
-	
-	public function is_present( $post_id, $delay ) {
-		
-		DBG::log( "Checking whether post {$post_id} with delay {$delay} is already included in {$this->sequence_id}" );
-		
-		if ( empty( $this->posts ) ) {
-			DBG::log( "No posts in sequence {$this->sequence_id}yet. Post was NOT found" );
-			
-			return false;
-		}
-		
-		foreach ( $this->posts as $k => $post ) {
-			
-			if ( ( $post_id == $post->id ) && ( $delay == $post->delay ) ) {
-				DBG::log( "Post and delay combination WAS found!" );
-				
-				return $k;
-			}
-		}
-		
-		DBG::log( "Post {$post_id} and delay {$delay} combination was NOT found." );
-		
-		return false;
-	}
-	
-	public function find_by_id( $post_id, $sequence_id = null, $user_id = null ) {
-		
-		DBG::log( "Locating post {$post_id} for {$user_id}." );
-		global $current_user;
-		
-		$found = array();
-		$posts = array();
-		
-		if ( is_null( $sequence_id ) && ( ! empty( $this->sequence_id ) ) ) {
-			DBG::log( "No sequence ID specified in call. Using default value of {$this->sequence_id}" );
-			$sequence_id = $this->sequence_id;
-		}
-		
-		if ( is_null( $user_id ) && is_user_logged_in() ) {
-			$user_id = $current_user->ID;
-		}
-  
-		$posts = $this->get_cache( $sequence_id );
-		
-		if ( empty( $posts ) ) {
-			
-			DBG::log( "Cache is invalid.  Using load_sequence_post to grab the post(s) by ID: {$post_id}." );
-			$posts = $this->load_sequence_post( $sequence_id, null, $post_id );
-			
-			if ( empty( $posts ) ) {
-				
-				DBG::log( "Couldn't find post based on post ID of {$post_id}. Now loading all posts in sequence" );
-				$posts = $this->load_sequence_post();
-			} else {
-				DBG::log( "Returned " . count( $posts ) . " posts from load_sequnce_post() function" );
-			}
-		} else {
-			
-			DBG::log( "Have valid cache. Using cached post list to locate post with ID {$post_id}" );
-			$this->posts = $posts;
-		}
-		
-		if ( empty( $posts ) ) {
-			DBG::log( "No posts in sequence. Returning empty list." );
-			
-			return array();
-		}
-		
-		foreach ( $posts as $p ) {
-			
-			if ( $p->id == $post_id ) {
-				
-				DBG::log( "Including post # {$post_id}, delay: {$p->delay}" );
-				$found[] = $p;
-			}
-		}
-		
-		return $found;
 	}
 	
 	/**
@@ -2051,6 +2249,61 @@ class Sequence_Controller {
 	}
 	
 	/**
+	 * Clear the cache for the specified sequence ID
+	 *
+	 * @param null $sequence_id
+	 *
+	 * @return bool
+	 */
+	public function delete_cache( $sequence_id = null ) {
+		
+		$direct_operation = false;
+		$status           = false;
+		
+		if ( empty( $sequence_id ) && ( isset( $_POST['e20r_sequence_id'] ) || isset( $_POST['e20r_sequence_post_nonce'] ) ) ) {
+			
+			DBG::log( "Attempting to clear cache during AJAX operation" );
+			$direct_operation = true;
+			
+			wp_verify_nonce( "e20r-sequence-post", "e20r_sequence_post_nonce" );
+			$sequence_id = isset( $_POST['e20r_sequence_id'] ) ? intval( $_POST['e20r_sequence_id'] ) : null;
+			
+			if ( is_null( $sequence_id ) ) {
+				wp_send_json_error( array( array( 'message' => __( "No sequence ID specified. Can't clear cache!", "e20r-sequences" ) ) ) );
+				wp_die();
+			}
+		}
+		
+		$c_key  = $this->get_cache_key( $sequence_id );
+		$prefix = Cache::CACHE_GROUP;
+		
+		DBG::log( "Removing old/stale cache data for {$sequence_id}: {$prefix}_{$c_key}" );
+		$this->expires = null;
+		
+		if ( ! is_null( "{$prefix}_{$c_key}" ) ) {
+			$status = delete_transient( "{$prefix}_{$c_key}" );
+		}
+		
+		if ( ( false === $status ) && ( true === $direct_operation ) &&
+		     ( isset( $_POST['e20r_sequence_id'] ) || isset( $_POST['e20r_sequence_post_nonce'] ) )
+		) {
+			wp_send_json_error( array( array( 'message' => __( "No cache to clear, or unable to clear the cache", "e20r-sequences" ) ) ) );
+			wp_die();
+		}
+		
+		if ( ( true === $status ) && ( true === $direct_operation ) &&
+		     ( isset( $_POST['e20r_sequence_id'] ) || isset( $_POST['e20r_sequence_post_nonce'] ) )
+		) {
+			
+			wp_send_json_success();
+			wp_die();
+		}
+		
+		return $status;
+		// return wp_cache_delete( $key, $group);
+	}
+	
+	/**
 	 * Check whether $user_id has acess to $post_id
 	 *
 	 * @param      $user_id
@@ -2261,25 +2514,39 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Check whether the specified user is a member of one of the supplied levels.
+	 * Default permission check function.
+	 * Checks whether the provided user_id is allowed to publish_pages & publish_posts.
 	 *
-	 * @param int|array|null $levels  - Array or ID of level(s) to check against
-	 * @param int|null       $user_id - Id of user to check levels for
+	 * @param $user_id - ID of user to check permissions for.
 	 *
-	 * @return boolean
+	 * @return bool -- True if the user is allowed to edi/update
 	 *
-	 * @since 4.2.6
+	 * @access private
 	 */
-	private function has_membership_level( $levels = null, $user_id = null ) {
+	private function user_can_edit( $user_id ) {
 		
-		$has_level = false;
+		$required_permissions = apply_filters( 'e20r-sequence-required-permissions', array(
+			'publish_pages',
+			'publish_posts',
+		) );
 		
-		// TODO: Remove dependency of pmpro_hasMembershipLevel out of the sequences class and into own module
-		if ( function_exists( 'pmpro_hasMembershipLevel' ) ) {
-			$has_level = pmpro_hasMembershipLevel( $levels, $user_id );
+		// Default is "no access"
+		$perm = false;
+		
+		// Make sure there are permissions to check against
+		if ( ! empty( $required_permissions ) ) {
+			$perm = true;
 		}
 		
-		return apply_filters( 'e20r-sequence-has-membership-level', $has_level, $levels, $user_id );
+		// Check the supplied array of permissions for the supplied user_id
+		foreach ( $required_permissions as $permission ) {
+			
+			$perm = $perm && user_can( $user_id, $permission );
+		}
+		
+		DBG::log( "User with ID {$user_id} has permission to update/edit this sequence? " . ( $perm ? 'Yes' : 'No' ) );
+		
+		return $perm;
 	}
 	
 	/**
@@ -2394,25 +2661,6 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Displays the 2nd function in the current stack trace (i.e. the one that called the one that called "me"
-	 *
-	 * @access private
-	 * @since  v2.0
-	 */
-	private function who_called_me() {
-		
-		$trace  = debug_backtrace();
-		$caller = $trace[2];
-		
-		$trace = "Called by {$caller['function']}()";
-		if ( isset( $caller['class'] ) ) {
-			$trace .= " in {$caller['class']}()";
-		}
-		
-		return $trace;
-	}
-	
-	/**
 	 * Set the postmeta about the sequence(s) this post belongs to, if it's not present already
 	 *
 	 * @param $post_id
@@ -2459,94 +2707,67 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Adds the 'closest post' flag as "true" for the correct post.
+	 * Check whether the specified user is a member of one of the supplied levels.
 	 *
-	 * @param          $post_list - List of posts to process
-	 * @param int|null $user_id   - User ID (or empty)
+	 * @param int|array|null $levels  - Array or ID of level(s) to check against
+	 * @param int|null       $user_id - Id of user to check levels for
 	 *
-	 * @return array - The completed/processed post list
+	 * @return boolean
+	 *
+	 * @since 4.2.6
 	 */
-	public function set_closest_post( $post_list, $user_id = null ) {
+	private function has_membership_level( $levels = null, $user_id = null ) {
 		
-		global $current_user;
+		$has_level = false;
 		
-		DBG::log( "Received posts: " . count( $post_list ) . " and user ID: " . ( is_null( $user_id ) ? 'None' : $user_id ) );
-		
-		if ( ! is_null( $user_id ) ) {
-			
-			$this->e20r_sequence_user_id = $user_id;
-		} else if ( empty( $this->e20r_sequence_user_id ) && ( $this->e20r_sequence_user_id != $current_user->ID ) ) {
-			
-			$user_id = $this->e20r_sequence_user_id;
-		} else {
-			
-			$user_id = $current_user->ID;
+		// TODO: Remove dependency of pmpro_hasMembershipLevel out of the sequences class and into own module
+		if ( function_exists( 'pmpro_hasMembershipLevel' ) ) {
+			$has_level = pmpro_hasMembershipLevel( $levels, $user_id );
 		}
 		
-		$closest_post = apply_filters( 'e20r-sequence-found-closest-post', $this->find_closest_post( $user_id ) );
-		
-		foreach ( $post_list as $key => $post ) {
-			
-			if ( isset( $post->id ) ) {
-				$post_id = $post->id;
-			}
-			
-			if ( isset( $post->ID ) ) {
-				$post_id = $post->ID;
-			}
-			
-			if ( ( $post->delay == $closest_post->delay ) && ( $post_id == $closest_post->id ) ) {
-				
-				DBG::log( "Most current post for user {$user_id} found for post id: {$post_id}" );
-				$post_list[ $key ]->closest_post = true;
-			}
-		}
-		
-		return $post_list;
+		return apply_filters( 'e20r-sequence-has-membership-level', $has_level, $levels, $user_id );
 	}
 	
 	/**
-	 * Gets and returns the post_id of the post in the sequence with a delay value
-	 *     closest to the number of days since startdate for the specified user ID.
+	 * Initialize the sequence and load its posts
 	 *
-	 * @param null $user_id -- ID of the user
+	 * @param null $id -- (optional) ID of the sequence we'd like to start/init.
 	 *
-	 * @return bool -- Post ID or FALSE (if error)
-	 *
-	 * @access public
+	 * @return bool|int -- ID of sequence if it successfully gets loaded
+	 * @throws \Exception -- Sequence to load/init wasn't identified (specified).
 	 */
-	public function find_closest_post( $user_id = null ) {
+	public function init( $id = null ) {
 		
-		if ( empty( $user_id ) ) {
+		global $current_user;
+		
+		if ( ! is_null( $id ) ) {
 			
-			DBG::log( "No user ID specified by callee: " . $this->who_called_me() );
+			$this->sequence = get_post( $id );
+			DBG::log( 'Loading the "' . get_the_title( $id ) . '" sequence settings' );
 			
-			global $current_user;
-			$user_id = $current_user->ID;
+			// Set options for the sequence
+			$this->get_options( $id );
+			
+			if ( 0 != $current_user->ID || $this->is_cron ) {
+				DBG::log( 'init() - Loading the "' . get_the_title( $id ) . '" sequence posts' );
+				$this->load_sequence_post();
+			}
+			
+			if ( empty( $this->posts ) && ( ! $this->is_converted( $id ) ) ) {
+				
+				DBG::log( "Need to convert sequence with ID {$id } to version 3 format!" );
+			}
+			
+			DBG::log( 'init complete' );
+			
+			return $this->sequence_id;
 		}
 		
-		// Get the current day of the membership (as a whole day, not a float)
-		$membership_day = $this->get_membership_days( $user_id );
-		
-		// Load all posts in this sequence
-		/*
-        if ( false === $this->is_cache_valid() ) {
-            $this->load_sequence_post();
-        }
-		*/
-		DBG::log( "Have " . count( $this->posts ) . " posts in sequence." );
-		
-		// Find the post ID in the postList array that has the delay closest to the $membership_day.
-		$closest = $this->find_closest_post_by_delay_val( $membership_day, $user_id );
-		
-		if ( isset( $closest->id ) ) {
-			
-			DBG::log( "For user {$user_id} on day {$membership_day}, the closest post is #{$closest->id} (with a delay value of {$closest->delay})" );
-			
-			return $closest;
+		if ( ( $id == null ) && ( $this->sequence_id == 0 ) ) {
+			throw new \Exception( __( 'No sequence ID specified.', "e20r-sequences" ) );
 		}
 		
-		return null;
+		return false;
 	}
 	
 	public function find_posts_by_delay( $delay, $user_id = null ) {
@@ -2570,123 +2791,6 @@ class Sequence_Controller {
 		DBG::log( "Returning " . count( $posts ) . " with delay value <= {$delay}" );
 		
 		return $posts;
-		
-	}
-	
-	/**
-	 * Compares the object to the array of posts in the sequence
-	 *
-	 * @param $delay_comp -- Delay value to compare to
-	 *
-	 * @return stdClass -- The post ID of the post with the delay value closest to the $delay_val
-	 *
-	 * @access private
-	 */
-	private function find_closest_post_by_delay_val( $delay_comp, $user_id = null ) {
-		
-		
-		if ( null === $user_id ) {
-			
-			$user_id = $this->e20r_sequence_user_id;
-		}
-		
-		$distances = array();
-		
-		// DBG::log( $postArr );
-		
-		foreach ( $this->posts as $key => $post ) {
-			
-			$n_delay           = $this->normalize_delay( $post->delay );
-			$distances[ $key ] = abs( $delay_comp - ( $n_delay /* + 1 */ ) );
-		}
-		
-		// Verify that we have one or more than one element
-		if ( count( $distances ) > 1 ) {
-			
-			$ret_val = $this->posts[ array_search( min( $distances ), $distances ) ];
-		} else if ( count( $distances ) == 1 ) {
-			$ret_val = $this->posts[ $key ];
-		} else {
-			$ret_val = null;
-		}
-		
-		return $ret_val;
-		
-	}
-	
-	/**
-	 * Pagination logic for posts.
-	 *
-	 * @param $post_list    - Posts to paginate
-	 * @param $page_size    - Size of page (# of posts per page).
-	 * @param $current_page - The current page number
-	 *
-	 * @return array - Array of posts to include in the current page.
-	 */
-	private function paginate_posts( $post_list, $page_size, $current_page ) {
-		
-		$page = array();
-		
-		$last_key  = ( $page_size * $current_page ) - 1;
-		$first_key = $page_size * ( $current_page - 1 );
-		
-		foreach ( $post_list as $k => $post ) {
-			
-			// skip if we've already marked this post for exclusion.
-			if ( false === $post->list_include ) {
-				
-				continue;
-			}
-			
-			if ( ! ( ( $k <= $last_key ) && ( $k >= $first_key ) ) ) {
-				DBG::log( "Excluding {$post->id} with delay {$post->delay} from post/page/list" );
-				// $page[] = $post;
-				$post_list[ $k ]->list_include = false;
-			}
-		}
-		
-		return $post_list;
-		
-	}
-	
-	/**
-	 * Get the first and last post to include on the page during pagination
-	 *
-	 * @param $pagesize  - The size of the page
-	 * @param $page_num  - The order of the page
-	 * @param $post_list - The posts to paginate
-	 *
-	 * @return array - Array consisting of the max and min delay value for the post(s) on the page.
-	 */
-	private function set_min_max( $pagesize, $page_num, $post_list ) {
-		
-		/**
-		 * Doesn't account for sort order.
-		 * @since 4.4.1
-		 */
-		
-		/**
-		 * Didn't account for pages < pagesize.
-		 * @since 4.4
-		 */
-		
-		if ( $this->options->sortOrder == SORT_DESC ) {
-			$min_key = 0;
-			$max_key = ( count( $post_list ) >= $pagesize ) ? $pagesize - 1 : count( $post_list ) - 1;
-		}
-		
-		if ( $this->options->sortOrder == SORT_ASC ) {
-			$min_key = ( count( $post_list ) >= $pagesize ) ? $pagesize - 1 : count( $post_list ) - 1;
-			$max_key = 0;
-		}
-		
-		DBG::log( "Max key: {$max_key} and min key: {$min_key}" );
-		$min = $post_list[ $max_key ]->delay;
-		$max = $post_list[ $min_key ]->delay;
-		
-		DBG::log( "Gives min/max values: Min: {$min}, Max: {$max}" );
-		
-		return array( $min, $max );
 		
 	}
 	
@@ -2715,7 +2819,7 @@ class Sequence_Controller {
 		global $load_e20r_sequence_admin_script;
 		
 		$load_e20r_sequence_admin_script = true;
-		$this->managed_types = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
+		$this->managed_types             = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
 		
 		foreach ( $this->managed_types as $type ) {
 			
@@ -2860,48 +2964,6 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Initialize the sequence and load its posts
-	 *
-	 * @param null $id -- (optional) ID of the sequence we'd like to start/init.
-	 *
-	 * @return bool|int -- ID of sequence if it successfully gets loaded
-	 * @throws \Exception -- Sequence to load/init wasn't identified (specified).
-	 */
-	public function init( $id = null ) {
-		
-		global $current_user;
-		
-		if ( ! is_null( $id ) ) {
-			
-			$this->sequence = get_post( $id );
-			DBG::log( 'Loading the "' . get_the_title( $id ) . '" sequence settings' );
-			
-			// Set options for the sequence
-			$this->get_options( $id );
-			
-			if ( 0 != $current_user->ID || $this->is_cron ) {
-				DBG::log( 'init() - Loading the "' . get_the_title( $id ) . '" sequence posts' );
-				$this->load_sequence_post();
-			}
-			
-			if ( empty( $this->posts ) && ( ! $this->is_converted( $id ) ) ) {
-				
-				DBG::log( "Need to convert sequence with ID {$id } to version 3 format!" );
-			}
-			
-			DBG::log( 'init complete' );
-			
-			return $this->sequence_id;
-		}
-		
-		if ( ( $id == null ) && ( $this->sequence_id == 0 ) ) {
-			throw new \Exception( __( 'No sequence ID specified.', "e20r-sequences" ) );
-		}
-		
-		return false;
-	}
-	
-	/**
 	 * Fetches the posts associated with this sequence, then generates HTML containing the list.
 	 *
 	 * @param bool $echo -- Whether to immediately 'echo' the value or return the HTML to the calling function
@@ -2933,32 +2995,6 @@ class Sequence_Controller {
 		}
 		
 		return false;
-	}
-	
-	/**
-	 * Selects & formats the correct delay value in the list of posts, based on admin settings
-	 *
-	 * @param $delay (int) -- The delay value
-	 *
-	 * @return bool|string -- The number
-	 *
-	 * @access public
-	 */
-	public function display_proper_delay( $delay ) {
-		
-		if ( $this->options->showDelayAs == E20R_SEQ_AS_DATE ) {
-			// Convert the delay to a date
-			
-			$memberDays = round( $this->get_membership_days(), 0 );
-			
-			$delayDiff = ( $delay - $memberDays );
-			DBG::log( 'Delay: ' . $delay . ', memberDays: ' . $memberDays . ', delayDiff: ' . $delayDiff );
-			
-			return date_i18n( get_option( 'date_format' ), strtotime( "+" . $delayDiff . " days" ) );
-		}
-		
-		return $delay; // It's stored as a number, not a date
-		
 	}
 	
 	/**
@@ -3034,8 +3070,8 @@ class Sequence_Controller {
 			
 			$post_sequences   = $this->get_sequences_for_post( $post->ID );
 			$days_since_start = $this->get_membership_days( $current_user->ID );
-			$delay = null;
-			$post_id = null;
+			$delay            = null;
+			$post_id          = null;
 			
 			//Update text. The user either will have to wait or sign up.
 			$insequence = false;
@@ -3071,8 +3107,8 @@ class Sequence_Controller {
 						'access' => $access[0],
 					);
 				}
-                
-                DBG::log( "Level info: " . print_r( $level_info, true ) );
+				
+				DBG::log( "Level info: " . print_r( $level_info, true ) );
 				
 				if ( ( is_array( $access ) && true == $access[0] ) || ( ! is_array( $access ) && true == $access ) ) {
 					
@@ -3098,24 +3134,24 @@ class Sequence_Controller {
 						$delay   = $r[0]->delay;
 						$post_id = $r[0]->id;
 					} else {
-					    DBG::log("Didn't add any delay/post info???");
-                    }
+						DBG::log( "Didn't add any delay/post info???" );
+					}
 				}
 				
 				if ( false !== $insequence ) {
 					
 					//user has one of the sequence levels, find out which one and tell him how many days left
 					$text = sprintf( "%s<br/>",
-                        sprintf(
-                                __( "This content is only available to existing members at the specified time or day. <span class=\"e20r-sequences-required-levels\"> Required %s: </span><a href='%s'>%s</a>", "e20r-sequences" ),
-                                __( "membership", "e20r-sequences" ),
-                                get_permalink( $ps ),
-                                get_the_title( $ps )
-                        )
-                    );
+						sprintf(
+							__( "This content is only available to existing members at the specified time or day. <span class=\"e20r-sequences-required-levels\"> Required %s: </span><a href='%s'>%s</a>", "e20r-sequences" ),
+							__( "membership", "e20r-sequences" ),
+							get_permalink( $ps ),
+							get_the_title( $ps )
+						)
+					);
 					
-					if ( !empty( $delay ) && !empty( $post_id )) {
-					 
+					if ( ! empty( $delay ) && ! empty( $post_id ) ) {
+						
 						switch ( $this->options->delayType ) {
 							
 							case 'byDays':
@@ -3125,20 +3161,20 @@ class Sequence_Controller {
 									case E20R_SEQ_AS_DAYNO:
 										
 										$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf(
-										        __( 'You will be able to access "%s" on day %s of your %s', "e20r-sequences" ),
-                                                get_the_title( $post_id ),
-                                                $this->display_proper_delay( $delay ),
-                                                __( "membership", "e20r-sequences" )
-                                            ) . '</span>';
+												__( 'You will be able to access "%s" on day %s of your %s', "e20r-sequences" ),
+												get_the_title( $post_id ),
+												$this->display_proper_delay( $delay ),
+												__( "membership", "e20r-sequences" )
+											) . '</span>';
 										break;
 									
 									case E20R_SEQ_AS_DATE:
 										
 										$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf(
-										        __( 'You will be able to  access "%s" on %s', "e20r-sequences" ),
-                                                get_the_title( $post_id ),
-                                                $this->display_proper_delay( $delay )
-                                            ) . '</span>';
+												__( 'You will be able to  access "%s" on %s', "e20r-sequences" ),
+												get_the_title( $post_id ),
+												$this->display_proper_delay( $delay )
+											) . '</span>';
 										break;
 								}
 								
@@ -3146,10 +3182,10 @@ class Sequence_Controller {
 							
 							case 'byDate':
 								$text .= '<span class="e20r-sequence-delay-prompt">' . sprintf(
-								        __( 'You will be able to access "%s" on %s', "e20r-sequences" ),
-                                        get_the_title( $post_id ),
-                                        $delay
-                                    ) . '</span>';
+										__( 'You will be able to access "%s" on %s', "e20r-sequences" ),
+										get_the_title( $post_id ),
+										$delay
+									) . '</span>';
 								break;
 							
 							default:
@@ -3233,6 +3269,47 @@ class Sequence_Controller {
 		}
 		
 		return false;
+	}
+	
+	/**
+	 * Display the error message (if it's defined).
+	 */
+	public function display_error() {
+		
+		DBG::log( "Display error message(s), if there are any" );
+		global $current_screen;
+		
+		if ( empty( $this->utils ) ) {
+			$this->utils = \E20R_Utils::get_instance();
+		}
+		
+		$this->utils->display_notice();
+	}
+	
+	/**
+	 * Selects & formats the correct delay value in the list of posts, based on admin settings
+	 *
+	 * @param $delay (int) -- The delay value
+	 *
+	 * @return bool|string -- The number
+	 *
+	 * @access public
+	 */
+	public function display_proper_delay( $delay ) {
+		
+		if ( $this->options->showDelayAs == E20R_SEQ_AS_DATE ) {
+			// Convert the delay to a date
+			
+			$memberDays = round( $this->get_membership_days(), 0 );
+			
+			$delayDiff = ( $delay - $memberDays );
+			DBG::log( 'Delay: ' . $delay . ', memberDays: ' . $memberDays . ', delayDiff: ' . $delayDiff );
+			
+			return date_i18n( get_option( 'date_format' ), strtotime( "+" . $delayDiff . " days" ) );
+		}
+		
+		return $delay; // It's stored as a number, not a date
+		
 	}
 	
 	/**
@@ -3499,69 +3576,6 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Retrieve the Google Analytics Cookie ID
-	 *
-	 * @return null - Return the Cookie ID for the Google Analytics cookie
-	 */
-	public function ga_getCid() {
-		
-		$contents = $this->ga_parseCookie();
-		
-		return isset( $contents['cid'] ) ? $contents['cid'] : null;
-	}
-	
-	/**
-	 * Parse the Google Analytics cookie to locate the Client ID info.
-	 *
-	 * By: Matt Clarke - https://plus.google.com/110147996971766876369/posts/Mz1ksPoBGHx
-	 *
-	 * @return array
-	 */
-	public function ga_parseCookie() {
-		
-		if ( isset( $_COOKIE["_ga"] ) ) {
-			
-			list( $version, $domainDepth, $cid1, $cid2 ) = preg_split( '/[\.]/i', $_COOKIE["_ga"], 4 );
-			
-			return array( 'version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1 . '.' . $cid2 );
-		}
-		
-		return array();
-	}
-	
-	/**
-	 * Prepare the (soon-to-be) PHPMailer() object to send
-	 *
-	 * @param \WP_Post $post     - Post Object
-	 * @param \WP_User $user     - User Object
-	 * @param          $template - Template name (string)
-	 *
-	 * @return E20R_Mail - Mail object to process
-	 */
-	private function prepare_mail_obj( $post, $user, $template ) {
-		
-		DBG::log( "Attempting to load email class..." );
-		
-		$email = new E20R_Mail();
-		
-		DBG::log( "Loaded " . get_class( $email ) );
-		
-		$title_to_use = apply_filters( 'e20r-sequence-alert-message-post-title', $post->title, $post, $user, $template );
-		
-		$user_started = ( $this->get_user_startdate( $user->ID ) - DAY_IN_SECONDS ) + ( $this->normalize_delay( $post->delay ) * DAY_IN_SECONDS );
-		
-		$email->from       = $this->get_option_by_name( 'replyto' );
-		$email->template   = $template;
-		$email->fromname   = $this->get_option_by_name( 'fromname' );
-		$email->to         = $user->user_email;
-		$email->subject    = sprintf( '%s: %s (%s)', $this->get_option_by_name( 'subject' ), $title_to_use, strftime( "%x", $user_started ) );
-		$email->dateformat = $this->get_option_by_name( 'dateformat' );
-		
-		return $email;
-		
-	}
-	
-	/**
 	 * Send email to userID about access to new post.
 	 *
 	 * @param $post_ids -- IDs of post(s) to send email about
@@ -3651,7 +3665,7 @@ class Sequence_Controller {
 			// Send all of the links to new content in a single email message.
 			if ( E20R_SEQ_SEND_AS_LIST == $send_as ) {
 				
-				$login_link = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $post->permalink ) ), $post, $user, $this->get_option_by_name( 'noticeTemplate' )  );
+				$login_link = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $post->permalink ) ), $post, $user, $this->get_option_by_name( 'noticeTemplate' ) );
 				$post_title = apply_filters( 'e20r-sequence-alert-message-post-title', $post->title, $post, $user, $this->get_option_by_name( 'noticeTemplate' ) );
 				
 				$idx        = 0;
@@ -3698,7 +3712,7 @@ class Sequence_Controller {
 					$excerpt = '<p>' . $this->options->excerptIntro . '</p><p>' . $post->excerpt . '</p>';
 				}
 				
-				$login_link = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $post->permalink ) ), $post, $user, $this->get_option_by_name( 'noticeTemplate' )  );
+				$login_link = apply_filters( 'e20r-sequence-alert-message-post-url', wp_login_url( esc_url_raw( $post->permalink ) ), $post, $user, $this->get_option_by_name( 'noticeTemplate' ) );
 				$post_title = apply_filters( 'e20r-sequence-alert-message-post-title', $post->title, $post, $user, $this->get_option_by_name( 'noticeTemplate' ) );
 				
 				$post_url   = $login_link;
@@ -3756,6 +3770,53 @@ class Sequence_Controller {
 	}
 	
 	/**
+	 * Find a Sequence option by name and return it's current setting/value
+	 *
+	 * @param $option - The name of the setting to return
+	 *
+	 * @return mixed - The setting value
+	 */
+	public function get_option_by_name( $option ) {
+		if ( ! isset( $this->options->{$option} ) ) {
+			
+			return false;
+		}
+		
+		return $this->options->{$option};
+	}
+	
+	/**
+	 * Retrieve the Google Analytics Cookie ID
+	 *
+	 * @return null - Return the Cookie ID for the Google Analytics cookie
+	 */
+	public function ga_getCid() {
+		
+		$contents = $this->ga_parseCookie();
+		
+		return isset( $contents['cid'] ) ? $contents['cid'] : null;
+	}
+	
+	/**
+	 * Parse the Google Analytics cookie to locate the Client ID info.
+	 *
+	 * By: Matt Clarke - https://plus.google.com/110147996971766876369/posts/Mz1ksPoBGHx
+	 *
+	 * @return array
+	 */
+	public function ga_parseCookie() {
+		
+		if ( isset( $_COOKIE["_ga"] ) ) {
+			
+			list( $version, $domainDepth, $cid1, $cid2 ) = preg_split( '/[\.]/i', $_COOKIE["_ga"], 4 );
+			
+			return array( 'version' => $version, 'domainDepth' => $domainDepth, 'cid' => $cid1 . '.' . $cid2 );
+		}
+		
+		return array();
+	}
+	
+	/**
 	 * Check the theme/child-theme/Sequence plugin directory for the specified notice template.
 	 *
 	 * @return null|string -- Path to the selected template for the email alert notice.
@@ -3783,449 +3844,13 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Resets the user-specific alert settings for a specified sequence Id.
+	 * Set a Sequence option by name to the specified $value.
 	 *
-	 * @param $user_id    - User's ID
-	 * @param $sequenceId - ID of the sequence we're clearning
-	 *
-	 * @return mixed - false means the reset didn't work.
+	 * @param $option
+	 * @param $value
 	 */
-	public function reset_user_alerts( $user_id, $sequenceId ) {
-		
-		global $wpdb;
-		
-		DBG::log( "reset_user_alerts() - Attempting to delete old-style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO );
-		$old_style = delete_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence_notices' );
-		
-		DBG::log( "reset_user_alerts() - Attempting to delete v3 style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO );
-		$v3_style = delete_user_meta( $user_id, "pmpro_sequence_id_{$sequenceId}_notices" );
-		
-		if ( $old_style || $v3_style ) {
-			
-			DBG::log( "reset_user_alerts() - Successfully delted user notice settings for user {$user_id}" );
-			
-			return true;
-		}
-		
-		return false;
-	}
-	
-	/**
-	 * Changes the content of the following placeholders as described:
-	 *
-	 * TODO: Simplify and just use a more standardized and simple way of preparing the mail object before wp_mail'ing
-	 * it.
-	 *
-	 *  !!excerpt_intro!! --> The introduction to the excerpt (Configure in "Sequence" editor ("Sequence Settings
-	 *  pane")
-	 *  !!lesson_title!! --> The title of the lesson/post we're emailing an alert about.
-	 *  !!today!! --> Today's date (in the configured format).
-	 *
-	 * @param $phpmailer -- PMPro Mail object (contains the Body of the message)
-	 *
-	 * @access private
-	 */
-	public function email_body( $phpmailer ) {
-		
-		DBG::log( 'email_body() action: Update body of message if it is sent by PMPro Sequence' );
-		
-		if ( isset( $phpmailer->excerpt_intro ) ) {
-			$phpmailer->Body = apply_filters( 'e20r-sequence-alert-message-excerpt-intro', str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body ) );
-		}
-		
-		if ( isset( $phpmailer->ptitle ) ) {
-			$phpmailer->Body = apply_filters( 'e20r-sequence-alert-message-title', str_replace( "!!ptitle!!", $phpmailer->ptitle, $phpmailer->Body ) );
-		}
-		
-	}
-	
-	/**
-	 * For backwards compatibility.
-	 *
-	 * @param     $msg
-	 * @param int $lvl
-	 */
-	public function dbgOut( $msg, $lvl = E20R_DEBUG_SEQ_INFO ) {
-		
-		DBG::log( $msg, $lvl );
-	}
-	
-	/**
-	 * Callback (hook) for the save_post action.
-	 *
-	 * If the contributor has added the necessary settings to include the post in a sequence, we'll add it.
-	 *
-	 * @param $post_id - The ID of the post being saved
-	 */
-	public function post_save_action( $post_id ) {
-		
-		global $current_user, $post;
-		
-		if ( ! isset( $post->post_type ) ) {
-			DBG::log( "post_save_action() - No post type defined for {$post_id}", E20R_DEBUG_SEQ_WARNING );
-			
-			return;
-		}
-		
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			DBG::log( "Exit during autosave" );
-			
-			return;
-		}
-		
-		if ( wp_is_post_revision( $post_id ) !== false ) {
-			DBG::log( "post_save_action() - Not saving revisions ({$post_id}) to sequence" );
-			
-			return;
-		}
-		
-		$this->managed_types = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
-		
-		
-		if ( ! in_array( $post->post_type, $this->managed_types ) ) {
-			DBG::log( "post_save_action() - Not saving delay info for {$post->post_type}" );
-			
-			return;
-		}
-		
-		if ( 'trash' == get_post_status( $post_id ) ) {
-			return;
-		}
-		
-		DBG::log( "post_save_action() - Sequences & Delays have been configured for page save. " . $this->who_called_me() );
-		
-		if ( isset( $_POST['e20r_seq-sequences'] ) ) {
-			$seq_ids = is_array( $_POST['e20r_seq-sequences'] ) ? array_map( 'esc_attr', $_POST['e20r_seq-sequences'] ) : null;
-		} else {
-			$seq_ids = array();
-		}
-		
-		if ( isset( $_POST['e20r_seq-delay'] ) ) {
-			
-			$delays = is_array( $_POST['e20r_seq-delay'] ) ? array_map( 'esc_attr', $_POST['e20r_seq-delay'] ) : array();
-		} else {
-			$delays = array();
-		}
-		
-		if ( empty( $delays ) && ( ! in_array( 0, $delays ) ) ) {
-			
-			$this->set_error_msg( __( "Error: No delay value(s) received", "e20r-sequences" ) );
-			DBG::log( "post_save_action() - Error: delay not specified! ", E20R_DEBUG_SEQ_CRITICAL );
-			
-			return;
-		}
-		
-		$errMsg = null;
-		
-		// $already_in = $this->get_sequences_for_post( $post_id );
-		// $already_in = get_post_meta( $post_id, "_post_sequences", true );
-		
-		DBG::log( "post_save_action() - Saved received variable values..." );
-		
-		foreach ( $seq_ids as $key => $id ) {
-			
-			DBG::log( "post_save_action() - Processing for sequence {$id}" );
-			
-			if ( $id == 0 ) {
-				continue;
-			}
-			
-			if ( $id != $this->sequence_id ) {
-				
-				if ( ! $this->get_options( $id ) ) {
-					DBG::log( "post_save_action() - Unable to load settings for sequence with ID: {$id}" );
-					
-					return;
-				}
-			}
-			
-			$user_can = apply_filters( 'e20r-sequence-has-edit-privileges', $this->user_can_edit( $current_user->ID ) );
-			
-			if ( ! $user_can ) {
-				
-				$this->set_error_msg( __( 'Incorrect privileges for this operation', "e20r-sequences" ) );
-				DBG::log( "post_save_action() - User lacks privileges to edit", E20R_DEBUG_SEQ_WARNING );
-				
-				return;
-			}
-			
-			if ( $id == 0 ) {
-				
-				DBG::log( "post_save_action() - No specified sequence or it's set to 'nothing'" );
-			} else if ( is_null( $delays[ $key ] ) || ( empty( $delays[ $key ] ) && ! is_numeric( $delays[ $key ] ) ) ) {
-				
-				DBG::log( "post_save_action() - Not a valid delay value...: " . $delays[ $key ], E20R_DEBUG_SEQ_CRITICAL );
-				$this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", "e20r-sequences" ), get_the_title( $id ) ) );
-			} else {
-				
-				DBG::log( "post_save_action() - Processing post {$post_id} for sequence {$this->sequence_id} with delay {$delays[$key]}" );
-				$this->add_post( $post_id, $delays[ $key ] );
-			}
-		}
-	}
-	
-	/**
-	 * Default permission check function.
-	 * Checks whether the provided user_id is allowed to publish_pages & publish_posts.
-	 *
-	 * @param $user_id - ID of user to check permissions for.
-	 *
-	 * @return bool -- True if the user is allowed to edi/update
-	 *
-	 * @access private
-	 */
-	private function user_can_edit( $user_id ) {
-		
-		$required_permissions = apply_filters( 'e20r-sequence-required-permissions', array(
-			'publish_pages',
-			'publish_posts',
-		) );
-		
-		// Default is "no access"
-		$perm = false;
-		
-		// Make sure there are permissions to check against
-		if ( ! empty( $required_permissions ) ) {
-			$perm = true;
-		}
-		
-		// Check the supplied array of permissions for the supplied user_id
-		foreach ( $required_permissions as $permission ) {
-			
-			$perm = $perm && user_can( $user_id, $permission );
-		}
-		
-		DBG::log( "User with ID {$user_id} has permission to update/edit this sequence? " . ( $perm ? 'Yes' : 'No' ) );
-		
-		return $perm;
-	}
-	
-	/**
-	 * Adds the specified post to this sequence
-	 *
-	 * @param $post_id -- The ID of the post to add to this sequence
-	 * @param $delay   -- The delay to apply to the post
-	 *
-	 * @return bool -- Success or failure
-	 *
-	 * @access public
-	 */
-	public function add_post( $post_id, $delay ) {
-		DBG::log( "add_post() for sequence {$this->sequence_id}: " . $this->who_called_me() );
-		
-		/*        if (! $this->is_valid_delay($delay) )
-        {
-            DBG::log('add_post(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
-            $this->set_error_msg( sprintf(__('Invalid delay value - %s', "e20r-sequences"), ( empty($delay) ? 'blank' : $delay ) ) );
-            return false;
-        }
-*/
-		if ( empty( $post_id ) || ! isset( $delay ) ) {
-			$this->set_error_msg( __( "Please enter a value for post and delay", "e20r-sequences" ) );
-			DBG::log( 'add_post(): No Post ID or delay specified' );
-			
-			return false;
-		}
-		
-		DBG::log( 'add_post(): Post ID: ' . $post_id . ' and delay: ' . $delay );
-		
-		if ( $post = get_post( $post_id ) === null ) {
-			
-			$this->set_error_msg( __( "A post with that id does not exist", "e20r-sequences" ) );
-			DBG::log( 'add_post(): No Post with ' . $post_id . ' found' );
-			
-			return false;
-		}
-		
-		/*        if ( $this->is_present( $post_id, $delay ) ) {
-
-            DBG::log("add_post() - Post {$post_id} with delay {$delay} is already present in sequence {$this->sequence_id}");
-            return true;
-        }
-*/
-		// Refresh the post list for the sequence, ignore cache
-		
-		if ( current_time( 'timestamp' ) >= $this->expires && ! empty( $this->posts ) ) {
-			
-			DBG::log( "add_post(): Refreshing post list for sequence #{$this->sequence_id}" );
-			$this->load_sequence_post();
-		}
-		
-		// Add this post to the current sequence.
-		
-		DBG::log( "add_post() - Adding post {$post_id} with delay {$delay} to sequence {$this->sequence_id}" );
-		if ( ! $this->add_post_to_sequence( $this->sequence_id, $post_id, $delay ) ) {
-			
-			DBG::log( "add_post() - ERROR: Unable to add post {$post_id} to sequence {$this->sequence_id} with delay {$delay}", E20R_DEBUG_SEQ_WARNING );
-			$this->set_error_msg( sprintf( __( "Error adding %s to %s", "e20r-sequences" ), get_the_title( $post_id ), get_the_title( $this->sequence_id ) ) );
-			
-			return false;
-		}
-		
-		//sort
-		DBG::log( 'add_post(): Sorting the sequence posts by delay value(s)' );
-		usort( $this->posts, array( $this, 'sort_posts_by_delay' ) );
-		
-		// Save the sequence list for this post id
-		
-		/* $this->set_sequences_for_post( $post_id, $post_in_sequences ); */
-		// update_post_meta( $post_id, "_post_sequences", $post_in_sequences );
-		
-		DBG::log( 'add_post(): Post/Page list updated and saved' );
-		
-		return true;
-	}
-	
-	/**
-	 * Validates that the value received follows a valid "delay" format for the post/page sequence
-	 *
-	 * @param $delay (string) - The specified post delay value
-	 *
-	 * @return bool - Delay is recognized (parseable).
-	 *
-	 * @access private
-	 */
-	private function is_valid_delay( $delay ) {
-		DBG::log( "is_valid_delay(): Delay value is: {$delay} for setting: {$this->options->delayType}" );
-		
-		switch ( $this->options->delayType ) {
-			case 'byDays':
-				DBG::log( 'is_valid_delay(): Delay configured as "days since membership start"' );
-				
-				return ( is_numeric( $delay ) ? true : false );
-				break;
-			
-			case 'byDate':
-				DBG::log( 'is_valid_delay(): Delay configured as a date value' );
-				
-				return ( apply_filters( 'e20r-sequence-check-valid-date', $this->is_valid_date( $delay ) ) ? true : false );
-				break;
-			
-			default:
-				DBG::log( 'is_valid_delay(): NOT a valid delay value, based on config' );
-				DBG::log( "is_valid_delay() - options Array: " . print_r( $this->options, true ) );
-				
-				return false;
-		}
-	}
-	
-	/**
-	 * Save the settings as metadata for the sequence
-	 *
-	 * @param $post_id -- ID of the sequence these options belong to.
-	 *
-	 * @return int | mixed - Either the ID of the Sequence or its content
-	 *
-	 * @access public
-	 */
-	public function save_post_meta( $post_id ) {
-		global $post;
-		
-		// Check that the function was called correctly. If not, just return
-		if ( empty( $post_id ) ) {
-			
-			DBG::log( 'save_post_meta(): No post ID supplied...', E20R_DEBUG_SEQ_WARNING );
-			
-			return false;
-		}
-		
-		if ( wp_is_post_revision( $post_id ) ) {
-			return $post_id;
-		}
-		
-		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
-			return $post_id;
-		}
-		
-		if ( ! isset( $post->post_type ) || ( 'pmpro_sequence' != $post->post_type ) ) {
-			return $post_id;
-		}
-		
-		if ( 'trash' == get_post_status( $post_id ) ) {
-			return $post_id;
-		}
-		
-		try {
-			$this->init( $post_id );
-		} catch( \Exception $exception ) {
-		    DBG::log("Unable to initialize the specified sequence: {$post_id}");
-		    return;
-        }
-		
-		DBG::log( 'save_post_meta(): Saving settings for sequence ' . $post_id );
-		// DBG::log('From Web: ' . print_r($_REQUEST, true));
-		
-		// OK, we're authenticated: we need to find and save the data
-		if ( isset( $_POST['e20r_sequence_settings_noncename'] ) ) {
-			
-			DBG::log( 'save_post_meta() - Have to load new instance of Sequence class' );
-			
-			if ( ! $this->options ) {
-				$this->options = $this->default_options();
-			}
-			
-			if ( ( $retval = $this->save_settings( $post_id ) ) === true ) {
-				
-				DBG::log( "save_post_meta(): Saved metadata for sequence #{$post_id} and clearing the cache" );
-				$this->delete_cache( $post_id );
-				
-				return true;
-			} else {
-				return false;
-			}
-			
-		}
-		
-		return false; // Default
-	}
-	
-	/**
-	 * Sanitize supplied field value(s) depending on it's data type
-	 *
-	 * @param $field - The data to santitize
-	 *
-	 * @return array|int|string
-	 */
-	public function sanitize( $field ) {
-		
-		if ( ! is_numeric( $field ) ) {
-			
-			if ( is_array( $field ) ) {
-				
-				foreach ( $field as $key => $val ) {
-					$field[ $key ] = $this->sanitize( $val );
-				}
-			}
-			
-			if ( is_object( $field ) ) {
-				
-				foreach ( $field as $key => $val ) {
-					$field->{$key} = $this->sanitize( $val );
-				}
-			}
-			
-			if ( ( ! is_array( $field ) ) && ctype_alpha( $field ) ||
-			     ( ( ! is_array( $field ) ) && strtotime( $field ) ) ||
-			     ( ( ! is_array( $field ) ) && is_string( $field ) )
-			) {
-				
-				$field = sanitize_text_field( $field );
-			}
-			
-		} else {
-			
-			if ( is_float( $field + 1 ) ) {
-				
-				$field = sanitize_text_field( $field );
-			}
-			
-			if ( is_int( $field + 1 ) ) {
-				
-				$field = intval( $field );
-			}
-		}
-		
-		return $field;
+	public function set_option_by_name( $option, $value ) {
+		$this->options->{$option} = $value;
 	}
 	
 	/**
@@ -4555,21 +4180,52 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Return the single (specified) option/setting from the membership plugin
+	 * Sanitize supplied field value(s) depending on it's data type
 	 *
-	 * @param string $option_name -- The name of the option to fetch
+	 * @param $field - The data to santitize
 	 *
-	 * @return mixed|void
+	 * @return array|int|string
 	 */
-	public function get_membership_setting( $option_name ) {
-		$val = null;
+	public function sanitize( $field ) {
 		
-		if ( function_exists( 'pmpro_getOption' ) ) {
+		if ( ! is_numeric( $field ) ) {
 			
-			$val = pmpro_getOption( $option_name );
+			if ( is_array( $field ) ) {
+				
+				foreach ( $field as $key => $val ) {
+					$field[ $key ] = $this->sanitize( $val );
+				}
+			}
+			
+			if ( is_object( $field ) ) {
+				
+				foreach ( $field as $key => $val ) {
+					$field->{$key} = $this->sanitize( $val );
+				}
+			}
+			
+			if ( ( ! is_array( $field ) ) && ctype_alpha( $field ) ||
+			     ( ( ! is_array( $field ) ) && strtotime( $field ) ) ||
+			     ( ( ! is_array( $field ) ) && is_string( $field ) )
+			) {
+				
+				$field = sanitize_text_field( $field );
+			}
+			
+		} else {
+			
+			if ( is_float( $field + 1 ) ) {
+				
+				$field = sanitize_text_field( $field );
+			}
+			
+			if ( is_int( $field + 1 ) ) {
+				
+				$field = intval( $field );
+			}
 		}
 		
-		return apply_filters( 'e20r-sequence-membership-module-get-membership-setting', $val, $option_name );
+		return $field;
 	}
 	
 	/**
@@ -4658,6 +4314,385 @@ class Sequence_Controller {
 	}
 	
 	/**
+	 * Prepare the (soon-to-be) PHPMailer() object to send
+	 *
+	 * @param \WP_Post $post     - Post Object
+	 * @param \WP_User $user     - User Object
+	 * @param          $template - Template name (string)
+	 *
+	 * @return E20R_Mail - Mail object to process
+	 */
+	private function prepare_mail_obj( $post, $user, $template ) {
+		
+		DBG::log( "Attempting to load email class..." );
+		
+		$email = new E20R_Mail();
+		
+		DBG::log( "Loaded " . get_class( $email ) );
+		
+		$title_to_use = apply_filters( 'e20r-sequence-alert-message-post-title', $post->title, $post, $user, $template );
+		
+		$user_started = ( $this->get_user_startdate( $user->ID ) - DAY_IN_SECONDS ) + ( $this->normalize_delay( $post->delay ) * DAY_IN_SECONDS );
+		
+		$email->from       = $this->get_option_by_name( 'replyto' );
+		$email->template   = $template;
+		$email->fromname   = $this->get_option_by_name( 'fromname' );
+		$email->to         = $user->user_email;
+		$email->subject    = sprintf( '%s: %s (%s)', $this->get_option_by_name( 'subject' ), $title_to_use, strftime( "%x", $user_started ) );
+		$email->dateformat = $this->get_option_by_name( 'dateformat' );
+		
+		return $email;
+		
+	}
+	
+	/**
+	 * Resets the user-specific alert settings for a specified sequence Id.
+	 *
+	 * @param $user_id    - User's ID
+	 * @param $sequenceId - ID of the sequence we're clearning
+	 *
+	 * @return mixed - false means the reset didn't work.
+	 */
+	public function reset_user_alerts( $user_id, $sequenceId ) {
+		
+		global $wpdb;
+		
+		DBG::log( "reset_user_alerts() - Attempting to delete old-style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO );
+		$old_style = delete_user_meta( $user_id, $wpdb->prefix . 'pmpro_sequence_notices' );
+		
+		DBG::log( "reset_user_alerts() - Attempting to delete v3 style user notices for sequence with ID: {$sequenceId}", E20R_DEBUG_SEQ_INFO );
+		$v3_style = delete_user_meta( $user_id, "pmpro_sequence_id_{$sequenceId}_notices" );
+		
+		if ( $old_style || $v3_style ) {
+			
+			DBG::log( "reset_user_alerts() - Successfully delted user notice settings for user {$user_id}" );
+			
+			return true;
+		}
+		
+		return false;
+	}
+	
+	/**
+	 * Changes the content of the following placeholders as described:
+	 *
+	 * TODO: Simplify and just use a more standardized and simple way of preparing the mail object before wp_mail'ing
+	 * it.
+	 *
+	 *  !!excerpt_intro!! --> The introduction to the excerpt (Configure in "Sequence" editor ("Sequence Settings
+	 *  pane")
+	 *  !!lesson_title!! --> The title of the lesson/post we're emailing an alert about.
+	 *  !!today!! --> Today's date (in the configured format).
+	 *
+	 * @param $phpmailer -- PMPro Mail object (contains the Body of the message)
+	 *
+	 * @access private
+	 */
+	public function email_body( $phpmailer ) {
+		
+		DBG::log( 'email_body() action: Update body of message if it is sent by PMPro Sequence' );
+		
+		if ( isset( $phpmailer->excerpt_intro ) ) {
+			$phpmailer->Body = apply_filters( 'e20r-sequence-alert-message-excerpt-intro', str_replace( "!!excerpt_intro!!", $phpmailer->excerpt_intro, $phpmailer->Body ) );
+		}
+		
+		if ( isset( $phpmailer->ptitle ) ) {
+			$phpmailer->Body = apply_filters( 'e20r-sequence-alert-message-title', str_replace( "!!ptitle!!", $phpmailer->ptitle, $phpmailer->Body ) );
+		}
+		
+	}
+	
+	/**
+	 * For backwards compatibility.
+	 *
+	 * @param     $msg
+	 * @param int $lvl
+	 */
+	public function dbgOut( $msg, $lvl = E20R_DEBUG_SEQ_INFO ) {
+		
+		DBG::log( $msg, $lvl );
+	}
+	
+	/**
+	 * Callback (hook) for the save_post action.
+	 *
+	 * If the contributor has added the necessary settings to include the post in a sequence, we'll add it.
+	 *
+	 * @param $post_id - The ID of the post being saved
+	 */
+	public function post_save_action( $post_id ) {
+		
+		global $current_user, $post;
+		
+		if ( ! isset( $post->post_type ) ) {
+			DBG::log( "post_save_action() - No post type defined for {$post_id}", E20R_DEBUG_SEQ_WARNING );
+			
+			return;
+		}
+		
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			DBG::log( "Exit during autosave" );
+			
+			return;
+		}
+		
+		if ( wp_is_post_revision( $post_id ) !== false ) {
+			DBG::log( "post_save_action() - Not saving revisions ({$post_id}) to sequence" );
+			
+			return;
+		}
+		
+		$this->managed_types = apply_filters( 'e20r-sequence-managed-post-types', array( 'post', 'page' ) );
+		
+		
+		if ( ! in_array( $post->post_type, $this->managed_types ) ) {
+			DBG::log( "post_save_action() - Not saving delay info for {$post->post_type}" );
+			
+			return;
+		}
+		
+		if ( 'trash' == get_post_status( $post_id ) ) {
+			return;
+		}
+		
+		DBG::log( "post_save_action() - Sequences & Delays have been configured for page save. " . $this->who_called_me() );
+		
+		if ( isset( $_POST['e20r_seq-sequences'] ) ) {
+			$seq_ids = is_array( $_POST['e20r_seq-sequences'] ) ? array_map( 'esc_attr', $_POST['e20r_seq-sequences'] ) : null;
+		} else {
+			$seq_ids = array();
+		}
+		
+		if ( isset( $_POST['e20r_seq-delay'] ) ) {
+			
+			$delays = is_array( $_POST['e20r_seq-delay'] ) ? array_map( 'esc_attr', $_POST['e20r_seq-delay'] ) : array();
+		} else {
+			$delays = array();
+		}
+		
+		if ( empty( $delays ) && ( ! in_array( 0, $delays ) ) ) {
+			
+			$this->set_error_msg( __( "Error: No delay value(s) received", "e20r-sequences" ) );
+			DBG::log( "post_save_action() - Error: delay not specified! ", E20R_DEBUG_SEQ_CRITICAL );
+			
+			return;
+		}
+		
+		$errMsg = null;
+		
+		// $already_in = $this->get_sequences_for_post( $post_id );
+		// $already_in = get_post_meta( $post_id, "_post_sequences", true );
+		
+		DBG::log( "post_save_action() - Saved received variable values..." );
+		
+		foreach ( $seq_ids as $key => $id ) {
+			
+			DBG::log( "post_save_action() - Processing for sequence {$id}" );
+			
+			if ( $id == 0 ) {
+				continue;
+			}
+			
+			if ( $id != $this->sequence_id ) {
+				
+				if ( ! $this->get_options( $id ) ) {
+					DBG::log( "post_save_action() - Unable to load settings for sequence with ID: {$id}" );
+					
+					return;
+				}
+			}
+			
+			$user_can = apply_filters( 'e20r-sequence-has-edit-privileges', $this->user_can_edit( $current_user->ID ) );
+			
+			if ( ! $user_can ) {
+				
+				$this->set_error_msg( __( 'Incorrect privileges for this operation', "e20r-sequences" ) );
+				DBG::log( "post_save_action() - User lacks privileges to edit", E20R_DEBUG_SEQ_WARNING );
+				
+				return;
+			}
+			
+			if ( $id == 0 ) {
+				
+				DBG::log( "post_save_action() - No specified sequence or it's set to 'nothing'" );
+			} else if ( is_null( $delays[ $key ] ) || ( empty( $delays[ $key ] ) && ! is_numeric( $delays[ $key ] ) ) ) {
+				
+				DBG::log( "post_save_action() - Not a valid delay value...: " . $delays[ $key ], E20R_DEBUG_SEQ_CRITICAL );
+				$this->set_error_msg( sprintf( __( "You must specify a delay value for the '%s' sequence", "e20r-sequences" ), get_the_title( $id ) ) );
+			} else {
+				
+				DBG::log( "post_save_action() - Processing post {$post_id} for sequence {$this->sequence_id} with delay {$delays[$key]}" );
+				$this->add_post( $post_id, $delays[ $key ] );
+			}
+		}
+	}
+	
+	/**
+	 * Adds the specified post to this sequence
+	 *
+	 * @param $post_id -- The ID of the post to add to this sequence
+	 * @param $delay   -- The delay to apply to the post
+	 *
+	 * @return bool -- Success or failure
+	 *
+	 * @access public
+	 */
+	public function add_post( $post_id, $delay ) {
+		DBG::log( "add_post() for sequence {$this->sequence_id}: " . $this->who_called_me() );
+		
+		/*        if (! $this->is_valid_delay($delay) )
+        {
+            DBG::log('add_post(): Admin specified an invalid delay value for post: ' . ( empty($post_id) ? 'Unknown' :  $post_id) );
+            $this->set_error_msg( sprintf(__('Invalid delay value - %s', "e20r-sequences"), ( empty($delay) ? 'blank' : $delay ) ) );
+            return false;
+        }
+*/
+		if ( empty( $post_id ) || ! isset( $delay ) ) {
+			$this->set_error_msg( __( "Please enter a value for post and delay", "e20r-sequences" ) );
+			DBG::log( 'add_post(): No Post ID or delay specified' );
+			
+			return false;
+		}
+		
+		DBG::log( 'add_post(): Post ID: ' . $post_id . ' and delay: ' . $delay );
+		
+		if ( $post = get_post( $post_id ) === null ) {
+			
+			$this->set_error_msg( __( "A post with that id does not exist", "e20r-sequences" ) );
+			DBG::log( 'add_post(): No Post with ' . $post_id . ' found' );
+			
+			return false;
+		}
+		
+		/*        if ( $this->is_present( $post_id, $delay ) ) {
+
+            DBG::log("add_post() - Post {$post_id} with delay {$delay} is already present in sequence {$this->sequence_id}");
+            return true;
+        }
+*/
+		// Refresh the post list for the sequence, ignore cache
+		
+		if ( current_time( 'timestamp' ) >= $this->expires && ! empty( $this->posts ) ) {
+			
+			DBG::log( "add_post(): Refreshing post list for sequence #{$this->sequence_id}" );
+			$this->load_sequence_post();
+		}
+		
+		// Add this post to the current sequence.
+		
+		DBG::log( "add_post() - Adding post {$post_id} with delay {$delay} to sequence {$this->sequence_id}" );
+		if ( ! $this->add_post_to_sequence( $this->sequence_id, $post_id, $delay ) ) {
+			
+			DBG::log( "add_post() - ERROR: Unable to add post {$post_id} to sequence {$this->sequence_id} with delay {$delay}", E20R_DEBUG_SEQ_WARNING );
+			$this->set_error_msg( sprintf( __( "Error adding %s to %s", "e20r-sequences" ), get_the_title( $post_id ), get_the_title( $this->sequence_id ) ) );
+			
+			return false;
+		}
+		
+		//sort
+		DBG::log( 'add_post(): Sorting the sequence posts by delay value(s)' );
+		usort( $this->posts, array( $this, 'sort_posts_by_delay' ) );
+		
+		// Save the sequence list for this post id
+		
+		/* $this->set_sequences_for_post( $post_id, $post_in_sequences ); */
+		// update_post_meta( $post_id, "_post_sequences", $post_in_sequences );
+		
+		DBG::log( 'add_post(): Post/Page list updated and saved' );
+		
+		return true;
+	}
+	
+	/**
+	 * Save the settings as metadata for the sequence
+	 *
+	 * @param $post_id -- ID of the sequence these options belong to.
+	 *
+	 * @return int | mixed - Either the ID of the Sequence or its content
+	 *
+	 * @access public
+	 */
+	public function save_post_meta( $post_id ) {
+		global $post;
+		
+		// Check that the function was called correctly. If not, just return
+		if ( empty( $post_id ) ) {
+			
+			DBG::log( 'save_post_meta(): No post ID supplied...', E20R_DEBUG_SEQ_WARNING );
+			
+			return false;
+		}
+		
+		if ( wp_is_post_revision( $post_id ) ) {
+			return $post_id;
+		}
+		
+		if ( defined( 'DOING_AUTOSAVE' ) && DOING_AUTOSAVE ) {
+			return $post_id;
+		}
+		
+		if ( ! isset( $post->post_type ) || ( 'pmpro_sequence' != $post->post_type ) ) {
+			return $post_id;
+		}
+		
+		if ( 'trash' == get_post_status( $post_id ) ) {
+			return $post_id;
+		}
+		
+		try {
+			$this->init( $post_id );
+		} catch ( \Exception $exception ) {
+			DBG::log( "Unable to initialize the specified sequence: {$post_id}" );
+			
+			return;
+		}
+		
+		DBG::log( 'save_post_meta(): Saving settings for sequence ' . $post_id );
+		// DBG::log('From Web: ' . print_r($_REQUEST, true));
+		
+		// OK, we're authenticated: we need to find and save the data
+		if ( isset( $_POST['e20r_sequence_settings_noncename'] ) ) {
+			
+			DBG::log( 'save_post_meta() - Have to load new instance of Sequence class' );
+			
+			if ( ! $this->options ) {
+				$this->options = $this->default_options();
+			}
+			
+			if ( ( $retval = $this->save_settings( $post_id ) ) === true ) {
+				
+				DBG::log( "save_post_meta(): Saved metadata for sequence #{$post_id} and clearing the cache" );
+				$this->delete_cache( $post_id );
+				
+				return true;
+			} else {
+				return false;
+			}
+			
+		}
+		
+		return false; // Default
+	}
+	
+	/**
+	 * Return the single (specified) option/setting from the membership plugin
+	 *
+	 * @param string $option_name -- The name of the option to fetch
+	 *
+	 * @return mixed|void
+	 */
+	public function get_membership_setting( $option_name ) {
+		$val = null;
+		
+		if ( function_exists( 'pmpro_getOption' ) ) {
+			
+			$val = pmpro_getOption( $option_name );
+		}
+		
+		return apply_filters( 'e20r-sequence-membership-module-get-membership-setting', $val, $option_name );
+	}
+	
+	/**
 	 * Callback to remove the all recorded post notifications for the specific post in the specified sequence
 	 */
 	public function remove_post_alert_callback() {
@@ -4706,17 +4741,6 @@ class Sequence_Controller {
 		}
 		
 		wp_send_json_error( 'Missing data in AJAX call' );
-	}
-	
-	
-	public function clearBuffers() {
-		
-		ob_start();
-		
-		$buffers = ob_get_clean();
-		
-		return $buffers;
-		
 	}
 	
 	/**
@@ -4842,6 +4866,39 @@ class Sequence_Controller {
 			wp_send_json_error( $this->get_error_msg() );
 		}
 		
+	}
+	
+	public function clearBuffers() {
+		
+		ob_start();
+		
+		$buffers = ob_get_clean();
+		
+		return $buffers;
+		
+	}
+	
+	/**
+	 * Access the private $error value
+	 *
+	 * @return string|null|mixed -- Error message or NULL
+	 * @access public
+	 */
+	public function get_error_msg() {
+		
+		// $e = apply_filters('get_e20rerror_class_instance', null);
+		$this->utils = \E20R_Utils::get_instance();
+		
+		$this->error = $this->utils->get_error_msg( 'error' );
+		
+		if ( ! empty( $this->error ) ) {
+			
+			DBG::log( "Error info found: " . print_r( $this->error, true ) );
+			
+			return $this->error;
+		} else {
+			return null;
+		}
 	}
 	
 	/**
@@ -5363,6 +5420,39 @@ class Sequence_Controller {
 	}
 	
 	/**
+	 * Validates that the value received follows a valid "delay" format for the post/page sequence
+	 *
+	 * @param $delay (string) - The specified post delay value
+	 *
+	 * @return bool - Delay is recognized (parseable).
+	 *
+	 * @access private
+	 */
+	private function is_valid_delay( $delay ) {
+		DBG::log( "is_valid_delay(): Delay value is: {$delay} for setting: {$this->options->delayType}" );
+		
+		switch ( $this->options->delayType ) {
+			case 'byDays':
+				DBG::log( 'is_valid_delay(): Delay configured as "days since membership start"' );
+				
+				return ( is_numeric( $delay ) ? true : false );
+				break;
+			
+			case 'byDate':
+				DBG::log( 'is_valid_delay(): Delay configured as a date value' );
+				
+				return ( apply_filters( 'e20r-sequence-check-valid-date', $this->is_valid_date( $delay ) ) ? true : false );
+				break;
+			
+			default:
+				DBG::log( 'is_valid_delay(): NOT a valid delay value, based on config' );
+				DBG::log( "is_valid_delay() - options Array: " . print_r( $this->options, true ) );
+				
+				return false;
+		}
+	}
+	
+	/**
 	 * Deactivate the plugin and clear our stuff.
 	 */
 	public function deactivation() {
@@ -5454,6 +5544,71 @@ class Sequence_Controller {
 	}
 	
 	/**
+	 * Registers the Sequence Custom Post Type (CPT)
+	 *
+	 * @return bool -- True if successful
+	 *
+	 * @access public
+	 *
+	 */
+	static public function create_custom_post_type() {
+		
+		// Not going to want to do this when deactivating
+		global $e20r_sequence_deactivating;
+		
+		if ( ! empty( $e20r_sequence_deactivating ) ) {
+			return false;
+		}
+		
+		$defaultSlug = get_option( 'e20r_sequence_slug', 'sequence' );
+		
+		$labels = array(
+			'name'               => __( 'Sequences', "e20r-sequences" ),
+			'singular_name'      => __( 'Sequence', "e20r-sequences" ),
+			'slug'               => 'e20r_sequence',
+			'add_new'            => __( 'New Sequence', "e20r-sequences" ),
+			'add_new_item'       => __( 'New Sequence', "e20r-sequences" ),
+			'edit'               => __( 'Edit Sequence', "e20r-sequences" ),
+			'edit_item'          => __( 'Edit Sequence', "e20r-sequences" ),
+			'new_item'           => __( 'Add New', "e20r-sequences" ),
+			'view'               => __( 'View Sequence', "e20r-sequences" ),
+			'view_item'          => __( 'View This Sequence', "e20r-sequences" ),
+			'search_items'       => __( 'Search Sequences', "e20r-sequences" ),
+			'not_found'          => __( 'No Sequence Found', "e20r-sequences" ),
+			'not_found_in_trash' => __( 'No Sequence Found In Trash', "e20r-sequences" ),
+		);
+		
+		$error = register_post_type( 'pmpro_sequence',
+			array(
+				'labels'             => apply_filters( 'e20r-sequence-cpt-labels', $labels ),
+				'public'             => true,
+				'show_ui'            => true,
+				'show_in_menu'       => true,
+				'publicly_queryable' => true,
+				'hierarchical'       => true,
+				'supports'           => array( 'title', 'editor', 'thumbnail', 'custom-fields', 'author', 'excerpt' ),
+				'can_export'         => true,
+				'show_in_nav_menus'  => true,
+				'show_in_rest'       => true,
+				'rewrite'            => array(
+					'slug'       => apply_filters( 'e20r-sequence-cpt-slug', $defaultSlug ),
+					'with_front' => false,
+				),
+				'has_archive'        => apply_filters( 'e20r-sequence-cpt-archive-slug', 'sequences' ),
+			)
+		);
+		
+		if ( ! is_wp_error( $error ) ) {
+			return true;
+		} else {
+			DBG::log( 'Error creating post type: ' . $error->get_error_message(), E20R_DEBUG_SEQ_CRITICAL );
+			wp_die( $error->get_error_message() );
+			
+			return false;
+		}
+	}
+	
+	/**
 	 * Convert sequence ID to V3 metadata config if it hasn't been converted already.
 	 *
 	 * @param $seq_id
@@ -5462,7 +5617,7 @@ class Sequence_Controller {
 		
 		DBG::log( "Process {$seq_id} for V3 upgrade?" );
 		
-		if ( ( true === version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '<=')) && false === $this->is_converted( $seq_id ) ) {
+		if ( ( true === version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '<=' ) ) && false === $this->is_converted( $seq_id ) ) {
 			
 			DBG::log( "Need to convert sequence #{$seq_id} to V3 format" );
 			$this->get_options( $seq_id );
@@ -5474,7 +5629,7 @@ class Sequence_Controller {
 			} else {
 				DBG::log( "Error during conversion of {$seq_id} to V3 format" );
 			}
-		} else if ( true === version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '>') && false === $this->is_converted( $seq_id ) ) {
+		} else if ( true === version_compare( E20R_SEQUENCE_VERSION, '3.0.0', '>' ) && false === $this->is_converted( $seq_id ) ) {
 			DBG::log( "Sequence id# {$this->sequence_id} doesn't need to be converted to v3 metadata format" );
 			$this->current_metadata_versions[ $this->sequence_id ] = 3;
 			update_option( "pmpro_sequence_metadata_version", $this->current_metadata_versions );
@@ -5591,70 +5746,6 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Registers the Sequence Custom Post Type (CPT)
-	 *
-	 * @return bool -- True if successful
-	 *
-	 * @access public
-	 *
-	 */
-	static public function create_custom_post_type() {
-		
-		// Not going to want to do this when deactivating
-		global $e20r_sequence_deactivating;
-		
-		if ( ! empty( $e20r_sequence_deactivating ) ) {
-			return false;
-		}
-		
-		$defaultSlug = get_option( 'e20r_sequence_slug', 'sequence' );
-		
-		$labels = array(
-			'name'               => __( 'Sequences', "e20r-sequences" ),
-			'singular_name'      => __( 'Sequence', "e20r-sequences" ),
-			'slug'               => 'e20r_sequence',
-			'add_new'            => __( 'New Sequence', "e20r-sequences" ),
-			'add_new_item'       => __( 'New Sequence', "e20r-sequences" ),
-			'edit'               => __( 'Edit Sequence', "e20r-sequences" ),
-			'edit_item'          => __( 'Edit Sequence', "e20r-sequences" ),
-			'new_item'           => __( 'Add New', "e20r-sequences" ),
-			'view'               => __( 'View Sequence', "e20r-sequences" ),
-			'view_item'          => __( 'View This Sequence', "e20r-sequences" ),
-			'search_items'       => __( 'Search Sequences', "e20r-sequences" ),
-			'not_found'          => __( 'No Sequence Found', "e20r-sequences" ),
-			'not_found_in_trash' => __( 'No Sequence Found In Trash', "e20r-sequences" ),
-		);
-		
-		$error = register_post_type( 'pmpro_sequence',
-			array(
-				'labels'             => apply_filters( 'e20r-sequence-cpt-labels', $labels ),
-				'public'             => true,
-				'show_ui'            => true,
-				'show_in_menu'       => true,
-				'publicly_queryable' => true,
-				'hierarchical'       => true,
-				'supports'           => array( 'title', 'editor', 'thumbnail', 'custom-fields', 'author', 'excerpt' ),
-				'can_export'         => true,
-				'show_in_nav_menus'  => true,
-				'rewrite'            => array(
-					'slug'       => apply_filters( 'e20r-sequence-cpt-slug', $defaultSlug ),
-					'with_front' => false,
-				),
-				'has_archive'        => apply_filters( 'e20r-sequence-cpt-archive-slug', 'sequences' ),
-			)
-		);
-		
-		if ( ! is_wp_error( $error ) ) {
-			return true;
-		} else {
-			DBG::log( 'Error creating post type: ' . $error->get_error_message(), E20R_DEBUG_SEQ_CRITICAL );
-			wp_die( $error->get_error_message() );
-			
-			return false;
-		}
-	}
-	
-	/**
 	 * Trigger conversion of the user notification metadata for all users - called as part of activation or upgrade.
 	 *
 	 * @param int|null $sid - Sequence ID to convert user notification(s) for.
@@ -5762,7 +5853,7 @@ class Sequence_Controller {
 					}
 				}
 				
-				if ( isset($user->user_id) && ! $this->remove_old_user_alert_setting( $user->user_id ) ) {
+				if ( isset( $user->user_id ) && ! $this->remove_old_user_alert_setting( $user->user_id ) ) {
 					
 					DBG::log( "Unable to remove old user_alert settings!", E20R_DEBUG_SEQ_WARNING );
 				}
@@ -6212,62 +6303,6 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * All published sequences that are protected by the specified PMPro Membership Level
-	 *
-	 * @param $level_id - the Level ID
-	 *
-	 * @return array - array of sequences;
-	 */
-	public function sequences_for_membership_level( $membership_level_id ) {
-		global $wpdb;
-		global $current_user;
-		
-		// get all published sequences
-		$sequence_list = $this->get_all_sequences( array( 'publish', 'private' ) );
-		$in_sequence   = array();
-		
-		DBG::log( "Found " . count( $sequence_list ) . " sequences have been published on this system" );
-		
-		// Pull out the ID values (post IDs)
-		foreach ( $sequence_list as $s ) {
-			
-			$in_sequence[] = $s->ID;
-		}
-		
-		// check that there are sequences found
-		if ( ! empty( $in_sequence ) ) {
-			
-			DBG::log( "Search DB for sequences protected by the specified membership ID: {$membership_level_id}" );
-			
-			// get all sequences (by page id) from the DB that are protected by
-			// a specific membership level.
-			$sql = $wpdb->prepare(
-				"
-                SELECT mp.page_id
-                FROM {$wpdb->pmpro_memberships_pages} AS mp
-                 WHERE mp.membership_id = %d AND
-                 mp.page_id IN ( " . implode( ', ', $in_sequence ) . " )
-                ",
-				$membership_level_id
-			);
-			
-			// list of page IDs that have the level ID configured
-			$sequences = $wpdb->get_col( $sql );
-			
-			DBG::log( "Found " . count( $sequences ) . " sequences that are protected by level # {$membership_level_id}" );
-			
-			// list of page IDs that have the level ID configured
-			return $sequences;
-			
-		}
-		
-		DBG::log( "Found NO sequences protected by level # {$membership_level_id}!" );
-		
-		// No sequences configured
-		return null;
-	}
-	
-	/**
 	 * Set the per-sequence startdate whenever the user signs up for a PMPro membership level.
 	 * TODO: Add functionality to do the same as part of activation/startup for the Sequence.
 	 *
@@ -6326,80 +6361,59 @@ class Sequence_Controller {
 	}
 	
 	/**
-	 * Returns the per-sequence startdate to use for a user
+	 * All published sequences that are protected by the specified PMPro Membership Level
 	 *
-	 * @param $user_id -- The user ID to find the startdate for
+	 * @param $level_id - the Level ID
 	 *
-	 * @return mixed  - A UNIX timestamp (seconds since start of epoch)
+	 * @return array - array of sequences;
 	 */
-	public function get_user_startdate( $user_id = null, $level_id = null, $sequence_id = null ) {
-		$timezone = get_option( 'timezone_string' );
+	public function sequences_for_membership_level( $membership_level_id ) {
+		global $wpdb;
+		global $current_user;
 		
-		// TODO: Split into pmpro_getMemberStartdate call & return into own module w/e20r-sequence-user-startdate filter
-		if ( function_exists( 'pmpro_getMemberStartdate' ) ) {
-			$startdate_ts = pmpro_getMemberStartdate( $user_id, $level_id );
+		// get all published sequences
+		$sequence_list = $this->get_all_sequences( array( 'publish', 'private' ) );
+		$in_sequence   = array();
+		
+		DBG::log( "Found " . count( $sequence_list ) . " sequences have been published on this system" );
+		
+		// Pull out the ID values (post IDs)
+		foreach ( $sequence_list as $s ) {
+			
+			$in_sequence[] = $s->ID;
 		}
 		
-		// we didn't get a sequence id to process for so check if it's set by default
-		if ( empty( $sequence_id ) && ! empty( $this->sequence_id ) ) {
-			$sequence_id = $this->sequence_id;
+		// check that there are sequences found
+		if ( ! empty( $in_sequence ) ) {
+			
+			DBG::log( "Search DB for sequences protected by the specified membership ID: {$membership_level_id}" );
+			
+			// get all sequences (by page id) from the DB that are protected by
+			// a specific membership level.
+			$sql = $wpdb->prepare(
+				"
+                SELECT mp.page_id
+                FROM {$wpdb->pmpro_memberships_pages} AS mp
+                 WHERE mp.membership_id = %d AND
+                 mp.page_id IN ( " . implode( ', ', $in_sequence ) . " )
+                ",
+				$membership_level_id
+			);
+			
+			// list of page IDs that have the level ID configured
+			$sequences = $wpdb->get_col( $sql );
+			
+			DBG::log( "Found " . count( $sequences ) . " sequences that are protected by level # {$membership_level_id}" );
+			
+			// list of page IDs that have the level ID configured
+			return $sequences;
+			
 		}
 		
-		// neither default nor received sequence id to process.
-		if ( empty( $sequence_id ) && empty( $this->sequence_id ) ) {
-			
-			DBG::log( "No Sequence ID configured. Returning NULL" );
-			
-			return null;
-		}
+		DBG::log( "Found NO sequences protected by level # {$membership_level_id}!" );
 		
-		// if the user doesn't have a membership level...
-		if ( empty( $startdate_ts ) ) {
-			
-			// and there's a valid Timezone setting
-			if ( ! empty( $timezone ) ) {
-				
-				// use 'right now' local time' as their startdate.
-				DBG::log( "Using timezone: {$timezone}" );
-				$startdate_ts = strtotime( 'today ' . get_option( 'timezone_string' ) );
-			} else {
-				// or we'll use the registration date for the user.
-				$user         = get_user_by( 'id', $user_id );
-				$startdate_ts = strtotime( $user->user_registered );
-			}
-		}
-		
-		$use_membership_startdate = apply_filters( 'e20r-sequence-use-membership-startdate', false );
-		$user_global_startdate    = apply_filters( 'e20r-sequence-use-global-startdate', false );
-		
-		if ( false === $use_membership_startdate ) {
-			
-			// filter this so other membership modules can set the startdate too.
-			$startdate_ts = apply_filters( 'e20r-sequence-mmodule-user-startdate', $startdate_ts, $user_id, $level_id, $sequence_id );
-			
-			DBG::log( "Filtered startdate: {$startdate_ts}" );
-			
-			if ( false === $user_global_startdate ) {
-				// Use a per-sequence startdate
-				$m_startdate_ts = get_user_meta( $user_id, "_e20r-sequence-startdate-{$sequence_id}", true );
-			} else {
-				// use a global startdate
-				$m_startdate_ts = get_user_meta( $user_id, "_e20r-sequence-startdate-global", true );
-			}
-		}
-		
-		if ( empty( $m_startdate_ts ) ) {
-			
-			update_user_meta( $user_id, "_e20r-sequence-startdate-{$sequence_id}", $startdate_ts );
-			$m_startdate_ts = $startdate_ts;
-		}
-		
-		$startdate = $m_startdate_ts;
-		
-		DBG::log( "Using startdate value of : {$startdate}" );
-		
-		// finally, allow the user to filter the startdate to whatever they want it to be.
-		return apply_filters( 'e20r-sequence-user-startdate', $startdate, $sequence_id, $user_id, $level_id );
+		// No sequences configured
+		return null;
 	}
 	
 	/**
@@ -6537,6 +6551,44 @@ class Sequence_Controller {
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Checks whether the post cache for the active sequence is still valid (timeout based)
+	 *
+	 * @return bool - True if still valid
+	 */
+	private function is_cache_valid() {
+		
+		DBG::log( "We have " . count( $this->posts ) . " posts in the post list" );
+		
+		$this->expires = $this->get_cache_expiry( $this->sequence_id );
+		
+		if ( empty( $this->posts ) || is_null( $this->expires ) ) {
+			
+			DBG::log( "Cache is INVALID" );
+			
+			return false;
+		}
+		
+		DBG::log( "Current refresh value: {$this->expires} vs " . current_time( 'timestamp', true ) );
+		
+		if ( ( $this->expires >= current_time( 'timestamp' ) ) /* && !empty( $this->posts ) */ ) {
+			
+			DBG::log( "Cache IS VALID." );
+			
+			return true;
+		}
+		
+		if ( empty( $this->posts ) && $this->expires >= current_time( 'timestamp' ) ) {
+			DBG::log( "No data in list, but cache IS VALID." );
+			
+			return true;
+		}
+		
+		DBG::log( "Cache is INVALID" );
+		
+		return false;
 	}
 	
 	/**
@@ -6701,57 +6753,5 @@ class Sequence_Controller {
 		
 		// Descending Sort Order
 		return ( $aDelay > $bDelay ) ? - 1 : + 1;
-	}
-	
-	/**
-	 * Class auto-loader for this plugin
-	 *
-	 * @param string $class_name Name of the class to auto-load
-	 *
-	 * @since  1.0
-	 * @access public
-	 */
-	public static function auto_loader( $class_name ) {
-		
-		if ( false === stripos( $class_name, 'E20R' ) ) {
-			return;
-		}
-		
-		$parts     = explode( '\\', $class_name );
-		$name      = strtolower( preg_replace( '/_/', '-', $parts[ ( count( $parts ) - 1 ) ] ) );
-		$base_path = plugin_dir_path( __FILE__ );
-		$filename  = "class.{$name}.php";
-		
-		if ( file_exists( "{$base_path}/async-notices/{$filename}" ) ) {
-			require_once( "{$base_path}/async-notices/{$filename}" );
-		}
-		
-		if ( file_exists( "{$base_path}/license/{$filename}" ) ) {
-			require_once( "{$base_path}/license/{$filename}" );
-		}
-		
-		if ( file_exists( "{$base_path}/licensing/{$filename}" ) ) {
-			require_once( "{$base_path}/licensing/{$filename}" );
-		}
-		
-		if ( file_exists( "{$base_path}/shortcodes/{$filename}" ) ) {
-			require_once( "{$base_path}/shortcodes/{$filename}" );
-		}
-		
-		if ( file_exists( "{$base_path}/tools/{$filename}" ) ) {
-			require_once( "{$base_path}/tools/{$filename}" );
-		}
-		
-		if ( file_exists( "{$base_path}/utilities/{$filename}" ) ) {
-			require_once( "{$base_path}/utilities/{$filename}" );
-		}
-		
-		if ( file_exists( "{$base_path}/widgets/{$filename}" ) ) {
-			require_once( "{$base_path}/widgets/{$filename}" );
-		}
-		
-		if ( file_exists( "{$base_path}/{$filename}" ) ) {
-			require_once( "{$base_path}/{$filename}" );
-		}
 	}
 }
