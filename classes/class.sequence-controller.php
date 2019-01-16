@@ -5587,7 +5587,7 @@ class Sequence_Controller {
 				'supports'           => array( 'title', 'editor', 'thumbnail', 'custom-fields', 'author', 'excerpt' ),
 				'can_export'         => true,
 				'show_in_nav_menus'  => true,
-				'show_in_rest'       => true,
+				// 'show_in_rest'       => true,
 				'rewrite'            => array(
 					'slug'       => apply_filters( 'e20r-sequence-cpt-slug', $defaultSlug ),
 					'with_front' => false,
