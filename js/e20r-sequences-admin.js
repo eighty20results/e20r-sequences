@@ -601,9 +601,9 @@ var postMeta = {
                     $class.set_error_message($data.data.message);
                 }
 
-                if (typeof $data.data === 'object') {
+                if (typeof $data.data === 'object' && false === $data.data.success ) {
 
-                    window.console.log("Received an object as the error status");
+                    window.console.log("Received an object as the error status", $data.data );
                     var last_element = $data.data.length - 1;
 
                     window.console.log("Received " + $data.data.length + " error messages");
@@ -701,7 +701,7 @@ var postMeta = {
 
                 if (($returned.data.html !== null)|| ($returned.data.message !== null)) {
 
-                    if (typeof $returned.data === 'object') {
+                    if (typeof $returned.data === 'object' && false === $returned.data.success) {
 
                         window.console.log("Received an object as the error status");
                         var last_element = $returned.data.length - 1;
