@@ -3,7 +3,7 @@ Contributors: eighty20results
 Tags: sequence, drip feed, serial content, delayed, limited, memberships, paid memberships pro, sequences, pmpro series
 Requires at least: 3.9
 Tested up to: 5.0.3
-Stable tag: 4.6.14
+Stable tag: 4.7
 
 Create a drip feed "Sequence" which are groups of posts/pages/CPTs where the content is revealed to members over time.
 
@@ -171,6 +171,16 @@ Please post it in the [issues section](https://github.com/eighty20results/e20r-s
 Or you can email support@eighty20results.zendesk.com
 
 == Changelog ==
+
+== 4.7 ==
+
+* ENHANCEMENT: Use Gutenberg editor for the Sequence Custom Post Type (when editing a sequence)
+* BUG FIX: Didn't always load the associated files for the Select2 library version we're using
+* BUG FIX: Update Select2 library to v4.0.5
+* BUG FIX: Added 'Post/Page' to message returned when removing a post/page from the sequence
+* BUG FIX: Add/Edit Posts metabox didn't size the post/page list correctly
+* BUG FIX: JS error when updating/removing posts/pages from sequence in Sequence CPT editor
+* BUG FIX: Accessibility update (color contrast) for Posts in Sequence metabox
 
 == 4.6.14 ==
 
