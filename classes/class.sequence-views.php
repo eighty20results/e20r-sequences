@@ -194,13 +194,15 @@ class Sequence_Views {
 				<div class="e20r-table-body clear">
 					<div class="table_newmeta e20r-sequence-full-row row">
 						<div class="table_newmeta e20r-meta-table-col-1 cell">
-						<select id="e20r_sequencepost" name="e20r_sequencepost">
+						<select id="e20r_sequencepost" name="e20r_sequencepost" style="width: 100%;">
 							<option value=""></option>
 							<?php
 							if  ( $all_posts !== false ) {
 
 								foreach( $all_posts as $post ) { ?>
-									<option value="<?php echo $post->ID;?>"><?php echo esc_textarea($post->post_title);?> (#<?php esc_attr_e( $post->ID );?><?php echo esc_attr_e( $this->set_post_status( $post->post_status ) );?>)</option><?php
+									<option value="<?php echo $post->ID;?>">
+									<?php echo esc_textarea($post->post_title);?> (#<?php esc_attr_e( $post->ID );?><?php echo esc_attr_e( $this->set_post_status( $post->post_status ) );?>)
+									</option><?php
 								}
 							}
 							else {
