@@ -34,7 +34,7 @@ use E20R\Sequences\Tools\Sequence_Updates;
 
 class Sequence_Controller {
 	
-	private static $select2_version = '4.0.3';
+	private static $select2_version = '4.0.5';
 	private static $seq_post_type = 'pmpro_sequence';
 	private static $cache_timeout = 5;
 	private static $_this = null; // List of available posts for user ID
@@ -5080,7 +5080,7 @@ class Sequence_Controller {
 		if ( $this->user_can_edit( $current_user->ID ) && ! is_null( $seq_post_id ) ) {
 			
 			$this->remove_post( $seq_post_id, $delay );
-			$this->set_error_msg( sprintf( __( "'%s' has been removed", "e20r-sequences" ), get_the_title( $seq_post_id ) ) );
+			$this->set_error_msg( sprintf( __( "Post/Page '%s' has been removed", "e20r-sequences" ), get_the_title( $seq_post_id ) ) );
 			//$result = __('The post has been removed', "e20r-sequences");
 			$success = true;
 			
@@ -5587,7 +5587,7 @@ class Sequence_Controller {
 				'supports'           => array( 'title', 'editor', 'thumbnail', 'custom-fields', 'author', 'excerpt' ),
 				'can_export'         => true,
 				'show_in_nav_menus'  => true,
-				// 'show_in_rest'       => true,
+				'show_in_rest'       => true,
 				'rewrite'            => array(
 					'slug'       => apply_filters( 'e20r-sequence-cpt-slug', $defaultSlug ),
 					'with_front' => false,
@@ -6116,7 +6116,7 @@ class Sequence_Controller {
 		wp_enqueue_style( 'fontawesome', E20R_SEQUENCE_PLUGIN_URL . '/css/font-awesome.min.css', false, '4.5.0' );
 		wp_enqueue_style( 'select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/css/select2.min.css", false, self::$select2_version );
 		
-		wp_enqueue_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/3.5.2/select2.min.css', '', '3.5.2', 'screen' );
+		wp_enqueue_style( 'select2', '//cdnjs.cloudflare.com/ajax/libs/select2/' . self::$select2_version . '/select2.min.css', '', '3.5.2', 'screen' );
 		wp_enqueue_style( 'e20r-sequence', E20R_SEQUENCE_PLUGIN_URL . 'css/e20r_sequences.css' );
 		
 		wp_enqueue_script( 'select2', "//cdnjs.cloudflare.com/ajax/libs/select2/" . self::$select2_version . "/js/select2.min.js", array( 'jquery' ), self::$select2_version );
