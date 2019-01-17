@@ -685,12 +685,13 @@ class Sequence_Controller {
 			
 			foreach ( $this->posts as $p_obj ) {
 				
-				if ( ! $this->add_post_to_sequence( $this->sequence_id, $p_obj->id, $p_obj->delay ) ) {
-					
-					DBG::log( "Unable to add post {$p_obj->id} with delay {$p_obj->delay} to sequence {$this->sequence_id}", E20R_DEBUG_SEQ_WARNING );
-					
-					return false;
-				}
+			    try {
+				    $this->add_post_to_sequence( $this->sequence_id, $p_obj->id, $p_obj->delay );
+                } catch ( \Exception $exception ) {
+				    DBG::log( "Unable to add post {$p_obj->id} with delay {$p_obj->delay} to sequence {$this->sequence_id}: " . $exception->getMessage(), E20R_DEBUG_SEQ_WARNING );
+				
+				    return false;
+                }
 			}
 			
 			return true;
@@ -705,7 +706,13 @@ class Sequence_Controller {
 			
 			DBG::log( "Saving post {$post_id} with delay {$delay} to sequence {$sequence_id}" );
 			
-			return $this->add_post_to_sequence( $sequence_id, $post_id, $delay );
+			try {
+				$this->add_post_to_sequence( $sequence_id, $post_id, $delay );
+				return true;
+			} catch ( \Exception $exception ) {
+				DBG::log( "Error saving post {$post_id} with delay {$delay} to sequence {$sequence_id}: " . $exception->getMessage() );
+			    return false;
+            }
 		} else {
 			DBG::log( "Need both post ID and delay values to save the post to sequence {$sequence_id}", E20R_DEBUG_SEQ_WARNING );
 			
@@ -4579,13 +4586,14 @@ class Sequence_Controller {
 		// Add this post to the current sequence.
 		
 		DBG::log( "add_post() - Adding post {$post_id} with delay {$delay} to sequence {$this->sequence_id}" );
-		if ( ! $this->add_post_to_sequence( $this->sequence_id, $post_id, $delay ) ) {
-			
+		try {
+			$this->add_post_to_sequence( $this->sequence_id, $post_id, $delay );
+		} catch (\Exception $exception ) {
+		 
 			DBG::log( "add_post() - ERROR: Unable to add post {$post_id} to sequence {$this->sequence_id} with delay {$delay}", E20R_DEBUG_SEQ_WARNING );
 			$this->set_error_msg( sprintf( __( "Error adding %s to %s", "e20r-sequences" ), get_the_title( $post_id ), get_the_title( $this->sequence_id ) ) );
-			
 			return false;
-		}
+        }
 		
 		//sort
 		DBG::log( 'add_post(): Sorting the sequence posts by delay value(s)' );
@@ -4677,7 +4685,7 @@ class Sequence_Controller {
 	 *
 	 * @param string $option_name -- The name of the option to fetch
 	 *
-	 * @return mixed|void
+	 * @return mixed
 	 */
 	public function get_membership_setting( $option_name ) {
 		$val = null;
