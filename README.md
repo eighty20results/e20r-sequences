@@ -212,13 +212,15 @@ You can also email you support question(s) to support@eighty20result.zendesk.com
 ### 4.7
 
 * ENHANCEMENT: Use Gutenberg editor for the Sequence Custom Post Type (when editing a sequence)
+* BUG FIX: Didn't handle exceptions when adding a post/page/cpt to a sequence
+* BUG FIX: Didn't handle exceptions when listing sequence content
+* BUG FIX: Incorrect PHPDoc block for Controller::find_closest_post() and Controller::get_membership_level_for_user()
 * BUG FIX: Didn't always load the associated files for the Select2 library version we're using
 * BUG FIX: Update Select2 library to v4.0.5
 * BUG FIX: Added 'Post/Page' to message returned when removing a post/page from the sequence
 * BUG FIX: Add/Edit Posts metabox didn't size the post/page list correctly
 * BUG FIX: JS error when updating/removing posts/pages from sequence in Sequence CPT editor
 * BUG FIX: Accessibility update (color contrast) for Posts in Sequence metabox
-
 
 ### 4.6.14
 

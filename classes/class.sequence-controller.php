@@ -1653,7 +1653,7 @@ class Sequence_Controller {
 	 * @param int|null $user_id - Id of user (or null)
 	 * @param bool     $force   - Whether to force refresh from a (possible) database table
 	 *
-	 * @return mixed|void - Object containing the level information (including an 'id' parameter.
+	 * @return mixed - Object containing the level information (including an 'id' parameter.
 	 */
 	private function get_membership_level_for_user( $user_id = null, $force = false ) {
 		
@@ -1731,7 +1731,7 @@ class Sequence_Controller {
 	 *
 	 * @param null $user_id -- ID of the user
 	 *
-	 * @return bool -- Post ID or FALSE (if error)
+	 * @return bool|stdClass -- Post ID or FALSE (if error)
 	 *
 	 * @access public
 	 */
@@ -2061,7 +2061,7 @@ class Sequence_Controller {
 	 *
 	 * @param $post_id - The ID of the post to search through the active member list for
 	 *
-	 * @returns bool|array() - The list of user IDs where the remove operation failed, or true for success.
+	 * @return bool|array() - The list of user IDs where the remove operation failed, or true for success.
 	 * @access private
 	 */
 	private function remove_post_notified_flag( $post_id, $delay ) {
@@ -2951,9 +2951,12 @@ class Sequence_Controller {
 			
 			DBG::log( "E20R Sequence display {$post->ID} - " . get_the_title( $post->ID ) . " : " . $this->who_called_me() . ' and page base: ' . $pagenow );
 			
-			if ( ! $this->init( $post->ID ) ) {
+			try {
+				$this->init( $post->ID );
+				
+            } catch ( \Exception $exception ) {
 				return $utils->display_notice() . $content;
-			}
+            }
 			
 			// If we're supposed to show the "days of membership" information, adjust the text for type of delay.
 			if ( intval( $this->options->lengthVisible ) == 1 ) {
